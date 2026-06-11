@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { QrCode, ArrowRight, X, Copy, Check, Lock } from 'lucide-react';
-import QRCode from 'qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
 import { hapticTap, hapticSuccess } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
@@ -41,7 +41,7 @@ export default function QRTransferModal({ wallets, onClose }) {
       chunks.push(encrypted.slice(i, i + CHUNK_SIZE));
     }
 
-    // Generate QR code images
+    // Generate QR code data chunks
     const images = [];
     for (let i = 0; i < chunks.length; i++) {
       const data = JSON.stringify({
@@ -50,11 +50,7 @@ export default function QRTransferModal({ wallets, onClose }) {
         total: chunks.length,
         data: chunks[i],
       });
-      const url = await QRCode.toDataURL(data, {
-        width: 300,
-        margin: 2,
-      });
-      images.push(url);
+      images.push(data);
     }
 
     setQrImages(images);
@@ -133,8 +129,8 @@ export default function QRTransferModal({ wallets, onClose }) {
 
             {/* QR Code */}
             <div className="flex justify-center py-2">
-              <div className="bg-surface-800 rounded-xl p-3 border border-surface-700">
-                <img src={qrImages[currentChunk]} alt={`QR ${currentChunk + 1}`} className="w-64 h-64" />
+              <div className="bg-white rounded-xl p-3 shadow-lg ring-1 ring-white/10">
+                <QRCodeSVG value={qrImages[currentChunk]} size={256} />
               </div>
             </div>
 
