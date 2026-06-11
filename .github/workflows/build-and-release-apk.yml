@@ -1,0 +1,83 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*' # Chỉ chạy khi push một tag có tiền tố "v" (ví dụ: v4.0.0)
+  workflow_dispatch: # Cho phép chạy thủ công
+
+jobs:
+  build:
+    name: Build & Release Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Cần quyền để tạo Release mới
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' # Kích hoạt cache cho npm
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚨 Run Linting
+        run: npm run lint # Dừng build nếu code bị lỗi
+
+      - name: 🏗️ Build Web App (Vite)
+        run: npm run build
+
+      - name: 🔄 Sync Capacitor
+        run: npx cap sync android
+
+      - name: ☕ Set up Java (for Android build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 💾 Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: 🔨 Build Android APK (Release)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: 🔑 Sign APK
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: 🔍 Lấy phiên bản từ package.json
+        id: get_version
+        run: |
+          APP_VERSION=$(node -p "require('./package.json').version")
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+
+      - name: 🏷️ Đổi tên file APK sau khi ký
+        run: |
+          APK_NAME="xKey-Release-v${{ env.APP_VERSION }}.apk"
+          mv ${{steps.sign_app.outputs.signedReleaseFile}} "$APK_NAME"
+          echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
+
+      - name: 🚀 Auto-Release on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "🔥 Phát hành phiên bản v${{ env.APP_VERSION }}"
+          body: "Tệp APK tự động được tối ưu hóa (Release) và đóng dấu bảo mật từ mã nguồn mới nhất. \n\n**Phiên bản:** v${{ env.APP_VERSION }}\n\nTải file bên dưới để cài đặt."
+          files: ${{ env.APK_NAME }}
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
