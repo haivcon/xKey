@@ -41,17 +41,29 @@ jobs:
       - name: 💾 Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
 
-      - name: 🔨 Build Android APK (Release)
+      - name: 🔨 Build Android APK & AAB (Release)
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease bundleRelease
 
       - name: 🔑 Sign APK
-        id: sign_app
+        id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: 🔑 Sign AAB
+        id: sign_aab
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/bundle/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -65,18 +77,23 @@ jobs:
           APP_VERSION=$(node -p "require('./package.json').version")
           echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
-      - name: 🏷️ Rename APK file after signing
+      - name: 🏷️ Rename Files
         run: |
           APK_NAME="xKey-Release-v${{ env.APP_VERSION }}.apk"
-          mv ${{steps.sign_app.outputs.signedReleaseFile}} "$APK_NAME"
+          AAB_NAME="xKey-Release-v${{ env.APP_VERSION }}.aab"
+          mv ${{steps.sign_apk.outputs.signedReleaseFile}} "$APK_NAME"
+          mv ${{steps.sign_aab.outputs.signedReleaseFile}} "$AAB_NAME"
           echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
+          echo "AAB_NAME=$AAB_NAME" >> $GITHUB_ENV
 
       - name: 🚀 Auto-Release on GitHub
         uses: softprops/action-gh-release@v2
         with:
           name: "🔑xKey v${{ env.APP_VERSION }}"
-          body: "Automatically optimized and securely signed APK release.\n\n**Version:** v${{ env.APP_VERSION }}\n\nDownload the file below to install."
-          files: ${{ env.APK_NAME }}
+          body: "Automatically optimized and securely signed releases.\n\n**Version:** v${{ env.APP_VERSION }}\n- **APK**: For manual installation.\n- **AAB**: For Google Play Console upload."
+          files: |
+            ${{ env.APK_NAME }}
+            ${{ env.AAB_NAME }}
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
