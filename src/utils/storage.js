@@ -59,49 +59,61 @@ const decryptField = (cipher, fieldKey) => {
  */
 export const getEncryptionKey = async () => {
     try {
-        const available = await NativeBiometric.isAvailable();
-        
-        if (available.isAvailable) {
-            try {
-                // Force the native authentication prompt
-                await NativeBiometric.verifyIdentity({
-                    reason: "Unlock xKey",
-                    title: "xKey Authentication",
-                    subtitle: "Log in using your biometric credential",
-                    useFallback: true // Allows device PIN if biometrics fail
-                });
+        let authSuccess = false;
+        try {
+            // Force the native authentication prompt (supports PIN if biometric fails)
+            await NativeBiometric.verifyIdentity({
+                reason: "Unlock xKey",
+                title: "xKey Authentication",
+                subtitle: "Log in using your device lock or biometric",
+                useFallback: true
+            });
+            authSuccess = true;
+        } catch (err) {
+            const msg = (err.message || '').toLowerCase();
+            const code = (err.code || '').toLowerCase();
+            // If user explicitly cancels the PIN/Biometric prompt, block access
+            if (msg.includes('cancel') || code === 'usercancel' || code === 'user_cancel') {
+                throw new Error("Authentication canceled.");
+            }
+            // If it throws because device has no lock screen at all, authSuccess remains false
+        }
 
-                // Try to get existing key
-                const creds = await NativeBiometric.getCredentials({
-                    server: BIOMETRIC_SERVER
-                });
-                return creds.password;
-            } catch (err) {
-                // If ItemNotFound or similar, create a new one
-                const msg = (err.message || '').toLowerCase();
-                const code = (err.code || '').toLowerCase();
-                
-                if (msg.includes('itemnotfound') || msg.includes('not found') || msg.includes('no credentials') || code === 'itemnotfound') {
-                    const newKey = generateRandomKey();
+        try {
+            // Try to get existing key from secure storage
+            const creds = await NativeBiometric.getCredentials({ server: BIOMETRIC_SERVER });
+            return creds.password;
+        } catch (err) {
+            const msg = (err.message || '').toLowerCase();
+            const code = (err.code || '').toLowerCase();
+            
+            // If credentials don't exist yet
+            if (msg.includes('itemnotfound') || msg.includes('not found') || msg.includes('no credentials') || code === 'itemnotfound') {
+                const newKey = generateRandomKey();
+                try {
                     await NativeBiometric.setCredentials({
                         username: BIOMETRIC_USER,
                         password: newKey,
                         server: BIOMETRIC_SERVER
                     });
                     return newKey;
+                } catch (setErr) {
+                    // Keystore failed (e.g. device completely unsecured), fallback below
                 }
-                // If user canceled the prompt or auth failed
-                throw new Error("Biometric authentication failed or canceled.");
+            } else if (authSuccess) {
+                // Unknown Keystore error after successful auth
+                throw err;
             }
-        } else {
-            // Device has no lock screen / biometrics. Use standard Preferences.
-            const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
-            if (value) return value;
-            
-            const newKey = generateRandomKey();
-            await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: newKey });
-            return newKey;
         }
+        
+        // Fallback: Device has no lock screen or Keystore is broken. Use standard Preferences.
+        const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
+        if (value) return value;
+        
+        const newKeyFallback = generateRandomKey();
+        await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: newKeyFallback });
+        return newKeyFallback;
+        
     } catch (e) {
         console.error("Encryption key retrieval error:", e);
         throw e;
