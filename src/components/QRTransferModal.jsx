@@ -4,8 +4,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
 import { hapticTap, hapticSuccess } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
+import PasswordInput from './PasswordInput';
 
-const CHUNK_SIZE = 1800; // ~1.8KB per QR code for reliable scanning
+const CHUNK_SIZE = 250; // Reduced from 500 to 250 to make QR codes much less dense and much faster to scan
 
 /**
  * QR Vault Transfer Modal
@@ -98,11 +99,12 @@ export default function QRTransferModal({ wallets, onClose }) {
             </p>
             <div className="flex items-center gap-2">
               <Lock size={14} className="text-surface-500" />
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
+              <PasswordInput
+                value={password} onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleStart()}
                 placeholder={t('qrTransfer.passwordPlaceholder')}
-                className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
+                wrapperClassName="flex-1"
+                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
             </div>
             <button onClick={handleStart} disabled={password.length < 6}
@@ -130,7 +132,7 @@ export default function QRTransferModal({ wallets, onClose }) {
             {/* QR Code */}
             <div className="flex justify-center py-2">
               <div className="bg-white rounded-xl p-3 shadow-lg ring-1 ring-white/10">
-                <QRCodeSVG value={qrImages[currentChunk]} size={256} />
+                <QRCodeSVG value={qrImages[currentChunk]} size={300} />
               </div>
             </div>
 

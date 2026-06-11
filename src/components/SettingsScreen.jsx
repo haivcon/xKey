@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, ShieldAlert, ShieldCheck, Sun, Moon, Download, Lock, Globe, Check, ChevronDown, Timer, Clipboard, KeyRound, Monitor, ShieldOff, RefreshCw, Save, QrCode, Heart, Camera } from 'lucide-react';
+import { ArrowLeft, Trash2, ShieldAlert, ShieldCheck, Sun, Moon, Download, Lock, Globe, Check, ChevronDown, Timer, Clipboard, KeyRound, Monitor, ShieldOff, RefreshCw, Save, QrCode, Heart, Camera, Eye, EyeOff } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets } from '../utils/storage';
 import { exportPortableBackup } from '../utils/backupUtils';
@@ -18,6 +18,7 @@ import CryptoJS from 'crypto-js';
 import QRTransferModal from './QRTransferModal';
 import QRReceiveModal from './QRReceiveModal';
 import DonateModal from './DonateModal';
+import PasswordInput from './PasswordInput';
 
 const AUTOLOCK_OPTIONS = [
   { label: '1 min', value: 60000 },
@@ -48,6 +49,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
     const [showMPSetup, setShowMPSetup] = useState(false);
     const [mpInput, setMpInput] = useState('');
     const [mpConfirm, setMpConfirm] = useState('');
+    const [showMPIcon, setShowMPIcon] = useState(false);
 
     // Change PIN state
     const [showChangePin, setShowChangePin] = useState(false);
@@ -82,6 +84,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
     const [showQRReceive, setShowQRReceive] = useState(false);
     const [transferWallets, setTransferWallets] = useState([]);
     const [showDonate, setShowDonate] = useState(false);
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
     const { theme, setTheme } = useTheme();
     const { showToast } = useToast();
@@ -91,6 +94,18 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
     const mp = useMasterPassword();
 
     const currentLang = LANGUAGES.find(l => l.code === lang);
+
+    useEffect(() => {
+        import('@capacitor/keyboard').then(({ Keyboard }) => {
+            Keyboard.addListener('keyboardWillShow', () => setIsKeyboardVisible(true));
+            Keyboard.addListener('keyboardWillHide', () => setIsKeyboardVisible(false));
+        }).catch(() => {});
+        return () => {
+            import('@capacitor/keyboard').then(({ Keyboard }) => {
+                Keyboard.removeAllListeners();
+            }).catch(() => {});
+        };
+    }, []);
 
     useEffect(() => {
         const loadCurrentSettings = async () => {
@@ -322,7 +337,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
     };
 
     return (
-        <div className="min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
+        <div className={`min-h-screen bg-surface-900 text-surface-50 p-4 transition-all duration-300 ${isKeyboardVisible ? 'pb-96' : 'pb-10'}`}>
             <header className="flex items-center justify-between mb-8 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
                 <button onClick={onBack} className="btn-icon-glow p-2 rounded-full hover:bg-surface-800 transition-colors">
                     <ArrowLeft size={24} className="text-surface-300" />
@@ -488,6 +503,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                             <div className="flex gap-2">
                                 <input type="number" value={customAutoLock} onChange={e => setCustomAutoLock(e.target.value)}
                                     placeholder={t('settings.customMinutes')} min="1"
+                                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
                                     className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                 <button onClick={() => { const m = parseInt(customAutoLock); if (m > 0) saveAutoLock(m * 60000); }}
                                     className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs">{t('common.save')}</button>
@@ -517,6 +533,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                             <div className="flex gap-2">
                                 <input type="number" value={customClipboard} onChange={e => setCustomClipboard(e.target.value)}
                                     placeholder={t('settings.customSeconds')} min="5"
+                                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
                                     className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                 <button onClick={() => { const s = parseInt(customClipboard); if (s >= 5) saveClipboard(s * 1000); }}
                                     className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs">{t('common.save')}</button>
@@ -548,12 +565,22 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                                 </button>
                             ) : (
                                 <div className="space-y-2">
-                                    <input type="password" value={mpInput} onChange={e => setMpInput(e.target.value)} autoFocus
-                                        placeholder={t('settings.passwordMin')}
-                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
-                                    <input type="password" value={mpConfirm} onChange={e => setMpConfirm(e.target.value)}
-                                        placeholder={t('settings.reenterPassword')}
-                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                    <div className="relative">
+                                        <input type={showMPIcon ? "text" : "password"} value={mpInput} onChange={e => setMpInput(e.target.value)} autoFocus
+                                            placeholder={t('settings.passwordMin')}
+                                            className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                        <button onClick={() => setShowMPIcon(!showMPIcon)} className="absolute right-3 top-2.5 text-surface-500 hover:text-white transition-colors">
+                                            {showMPIcon ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <input type={showMPIcon ? "text" : "password"} value={mpConfirm} onChange={e => setMpConfirm(e.target.value)}
+                                            placeholder={t('settings.reenterPassword')}
+                                            className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                        <button onClick={() => setShowMPIcon(!showMPIcon)} className="absolute right-3 top-2.5 text-surface-500 hover:text-white transition-colors">
+                                            {showMPIcon ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
                                     <div className="flex gap-2">
                                         <button onClick={() => { setShowMPSetup(false); setMpInput(''); setMpConfirm(''); }}
                                             className="btn-glow flex-1 bg-surface-700 text-surface-300 py-2 rounded-lg text-xs">{t('common.cancel')}</button>
@@ -593,17 +620,17 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                         {showChangePin && (
                             <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
                                 {pinStep === 'current' && (
-                                    <input type="password" value={pinCurrent} onChange={e => setPinCurrent(e.target.value)}
+                                    <PasswordInput value={pinCurrent} onChange={e => setPinCurrent(e.target.value)}
                                         placeholder={t('settings.currentPin')} maxLength={6} autoFocus
                                         className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                 )}
                                 {pinStep === 'new' && (
-                                    <input type="password" value={pinNew} onChange={e => setPinNew(e.target.value)}
+                                    <PasswordInput value={pinNew} onChange={e => setPinNew(e.target.value)}
                                         placeholder={t('settings.newPin')} maxLength={6} autoFocus
                                         className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                 )}
                                 {pinStep === 'confirm' && (
-                                    <input type="password" value={pinConfirmVal} onChange={e => setPinConfirmVal(e.target.value)}
+                                    <PasswordInput value={pinConfirmVal} onChange={e => setPinConfirmVal(e.target.value)}
                                         placeholder={t('settings.confirmNewPin')} maxLength={6} autoFocus
                                         className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                 )}
@@ -646,13 +673,13 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                             </div>
                             {showDecoyPinInput && !hasDecoyPin && (
                                 <div className="flex items-center gap-2 mt-2 bg-surface-900/50 p-2 rounded-lg">
-                                    <input 
-                                        type="password" 
+                                    <PasswordInput 
                                         value={decoyPinInput} 
                                         onChange={(e) => setDecoyPinInput(e.target.value.replace(/[^0-9]/g, ''))}
                                         placeholder="6-digit PIN" 
                                         maxLength={6} 
-                                        className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" 
+                                        wrapperClassName="flex-1"
+                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" 
                                     />
                                     <button onClick={handleSetDecoyPin} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-500 transition-colors">
                                         {t('settings.save') || 'Save'}
@@ -754,9 +781,9 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                             </div>
                             {autoBackupInterval !== 'off' && (
                                 <div className="flex gap-2">
-                                    <input type="password" value={autoBackupPassword} onChange={e => setAutoBackupPassword(e.target.value)}
-                                        placeholder={t('settings.backupPassword')}
-                                        className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                    <PasswordInput value={autoBackupPassword} onChange={e => setAutoBackupPassword(e.target.value)}
+                                        placeholder={t('settings.backupPassword')} wrapperClassName="flex-1"
+                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                                     <button onClick={saveAutoBackupPassword}
                                         className="btn-glow bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm transition-all">{t('common.save')}</button>
                                 </div>
@@ -795,8 +822,8 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                         <div className="space-y-3 bg-surface-800/50 p-4 rounded-xl border border-surface-700">
                             <div>
                                 <label className="block text-xs font-medium text-surface-400 mb-1.5">{t('settings.backupPassword')}</label>
-                                <input
-                                    type="password" value={backupPassword} autoFocus
+                                <PasswordInput
+                                    value={backupPassword} autoFocus
                                     onChange={(e) => setBackupPassword(e.target.value)}
                                     placeholder={t('settings.passwordMin')}
                                     className="w-full bg-surface-900 border border-surface-700 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder:text-surface-600"
@@ -804,8 +831,8 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-surface-400 mb-1.5">{t('settings.confirmPassword')}</label>
-                                <input
-                                    type="password" value={backupPasswordConfirm}
+                                <PasswordInput
+                                    value={backupPasswordConfirm}
                                     onChange={(e) => setBackupPasswordConfirm(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleExportPortable()}
                                     placeholder={t('settings.reenterPassword')}

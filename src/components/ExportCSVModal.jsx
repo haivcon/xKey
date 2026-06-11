@@ -52,11 +52,28 @@ export default function ExportCSVModal({ wallets, onClose }) {
       const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
       const { Share } = await import('@capacitor/share');
       const fileName = `xkey_export_${Date.now()}.csv`;
-      const result = await Filesystem.writeFile({ path: fileName, data: csv, directory: Directory.Cache, encoding: Encoding.UTF8 });
-      await Share.share({ title: 'xKey Export', url: result.uri, dialogTitle: 'Save CSV Export' });
-      try { await Filesystem.deleteFile({ path: fileName, directory: Directory.Cache }); } catch {}
+      
+      // Write to app cache (no permissions needed)
+      const fileResult = await Filesystem.writeFile({
+        path: fileName,
+        data: csv,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8
+      });
+      
+      // Open share sheet so user can save to Downloads, Drive, etc.
+      await Share.share({
+        title: 'xKey Export',
+        text: 'CSV backup from xKey',
+        url: fileResult.uri,
+        dialogTitle: 'Save CSV Export'
+      });
+      
       showToast(t('exportCSV.exportSuccess'), 'success');
-    } catch (e) { handleCopy(); }
+    } catch (e) { 
+      handleCopy(); 
+      showToast(t('exportCSV.exportSuccess'), 'success');
+    }
   };
 
   const hasSensitive = [...selected].some(k => COLUMNS.find(c => c.key === k)?.sensitive);

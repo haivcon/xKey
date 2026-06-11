@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput } from 'lucide-react';
+import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import { secureCopy } from '../utils/clipboard';
 import { useToast } from '../contexts/ToastContext';
+import { useMasterPassword } from '../contexts/MasterPasswordContext';
+import PasswordInput from './PasswordInput';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -36,6 +38,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const pressTimerRef = useRef(null);
   const t = useT();
   const { showToast } = useToast();
+  const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
+  const [showMPPrompt, setShowMPPrompt] = useState(null);
+  const [mpInput, setMpInput] = useState('');
 
   // Long-press quick copy address
   const handleTouchStart = () => {
@@ -60,6 +65,36 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   const handleCopy = (text, field) => { secureCopy(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000); };
   const formatDate = (ts) => { if (!ts) return null; const d = new Date(ts); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
+
+  const executeSensitiveAction = (actionType) => {
+    if (actionType === 'pk') setShowPk(!showPk);
+    else if (actionType === 'seed') setShowSeed(!showSeed);
+    else if (actionType === 'qr_pk') onShowQR(wallet.privateKey, t('walletCard.privateKey'), 'WARNING');
+    else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk');
+    else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed');
+  };
+
+  const handleShowSensitive = async (actionType) => {
+    if (actionType === 'pk' && showPk) { setShowPk(false); return; }
+    if (actionType === 'seed' && showSeed) { setShowSeed(false); return; }
+    
+    if (hasMasterPassword) {
+      setShowMPPrompt(actionType);
+    } else {
+      executeSensitiveAction(actionType);
+    }
+  };
+
+  const submitMP = async () => {
+    const ok = await verifyMasterPassword(mpInput);
+    if (ok) {
+      executeSensitiveAction(showMPPrompt);
+      setShowMPPrompt(null);
+      setMpInput('');
+    } else {
+      showToast(t('walletCard.masterPasswordWrong') || 'Wrong master password', 'error');
+    }
+  };
 
   const enterEditMode = () => {
     setEditFields({
@@ -96,7 +131,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   );
 
   return (
-    <div className="glass-card overflow-hidden border border-surface-700 hover:border-brand-500/30 transition-colors">
+    <div className="glass-card overflow-hidden border border-surface-700 hover:border-brand-500/30 transition-colors relative">
       <div className="p-4 flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50"
         onClick={() => { if (!longPressActive) setExpanded(!expanded); }}
         onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}
@@ -227,9 +262,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-all font-mono">
                       {showPk ? wallet.privateKey : '•'.repeat(Math.min(wallet.privateKey.length, 64))}
                     </code>
-                    <button onClick={() => setShowPk(!showPk)} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">{showPk ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                    <button onClick={() => onShowQR(wallet.privateKey, t('walletCard.privateKey'), 'WARNING')} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded transition-colors"><QrCode size={18} /></button>
-                    <button onClick={() => handleCopy(wallet.privateKey, 'pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
+                    <button onClick={() => handleShowSensitive('pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">{showPk ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    <button onClick={() => handleShowSensitive('qr_pk')} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded transition-colors"><QrCode size={18} /></button>
+                    <button onClick={() => handleShowSensitive('copy_pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
                       {copiedField === 'pk' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                     </button>
                   </div>
@@ -247,8 +282,8 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-words leading-relaxed">
                       {showSeed ? wallet.seedPhrase : '• '.repeat(wallet.seedPhrase.split(' ').length)}
                     </code>
-                    <button onClick={() => setShowSeed(!showSeed)} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">{showSeed ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                    <button onClick={() => handleCopy(wallet.seedPhrase, 'seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">
+                    <button onClick={() => handleShowSensitive('seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">{showSeed ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    <button onClick={() => handleShowSensitive('copy_seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">
                       {copiedField === 'seed' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                     </button>
                   </div>
@@ -263,6 +298,19 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               )}
             </>
           )}
+        </div>
+      )}
+
+      {showMPPrompt && (
+        <div className="absolute inset-0 z-10 bg-surface-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-xl">
+          <p className="text-sm font-medium text-white mb-3">{t('walletCard.masterPasswordRequired') || 'Master Password Required'}</p>
+          <div className="flex gap-2 w-full max-w-[280px]">
+            <PasswordInput autoFocus value={mpInput} onChange={e=>setMpInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitMP()} 
+              placeholder="Password" wrapperClassName="flex-1"
+              className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" />
+            <button onClick={submitMP} className="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg text-sm transition-colors">OK</button>
+            <button onClick={()=>{setShowMPPrompt(null); setMpInput('');}} className="bg-surface-700 hover:bg-surface-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"><X size={16}/></button>
+          </div>
         </div>
       )}
     </div>

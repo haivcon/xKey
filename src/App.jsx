@@ -24,6 +24,9 @@ import PinLockScreen from './components/PinLockScreen';
 import MoveToFolderModal from './components/MoveToFolderModal';
 import DonateModal from './components/DonateModal';
 import BulkNetworkModal from './components/BulkNetworkModal';
+import PasswordInput from './components/PasswordInput';
+import AnimatedSplash from './components/AnimatedSplash';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // Utils & Hooks
 import { saveWallets, loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
@@ -65,6 +68,7 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [vaultLoading, setVaultLoading] = useState(true);
   const [needsPinAuth, setNeedsPinAuth] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Folder editing
   const [editingFolder, setEditingFolder] = useState(null);
@@ -82,9 +86,7 @@ export default function App() {
 
   // Auto-lock after 5min idle
   useAutoLock(() => {
-    setAesKey(null);
-    setCurrentView('home');
-    window.location.reload();
+    setNeedsPinAuth(true);
   }, !!aesKey);
 
   // Auto-backup on app open
@@ -129,8 +131,47 @@ export default function App() {
     qrModalData.isOpen, currentView
   ]);
 
+  // Hide native splash immediately, show our custom animated one
+  useEffect(() => {
+    SplashScreen.hide().catch(() => {});
+  }, []);
+
+  // Global Keyboard & Focus Handler
+  useEffect(() => {
+    const handleFocusIn = (e) => {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        const scrollContainer = target.closest('.overflow-y-auto') || target.closest('.overflow-auto') || document.getElementById('root') || document.body;
+        // Force large padding at the bottom of the scrolling container
+        scrollContainer.style.setProperty('padding-bottom', '60vh', 'important');
+        
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    };
+
+    const handleFocusOut = (e) => {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        const scrollContainer = target.closest('.overflow-y-auto') || target.closest('.overflow-auto') || document.getElementById('root') || document.body;
+        scrollContainer.style.removeProperty('padding-bottom');
+      }
+    };
+    
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
   // On Unlock, load data
   useEffect(() => {
+    if (showSplash) return; // Wait for custom splash to finish before prompting bio/pin
+
     const authenticate = async () => {
       try {
         // Check onboarding
@@ -155,7 +196,7 @@ export default function App() {
       setVaultLoading(false);
     };
     authenticate();
-  }, []);
+  }, [showSplash]);
 
   // Called after PIN verification succeeds
   const handlePinSuccess = async (isDecoy = false) => {
@@ -210,8 +251,6 @@ export default function App() {
         if (deltaX + deltaY + deltaZ > threshold) {
           // Trigger Lock
           setNeedsPinAuth(true);
-          setWallets([]);
-          setAesKey(null);
           hapticSuccess();
         }
       }
@@ -321,7 +360,7 @@ export default function App() {
     setWallets([]);
     setAesKey(null);
     setCurrentView('home');
-    window.location.reload();
+    setNeedsPinAuth(true);
   };
 
   const handleDeleteWallet = async (walletToDelete) => {
@@ -493,30 +532,18 @@ export default function App() {
 
   if (authError) return <AuthErrorScreen error={authError} />;
 
-  if (needsPinAuth && !vaultLoading) {
-    return (
-      <>
-        <PinLockScreen onSuccess={handlePinSuccess} onSelfDestruct={handleSelfDestruct} />
-        {!isAppActive && (
-          <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
-            <img src="/logo.png" alt="xKey" className="w-20 h-20 opacity-30" />
-          </div>
-        )}
-      </>
-    );
-  }
+  let mainContent = null;
 
   if (!aesKey) {
-    return (
+    mainContent = (
       <div className={`min-h-screen bg-surface-950 text-white font-sans overflow-hidden flex flex-col ${!isAppActive ? 'blur-xl pointer-events-none' : ''} items-center justify-center`}>
-        <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-surface-400 text-sm">{t('home.unlocking')}</p>
+        <div className="text-[56px] font-bold text-white tracking-[2px]" style={{ textShadow: '0 0 20px rgba(99, 102, 241, 0.4)' }}>
+          xKey
+        </div>
       </div>
     );
-  }
-
-  if (currentView === 'settings') {
-    return (
+  } else if (currentView === 'settings') {
+    mainContent = (
       <SettingsScreen
         aesKey={aesKey}
         onBack={() => setCurrentView('home')}
@@ -524,12 +551,10 @@ export default function App() {
         onImport={(newWallets) => setWallets(newWallets)}
       />
     );
-  }
-  if (currentView === 'dashboard') {
-    return <DashboardView wallets={wallets} onBack={() => setCurrentView('home')} />;
-  }
-
-  // ─── Home View ───
+  } else if (currentView === 'dashboard') {
+    mainContent = <DashboardView wallets={wallets} onBack={() => setCurrentView('home')} />;
+  } else {
+    // ─── Home View ───
   const folders = ['All', ...new Set(wallets.map(w => w.groupId || 'Imported'))];
 
   const filteredWallets = wallets.filter(w => {
@@ -584,7 +609,7 @@ export default function App() {
     return acc + (isNaN(val) ? 0 : val);
   }, 0);
 
-  return (
+  mainContent = (
     <>
     <div className={`min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
 
@@ -785,8 +810,8 @@ export default function App() {
             </div>
             <h3 className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
             <p className="text-surface-400 text-sm text-center mb-5">{t('restore.desc')}</p>
-            <input
-              type="password" autoFocus
+            <PasswordInput
+              autoFocus
               value={importPassword}
               onChange={(e) => setImportPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleImportWithPassword()}
@@ -803,12 +828,31 @@ export default function App() {
         </div>
       )}
     </div>
-    {/* App Switcher Privacy Overlay */}
-    {!isAppActive && (
-      <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
-        <img src="/logo.png" alt="xKey" className="w-20 h-20 opacity-30 animate-pulse" />
+    </>
+  );
+  }
+
+  return (
+    <>
+      {showSplash && <AnimatedSplash onFinish={() => setShowSplash(false)} />}
+      <div style={{ display: (needsPinAuth && !vaultLoading) ? 'none' : 'block' }}>
+        {mainContent}
       </div>
-    )}
+      {needsPinAuth && !vaultLoading && (
+        <div className="fixed inset-0 z-[10000] bg-surface-950">
+          <PinLockScreen onSuccess={handlePinSuccess} onSelfDestruct={handleSelfDestruct} />
+          {!isAppActive && (
+            <div className="fixed inset-0 z-[10001] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
+              <div className="text-[40px] font-bold text-white/30 tracking-[2px]">xKey</div>
+            </div>
+          )}
+        </div>
+      )}
+      {!isAppActive && !needsPinAuth && (
+        <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
+          <div className="text-[40px] font-bold text-white/30 tracking-[2px] animate-pulse">xKey</div>
+        </div>
+      )}
     </>
   );
 }

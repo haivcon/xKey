@@ -3,6 +3,7 @@ import { X, Camera, Lock, Check, Loader2 } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useT } from '../contexts/LanguageContext';
 import CryptoJS from 'crypto-js';
+import PasswordInput from './PasswordInput';
 
 export default function QRReceiveModal({ onClose, onImport }) {
   const [error, setError] = useState('');
@@ -39,12 +40,17 @@ export default function QRReceiveModal({ onClose, onImport }) {
 
     const startScanner = async () => {
       try {
-        scanner = new Html5Qrcode('qr-receive-reader');
+        const devices = await Html5Qrcode.getCameras();
+        const cameraId = devices && devices.length > 0 ? devices[devices.length - 1].id : { facingMode: 'environment' };
+        
+        scanner = new Html5Qrcode('qr-receive-reader', { 
+          formatsToSupport: [0] // Html5QrcodeSupportedFormats.QR_CODE = 0
+        });
         scannerRef.current = scanner;
 
         await scanner.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          cameraId,
+          { fps: 15, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
             if (stopped) return;
             try {
@@ -52,32 +58,41 @@ export default function QRReceiveModal({ onClose, onImport }) {
               if (data._xkey === 'transfer' && data.part && data.total && data.data) {
                 setTotalChunks(data.total);
                 setChunks(prev => {
-                  const newChunks = { ...prev, [data.part]: data.data };
-                  if (Object.keys(newChunks).length === data.total) {
-                    stopped = true;
-                    stopScanner();
-                    setScanning(false);
-                    setPasswordPrompt(true);
+                  // Only process if we haven't scanned this chunk yet
+                  if (!prev[data.part]) {
+                    if (window.navigator && window.navigator.vibrate) {
+                      window.navigator.vibrate(50); // Provide physical feedback!
+                    }
+                    
+                    const newChunks = { ...prev, [data.part]: data.data };
+                    if (Object.keys(newChunks).length === data.total) {
+                      stopped = true;
+                      stopScanner();
+                      setScanning(false);
+                      setPasswordPrompt(true);
+                    }
+                    return newChunks;
                   }
-                  return newChunks;
+                  return prev;
                 });
               }
-            } catch (err) {
-              // Ignore invalid QR codes
-            }
+            } catch (err) {}
           },
           () => {}
         );
       } catch (err) {
         if (!stopped) {
-          setError(err.message || 'Camera access denied');
+          console.error("Scanner Error:", err);
+          // Show more detailed error
+          setError(typeof err === 'string' ? err : (err.message || 'Camera access denied or no camera found. Please check App Permissions.'));
           setScanning(false);
         }
       }
     };
 
     if (scanning) {
-      startScanner();
+      // Add slight delay to ensure DOM is ready
+      setTimeout(startScanner, 300);
     }
 
     return () => {
@@ -167,8 +182,7 @@ export default function QRReceiveModal({ onClose, onImport }) {
 
               {error && <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">{error}</p>}
 
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 autoFocus

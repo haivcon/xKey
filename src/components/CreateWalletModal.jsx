@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import QRScannerModal from './QRScannerModal';
+import PasswordInput from './PasswordInput';
 
 const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 
@@ -24,6 +25,7 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
   const [generatedWallets, setGeneratedWallets] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [generateProgress, setGenerateProgress] = useState(0);
+  const [floatingEffects, setFloatingEffects] = useState([]);
   const [bulkResult, setBulkResult] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
   const [walletName, setWalletName] = useState('');
@@ -136,27 +138,40 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
 
     if (count < 10) {
       setGenerating(true);
-      setTimeout(() => {
-        const newWallets = [];
-        for (let i = 0; i < count; i++) {
+      setGenerateProgress(0);
+      setFloatingEffects([]);
+      
+      const processSingle = async (i, newWallets) => {
+        if (i < count) {
           const w = ethers.Wallet.createRandom();
           newWallets.push({
             name: count === 1 ? `Wallet ${Date.now().toString(36).slice(-4).toUpperCase()}` : `Wallet ${i + 1}`,
             address: w.address,
             privateKey: w.privateKey,
-            mnemonic: w.mnemonic?.phrase || ''
+            mnemonic: w.mnemonic?.phrase || '',
+            seedPhrase: w.mnemonic?.phrase || '',
+            balance: '0.00',
+            network: 'XLAYER'
           });
+          setGenerateProgress(i + 1);
+          setFloatingEffects(prev => [...prev.slice(-4), { count: i + 1, address: w.address, key: Math.random() }]);
+          setTimeout(() => processSingle(i + 1, newWallets), 150);
+        } else {
+          setTimeout(() => {
+            setGeneratedWallets(newWallets);
+            if (count === 1) {
+              setWallet(newWallets[0]);
+              setWalletName(newWallets[0].name);
+            }
+            setGenerating(false);
+          }, 800);
         }
-        setGeneratedWallets(newWallets);
-        if (count === 1) {
-          setWallet(newWallets[0]);
-          setWalletName(newWallets[0].name);
-        }
-        setGenerating(false);
-      }, 50);
+      };
+      processSingle(0, []);
     } else {
       setGenerating(true);
       setGenerateProgress(0);
+      setFloatingEffects([]);
       const newWallets = [];
       const chunkSize = 20;
       
@@ -174,18 +189,22 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
           });
         }
         setGenerateProgress(limit);
+        const lastW = newWallets[newWallets.length - 1];
+        setFloatingEffects(prev => [...prev.slice(-4), { count: limit, address: lastW.address, key: Math.random() }]);
+
         if (limit < count) {
-          setTimeout(() => processChunk(limit), 10);
+          setTimeout(() => processChunk(limit), 100);
         } else {
-          // Finished
-          const sizeBytes = new Blob([JSON.stringify(newWallets)]).size;
-          let storageInfo = null;
-          if (navigator.storage && navigator.storage.estimate) {
-            try { storageInfo = await navigator.storage.estimate(); } catch (e) {}
-          }
-          onSave(newWallets);
-          setBulkResult({ count, sizeBytes, storageInfo });
-          setGenerating(false);
+          setTimeout(async () => {
+            const sizeBytes = new Blob([JSON.stringify(newWallets)]).size;
+            let storageInfo = null;
+            if (navigator.storage && navigator.storage.estimate) {
+              try { storageInfo = await navigator.storage.estimate(); } catch (e) {}
+            }
+            onSave(newWallets);
+            setBulkResult({ count, sizeBytes, storageInfo });
+            setGenerating(false);
+          }, 800);
         }
       };
       processChunk(0);
@@ -311,7 +330,7 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
 
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.privateKey')} <span className="text-surface-600">{t('createWallet.optional')}</span></label>
-                <input type="password" value={manualPK} onChange={(e) => setManualPK(e.target.value)} placeholder={t('createWallet.privateKey') + '...'}
+                <PasswordInput value={manualPK} onChange={(e) => setManualPK(e.target.value)} placeholder={t('createWallet.privateKey') + '...'}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                 <p className="text-[11px] text-red-400/70 mt-1.5 flex items-start gap-1"><Info size={10} className="mt-0.5 flex-shrink-0" />{t('createWallet.pkExplain')}</p>
               </div>
@@ -348,15 +367,39 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
           {tab === 'generate' && (
             <div className="flex flex-col space-y-4">
               {generating ? (
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <RefreshCw size={32} className="text-brand-400 animate-spin" />
+                <div className="text-center py-10 relative">
+                  <style>{`
+                    @keyframes floatUpFade {
+                      0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+                      20% { opacity: 1; transform: translateY(0px) scale(1.1); }
+                      100% { opacity: 0; transform: translateY(-50px) scale(1); }
+                    }
+                    .animate-float-up-fade {
+                      animation: floatUpFade 1.2s ease-out forwards;
+                    }
+                  `}</style>
+                  
+                  <div className="relative h-24 flex items-end justify-center overflow-hidden mb-4">
+                    {floatingEffects.map(effect => (
+                      <div key={effect.key} className="absolute bottom-0 text-center animate-float-up-fade pointer-events-none">
+                        <span className="text-brand-400 font-black text-3xl drop-shadow-[0_0_12px_rgba(56,189,248,0.8)]">+{effect.count}</span>
+                        <p className="text-[10px] text-brand-300/80 font-mono mt-1 bg-surface-900/80 px-2 py-0.5 rounded-full border border-surface-700/50 shadow-lg">{effect.address.substring(0,8)}...{effect.address.substring(34)}</p>
+                      </div>
+                    ))}
+                    {floatingEffects.length === 0 && (
+                      <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center">
+                        <RefreshCw size={32} className="text-brand-400 animate-spin" />
+                      </div>
+                    )}
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{t('createWallet.bulkGenerating') || 'Generating Wallets...'}</h3>
-                  <div className="w-full bg-surface-800 rounded-full h-2.5 mb-2 overflow-hidden">
-                    <div className="bg-brand-500 h-2.5 rounded-full transition-all duration-300" style={{ width: `${(generateProgress / (parseInt(generateCount)||1)) * 100}%` }}></div>
+                  
+                  <h3 className="text-lg font-bold text-white mb-2">{t('createWallet.bulkGenerating', { count: generateCount }) || 'Generating Wallets...'}</h3>
+                  <div className="w-full bg-surface-800 rounded-full h-2.5 mb-2 overflow-hidden shadow-inner">
+                    <div className="bg-gradient-to-r from-brand-600 to-brand-400 h-2.5 rounded-full transition-all duration-300 relative overflow-hidden" style={{ width: `${(generateProgress / (parseInt(generateCount)||1)) * 100}%` }}>
+                       <div className="absolute inset-0 bg-white/20 w-full animate-pulse"></div>
+                    </div>
                   </div>
-                  <p className="text-sm text-surface-400">{generateProgress} / {generateCount}</p>
+                  <p className="text-sm text-surface-400 font-medium">{generateProgress} / {generateCount}</p>
                 </div>
               ) : bulkResult ? (
                 <div className="text-center py-6">

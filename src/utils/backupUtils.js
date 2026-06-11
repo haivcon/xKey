@@ -29,6 +29,7 @@ export const exportPortableBackup = async (wallets, config, userPassword) => {
         const encryptedData = encryptBackup(backupPayload, userPassword);
         const fileName = `xkey_portable_${new Date().getTime()}.xkey`;
 
+        // Write to app cache (no permissions needed on any Android version)
         const fileResult = await Filesystem.writeFile({
             path: fileName,
             data: encryptedData,
@@ -36,15 +37,13 @@ export const exportPortableBackup = async (wallets, config, userPassword) => {
             encoding: Encoding.UTF8
         });
 
+        // Open share sheet so user can save to Downloads, Drive, etc.
         await Share.share({
             title: 'xKey Portable Backup',
-            text: 'Password-protected xKey vault backup. Can be restored on any device.',
+            text: 'Password-protected xKey vault backup.',
             url: fileResult.uri,
             dialogTitle: 'Save Portable Backup'
         });
-
-        // Clean up cache after share
-        try { await Filesystem.deleteFile({ path: fileName, directory: Directory.Cache }); } catch {}
 
         return true;
     } catch (e) {
