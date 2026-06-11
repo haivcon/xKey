@@ -24,8 +24,8 @@ export default function ExportCSVModal({ wallets, onClose }) {
   const toggle = async (key) => {
     const col = COLUMNS.find(c => c.key === key);
     if (col.sensitive && !selected.has(key)) {
-      const ok = await reauthenticate('Authenticate to include sensitive data');
-      if (!ok) { showToast('Authentication required', 'warning'); return; }
+      const ok = await reauthenticate(t('exportCSV.authPrompt') || 'Authenticate to include sensitive data');
+      if (!ok) { showToast(t('authError.vaultLocked') || 'Authentication required', 'warning'); return; }
     }
     const next = new Set(selected);
     next.has(key) ? next.delete(key) : next.add(key);

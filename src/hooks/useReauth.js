@@ -3,9 +3,13 @@ import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 /**
  * Trigger a biometric/lock-screen re-authentication.
  * Returns true if verified, false if cancelled or unavailable.
+ * On devices without biometric, returns true (user already authenticated via PIN).
  */
 export async function reauthenticate(reason = 'Confirm this action') {
   try {
+    const { isAvailable } = await NativeBiometric.isAvailable();
+    if (!isAvailable) return true; // No biometrics → user already authenticated via app PIN
+
     await NativeBiometric.verifyIdentity({
       reason,
       title: 'Security Verification',
@@ -13,14 +17,7 @@ export async function reauthenticate(reason = 'Confirm this action') {
       useFallback: true
     });
     return true;
-  } catch (err) {
-    const msg = (err.message || '').toLowerCase();
-    const code = (err.code || '').toLowerCase();
-    // Block if user actively canceled
-    if (msg.includes('cancel') || code === 'usercancel' || code === 'user_cancel') {
-        return false;
-    }
-    // Allow pass-through if device has no lock screen at all
-    return true;
+  } catch {
+    return false;
   }
 }

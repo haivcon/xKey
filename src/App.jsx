@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
 import Papa from 'papaparse';
 import {
-  UploadCloud, ShieldAlert, BarChart3, Settings, FileDown, Plus, AlertTriangle
+  UploadCloud, ShieldAlert, BarChart3, Settings, FileDown, Plus, AlertTriangle, Heart
 } from 'lucide-react';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 
@@ -20,12 +20,17 @@ import CreateWalletModal from './components/CreateWalletModal';
 import DuplicateDetector from './components/DuplicateDetector';
 import OnboardingScreen, { ONBOARDED_KEY } from './components/OnboardingScreen';
 import SkeletonCard from './components/SkeletonCard';
+import PinLockScreen from './components/PinLockScreen';
+import MoveToFolderModal from './components/MoveToFolderModal';
+import DonateModal from './components/DonateModal';
+import BulkNetworkModal from './components/BulkNetworkModal';
 
 // Utils & Hooks
-import { saveWallets, loadWallets, getEncryptionKey } from './utils/storage';
+import { saveWallets, loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
 import { parseVaultBackupFile } from './utils/backupUtils';
-import { hapticTap, hapticSuccess, hapticWarning } from './utils/haptics';
+import { hapticTap, hapticSuccess } from './utils/haptics';
 import useAutoLock from './hooks/useAutoLock';
+import useAutoBackup from './hooks/useAutoBackup';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
 import { useT } from './contexts/LanguageContext';
@@ -34,6 +39,7 @@ export default function App() {
   // Auth state
   const [aesKey, setAesKey] = useState(null);
   const [authError, setAuthError] = useState('');
+  const [isDecoyMode, setIsDecoyMode] = useState(false);
 
   // Navigation
   const [currentView, setCurrentView] = useState('home');
@@ -42,6 +48,7 @@ export default function App() {
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDonate, setShowDonate] = useState(false);
   const [activeFolder, setActiveFolder] = useState('All');
   const [sortOrder, setSortOrder] = useState('none');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -51,10 +58,13 @@ export default function App() {
   const [showExportCSV, setShowExportCSV] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
+  const [showBulkNetworkModal, setShowBulkNetworkModal] = useState(false);
+  const [movingWallet, setMovingWallet] = useState(null);
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [vaultLoading, setVaultLoading] = useState(true);
+  const [needsPinAuth, setNeedsPinAuth] = useState(false);
 
   // Folder editing
   const [editingFolder, setEditingFolder] = useState(null);
@@ -64,6 +74,7 @@ export default function App() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingBackupData, setPendingBackupData] = useState(null);
   const [importPassword, setImportPassword] = useState('');
+  const [isAppActive, setIsAppActive] = useState(true);
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
@@ -75,6 +86,9 @@ export default function App() {
     setCurrentView('home');
     window.location.reload();
   }, !!aesKey);
+
+  // Auto-backup on app open
+  useAutoBackup(aesKey);
 
   // Hardware Back Button listener
   useEffect(() => {
@@ -123,11 +137,17 @@ export default function App() {
         const { value: onboarded } = await Preferences.get({ key: ONBOARDED_KEY });
         if (!onboarded) { setShowOnboarding(true); }
 
-        const key = await getEncryptionKey();
-        setAesKey(key);
-        const savedWallets = await loadWallets(key);
-        if (savedWallets && savedWallets.length > 0) {
-          setWallets(savedWallets);
+        const hasBio = await isBiometricAvailable();
+        if (hasBio) {
+          const key = await getEncryptionKeyBiometric();
+          setAesKey(key);
+          const savedWallets = await loadWallets(key);
+          if (savedWallets && savedWallets.length > 0) {
+            setWallets(savedWallets);
+          }
+        } else {
+          // No biometric hardware — show in-app PIN screen
+          setNeedsPinAuth(true);
         }
       } catch (err) {
         setAuthError(err.message || "Failed to authenticate.");
@@ -136,6 +156,78 @@ export default function App() {
     };
     authenticate();
   }, []);
+
+  // Called after PIN verification succeeds
+  const handlePinSuccess = async (isDecoy = false) => {
+    try {
+      setIsDecoyMode(isDecoy);
+      const key = await getEncryptionKeyFallback();
+      setAesKey(key);
+      const savedWallets = await loadWallets(key, isDecoy);
+      if (savedWallets && savedWallets.length > 0) {
+        setWallets(savedWallets);
+      } else {
+        setWallets([]); // clear just in case it's a new decoy vault
+      }
+      setNeedsPinAuth(false);
+    } catch (err) {
+      setAuthError(err.message || "Failed to load vault.");
+    }
+  };
+
+  // App Switcher Privacy & Shake to Lock
+  useEffect(() => {
+    // 1. App Switcher Privacy
+    const stateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      setIsAppActive(isActive);
+    });
+
+    // 2. Shake to Lock
+    let lastX = null, lastY = null, lastZ = null;
+    let shakeEnabled = false;
+    let threshold = 15;
+
+    const checkShakeSettings = async () => {
+      const { value: en } = await Preferences.get({ key: 'xkey_shake_to_lock' });
+      shakeEnabled = en === 'true';
+      const { value: sens } = await Preferences.get({ key: 'xkey_shake_sensitivity' });
+      if (sens) threshold = Number(sens);
+    };
+
+    checkShakeSettings();
+    // Re-check when app becomes active
+    const shakeStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) checkShakeSettings();
+    });
+
+    const handleMotion = (e) => {
+      if (!shakeEnabled || needsPinAuth || vaultLoading || !e.accelerationIncludingGravity) return;
+      const { x, y, z } = e.accelerationIncludingGravity;
+      if (lastX !== null) {
+        const deltaX = Math.abs(lastX - x);
+        const deltaY = Math.abs(lastY - y);
+        const deltaZ = Math.abs(lastZ - z);
+        if (deltaX + deltaY + deltaZ > threshold) {
+          // Trigger Lock
+          setNeedsPinAuth(true);
+          setWallets([]);
+          setAesKey(null);
+          hapticSuccess();
+        }
+      }
+      lastX = x;
+      lastY = y;
+      lastZ = z;
+    };
+
+    window.addEventListener('devicemotion', handleMotion);
+
+    return () => {
+      stateListener.then(l => l.remove());
+      shakeStateListener.then(l => l.remove());
+      window.removeEventListener('devicemotion', handleMotion);
+    };
+  }, [needsPinAuth, vaultLoading]);
 
   // ─── File Upload (CSV / .xkey) ───
   const handleFileUpload = async () => {
@@ -168,7 +260,7 @@ export default function App() {
           }
           csvString = new TextDecoder().decode(bytes);
         } catch (e) {
-          showToast('Error reading file data.', 'error');
+          showToast(t('common.errorReadingFile') || 'Error reading file data.', 'error');
           setLoading(false);
           return;
         }
@@ -206,14 +298,14 @@ export default function App() {
 
             const newWallets = [...wallets, ...uniqueNew];
             setWallets(newWallets);
-            await saveWallets(newWallets, aesKey);
+            await saveWallets(newWallets, aesKey, isDecoyMode);
             let msg = t('home.importSuccess', { count: uniqueNew.length, folder: folderName });
             if (skippedCount > 0) msg += t('home.duplicatesSkipped', { count: skippedCount });
             showToast(msg, 'success');
             setLoading(false);
           },
           error: (err) => {
-            showToast('CSV parse error: ' + err.message, 'error');
+            showToast((t('common.csvParseError') || 'CSV parse error: ') + err.message, 'error');
             setLoading(false);
           }
         });
@@ -240,7 +332,7 @@ export default function App() {
       return !(w.address === walletToDelete.address && w.name === walletToDelete.name && w.groupId === walletToDelete.groupId);
     });
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     showToast(t('home.walletDeleted'), 'info');
   };
 
@@ -251,7 +343,7 @@ export default function App() {
       return !(w.address === walletToDelete.address && w.name === walletToDelete.name && w.groupId === walletToDelete.groupId);
     });
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     showToast(t('home.walletDeleted'), 'info');
   };
 
@@ -260,7 +352,7 @@ export default function App() {
     if (!ok) return;
     const updated = wallets.filter(w => (w.groupId || 'Imported') !== folderName);
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     setActiveFolder('All');
     showToast(t('home.folderDeleted', { name: folderName }), 'info');
   };
@@ -269,7 +361,7 @@ export default function App() {
     if (!newName || newName === oldName) { setEditingFolder(null); return; }
     const updated = wallets.map(w => (w.groupId || 'Imported') === oldName ? { ...w, groupId: newName } : w);
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     setEditingFolder(null);
     if (activeFolder === oldName) setActiveFolder(newName);
   };
@@ -280,7 +372,7 @@ export default function App() {
       return (w.address === wallet.address && w.groupId === wallet.groupId) ? { ...w, name: newName } : w;
     });
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
   };
 
   // Edit wallet fields (name, address, PK, seed, balance, notes)
@@ -290,17 +382,33 @@ export default function App() {
       return (w === wallet) ? { ...w, ...updatedFields } : w;
     });
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     showToast(t('walletCard.saved'), 'success');
   };
 
-  // Save newly created wallet
-  const handleSaveNewWallet = async (newWallet) => {
-    const folder = activeFolder !== 'All' ? activeFolder : 'Created';
-    const walletWithGroup = { ...newWallet, groupId: newWallet.groupId || folder, network: newWallet.network || 'ETH', pinned: false };
-    const updated = [...wallets, walletWithGroup];
+  const handleBulkNetworkChange = async (newNetwork) => {
+    const filterSet = new Set(filteredWallets);
+    const updated = wallets.map(w => filterSet.has(w) ? { ...w, network: newNetwork } : w);
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
+    showToast(t('common.updatedNetwork', { count: filteredWallets.length }) || `Updated network for ${filteredWallets.length} wallets`, 'success');
+    setShowBulkNetworkModal(false);
+  };
+
+  // Save newly created wallet
+  const handleSaveWallet = async (newWalletData) => {
+    const newWalletsArr = Array.isArray(newWalletData) ? newWalletData : [newWalletData];
+    const folder = activeFolder !== 'All' ? activeFolder : 'Created';
+    const processed = newWalletsArr.map(w => ({ 
+        ...w, 
+        groupId: w.groupId || folder, 
+        network: w.network || 'ETH', 
+        pinned: false,
+        createdAt: w.createdAt || Date.now()
+    }));
+    const updated = [...processed, ...wallets];
+    setWallets(updated);
+    await saveWallets(updated, aesKey, isDecoyMode);
   };
 
   // Toggle pin
@@ -310,8 +418,27 @@ export default function App() {
       return (w === wallet) ? { ...w, pinned: !w.pinned } : w;
     });
     setWallets(updated);
-    await saveWallets(updated, aesKey);
+    await saveWallets(updated, aesKey, isDecoyMode);
     hapticTap();
+  };
+
+  // Move wallet to a different folder
+  const handleMoveWallet = async (wallet, newFolder) => {
+    const updated = wallets.map(w => {
+      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: newFolder } : w;
+      return (w === wallet) ? { ...w, groupId: newFolder } : w;
+    });
+    setWallets(updated);
+    await saveWallets(updated, aesKey, isDecoyMode);
+    showToast(t('home.movedToFolder', { folder: newFolder }), 'success');
+  };
+
+  // Self-destruct: wipe all data after too many failed PIN attempts
+  const handleSelfDestruct = async () => {
+    const { wipeAllData } = await import('./utils/storage');
+    await wipeAllData();
+    await Preferences.clear();
+    window.location.reload();
   };
 
   // Handle portable backup password submission
@@ -332,7 +459,7 @@ export default function App() {
 
       const newWallets = [...wallets, ...uniqueBackup];
       setWallets(newWallets);
-      await saveWallets(newWallets, aesKey);
+      await saveWallets(newWallets, aesKey, isDecoyMode);
       let msg = t('home.backupImported', { count: uniqueBackup.length });
       if (skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
       showToast(msg, 'success');
@@ -366,9 +493,22 @@ export default function App() {
 
   if (authError) return <AuthErrorScreen error={authError} />;
 
+  if (needsPinAuth && !vaultLoading) {
+    return (
+      <>
+        <PinLockScreen onSuccess={handlePinSuccess} onSelfDestruct={handleSelfDestruct} />
+        {!isAppActive && (
+          <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
+            <img src="/logo.png" alt="xKey" className="w-20 h-20 opacity-30" />
+          </div>
+        )}
+      </>
+    );
+  }
+
   if (!aesKey) {
     return (
-      <div className="min-h-screen bg-surface-900 splash-bg flex flex-col items-center justify-center">
+      <div className={`min-h-screen bg-surface-950 text-white font-sans overflow-hidden flex flex-col ${!isAppActive ? 'blur-xl pointer-events-none' : ''} items-center justify-center`}>
         <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-surface-400 text-sm">{t('home.unlocking')}</p>
       </div>
@@ -381,6 +521,7 @@ export default function App() {
         aesKey={aesKey}
         onBack={() => setCurrentView('home')}
         onWipe={handleWipe}
+        onImport={(newWallets) => setWallets(newWallets)}
       />
     );
   }
@@ -444,7 +585,8 @@ export default function App() {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30">
+    <>
+    <div className={`min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
 
       {/* Header */}
       <header className="sticky top-0 z-10 bg-surface-900/80 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
@@ -480,6 +622,9 @@ export default function App() {
             <button onClick={() => { hapticTap(); setCurrentView('dashboard'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title="Analytics">
               <BarChart3 size={18} />
             </button>
+            <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title="Donate">
+              <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
+            </button>
             <button onClick={() => { hapticTap(); setCurrentView('settings'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title="Settings">
               <Settings size={20} />
             </button>
@@ -487,15 +632,15 @@ export default function App() {
         </div>
 
         {wallets.length > 0 && (
-          <div className="glass-card p-4 flex justify-between items-end mb-2">
-            <div>
-              <p className="text-surface-400 text-xs uppercase tracking-wider mb-1">{t('home.totalAssets')}</p>
-              <h2 className="text-3xl font-bold text-white tracking-tight">
+          <div className="glass-card px-4 py-2 flex justify-between items-center mb-0 mt-1">
+            <div className="flex flex-col">
+              <span className="text-surface-400 text-[10px] font-semibold tracking-wider uppercase">{t('home.totalAssets')}</span>
+              <span className="text-lg font-bold text-white leading-tight">
                 ${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-              </h2>
+              </span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-lg">
-              <ShieldAlert size={14} />
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md">
+              <ShieldAlert size={12} />
               {t('home.offlineVault')}
             </div>
           </div>
@@ -545,9 +690,11 @@ export default function App() {
             <ActionBar
               searchQuery={searchQuery} onSearchChange={setSearchQuery}
               sortOrder={sortOrder} onSortChange={setSortOrder}
-              onUpload={handleFileUpload} loading={loading}
               activeFilter={activeFilter} onFilterChange={setActiveFilter}
-              onAddWallet={() => setShowCreateWallet(true)}
+              onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
+              onBulkNetwork={() => { hapticTap(); setShowBulkNetworkModal(true); }}
+              onUpload={() => { hapticTap(); handleFileUpload(); }}
+              loading={loading}
             />
 
             <div className="space-y-3">
@@ -571,6 +718,7 @@ export default function App() {
                     onRename={(newName) => handleRenameWallet(w, newName)}
                     onEdit={(updatedFields) => handleEditWallet(w, updatedFields)}
                     onPin={() => handleTogglePin(w)}
+                    onMove={(wallet) => setMovingWallet(wallet)}
                   />
                 ))
               )}
@@ -592,10 +740,12 @@ export default function App() {
         />
       )}
 
+      {showDonate && <DonateModal onClose={() => setShowDonate(false)} />}
+
       {showCreateWallet && (
         <CreateWalletModal
           onClose={() => setShowCreateWallet(false)}
-          onSave={handleSaveNewWallet}
+          onSave={handleSaveWallet}
           onShowQR={(data, title, subtitle) => setQrModalData({ isOpen: true, data, title, subtitle })}
           existingWallets={wallets}
         />
@@ -606,6 +756,23 @@ export default function App() {
           wallets={wallets}
           onDeleteWallet={handleDeleteWalletDirect}
           onClose={() => setShowDuplicates(false)}
+        />
+      )}
+
+      {movingWallet && (
+        <MoveToFolderModal
+          wallet={movingWallet}
+          folders={['All', ...new Set(wallets.map(w => w.groupId || 'Imported'))]}
+          onMove={handleMoveWallet}
+          onClose={() => setMovingWallet(null)}
+        />
+      )}
+
+      {showBulkNetworkModal && (
+        <BulkNetworkModal 
+          wallets={wallets} 
+          onClose={() => setShowBulkNetworkModal(false)} 
+          onSave={handleBulkNetworkChange} 
         />
       )}
 
@@ -636,5 +803,12 @@ export default function App() {
         </div>
       )}
     </div>
+    {/* App Switcher Privacy Overlay */}
+    {!isAppActive && (
+      <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
+        <img src="/logo.png" alt="xKey" className="w-20 h-20 opacity-30 animate-pulse" />
+      </div>
+    )}
+    </>
   );
 }

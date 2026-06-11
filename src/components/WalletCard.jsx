@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, Link } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import { secureCopy } from '../utils/clipboard';
+import { useToast } from '../contexts/ToastContext';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -15,13 +16,14 @@ const NETWORK_COLORS = {
   Solana: { bg: 'bg-green-500/15', text: 'text-green-400', label: 'SOL' },
   Tron: { bg: 'bg-red-600/15', text: 'text-red-300', label: 'TRX' },
   Base: { bg: 'bg-blue-600/15', text: 'text-blue-300', label: 'BASE' },
+  XLAYER: { bg: 'bg-orange-500/15', text: 'text-orange-400', label: 'XLAYER' },
 };
 
 const NETWORK_KEYS = Object.keys(NETWORK_COLORS);
 
 export { NETWORK_COLORS, NETWORK_KEYS };
 
-export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin }) {
+export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin, onMove }) {
   const [expanded, setExpanded] = useState(false);
   const [showPk, setShowPk] = useState(false);
   const [showSeed, setShowSeed] = useState(false);
@@ -30,7 +32,28 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [editName, setEditName] = useState(wallet.name || '');
   const [editMode, setEditMode] = useState(false);
   const [editFields, setEditFields] = useState({});
+  const [longPressActive, setLongPressActive] = useState(false);
+  const pressTimerRef = useRef(null);
   const t = useT();
+  const { showToast } = useToast();
+
+  // Long-press quick copy address
+  const handleTouchStart = () => {
+    pressTimerRef.current = setTimeout(() => {
+      if (wallet.address) {
+        secureCopy(wallet.address);
+        hapticSuccess();
+        showToast(t('walletCard.addressCopied', { address: wallet.address.substring(0, 10) }), 'success');
+        setLongPressActive(true);
+      }
+    }, 500);
+  };
+  const handleTouchEnd = () => {
+    clearTimeout(pressTimerRef.current);
+    if (longPressActive) {
+      setLongPressActive(false);
+    }
+  };
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
@@ -74,7 +97,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   return (
     <div className="glass-card overflow-hidden border border-surface-700 hover:border-brand-500/30 transition-colors">
-      <div className="p-4 flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50" onClick={() => setExpanded(!expanded)}>
+      <div className="p-4 flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50"
+        onClick={() => { if (!longPressActive) setExpanded(!expanded); }}
+        onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}
+        onMouseDown={handleTouchStart} onMouseUp={handleTouchEnd} onMouseLeave={handleTouchEnd}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center flex-shrink-0"><Wallet size={20} className="text-brand-400" /></div>
           <div className="min-w-0">
@@ -152,10 +178,13 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={cancelEdit}
-                  className="btn-glow flex-1 flex items-center justify-center gap-1.5 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg text-sm transition-colors">
-                  <X size={14} /> {t('common.cancel')}
-                </button>
+                {onMove && (
+                    <button onClick={() => { hapticTap(); onMove(wallet); }}
+                    className="btn-icon-glow flex-1 flex flex-col items-center justify-center gap-1.5 p-3 hover:bg-surface-700/50 rounded-xl transition-colors text-surface-400 hover:text-brand-400">
+                    <FolderPlus size={18} />
+                    <span className="text-xs font-medium">{t('walletCard.moveBtn')}</span>
+                    </button>
+                )}
                 <button onClick={saveEdit}
                   className="btn-glow btn-glow-success flex-1 flex items-center justify-center gap-1.5 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors">
                   <Save size={14} /> {t('walletCard.saveChanges')}
@@ -169,6 +198,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <button onClick={() => { hapticTap(); onPin && onPin(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-amber-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors">{wallet.pinned ? <PinOff size={12} /> : <Pin size={12} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}</button>
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-cyan-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Settings2 size={12} /> {t('walletCard.edit')}</button>
+                {onMove && <button onClick={() => { hapticTap(); onMove(wallet); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><FolderInput size={12} /> Move</button>}
                 <button onClick={() => { hapticWarning(); onDelete(); }} className="btn-glow btn-glow-danger flex items-center gap-1 text-xs text-surface-400 hover:text-red-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Trash2 size={12} /> {t('walletCard.delete')}</button>
               </div>
 

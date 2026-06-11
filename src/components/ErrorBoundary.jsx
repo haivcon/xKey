@@ -51,18 +51,16 @@ export default class ErrorBoundary extends Component {
           }}>
             ⚠️
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px', color: '#fff' }}>
-            Something went wrong
-          </h1>
+          <h2 className="text-xl font-bold text-white mb-2">{this.props.t?.('common.error') || 'Something went wrong'}</h2>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5' }}>
-            xKey encountered an unexpected error. Your data is safe — try reloading the app.
+            {this.props.t?.('common.errorDesc') || 'xKey encountered an unexpected error. Your data is safe — try reloading the app.'}
           </p>
 
           <button onClick={this.handleReload} style={{
             width: '100%', padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
             background: '#0ea5e9', color: '#fff', fontWeight: '600', fontSize: '14px', marginBottom: '10px'
           }}>
-            Reload App
+              {this.props.t?.('common.reload') || 'Reload App'}
           </button>
 
           <button onClick={this.handleReset} style={{
@@ -70,7 +68,7 @@ export default class ErrorBoundary extends Component {
             background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: '600', fontSize: '14px',
             cursor: 'pointer', marginBottom: '16px'
           }}>
-            Wipe & Reset (Last Resort)
+              {this.props.t?.('authError.wipeReset') || 'Wipe & Reset (Last Resort)'}
           </button>
 
           <button onClick={() => this.setState({ showDetails: !showDetails })} style={{

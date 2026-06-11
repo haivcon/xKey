@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, ShieldAlert, ShieldCheck, Sun, Moon, Download, Lock, Globe, Check, ChevronDown, Timer, Clipboard, KeyRound, Monitor } from 'lucide-react';
+import { ArrowLeft, Trash2, ShieldAlert, ShieldCheck, Sun, Moon, Download, Lock, Globe, Check, ChevronDown, Timer, Clipboard, KeyRound, Monitor, ShieldOff, RefreshCw, Save, QrCode, Heart, Camera } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
-import { loadWallets } from '../utils/storage';
+import { loadWallets, saveWallets } from '../utils/storage';
 import { exportPortableBackup } from '../utils/backupUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../contexts/ToastContext';
@@ -12,6 +12,12 @@ import { LANGUAGES } from '../locales';
 import { AUTOLOCK_KEY } from '../hooks/useAutoLock';
 import { CLIPBOARD_TIMEOUT_KEY, CLIPBOARD_OPTIONS } from '../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../utils/haptics';
+import { PIN_HASH_KEY, KILL_SWITCH_KEY } from './PinLockScreen';
+import { isBiometricAvailable } from '../utils/storage';
+import CryptoJS from 'crypto-js';
+import QRTransferModal from './QRTransferModal';
+import QRReceiveModal from './QRReceiveModal';
+import DonateModal from './DonateModal';
 
 const AUTOLOCK_OPTIONS = [
   { label: '1 min', value: 60000 },
@@ -26,7 +32,8 @@ const THEME_OPTIONS = [
   { key: 'amoled', icon: Monitor, label: 'settings.amoledMode', color: 'slate' },
 ];
 
-export default function SettingsScreen({ aesKey, onBack, onWipe }) {
+export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
+    const [activeTab, setActiveTab] = useState('general');
     const [exporting, setExporting] = useState(false);
     const [showPasswordInput, setShowPasswordInput] = useState(false);
     const [backupPassword, setBackupPassword] = useState('');
@@ -41,6 +48,40 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
     const [showMPSetup, setShowMPSetup] = useState(false);
     const [mpInput, setMpInput] = useState('');
     const [mpConfirm, setMpConfirm] = useState('');
+
+    // Change PIN state
+    const [showChangePin, setShowChangePin] = useState(false);
+    const [pinStep, setPinStep] = useState('current'); // current | new | confirm
+    const [pinCurrent, setPinCurrent] = useState('');
+    const [pinNew, setPinNew] = useState('');
+    const [pinConfirmVal, setPinConfirmVal] = useState('');
+    const [pinError, setPinError] = useState('');
+    const [hasPinSet, setHasPinSet] = useState(false);
+
+    // Kill Switch state
+    const [killSwitchEnabled, setKillSwitchEnabled] = useState(false);
+    
+    // New Features
+    const [hasDecoyPin, setHasDecoyPin] = useState(false);
+    const [showDecoyPinInput, setShowDecoyPinInput] = useState(false);
+    const [decoyPinInput, setDecoyPinInput] = useState('');
+    const [shakeToLockEnabled, setShakeToLockEnabled] = useState(false);
+    const [shakeSensitivity, setShakeSensitivity] = useState(15);
+    const hashPin = (p) => CryptoJS.SHA256(p + 'xkey_pin_salt_v1').toString();
+
+    // Auto-Backup state
+    const [autoBackupInterval, setAutoBackupInterval] = useState('off');
+    const [showAutoBackup, setShowAutoBackup] = useState(false);
+    const [autoBackupPassword, setAutoBackupPassword] = useState('');
+
+    // Is biometric available
+    const [hasBiometric, setHasBiometric] = useState(true);
+
+    // QR Transfer
+    const [showQRTransfer, setShowQRTransfer] = useState(false);
+    const [showQRReceive, setShowQRReceive] = useState(false);
+    const [transferWallets, setTransferWallets] = useState([]);
+    const [showDonate, setShowDonate] = useState(false);
 
     const { theme, setTheme } = useTheme();
     const { showToast } = useToast();
@@ -70,6 +111,29 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
             }
         };
         loadCurrentSettings();
+    }, []);
+
+    // Load PIN/Kill Switch/Auto-Backup settings
+    useEffect(() => {
+        (async () => {
+            const { value: pinHash } = await Preferences.get({ key: PIN_HASH_KEY });
+            setHasPinSet(!!pinHash);
+            const { value: ks } = await Preferences.get({ key: KILL_SWITCH_KEY });
+            setKillSwitchEnabled(ks === 'true');
+            const { value: abInterval } = await Preferences.get({ key: 'xkey_autobackup_interval' });
+            if (abInterval) setAutoBackupInterval(abInterval);
+            const { value: abPass } = await Preferences.get({ key: 'xkey_autobackup_password' });
+            if (abPass) setAutoBackupPassword(abPass);
+            const bio = await isBiometricAvailable();
+            setHasBiometric(bio);
+
+            const { value: decoyHash } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
+            setHasDecoyPin(!!decoyHash);
+            const { value: shakeVal } = await Preferences.get({ key: 'xkey_shake_to_lock' });
+            setShakeToLockEnabled(shakeVal === 'true');
+            const { value: shakeSens } = await Preferences.get({ key: 'xkey_shake_sensitivity' });
+            if (shakeSens) setShakeSensitivity(Number(shakeSens));
+        })();
     }, []);
 
     const handleExportPortable = async () => {
@@ -149,6 +213,114 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
         showToast(t('settings.masterPasswordRemoved'), 'success');
     };
 
+
+
+    const handleChangePin = async () => {
+        if (pinStep === 'current') {
+            const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
+            if (hashPin(pinCurrent) !== stored) {
+                setPinError('Incorrect current PIN');
+                return;
+            }
+            setPinStep('new');
+            setPinError('');
+        } else if (pinStep === 'new') {
+            if (pinNew.length < 6) {
+                setPinError('PIN must be 6 digits');
+                return;
+            }
+            setPinStep('confirm');
+            setPinError('');
+        } else if (pinStep === 'confirm') {
+            if (pinConfirmVal !== pinNew) {
+                setPinError(t('settings.pinsNotMatch'));
+                setPinStep('new');
+                setPinNew('');
+                setPinConfirmVal('');
+                return;
+            }
+            await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(pinNew) });
+            hapticSuccess();
+            showToast(t('settings.pinChangedSuccess'), 'success');
+            setShowChangePin(false);
+            setPinCurrent(''); setPinNew(''); setPinConfirmVal('');
+            setPinStep('current');
+        }
+    };
+
+    const handleToggleKillSwitch = async () => {
+        const newVal = !killSwitchEnabled;
+        if (newVal) {
+            const confirm = await showConfirm(
+                t('settings.killSwitchConfirm'),
+                { danger: true }
+            );
+            if (!confirm) return;
+        }
+        await Preferences.set({ key: KILL_SWITCH_KEY, value: String(newVal) });
+        setKillSwitchEnabled(newVal);
+        await Preferences.set({ key: KILL_SWITCH_KEY, value: String(newVal) });
+        showToast(newVal ? t('settings.killSwitchEnabled') : t('settings.killSwitchDisabled'), newVal ? 'warning' : 'info');
+    };
+
+    const handleToggleDecoy = async () => {
+        if (hasDecoyPin) {
+            const confirmed = await showConfirm(t('settings.decoyRemoveConfirm') || 'Remove Decoy Vault PIN?', t('settings.decoyRemoveWarning') || 'Are you sure you want to disable the Decoy Vault?');
+            if (confirmed) {
+                await Preferences.remove({ key: 'xkey_decoy_pin_hash' });
+                setHasDecoyPin(false);
+                showToast(t('settings.decoyRemoved') || 'Decoy Vault disabled', 'info');
+            }
+        } else {
+            setShowDecoyPinInput(!showDecoyPinInput);
+        }
+    };
+
+    const handleSetDecoyPin = async () => {
+        if (decoyPinInput.length !== 6) {
+            showToast(t('pinLock.enter6Digits') || 'PIN must be 6 digits', 'error');
+            return;
+        }
+        const { value: mainPinHash } = await Preferences.get({ key: PIN_HASH_KEY });
+        if (hashPin(decoyPinInput) === mainPinHash) {
+             showToast(t('settings.decoySameAsMain') || 'Decoy PIN must be different from main PIN', 'error');
+             return;
+        }
+        await Preferences.set({ key: 'xkey_decoy_pin_hash', value: hashPin(decoyPinInput) });
+        setHasDecoyPin(true);
+        setShowDecoyPinInput(false);
+        setDecoyPinInput('');
+        showToast(t('settings.decoyEnabled') || 'Decoy Vault enabled', 'success');
+    };
+
+    const handleToggleShakeToLock = async () => {
+        const newVal = !shakeToLockEnabled;
+        setShakeToLockEnabled(newVal);
+        await Preferences.set({ key: 'xkey_shake_to_lock', value: newVal ? 'true' : 'false' });
+    };
+
+    const handleChangeShakeSensitivity = async (e) => {
+        const val = Number(e.target.value);
+        setShakeSensitivity(val);
+        await Preferences.set({ key: 'xkey_shake_sensitivity', value: String(val) });
+    };
+
+    const saveAutoBackup = async (interval) => {
+        await Preferences.set({ key: 'xkey_autobackup_interval', value: interval });
+        setAutoBackupInterval(interval);
+        showToast(t('settings.autoBackupSet', { interval: interval }), 'success');
+    };
+
+    const saveAutoBackupPassword = async () => {
+        if (autoBackupPassword.length < 6) {
+            showToast(t('settings.passwordMinError'), 'warning');
+            return;
+        }
+        await Preferences.set({ key: 'xkey_autobackup_password', value: autoBackupPassword });
+        hapticSuccess();
+        showToast(t('settings.autoBackupPasswordSaved'), 'success');
+    };
+
     return (
         <div className="min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
             <header className="flex items-center justify-between mb-8 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
@@ -161,10 +333,26 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
                 <div className="w-10"></div>
             </header>
 
+            <div className="max-w-xl mx-auto mb-6">
+                <div className="flex bg-surface-800/50 p-1 rounded-xl">
+                    <button onClick={() => { hapticTap(); setActiveTab('general'); }} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'general' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80'}`}>
+                        {t('settings.tabGeneral') || 'Chung'}
+                    </button>
+                    <button onClick={() => { hapticTap(); setActiveTab('security'); }} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'security' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80'}`}>
+                        {t('settings.tabSecurity') || 'Bảo mật'}
+                    </button>
+                    <button onClick={() => { hapticTap(); setActiveTab('data'); }} className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'data' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80'}`}>
+                        {t('settings.tabData') || 'Dữ liệu'}
+                    </button>
+                </div>
+            </div>
+
             <div className="max-w-xl mx-auto space-y-6">
 
-                {/* ═══ Language Picker ═══ */}
-                <div className="glass-card overflow-hidden">
+                {activeTab === 'general' && (
+                    <>
+                        {/* ═══ Language Picker ═══ */}
+                        <div className="glass-card overflow-hidden">
                     <button
                         onClick={() => { hapticTap(); setShowLangPicker(!showLangPicker); }}
                         className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
@@ -238,7 +426,33 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
                     </div>
                 </div>
 
-                {/* ═══ Security Section ═══ */}
+                {/* ═══ Donate ═══ */}
+                <div className="bg-gradient-to-br from-brand-600/10 via-fuchsia-500/10 to-surface-800 border border-brand-500/20 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 blur-3xl rounded-full"></div>
+                    <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                                <Heart size={20} className="text-white fill-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-white">{t('donate.title')}</h2>
+                                <p className="text-xs text-brand-400">{t('donate.subtitle')}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setShowDonate(true)}
+                            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg shadow-brand-500/20 transition-all active:scale-95"
+                        >
+                            Donate
+                        </button>
+                    </div>
+                </div>
+                </>
+                )}
+
+                {activeTab === 'security' && (
+                    <>
+                        {/* ═══ Security Section ═══ */}
                 <div className="glass-card overflow-hidden">
                     <div className="p-4 border-b border-surface-700/50">
                         <div className="flex items-center gap-3">
@@ -352,6 +566,205 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
                     </div>
                 </div>
 
+                {/* ═══ PIN & Kill Switch (only if no biometric) ═══ */}
+                {!hasBiometric && (
+                    <div className="glass-card overflow-hidden">
+                        <div className="p-4 border-b border-surface-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                    <Lock size={20} className="text-amber-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-medium">{t('settings.pinLockTitle')}</h3>
+                                    <p className="text-xs text-surface-400">{t('settings.pinLockDesc')}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Change PIN */}
+                        <button onClick={() => { hapticTap(); setShowChangePin(!showChangePin); }}
+                            className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors border-b border-surface-700/30">
+                            <div className="flex items-center gap-3">
+                                <RefreshCw size={16} className="text-surface-400" />
+                                <span className="text-sm font-medium">{t('settings.changePin')}</span>
+                            </div>
+                            <ChevronDown size={16} className={`text-surface-500 transition-transform ${showChangePin ? 'rotate-180' : ''}`} />
+                        </button>
+                        {showChangePin && (
+                            <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
+                                {pinStep === 'current' && (
+                                    <input type="password" value={pinCurrent} onChange={e => setPinCurrent(e.target.value)}
+                                        placeholder={t('settings.currentPin')} maxLength={6} autoFocus
+                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                )}
+                                {pinStep === 'new' && (
+                                    <input type="password" value={pinNew} onChange={e => setPinNew(e.target.value)}
+                                        placeholder={t('settings.newPin')} maxLength={6} autoFocus
+                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                )}
+                                {pinStep === 'confirm' && (
+                                    <input type="password" value={pinConfirmVal} onChange={e => setPinConfirmVal(e.target.value)}
+                                        placeholder={t('settings.confirmNewPin')} maxLength={6} autoFocus
+                                        className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                )}
+                                {pinError && <p className="text-red-400 text-xs">{pinError}</p>}
+                                <button onClick={handleChangePin}
+                                    className="btn-glow w-full bg-brand-600 text-white py-2 rounded-lg text-xs font-medium">
+                                    {pinStep === 'current' ? t('settings.verifyBtn') : pinStep === 'new' ? t('settings.nextBtn') : t('settings.save')}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Kill Switch */}
+                        <button onClick={handleToggleKillSwitch}
+                            className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors">
+                            <div className="flex items-center gap-3">
+                                <ShieldOff size={16} className={killSwitchEnabled ? 'text-red-400' : 'text-surface-400'} />
+                                <div>
+                                    <h3 className="text-white font-medium">{t('settings.killSwitchTitle')}</h3>
+                                    <p className="text-xs text-surface-400">{t('settings.killSwitchDesc')}</p>
+                                </div>
+                            </div>
+                            <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${killSwitchEnabled ? 'bg-red-500' : 'bg-surface-700'}`}>
+                                <div className={`w-5 h-5 rounded-full bg-white transition-transform ${killSwitchEnabled ? 'translate-x-4' : ''}`} />
+                            </div>
+                        </button>
+
+                        {/* Decoy Vault */}
+                        <div className="border-t border-surface-800 p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <ShieldAlert size={16} className={hasDecoyPin ? 'text-amber-400' : 'text-surface-400'} />
+                                    <div>
+                                        <h3 className="text-white font-medium">{t('settings.decoyVaultTitle') || 'Decoy Vault'}</h3>
+                                        <p className="text-xs text-surface-400">{t('settings.decoyVaultDesc') || 'Set a fake PIN to open an empty vault'}</p>
+                                    </div>
+                                </div>
+                                <button onClick={handleToggleDecoy} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${hasDecoyPin ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-surface-700 text-white hover:bg-surface-600'}`}>
+                                    {hasDecoyPin ? t('settings.removeDecoyPin') || 'Remove' : t('settings.setDecoyPin') || 'Setup'}
+                                </button>
+                            </div>
+                            {showDecoyPinInput && !hasDecoyPin && (
+                                <div className="flex items-center gap-2 mt-2 bg-surface-900/50 p-2 rounded-lg">
+                                    <input 
+                                        type="password" 
+                                        value={decoyPinInput} 
+                                        onChange={(e) => setDecoyPinInput(e.target.value.replace(/[^0-9]/g, ''))}
+                                        placeholder="6-digit PIN" 
+                                        maxLength={6} 
+                                        className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" 
+                                    />
+                                    <button onClick={handleSetDecoyPin} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-500 transition-colors">
+                                        {t('settings.save') || 'Save'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Shake to Lock */}
+                        <div className="border-t border-surface-800">
+                            <button onClick={handleToggleShakeToLock}
+                                className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Monitor size={16} className={shakeToLockEnabled ? 'text-brand-400' : 'text-surface-400'} />
+                                    <div className="text-left">
+                                        <h3 className="text-white font-medium">{t('settings.shakeToLockTitle') || 'Shake to Lock'}</h3>
+                                        <p className="text-xs text-surface-400">{t('settings.shakeToLockDesc') || 'Lock app immediately when shaking device'}</p>
+                                    </div>
+                                </div>
+                                <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${shakeToLockEnabled ? 'bg-brand-500' : 'bg-surface-700'}`}>
+                                    <div className={`w-5 h-5 rounded-full bg-white transition-transform ${shakeToLockEnabled ? 'translate-x-4' : ''}`} />
+                                </div>
+                            </button>
+                            {shakeToLockEnabled && (
+                                <div className="px-4 pb-4">
+                                    <div className="flex items-center justify-between text-xs text-surface-400 mb-2">
+                                        <span>{t('settings.shakeSensitivity') || 'Sensitivity'}</span>
+                                        <span>{shakeSensitivity === 10 ? (t('settings.high') || 'High') : shakeSensitivity === 15 ? (t('settings.medium') || 'Medium') : (t('settings.low') || 'Low')}</span>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="10" 
+                                        max="25" 
+                                        step="5"
+                                        value={shakeSensitivity} 
+                                        onChange={handleChangeShakeSensitivity}
+                                        className="w-full h-1 bg-surface-700 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-surface-500 mt-1">
+                                        <span>{t('settings.high') || 'High'}</span>
+                                        <span>{t('settings.low') || 'Low'}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══ Danger Zone ═══ */}
+                <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                            <ShieldAlert size={20} className="text-red-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-red-400">{t('settings.dangerZone')}</h2>
+                            <p className="text-xs text-red-400/70">{t('settings.dangerSubtitle')}</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleWipe}
+                        className="btn-glow btn-glow-danger w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                    >
+                        <Trash2 size={18} />
+                        {t('settings.wipeAll')}
+                    </button>
+                    <p className="text-xs text-surface-500 mt-3 text-center">{t('settings.wipeDesc')}</p>
+                </div>
+                </>
+                )}
+
+                {activeTab === 'data' && (
+                    <>
+                        {/* ═══ Auto-Backup ═══ */}
+                <div className="glass-card overflow-hidden">
+                    <button onClick={() => { hapticTap(); setShowAutoBackup(!showAutoBackup); }}
+                        className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                                <Save size={20} className="text-violet-400" />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-white font-medium">{t('settings.autoBackupTitle')}</h3>
+                                <p className="text-xs text-surface-400">{t('settings.autoBackupStatus', { interval: t(`settings.${autoBackupInterval}`) || autoBackupInterval })}</p>
+                            </div>
+                        </div>
+                        <ChevronDown size={18} className={`text-surface-500 transition-transform ${showAutoBackup ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showAutoBackup && (
+                        <div className="px-4 pb-4 border-t border-surface-700/50 space-y-3 pt-3">
+                            <div className="flex gap-2">
+                                {['off', 'daily', 'weekly'].map(opt => (
+                                    <button key={opt} onClick={() => saveAutoBackup(opt)}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${autoBackupInterval === opt ? 'bg-brand-500/15 border-2 border-brand-500/40 text-white' : 'bg-surface-800 border-2 border-transparent text-surface-400 hover:text-white'}`}>
+                                        {t(`settings.${opt}`) || opt}
+                                    </button>
+                                ))}
+                            </div>
+                            {autoBackupInterval !== 'off' && (
+                                <div className="flex gap-2">
+                                    <input type="password" value={autoBackupPassword} onChange={e => setAutoBackupPassword(e.target.value)}
+                                        placeholder={t('settings.backupPassword')}
+                                        className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                                    <button onClick={saveAutoBackupPassword}
+                                        className="btn-glow bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm transition-all">{t('common.save')}</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 {/* ═══ Vault Backup ═══ */}
                 <div className="glass-card p-6">
                     <div className="flex items-center gap-3 mb-4">
@@ -413,30 +826,75 @@ export default function SettingsScreen({ aesKey, onBack, onWipe }) {
                             </div>
                         </div>
                     )}
-                </div>
 
-                {/* ═══ Danger Zone ═══ */}
-                <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6 mt-8">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                            <ShieldAlert size={20} className="text-red-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-red-400">{t('settings.dangerZone')}</h2>
-                            <p className="text-xs text-red-400/70">{t('settings.dangerSubtitle')}</p>
-                        </div>
+                    <div className="mt-4 pt-4 border-t border-surface-700/50 flex gap-2">
+                        <button onClick={async () => {
+                            hapticTap();
+                            const w = await loadWallets(aesKey);
+                            setTransferWallets(w || []);
+                            setShowQRTransfer(true);
+                        }}
+                            className="btn-glow flex-1 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <QrCode size={16} />
+                            {t('settings.qrTransferBtn')}
+                        </button>
+                        <button onClick={() => {
+                            hapticTap();
+                            setShowQRReceive(true);
+                        }}
+                            className="btn-glow flex-1 bg-fuchsia-500/10 hover:bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/20 font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <Camera size={16} />
+                            {t('settings.qrReceiveBtn') || 'Receive QR'}
+                        </button>
                     </div>
-
-                    <button
-                        onClick={handleWipe}
-                        className="btn-glow btn-glow-danger w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
-                    >
-                        <Trash2 size={18} />
-                        {t('settings.wipeAll')}
-                    </button>
-                    <p className="text-xs text-surface-500 mt-3 text-center">{t('settings.wipeDesc')}</p>
                 </div>
+                </>
+                )}
             </div>
+
+            {showQRTransfer && transferWallets.length > 0 && (
+                <QRTransferModal
+                    wallets={transferWallets}
+                    onClose={() => setShowQRTransfer(false)}
+                />
+            )}
+
+            {showQRReceive && (
+                <QRReceiveModal
+                    onClose={() => setShowQRReceive(false)}
+                    onImport={async (importedWallets) => {
+                        setShowQRReceive(false);
+                        const current = await loadWallets(aesKey) || [];
+                        
+                        // Filter duplicates
+                        const existingAddrs = new Set(current.map(w => w.address?.toLowerCase()).filter(Boolean));
+                        const uniqueNew = importedWallets.filter(w => {
+                            if (!w.address) return true;
+                            const lower = w.address.toLowerCase();
+                            if (existingAddrs.has(lower)) return false;
+                            existingAddrs.add(lower);
+                            return true;
+                        });
+
+                        const skippedCount = importedWallets.length - uniqueNew.length;
+                        const finalWallets = [...current, ...uniqueNew];
+                        
+                        await saveWallets(finalWallets, aesKey);
+                        
+                        if (typeof onImport === 'function') {
+                            onImport(finalWallets);
+                        }
+                        
+                        let msg = t('home.importSuccess', { count: uniqueNew.length, folder: 'QR Transfer' });
+                        if (skippedCount > 0) msg += t('home.duplicatesSkipped', { count: skippedCount });
+                        showToast(msg, 'success');
+                    }}
+                />
+            )}
+
+            {showDonate && (
+                <DonateModal onClose={() => setShowDonate(false)} />
+            )}
         </div>
     );
 }

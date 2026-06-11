@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Search, ArrowDownUp, UploadCloud, Filter, Plus } from 'lucide-react';
+import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 
 export default function ActionBar({
   searchQuery, onSearchChange, sortOrder, onSortChange,
-  onUpload, loading, activeFilter, onFilterChange, onAddWallet
+  onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
@@ -18,6 +18,7 @@ export default function ActionBar({
     { key: 'hasBalance', label: t('actionBar.hasBalance') },
     { key: 'empty', label: t('actionBar.empty') },
     // Network filters
+    { key: 'net:XLAYER', label: 'XLAYER', group: 'chain' },
     { key: 'net:ETH', label: 'ETH', group: 'chain' },
     { key: 'net:BSC', label: 'BSC', group: 'chain' },
     { key: 'net:Polygon', label: 'MATIC', group: 'chain' },
@@ -54,6 +55,7 @@ export default function ActionBar({
           className={`flex-shrink-0 border px-3 py-3 rounded-lg transition-colors flex items-center justify-center ${sortOrder !== 'none' ? 'bg-brand-500/10 border-brand-500/30 text-brand-400' : 'bg-surface-800 border-surface-700 text-surface-300 hover:text-white hover:bg-surface-700'}`}
           title="Sort"><ArrowDownUp size={18} /></button>
         <button onClick={onAddWallet} className="flex-shrink-0 bg-brand-600 hover:bg-brand-500 border border-brand-500 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('home.addWallet')}><Plus size={18} /></button>
+        <button onClick={onBulkNetwork} className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('actionBar.bulkNetwork') || 'Bulk Change Network'}><Network size={18} /></button>
         <button onClick={onUpload} disabled={loading}
           className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title="Import">
           {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <UploadCloud size={18} />}

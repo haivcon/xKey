@@ -9,7 +9,10 @@ export default {
     copied: "Copied!",
     copyData: "Copy Data",
     copiedClipboard: "Copied to Clipboard",
-  },
+  
+    errorReadingFile: "Error reading file",
+    csvParseError: "CSV parse error",
+    updatedNetwork: "Network updated",},
 
   // ─── Home / App ───
   home: {
@@ -28,7 +31,8 @@ export default {
     backupImported: "Backup imported: {count} wallets",
     deleteWalletConfirm: 'Delete wallet "{name}"?',
     deleteFolderConfirm: 'Delete all wallets in folder "{name}"?',
-  },
+  
+    movedToFolder: "Moved to folder",},
 
   // ─── Restore Backup ───
   restore: {
@@ -86,7 +90,54 @@ export default {
     wipeAll: "Wipe All Vault Data",
     wipeDesc: "This action deletes the AES Encryption Key and all encrypted wallets. You cannot recover them.",
     wipeConfirm: "WARNING: This will delete all encrypted wallets from this device. You will lose access to this vault. Are you sure?",
-  },
+  
+    decoyVaultTitle: "Decoy Vault",
+    decoyVaultDesc: "Set a fake PIN to open an empty vault",
+    setDecoyPin: "Setup",
+    removeDecoyPin: "Remove",
+    decoyRemoveConfirm: "Remove Decoy Vault PIN?",
+    decoyRemoveWarning: "Are you sure you want to disable the Decoy Vault?",
+    decoyRemoved: "Decoy Vault disabled",
+    decoySameAsMain: "Decoy PIN must be different from main PIN",
+    decoyEnabled: "Decoy Vault enabled",
+    shakeToLockTitle: "Shake to Lock",
+    shakeToLockDesc: "Lock app immediately when shaking device",
+    shakeSensitivity: "Sensitivity",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+    tabGeneral: "General",
+    tabSecurity: "Security",
+    tabData: "Data",
+    pinLockTitle: "PIN Lock",
+    pinLockDesc: "Manage app PIN code",
+    changePin: "Change PIN",
+    currentPin: "Current PIN",
+    newPin: "New PIN (6 digits)",
+    confirmNewPin: "Confirm new PIN",
+    incorrectCurrentPin: "Incorrect current PIN",
+    pinLengthError: "PIN must be 6 digits",
+    pinsNotMatch: "PINs do not match",
+    pinChangedSuccess: "PIN changed successfully",
+    verifyBtn: "Verify",
+    nextBtn: "Next",
+    killSwitchTitle: "Kill Switch",
+    killSwitchDesc: "Erase all data after 10 failed attempts",
+    killSwitchConfirm: "Enable Kill Switch? All data will be wiped after 10 failed PIN attempts.",
+    killSwitchEnabled: "Kill Switch enabled",
+    killSwitchDisabled: "Kill Switch disabled",
+    autoBackupTitle: "Auto Backup",
+    autoBackupStatus: "Currently: {interval}",
+    off: "Off",
+    daily: "Daily",
+    weekly: "Weekly",
+    qrTransferBtn: "Transfer via QR",
+    qrReceiveBtn: "Receive via QR",
+    incorrectPassword: "Incorrect password",
+    changeConfirm: "Confirm change?",
+    autoBackupSet: "Auto backup enabled",
+    autoBackupPasswordSaved: "Auto backup password saved",
+    save: "Save",},
 
   // ─── Create Wallet ───
   createWallet: {
@@ -121,7 +172,24 @@ export default {
     seedExplain: "12 or 24 words that can regenerate the private key. Store offline, never screenshot or share.",
     network: "Network",
     scanQR: "Scan QR",
-  },
+  
+    tabVanity: "Vanity",
+    vanityPrefix: "Prefix",
+    vanitySuffix: "Suffix",
+    startVanity: "Start Generator",
+    stopVanity: "Stop Generator",
+    vanityStatus: "Scanned: {{scanned}} | Speed: {{speed}} h/s | Time: {{time}}s",
+    vanityWarning: "Warning: Long prefixes take exponentially longer. Keep it to 2-4 characters to avoid freezing.",
+    derivationPath: "Derivation Path",
+    derivationPathHelp: "Advanced: Custom HD path (e.g. m/44'/60'/0'/0/0)",
+    mathSteps: {"task":"Task","meaning":"Meaning","result":"Result","steps":[{"title":"1. Entropy (Randomness)","task":"This is the starting point. The computer generates a completely random sequence of bits (0s and 1s). This sequence is usually 128 bits (for 12 words) or 256 bits (for 24 words).","result":"This is the security 'core' of the wallet. If someone guesses this entropy, they control your wallet.","type":"meaning"},{"title":"2. Checksum","task":"The entropy is hashed (usually using SHA-256). The first few bits of the hash are taken as a Checksum and appended to the entropy.","result":"Ensures the final seed phrase is valid and prevents typos when entering it.","type":"meaning"},{"title":"3. Mnemonic Words (BIP-39)","task":"The combined sequence (Entropy + Checksum) is divided into 11-bit segments. Each segment maps to an index (0-2047) in the BIP-39 wordlist.","result":"This creates your 12 or 24-word Seed Phrase.","type":"result"},{"title":"4. Seed Generation (PBKDF2)","task":"The Mnemonic words are run through a key stretching function (PBKDF2) using HMAC-SHA512 with 2048 iterations.","result":"A 512-bit Master Seed is created. This seed can restore all your accounts.","type":"result"},{"title":"5. Private Key (BIP-32 & BIP-44)","task":"The Master Seed is used to derive a specific Private Key using an HD Derivation Path (e.g., m/44'/60'/0'/0/0).","result":"Your actual 256-bit Private Key for this specific wallet.","type":"result"},{"title":"6. Public Key (ECDSA)","task":"The Private Key is passed through the Elliptic Curve Digital Signature Algorithm (secp256k1) to calculate a coordinate on the curve.","result":"A 512-bit Public Key is generated.","type":"result"},{"title":"7. Wallet Address (Keccak-256)","task":"The Public Key is hashed using Keccak-256. The last 20 bytes (40 hex characters) are kept, and '0x' is added to the beginning.","result":"Your final EVM Wallet Address (e.g., 0x123...abc).","type":"result"}]},
+    bulkTitle: "Bulk Generate",
+    bulkQuantity: "Quantity",
+    bulkGenerateBtn: "Generate Wallets",
+    bulkGenerating: "Generating {count} wallets...",
+    bulkSuccess: "Successfully generated {count} wallets",
+    bulkSize: "Quantity (Max {max})",
+    bulkStorage: "You can only generate {count} more wallets due to browser storage limits",},
 
   // ─── Wallet Card ───
   walletCard: {
@@ -150,7 +218,9 @@ export default {
     masterPasswordRequired: "Enter master password to view",
     masterPasswordWrong: "Wrong master password",
     changeNetwork: "Tap to change network",
-  },
+  
+    addressCopied: "Address copied",
+    moveBtn: "Move",},
 
   // ─── Action Bar ───
   actionBar: {
@@ -171,7 +241,9 @@ export default {
     allNetworks: "All Networks",
     pinned: "Pinned",
     byChain: "By Chain",
-  },
+  
+    bulkNetwork: "Bulk Network Change",
+    bulkNetworkDesc: "Select a network to apply to all wallets",},
 
   // ─── Duplicate Detector ───
   duplicates: {
@@ -215,7 +287,8 @@ export default {
     colPrivateKey: "Private Key",
     colSeedPhrase: "Seed Phrase",
     colNetwork: "Network",
-  },
+  
+    authPrompt: "Authenticate to export data",},
 
   // ─── Auth Error ───
   authError: {
@@ -245,4 +318,45 @@ export default {
     title: "Scan QR Code",
     hint: "Point camera at a QR code containing an address, private key, or seed phrase",
   },
-};
+  pinLock: {
+    enterPin: "Enter PIN",
+    enter6Digits: "Enter 6 digits",
+  
+    incorrectPin: "Incorrect PIN",
+    createPin: "Create PIN",
+    confirmPin: "Confirm PIN",
+    tooManyAttempts: "Too many attempts",
+    tryAgainIn: "Try again in {seconds}s",},
+  donate: {
+    title: "Donate",
+    subtitle: "Help xKey grow",
+  
+    message: "xKey is a non-profit passion project. Your support, no matter how small, is a huge motivation that helps maintain, develop new features, and keep the app 100% free and ad-free forever. Thank you from the bottom of my heart!",
+    scanQR: "Scan QR Code",
+    author: "Author",
+    thankYou: "Thank you for your support!",},
+  moveWallet: {
+    title: "Move Wallet",
+    desc: "Select a folder to move this wallet to.",
+    newFolderName: "New folder name",
+    moveBtn: "Move",
+  },
+  qrReceive: {
+    title: "Receive data via QR",
+    passwordTitle: "Enter vault password",
+    passwordSubtitle: "This password is used to decrypt the scanned data",
+    progress: "Scanned {count}/{total} QR",
+    hint: "Point camera at the QR code displayed on the other device",
+  },
+  qrTransfer: {
+    title: "Transfer data via QR",
+    desc: "Encrypt and share all data via QR codes",
+    passwordPlaceholder: "Enter new encryption password",
+    generateBtn: "Generate QR Codes",
+    progress: "QR {current} / {total}",
+    passwordBtn: "Enter Password",
+    prevBtn: "Prev",
+    nextBtn: "Next",
+    doneBtn: "Done",
+    hint: "Use another device and select 'Receive data via QR' to scan",
+  }};

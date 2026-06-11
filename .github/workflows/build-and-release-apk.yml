@@ -74,7 +74,7 @@ jobs:
       - name: 🚀 Auto-Release on GitHub
         uses: softprops/action-gh-release@v2
         with:
-          name: "🔥xKey v${{ env.APP_VERSION }}"
+          name: "🔑xKey v${{ env.APP_VERSION }}"
           body: "Automatically optimized and securely signed APK release.\n\n**Version:** v${{ env.APP_VERSION }}\n\nDownload the file below to install."
           files: ${{ env.APK_NAME }}
           prerelease: false

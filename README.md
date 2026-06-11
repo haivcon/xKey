@@ -6,7 +6,19 @@
 
 ---
 
-## 🚀 What's New in v4.0.x
+## 🚀 What's New in v4.0.8
+
+### 🌍 Ultimate Localization & i18n Perfection
+- **100% Comprehensive Coverage**: Achieved full multi-language support across all 15 languages (Arabic, German, Spanish, French, Hindi, Indonesian, Japanese, Korean, Portuguese, Russian, Thai, Turkish, Vietnamese, Chinese, and English).
+- **Hardcoded Text Eradication**: Refactored internal React UI components (like `ErrorBoundary`, `CreateWalletModal`, and `SettingsScreen`) to completely replace hardcoded English text with dynamic `t()` locale keys.
+- **Missing Keys Resolved**: Accurately translated and injected previously missing advanced security features like **Decoy Vault**, **Shake to Lock**, **Kill Switch**, and **Auto Backup** across all foreign language files, eliminating jarring English fallbacks.
+- **UI/UX Polish**: Fixed spacing and display issues caused by variable string lengths across different languages (especially in Asian languages like Japanese and Chinese).
+
+---
+
+<details>
+<summary><b>📦 Previous Features (v4.0.7 & older)</b></summary>
+<br>
 
 ### 🤖 Automated CI/CD Pipeline
 - **GitHub Actions Integration**: Pushing a `v*` tag now automatically triggers a cloud build.
@@ -22,16 +34,9 @@
 - **Capacitor 8 Upgrade**: Migrated the build system to support the latest Android SDKs, enforcing Node.js 22 and Java 21 architectures.
 - **1-Click Dev Script**: Added the `npm run android` shortcut to automatically build Vite, sync Capacitor, and launch Android Studio in a single command.
 
----
-
-<details>
-<summary><b>📦 Previous Features (v3.x & older)</b></summary>
-<br>
-
 ### Complete Rebrand & UI
 - **XBOT Check → xKey**: Complete identity migration.
 - **Theme Toggle**: Gradient toggle with Sun/Moon icon inside the knob.
-- **Full i18n Coverage**: 15 Languages with auto-detection.
 
 ### Wallet Management
 - **Inline Wallet Editing**: Edit name, address, private key, seed phrase, balance, notes.

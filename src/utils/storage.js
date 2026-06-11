@@ -5,6 +5,7 @@ import { runMigrations } from './migration';
 
 const STORAGE_KEYS = {
     WALLETS: 'xkey_wallets',
+    DECOY_WALLETS: 'xkey_decoy_wallets',
     AES_KEY_FALLBACK: 'xkey_aes_fallback'
 };
 
@@ -53,71 +54,58 @@ const decryptField = (cipher, fieldKey) => {
 };
 
 /**
- * Retrieve the AES Encryption Key
- * Triggers native Biometric/Lock Screen if available.
- * If no lock screen is set on the device, it falls back to standard Preferences.
+ * Check if native biometric/face authentication hardware is available.
  */
-export const getEncryptionKey = async () => {
+export const isBiometricAvailable = async () => {
     try {
-        let authSuccess = false;
-        try {
-            // Force the native authentication prompt (supports PIN if biometric fails)
-            await NativeBiometric.verifyIdentity({
-                reason: "Unlock xKey",
-                title: "xKey Authentication",
-                subtitle: "Log in using your device lock or biometric",
-                useFallback: true
-            });
-            authSuccess = true;
-        } catch (err) {
-            const msg = (err.message || '').toLowerCase();
-            const code = (err.code || '').toLowerCase();
-            // If user explicitly cancels the PIN/Biometric prompt, block access
-            if (msg.includes('cancel') || code === 'usercancel' || code === 'user_cancel') {
-                throw new Error("Authentication canceled.");
-            }
-            // If it throws because device has no lock screen at all, authSuccess remains false
-        }
-
-        try {
-            // Try to get existing key from secure storage
-            const creds = await NativeBiometric.getCredentials({ server: BIOMETRIC_SERVER });
-            return creds.password;
-        } catch (err) {
-            const msg = (err.message || '').toLowerCase();
-            const code = (err.code || '').toLowerCase();
-            
-            // If credentials don't exist yet
-            if (msg.includes('itemnotfound') || msg.includes('not found') || msg.includes('no credentials') || code === 'itemnotfound') {
-                const newKey = generateRandomKey();
-                try {
-                    await NativeBiometric.setCredentials({
-                        username: BIOMETRIC_USER,
-                        password: newKey,
-                        server: BIOMETRIC_SERVER
-                    });
-                    return newKey;
-                } catch (setErr) {
-                    // Keystore failed (e.g. device completely unsecured), fallback below
-                }
-            } else if (authSuccess) {
-                // Unknown Keystore error after successful auth
-                throw err;
-            }
-        }
-        
-        // Fallback: Device has no lock screen or Keystore is broken. Use standard Preferences.
-        const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
-        if (value) return value;
-        
-        const newKeyFallback = generateRandomKey();
-        await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: newKeyFallback });
-        return newKeyFallback;
-        
-    } catch (e) {
-        console.error("Encryption key retrieval error:", e);
-        throw e;
+        const result = await NativeBiometric.isAvailable();
+        return result.isAvailable;
+    } catch {
+        return false;
     }
+};
+
+/**
+ * Retrieve the AES Encryption Key using biometric authentication.
+ * Only call this when isBiometricAvailable() returns true.
+ */
+export const getEncryptionKeyBiometric = async () => {
+    await NativeBiometric.verifyIdentity({
+        reason: "Unlock xKey",
+        title: "xKey Authentication",
+        subtitle: "Verify your identity to access the vault",
+        useFallback: true
+    });
+
+    try {
+        const creds = await NativeBiometric.getCredentials({ server: BIOMETRIC_SERVER });
+        return creds.password;
+    } catch (err) {
+        const msg = (err.message || '').toLowerCase();
+        const code = (err.code || '').toLowerCase();
+        if (msg.includes('itemnotfound') || msg.includes('not found') || msg.includes('no credentials') || code === 'itemnotfound') {
+            const newKey = generateRandomKey();
+            await NativeBiometric.setCredentials({
+                username: BIOMETRIC_USER,
+                password: newKey,
+                server: BIOMETRIC_SERVER
+            });
+            return newKey;
+        }
+        throw err;
+    }
+};
+
+/**
+ * Retrieve the AES Encryption Key from Preferences (no biometric).
+ * Used after the user authenticates via the in-app PIN screen.
+ */
+export const getEncryptionKeyFallback = async () => {
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
+    if (value) return value;
+    const newKey = generateRandomKey();
+    await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: newKey });
+    return newKey;
 };
 
 /**
@@ -148,7 +136,7 @@ const decryptData = (cipherText, key) => {
  * Sensitive fields (privateKey, seedPhrase) are encrypted individually
  * before the entire array is encrypted.
  */
-export const saveWallets = async (wallets, key) => {
+export const saveWallets = async (wallets, key, isDecoy = false) => {
     try {
         const fieldKey = deriveFieldKey(key);
         // Double-encrypt sensitive fields
@@ -159,7 +147,8 @@ export const saveWallets = async (wallets, key) => {
             _fieldEncrypted: true,
         }));
         const encrypted = encryptData(protected_, key);
-        await Preferences.set({ key: STORAGE_KEYS.WALLETS, value: encrypted });
+        const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
+        await Preferences.set({ key: storageKey, value: encrypted });
         return true;
     } catch (e) {
         console.error('Failed to save wallets', e);
@@ -170,8 +159,9 @@ export const saveWallets = async (wallets, key) => {
 /**
  * Load encrypted wallets, run migrations, and decrypt field-level encryption.
  */
-export const loadWallets = async (key) => {
-    const { value } = await Preferences.get({ key: STORAGE_KEYS.WALLETS });
+export const loadWallets = async (key, isDecoy = false) => {
+    const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
+    const { value } = await Preferences.get({ key: storageKey });
     if (!value) return [];
     
     let wallets = decryptData(value, key);
@@ -190,7 +180,7 @@ export const loadWallets = async (key) => {
     
     // If migration happened, re-save with new schema + field encryption
     if (didMigrate) {
-        await saveWallets(wallets, key);
+        await saveWallets(wallets, key, isDecoy);
     }
     
     return wallets;

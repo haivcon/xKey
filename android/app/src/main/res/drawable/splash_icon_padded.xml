@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/transparent" />
+    
+    <!-- Yellow ring (Vòng sáng vàng) -->
+    <item android:left="64dp" android:right="64dp" android:top="64dp" android:bottom="64dp">
+        <shape android:shape="oval">
+            <stroke android:width="4dp" android:color="#FFD700" />
+        </shape>
+    </item>
+
+    <!-- Padded Image to prevent cropping -->
+    <item android:left="72dp" android:right="72dp" android:top="72dp" android:bottom="72dp">
+        <bitmap android:src="@drawable/splash_image" android:gravity="fill" />
+    </item>
+</layer-list>

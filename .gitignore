@@ -42,3 +42,5 @@ Desktop.ini
 # Keystore files
 *.keystore
 keystore_base64.txt
+
+.env
