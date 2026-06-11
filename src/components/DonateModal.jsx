@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Copy, Check, Heart, Send } from 'lucide-react';
-import QRCode from 'qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 import { Clipboard } from '@capacitor/clipboard';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess } from '../utils/haptics';
@@ -14,14 +14,7 @@ export default function DonateModal({ onClose }) {
   const donateAddress = '0x5c6253e43c834ed82916256681aa70eb8692eddb';
 
   useEffect(() => {
-    QRCode.toDataURL(donateAddress, {
-      width: 300,
-      margin: 2
-    }).then(url => {
-      setQrCodeData(url);
-    }).catch(err => {
-      console.error(err);
-    });
+    // No longer generating data URL since we use SVG directly
   }, [donateAddress]);
 
   const handleCopy = async () => {
@@ -73,12 +66,12 @@ export default function DonateModal({ onClose }) {
 
           <div className="glass-card bg-surface-800/50 rounded-2xl p-4 mb-6 border border-brand-500/20 shadow-inner">
             <div className="flex flex-col items-center">
-              {qrCodeData ? (
+              {donateAddress ? (
                 <div 
                   className="p-2 bg-white rounded-xl mb-3 shadow-lg ring-1 ring-white/10 cursor-pointer transition-transform hover:scale-105 active:scale-95"
                   onClick={() => { hapticTap(); setIsZoomed(true); }}
                 >
-                  <img src={qrCodeData} alt="Donate QR" className="w-32 h-32" />
+                  <QRCodeSVG value={donateAddress} size={128} />
                 </div>
               ) : (
                 <div className="w-32 h-32 bg-surface-800 rounded-xl mb-3 animate-pulse"></div>
@@ -134,7 +127,7 @@ export default function DonateModal({ onClose }) {
           onClick={() => { hapticTap(); setIsZoomed(false); }}
         >
           <div className="p-4 bg-white rounded-3xl shadow-2xl mb-6">
-            <img src={qrCodeData} alt="Donate QR Zoomed" className="w-64 h-64" />
+            <QRCodeSVG value={donateAddress} size={256} />
           </div>
           <p className="text-white font-medium text-lg mb-2">{t('donate.scanQR')}</p>
           <p className="text-surface-400 text-sm font-mono break-all px-8 text-center">{donateAddress}</p>
