@@ -182,6 +182,80 @@ export default function DashboardView({ wallets, onBack }) {
                     </div>
                 </div>
 
+                {/* Tag Distribution */}
+                {(() => {
+                    const tagMap = {};
+                    wallets.forEach(w => (w.tags || []).forEach(tag => {
+                        if (!tagMap[tag]) tagMap[tag] = 0;
+                        tagMap[tag]++;
+                    }));
+                    const tagEntries = Object.entries(tagMap).sort((a, b) => b[1] - a[1]);
+                    const maxTag = Math.max(...tagEntries.map(e => e[1]), 1);
+                    const tagColors = ['#a855f7', '#06b6d4', '#f59e0b', '#22c55e', '#ec4899', '#3b82f6', '#ef4444', '#14b8a6'];
+                    if (tagEntries.length === 0) return null;
+                    return (
+                        <div className="glass-card p-6 border border-surface-700">
+                            <h3 className="text-white font-semibold mb-4">{t('dashboard.tagDistribution') || 'Tag Distribution'}</h3>
+                            <div className="space-y-2.5">
+                                {tagEntries.slice(0, 10).map(([tag, count], i) => (
+                                    <div key={tag} className="flex items-center gap-3">
+                                        <span className="text-xs text-surface-400 w-16 truncate text-right">#{tag}</span>
+                                        <div className="flex-1 h-5 bg-surface-800 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full transition-all duration-500"
+                                                style={{
+                                                    width: `${(count / maxTag) * 100}%`,
+                                                    background: `linear-gradient(90deg, ${tagColors[i % tagColors.length]}88, ${tagColors[i % tagColors.length]})`
+                                                }}
+                                            />
+                                        </div>
+                                        <span className="text-xs text-white font-medium w-8">{count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* Security Score */}
+                {(() => {
+                    const total = wallets.length || 1;
+                    const pkRate = walletsWithPK / total;
+                    const seedRate = walletsWithSeed / total;
+                    const taggedRate = wallets.filter(w => (w.tags || []).length > 0).length / total;
+                    const score = Math.round((pkRate * 40 + seedRate * 40 + taggedRate * 20) * 100);
+                    const getColor = (s) => s >= 80 ? 'text-emerald-400' : s >= 50 ? 'text-amber-400' : 'text-red-400';
+                    const getBg = (s) => s >= 80 ? 'from-emerald-500' : s >= 50 ? 'from-amber-500' : 'from-red-500';
+                    return (
+                        <div className="glass-card p-6 border border-surface-700">
+                            <h3 className="text-white font-semibold mb-4">{t('dashboard.securityScore') || 'Vault Health'}</h3>
+                            <div className="flex items-center gap-6">
+                                <div className="relative w-24 h-24">
+                                    <svg viewBox="0 0 36 36" className="w-24 h-24 -rotate-90">
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgb(55,65,81)" strokeWidth="3" />
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#scoreGrad)" strokeWidth="3"
+                                            strokeDasharray={`${score} ${100 - score}`} strokeLinecap="round" />
+                                        <defs>
+                                            <linearGradient id="scoreGrad"><stop stopColor={score >= 80 ? '#34d399' : score >= 50 ? '#fbbf24' : '#f87171'} /><stop offset="1" stopColor={score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'} /></linearGradient>
+                                        </defs>
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className={`text-xl font-bold ${getColor(score)}`}>{score}%</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1 space-y-2 text-xs">
+                                    <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.withPK')}</span><span className="text-white">{Math.round(pkRate * 100)}%</span></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-cyan-500 rounded-full" style={{ width: `${pkRate * 100}%` }} /></div>
+                                    <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.withSeed')}</span><span className="text-white">{Math.round(seedRate * 100)}%</span></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${seedRate * 100}%` }} /></div>
+                                    <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.tagged') || 'Tagged'}</span><span className="text-white">{Math.round(taggedRate * 100)}%</span></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-amber-500 rounded-full" style={{ width: `${taggedRate * 100}%` }} /></div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+
                 {/* Total */}
                 <div className="glass-card p-6 border border-brand-500/20 bg-brand-500/5">
                     <p className="text-surface-400 text-xs uppercase tracking-wider mb-1">{t('dashboard.totalValue')}</p>

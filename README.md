@@ -6,27 +6,73 @@
 
 ---
 
-## 🚀 What's New in v4.0.11
+## 🚀 What's New in v5.1.0
 
-### ⌨️ Dynamic UX & Keyboard Layout Management
-- **Smart Auto-Scroll**: Implemented smooth auto-scroll logic to seamlessly push input fields into the center of the viewport whenever the Android on-screen keyboard appears, preventing hidden inputs.
-- **Capacitor Keyboard Fix**: Switched back to `KeyboardResize.Body` to ensure `keyboardWillShow` events reliably trigger the scrolling mechanisms inside the webview.
+### 🏗️ Major Architecture Refactoring
+- **App.jsx**: Reduced from **859 → 470 lines** by extracting 4 custom hooks: `useWallets`, `useFileImport`, `useBackButton`, `useShakeToLock`.
+- **SettingsScreen**: Reduced from **928 → 65 lines** by splitting into `GeneralTab`, `SecurityTab`, `DataTab` components.
+- **Lazy Wallet Rendering**: New `WalletList` component with `useLazyList` hook — renders 50 wallets initially, infinite-scrolls more via IntersectionObserver.
 
-### 📁 Advanced Offline Data Export
-- **Scoped Storage Bypass**: Completely re-architected the vault backup (`.xkey`) and CSV export engine to utilize the app's internal `Directory.Cache` combined with the native **Share API**. 
-- **Privacy First**: By removing the reliance on direct file paths, the app now allows users to save files directly to Google Drive, Telegram, or Downloads via the system picker.
-- **Zero Permissions Needed**: Successfully dropped the `WRITE_EXTERNAL_STORAGE` requirement, significantly improving the app's privacy profile and installation footprint.
+### 🧭 URL-Based Routing
+- **HashRouter Integration**: Replaced `currentView` state with `react-router-dom` HashRouter for Capacitor-safe offline routing.
+- **Deep Linking**: Settings (`#/settings`) and Dashboard (`#/dashboard`) are now URL-addressable routes.
+- **Back Button**: Android hardware back button navigates via router history instead of manual state management.
 
-### 📷 High-Speed QR Vault Transfer
-- **Optimized QR Density**: Halved the chunk payload sizes (down to 250 characters) to generate much simpler, less dense QR codes that scan instantly, even on older phone cameras.
-- **Haptic Scanning Engine**: Overhauled the `Html5Qrcode` scanner flow to include physical vibration feedback (Haptics) upon each successful chunk read.
-- **Resilient Camera Auto-Discovery**: Upgraded camera initialization to actively poll `getCameras()` and auto-select the rear camera. Replaced silent failures with explicit UI error alerts for camera permission denials.
+### 🔒 Security Hardening
+- **Encrypted Auto-Backup Password**: Backup password is now AES-encrypted before storing in Preferences (was plaintext). Backward-compatible with existing vaults.
+- **useMemo Optimization**: Filter/sort logic memoized with proper dependency arrays — no more recalculation on every render.
+
+### 🏷️ Wallet Tags System
+- **Tag Badges**: Color-coded tag pills displayed on wallet cards with consistent hash-based coloring.
+- **Tag Editor**: In-wallet edit mode with autocomplete suggestions from existing tags.
+- **Tag Filtering**: Filter wallets by tag via the ActionBar filter panel — dynamic tag pills appear automatically.
+
+### 📦 Batch Operations
+- **Selection Mode**: New toggle in ActionBar to enter multi-select mode. Clicking wallets toggles their selection state.
+- **Bulk Actions**: Floating contextual action bar allows batch Delete, Move to Folder, Tag, and Pin operations across all selected wallets simultaneously.
+
+### ↕️ Drag & Drop Reordering
+- **Manual Sorting**: Select "Custom Order" from the sort menu to enable drag handles on wallet cards.
+- **Touch Optimized**: Uses `@dnd-kit` with 200ms touch delay sensor to avoid conflicts with scrolling.
+- **Persistent Order**: Drag changes are saved to storage immediately.
+
+### 📝 Markdown Notes
+- **Rich Text Rendering**: Wallet notes now render as markdown — supports **bold**, *italic*, `code`, links, lists, and headings.
+- **Mono Editor**: Notes textarea uses monospace font with markdown syntax placeholder hints.
+- **Zero Dependencies**: Lightweight custom MarkdownRenderer component, no external library needed.
+
+### 📥 Multi-format Import
+- **JSON Import**: Import wallet arrays from `.json` files with auto-field mapping (`address`, `privateKey`, `seedPhrase`, `mnemonic`, etc.).
+- **Plain Text Import**: Import `.txt` files with one address per line.
+- **Smart Detection**: File format is auto-detected by extension and content structure.
+
+### ⚡ Performance
+- **Lazy List Rendering**: Only 50 wallets render initially, with IntersectionObserver loading more on scroll.
+- **Memoized Derivations**: `folders`, `filteredWallets`, `totalBalance`, `allTags` all properly memoized.
+
+### 🛠️ TypeScript Foundation
+- **Incremental Migration Ready**: Added `tsconfig.json` (allowJs=true) and core `types.ts` with `Wallet`, `SortOrder`, `FilterKey` interfaces.
+- **Type Safety**: New files can be written in `.ts`/`.tsx` while existing `.jsx` files continue working.
 
 ---
 
 <details>
-<summary><b>📦 Previous Features (v4.0.10 & older)</b></summary>
+<summary><b>📦 Previous Features (v4.0.12 & older)</b></summary>
 <br>
+
+### ⌨️ Dynamic UX & Keyboard Layout Management (v4.0.11)
+- **Smart Auto-Scroll**: Smooth auto-scroll logic to push input fields into viewport center when keyboard appears.
+- **Capacitor Keyboard Fix**: Switched to `KeyboardResize.Body` for reliable `keyboardWillShow` events.
+
+### 📁 Advanced Offline Data Export (v4.0.11)
+- **Scoped Storage Bypass**: Re-architected vault backup and CSV export to use `Directory.Cache` + native Share API.
+- **Privacy First**: Files saved via system picker to Google Drive, Telegram, or Downloads.
+- **Zero Permissions Needed**: Dropped `WRITE_EXTERNAL_STORAGE` requirement.
+
+### 📷 High-Speed QR Vault Transfer (v4.0.11)
+- **Optimized QR Density**: Halved chunk payload sizes for instant scanning on older cameras.
+- **Haptic Scanning Engine**: Physical vibration feedback on each successful chunk read.
+- **Resilient Camera Auto-Discovery**: Auto-select rear camera with explicit error alerts.
 
 ### 🌍 Ultimate Localization & i18n Perfection (v4.0.8)
 - **100% Comprehensive Coverage**: Achieved full multi-language support across all 15 languages.

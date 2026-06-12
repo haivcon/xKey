@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus } from 'lucide-react';
+import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
+import MarkdownRenderer from './MarkdownRenderer';
 import { secureCopy } from '../utils/clipboard';
 import { useToast } from '../contexts/ToastContext';
 import { useMasterPassword } from '../contexts/MasterPasswordContext';
 import PasswordInput from './PasswordInput';
+import { TagBadge, TagEditor } from './TagSystem';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -25,7 +27,7 @@ const NETWORK_KEYS = Object.keys(NETWORK_COLORS);
 
 export { NETWORK_COLORS, NETWORK_KEYS };
 
-export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin, onMove }) {
+export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin, onMove, selectionMode, isSelected, onToggleSelect }) {
   const [expanded, setExpanded] = useState(false);
   const [showPk, setShowPk] = useState(false);
   const [showSeed, setShowSeed] = useState(false);
@@ -105,6 +107,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
       balance: wallet.balance || '',
       notes: wallet.notes || '',
       network: wallet.network || 'ETH',
+      tags: wallet.tags || [],
     });
     setEditMode(true);
   };
@@ -121,8 +124,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     <div>
       <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{label}</label>
       {multiline ? (
-        <textarea rows={2} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
-          className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none" />
+        <textarea rows={4} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
+          placeholder={key === 'notes' ? '**bold**, *italic*, `code`, - lists' : ''}
+          className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none font-mono" />
       ) : (
         <input type={type} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
           className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
@@ -131,13 +135,25 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   );
 
   return (
-    <div className="glass-card overflow-hidden border border-surface-700 hover:border-brand-500/30 transition-colors relative">
+    <div className={`glass-card overflow-hidden border transition-all relative ${isSelected ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5' : 'border-surface-700 hover:border-brand-500/30'}`}>
       <div className="p-4 flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50"
-        onClick={() => { if (!longPressActive) setExpanded(!expanded); }}
+        onClick={() => {
+          if (selectionMode) {
+            onToggleSelect();
+          } else if (!longPressActive) {
+            setExpanded(!expanded);
+          }
+        }}
         onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}
         onMouseDown={handleTouchStart} onMouseUp={handleTouchEnd} onMouseLeave={handleTouchEnd}>
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-full bg-brand-500/10 flex items-center justify-center flex-shrink-0"><Wallet size={20} className="text-brand-400" /></div>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
+            {selectionMode ? (
+              isSelected ? <CheckSquare size={20} /> : <Square size={20} />
+            ) : (
+              <Wallet size={20} />
+            )}
+          </div>
           <div className="min-w-0">
             {renaming ? (
               <input autoFocus className="bg-transparent border-b border-brand-500 text-white text-sm outline-none w-full" value={editName}
@@ -167,6 +183,14 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             <p className="text-surface-400 text-sm font-mono truncate">
               {wallet.address ? `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}` : t('walletCard.noAddress')}
             </p>
+            {wallet.tags && wallet.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {wallet.tags.slice(0, 3).map(tag => (
+                  <TagBadge key={tag} tag={tag} small />
+                ))}
+                {wallet.tags.length > 3 && <span className="text-[9px] text-surface-500">+{wallet.tags.length - 3}</span>}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -193,6 +217,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               {editInput('seedPhrase', t('walletCard.seedPhrase'), 'text', true)}
               {editInput('balance', t('createWallet.balance'), 'number')}
               {editInput('notes', t('walletCard.notes'), 'text', true)}
+              <TagEditor
+                tags={editFields.tags || []}
+                onChange={(newTags) => setEditFields(p => ({ ...p, tags: newTags }))}
+              />
               {/* Network Selector */}
               <div>
                 <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{t('walletCard.network')}</label>
@@ -293,7 +321,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               {wallet.notes && (
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 block">{t('walletCard.notes')}</label>
-                  <p className="text-sm text-surface-300 bg-surface-800 p-2 rounded">{wallet.notes}</p>
+                  <div className="bg-surface-800 p-3 rounded-lg border border-surface-700/50">
+                    <MarkdownRenderer text={wallet.notes} />
+                  </div>
                 </div>
               )}
             </>

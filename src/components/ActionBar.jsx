@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network } from 'lucide-react';
+import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 
 export default function ActionBar({
   searchQuery, onSearchChange, sortOrder, onSortChange,
-  onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork
+  onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
+  allTags = [], selectionMode, onToggleSelectionMode
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
@@ -37,6 +38,7 @@ export default function ActionBar({
     { key: 'date-asc', label: t('actionBar.oldestFirst') },
     { key: 'balance-desc', label: t('actionBar.balanceHigh') },
     { key: 'balance-asc', label: t('actionBar.balanceLow') },
+    { key: 'custom', label: t('actionBar.customOrder') || '↕ Custom Order' },
     { key: 'address-asc', label: t('actionBar.addressAsc') },
   ];
 
@@ -56,6 +58,9 @@ export default function ActionBar({
           title="Sort"><ArrowDownUp size={18} /></button>
         <button onClick={onAddWallet} className="flex-shrink-0 bg-brand-600 hover:bg-brand-500 border border-brand-500 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('home.addWallet')}><Plus size={18} /></button>
         <button onClick={onBulkNetwork} className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('actionBar.bulkNetwork') || 'Bulk Change Network'}><Network size={18} /></button>
+        <button onClick={onToggleSelectionMode} className={`flex-shrink-0 border px-3 py-3 rounded-lg transition-colors flex items-center justify-center ${selectionMode ? 'bg-brand-500/20 border-brand-500/40 text-brand-400' : 'bg-surface-800 hover:bg-surface-700 border-surface-700 text-white'}`} title={t('batch.toggleSelection') || 'Select Wallets'}>
+          <CheckSquare size={18} />
+        </button>
         <button onClick={onUpload} disabled={loading}
           className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title="Import">
           {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <UploadCloud size={18} />}
@@ -83,6 +88,19 @@ export default function ActionBar({
               ))}
             </div>
           </div>
+          {allTags.length > 0 && (
+            <div className="border-t border-surface-700 pt-2 mt-1">
+              <span className="text-[10px] text-surface-500 uppercase tracking-wider mr-2">Tags</span>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {allTags.map(tag => (
+                  <button key={tag} onClick={() => { onFilterChange(`tag:${tag}`); setShowFilters(false); }}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors ${activeFilter === `tag:${tag}` ? 'bg-purple-500 text-white' : 'bg-surface-700 text-surface-400 hover:bg-surface-600'}`}>
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

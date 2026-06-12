@@ -187,6 +187,29 @@ export const loadWallets = async (key, isDecoy = false) => {
 };
 
 /**
+ * Encrypt a setting value before storing in Preferences.
+ * Uses the vault AES key so settings are tied to the vault.
+ */
+export const encryptSetting = (value, key) => {
+    if (!value || !key) return value;
+    return CryptoJS.AES.encrypt(value, key).toString();
+};
+
+/**
+ * Decrypt a setting value read from Preferences.
+ */
+export const decryptSetting = (cipher, key) => {
+    if (!cipher || !key) return cipher;
+    try {
+        const bytes = CryptoJS.AES.decrypt(cipher, key);
+        const result = bytes.toString(CryptoJS.enc.Utf8);
+        return result || cipher; // Return original if decrypt fails (legacy plaintext)
+    } catch {
+        return cipher; // Return as-is for backward compatibility
+    }
+};
+
+/**
  * Wipe all data
  */
 export const wipeAllData = async () => {

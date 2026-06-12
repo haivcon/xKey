@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Preferences } from '@capacitor/preferences';
-import { loadWallets } from '../utils/storage';
+import { loadWallets, decryptSetting } from '../utils/storage';
 import { exportPortableBackup } from '../utils/backupUtils';
 
 const INTERVAL_KEY = 'xkey_autobackup_interval';
@@ -25,8 +25,11 @@ export default function useAutoBackup(aesKey) {
         const { value: interval } = await Preferences.get({ key: INTERVAL_KEY });
         if (!interval || interval === 'off') return;
 
-        const { value: password } = await Preferences.get({ key: PASSWORD_KEY });
-        if (!password) return; // No password set, skip
+        const { value: encryptedPassword } = await Preferences.get({ key: PASSWORD_KEY });
+        if (!encryptedPassword) return; // No password set, skip
+
+        const password = decryptSetting(encryptedPassword, aesKey);
+        if (!password) return;
 
         const { value: lastStr } = await Preferences.get({ key: LAST_KEY });
         const lastBackup = lastStr ? parseInt(lastStr) : 0;
