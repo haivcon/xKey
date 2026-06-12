@@ -44,7 +44,7 @@ export default function ActionBar({
     { key: 'date-asc', label: t('actionBar.oldestFirst') },
     { key: 'balance-desc', label: t('actionBar.balanceHigh') },
     { key: 'balance-asc', label: t('actionBar.balanceLow') },
-    { key: 'custom', label: t('actionBar.customOrder') || '↕ Custom Order' },
+    { key: 'custom', label: t('actionBar.customOrder') },
     { key: 'address-asc', label: t('actionBar.addressAsc') },
   ];
 
@@ -253,20 +253,20 @@ export default function ActionBar({
       {showTools && createPortal(
         <div className="fixed inset-0 z-[9998] xl:hidden">
           <button className="absolute inset-0 w-full bg-black/55 backdrop-blur-sm" onClick={closeTools} aria-label={t('common.close')} />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[82vh] flex-col overflow-hidden rounded-t-2xl border border-surface-700 bg-surface-950 shadow-2xl">
-            <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[72vh] flex-col overflow-hidden rounded-t-xl border border-surface-700 bg-surface-950 shadow-2xl sm:max-h-[82vh] sm:rounded-t-2xl">
+            <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3">
               <div>
-                <h3 className="text-base font-bold text-white">{t('actionBar.tools')}</h3>
-                <p className="text-xs text-surface-500">{t('actionBar.moreTools')}</p>
+                <h3 className="text-sm font-bold text-white sm:text-base">{t('actionBar.tools')}</h3>
+                <p className="text-[11px] text-surface-500 sm:text-xs">{t('actionBar.moreTools')}</p>
               </div>
-              <button onClick={closeTools} className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white">
+              <button onClick={closeTools} className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white sm:h-10 sm:w-10">
                 <X size={18} />
               </button>
             </div>
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:space-y-4 sm:px-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
               {toolGroups.map(group => (
                 <div key={group.key}>
-                  <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                  <div className="mb-1.5 px-1 text-[9px] font-semibold uppercase tracking-wider text-surface-500 sm:mb-2 sm:text-[10px]">
                     {group.title}
                   </div>
                   <div className="grid grid-cols-1 gap-2">
@@ -277,14 +277,14 @@ export default function ActionBar({
                           key={item.key}
                           onClick={item.onClick}
                           disabled={item.loading}
-                          className={`relative flex items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors disabled:opacity-60 ${toolButtonClass(item)}`}
+                          className={`relative flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors disabled:opacity-60 sm:gap-3 sm:py-3 ${toolButtonClass(item)}`}
                         >
-                          <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-black/10">
+                          <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-black/10 sm:h-8 sm:w-8">
                             {item.loading ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={17} />}
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold">{item.label}</span>
-                            <span className="mt-0.5 block text-xs leading-snug opacity-70">{item.desc}</span>
+                            <span className="block text-xs font-semibold sm:text-sm">{item.label}</span>
+                            <span className="mt-0.5 block text-[11px] leading-snug opacity-70 sm:text-xs">{item.desc}</span>
                           </span>
                           {item.badge && (
                             <span className="mt-1 min-w-5 h-5 px-1.5 bg-yellow-500 text-black text-[11px] font-bold rounded-full flex items-center justify-center">
@@ -326,7 +326,7 @@ export default function ActionBar({
           </div>
           {allTags.length > 0 && (
             <div className="border-t border-surface-700 pt-2 mt-1">
-              <span className="text-[10px] text-surface-500 uppercase tracking-wider mr-2">Tags</span>
+              <span className="text-[10px] text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.tags')}</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {allTags.map(tag => (
                   <button key={tag} onClick={() => { onFilterChange(`tag:${tag}`); setShowFilters(false); }}

@@ -1,162 +1,203 @@
-# 🔐 xKey — Offline Web3 Wallet Vault
+# xKey - Offline Web3 Wallet Vault
 
-**xKey** is a 100% offline, secure Web3 wallet management application built with React, Vite, and Capacitor 8. Designed as a cold vault for your crypto assets — featuring biometric authentication, AES-256 encryption, and full i18n support across 15 languages.
+**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, notes, tags, folders, backups, and batch workflows in a local encrypted app.
 
-> **🛡️ Zero network connections. Your keys never leave your device.**
+The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, biometric/device authentication support, and full localization across 15 languages.
 
----
+> Your keys are stored locally. xKey is designed as a private cold-vault style manager, not as a network-connected trading wallet.
 
-## 🚀 What's New in v5.2.0
+## Current Release: v5.3.0
 
-### 🌐 xLayer Ecosystem Integration
-- **Unified Portal**: Integrated xBot and xKey into a single monolithic xLayer portal via Vite Multi-Page Application (MPA) architecture.
-- **Tailwind CSS v4**: Upgraded the entire project to Tailwind v4, utilizing native CSS `@theme` and `@import` capabilities.
-- **Glassmorphism UI**: Harmonized design system across the new Landing Page, xBot dashboard, and xKey vault with seamless transition states.
-- **CSS Engine Overhaul**: Fully refactored legacy `@apply` cross-references for strict Tailwind v4 compatibility.
+### Release Focus
 
----
+v5.3.0 focuses on usability, responsive layout, advanced wallet tooling, web compatibility, translation coverage, and a cleaner author/support experience.
 
-<details>
-<summary><b>📦 Previous Features (v5.1.0 & older)</b></summary>
-<br>
+### Major UI and Layout Upgrades
 
-### 🏗️ Major Architecture Refactoring (v5.1.0)
-- **App.jsx**: Reduced from **859 → 470 lines** by extracting 4 custom hooks: `useWallets`, `useFileImport`, `useBackButton`, `useShakeToLock`.
-- **SettingsScreen**: Reduced from **928 → 65 lines** by splitting into `GeneralTab`, `SecurityTab`, `DataTab` components.
-- **Lazy Wallet Rendering**: New `WalletList` component with `useLazyList` hook — renders 50 wallets initially, infinite-scrolls more via IntersectionObserver.
+- Reworked the home screen for wide displays, tablets, and desktop browsers.
+- Added responsive wallet grids so large screens no longer waste empty side space.
+- Improved sticky header, folder tabs, search, and action toolbar behavior while scrolling.
+- Reduced toolbar height and removed excessive gaps between controls and wallet cards.
+- Reorganized mobile toolbar layout so the Add Wallet action remains clearly visible.
+- Improved mobile tool sheets to avoid covering wallet content unnecessarily.
+- Compact advanced tools and donation modals for small screens and low-height browser windows.
+- Added a compact total-assets placement that avoids taking a large dedicated header block.
 
-### 🧭 URL-Based Routing
-- **HashRouter Integration**: Replaced `currentView` state with `react-router-dom` HashRouter for Capacitor-safe offline routing.
-- **Deep Linking**: Settings (`#/settings`) and Dashboard (`#/dashboard`) are now URL-addressable routes.
-- **Back Button**: Android hardware back button navigates via router history instead of manual state management.
+### Advanced Tools Redesign
 
-### 🔒 Security Hardening
-- **Encrypted Auto-Backup Password**: Backup password is now AES-encrypted before storing in Preferences (was plaintext). Backward-compatible with existing vaults.
-- **useMemo Optimization**: Filter/sort logic memoized with proper dependency arrays — no more recalculation on every render.
+The previous flat list of many tool buttons has been simplified into workflow-based sections:
 
-### 🏷️ Wallet Tags System
-- **Tag Badges**: Color-coded tag pills displayed on wallet cards with consistent hash-based coloring.
-- **Tag Editor**: In-wallet edit mode with autocomplete suggestions from existing tags.
-- **Tag Filtering**: Filter wallets by tag via the ActionBar filter panel — dynamic tag pills appear automatically.
+- **Check Wallets**
+  - Missing data audit
+  - Risk scan
+  - Duplicate private key / seed / address checks
+  - Backup verification
 
-### 📦 Batch Operations
-- **Selection Mode**: New toggle in ActionBar to enter multi-select mode. Clicking wallets toggles their selection state.
-- **Bulk Actions**: Floating contextual action bar allows batch Delete, Move to Folder, Tag, and Pin operations across all selected wallets simultaneously.
+- **Fix Data**
+  - Normalize wallet fields
+  - Auto-detect obvious networks from address format
+  - Merge duplicate wallet records
+  - Bulk tag filtered wallets
 
-### ↕️ Drag & Drop Reordering
-- **Manual Sorting**: Select "Custom Order" from the sort menu to enable drag handles on wallet cards.
-- **Touch Optimized**: Uses `@dnd-kit` with 200ms touch delay sensor to avoid conflicts with scrolling.
-- **Persistent Order**: Drag changes are saved to storage immediately.
+- **Import / Export**
+  - Export filtered or full encrypted `.xkey` backups
+  - Compare wallet files without importing them
+  - Compare `.csv`, `.json`, and `.xkey` files
+  - Pattern-based search handoff to the main search box
 
-### 📝 Markdown Notes
-- **Rich Text Rendering**: Wallet notes now render as markdown — supports **bold**, *italic*, `code`, links, lists, and headings.
-- **Mono Editor**: Notes textarea uses monospace font with markdown syntax placeholder hints.
-- **Zero Dependencies**: Lightweight custom MarkdownRenderer component, no external library needed.
+- **History & Security**
+  - Tool action history
+  - Sensitive CSV export lock
+  - CSV export confirmation when sensitive data may be exposed
 
-### 📥 Multi-format Import
-- **JSON Import**: Import wallet arrays from `.json` files with auto-field mapping (`address`, `privateKey`, `seedPhrase`, `mnemonic`, etc.).
-- **Plain Text Import**: Import `.txt` files with one address per line.
-- **Smart Detection**: File format is auto-detected by extension and content structure.
+### Import, Export, and Backup Improvements
 
-### ⚡ Performance
-- **Lazy List Rendering**: Only 50 wallets render initially, with IntersectionObserver loading more on scroll.
-- **Memoized Derivations**: `folders`, `filteredWallets`, `totalBalance`, `allTags` all properly memoized.
+- Import button now clearly states supported formats: `CSV / .xkey`.
+- Export tools distinguish plain CSV export from encrypted `.xkey` backup export.
+- Added scoped `.xkey` export for either all wallets or the current filter.
+- Added password handling for `.xkey` file comparison and backup verification.
+- Added error handling for invalid file types, wrong backup passwords, failed backup exports, and failed wallet saves.
 
-### 🛠️ TypeScript Foundation
-- **Incremental Migration Ready**: Added `tsconfig.json` (allowJs=true) and core `types.ts` with `Wallet`, `SortOrder`, `FilterKey` interfaces.
-- **Type Safety**: New files can be written in `.ts`/`.tsx` while existing `.jsx` files continue working.
+### Search and Scanning Improvements
 
-</details>
+- Added a paste button directly inside the search input.
+- Added camera-based QR address scanning for faster address lookup.
+- Extracts EVM and Tron addresses from pasted or scanned text when possible.
+- Improved mobile layout for search, filter, sort, camera, and paste controls.
 
----
+### Localization and i18n
 
-<details>
-<summary><b>📦 Previous Features (v4.0.12 & older)</b></summary>
-<br>
+- Completed translation coverage for all newly added tool labels and descriptions.
+- Verified required translation keys across all 15 supported languages.
+- Added translations for advanced tools, batch actions, dashboard additions, donation website label, and toolbar labels.
+- Removed raw translation key leaks such as `advancedTools.title` and `advancedTools.audit`.
 
-### ⌨️ Dynamic UX & Keyboard Layout Management (v4.0.11)
-- **Smart Auto-Scroll**: Smooth auto-scroll logic to push input fields into viewport center when keyboard appears.
-- **Capacitor Keyboard Fix**: Switched to `KeyboardResize.Body` for reliable `keyboardWillShow` events.
+Supported locale files:
 
-### 📁 Advanced Offline Data Export (v4.0.11)
-- **Scoped Storage Bypass**: Re-architected vault backup and CSV export to use `Directory.Cache` + native Share API.
-- **Privacy First**: Files saved via system picker to Google Drive, Telegram, or Downloads.
-- **Zero Permissions Needed**: Dropped `WRITE_EXTERNAL_STORAGE` requirement.
+`ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`
 
-### 📷 High-Speed QR Vault Transfer (v4.0.11)
-- **Optimized QR Density**: Halved chunk payload sizes for instant scanning on older cameras.
-- **Haptic Scanning Engine**: Physical vibration feedback on each successful chunk read.
-- **Resilient Camera Auto-Discovery**: Auto-select rear camera with explicit error alerts.
+### Web Compatibility Fixes
 
-### 🌍 Ultimate Localization & i18n Perfection (v4.0.8)
-- **100% Comprehensive Coverage**: Achieved full multi-language support across all 15 languages.
-- **Hardcoded Text Eradication**: Refactored internal React UI components to completely replace hardcoded English text.
-- **Missing Keys Resolved**: Translated advanced security features like **Decoy Vault**, **Shake to Lock**, **Kill Switch**, and **Auto Backup**.
+- Fixed web-mode authentication fallback so first-run web usage can create and unlock a PIN flow properly.
+- Improved handling for browser storage and local encrypted data.
+- Added safer error states for corrupted or invalid vault data.
 
-### 🤖 Automated CI/CD Pipeline
-- **GitHub Actions Integration**: Pushing a `v*` tag now automatically triggers a cloud build.
-- **Auto-Signing**: Securely injects Base64 keystores to sign Release APKs dynamically.
-- **GitHub Releases**: The final APK is automatically attached to the GitHub Releases page with versioning (e.g., `xKey-Release-v4.0.7.apk`).
+### Author and Project Links
 
-### 📱 Premium Native Experience
-- **Cinematic Splash Screen**: Utilized advanced CSS backdrop-blur outpainting techniques to ensure the app's logo scales perfectly across all aspect ratios without cropping.
-- **Native Android Icons**: Integrated `@capacitor/assets` to automatically generate all 87 adaptive launcher icons and splash screens directly from the source logo.
+The support/about modal now includes:
 
-### 🔒 Enhanced Security & Architecture
-- **Biometric Fallback Optimization**: Fixed a critical bypass where devices without fingerprint hardware skipped authentication. The app now properly triggers the OS-level Device Credential fallback (PIN/Pattern/Password).
-- **Capacitor 8 Upgrade**: Migrated the build system to support the latest Android SDKs, enforcing Node.js 22 and Java 21 architectures.
-- **1-Click Dev Script**: Added the `npm run android` shortcut to automatically build Vite, sync Capacitor, and launch Android Studio in a single command.
+- GitHub: <https://github.com/haivcon/xkey>
+- Website: <https://xlayer.my>
+- X: <https://x.com/haivcon>
+- Telegram: <https://t.me/haivcon>
 
-### Complete Rebrand & UI
-- **XBOT Check → xKey**: Complete identity migration.
-- **Theme Toggle**: Gradient toggle with Sun/Moon icon inside the knob.
+### Quality Checks
 
-### Wallet Management
-- **Inline Wallet Editing**: Edit name, address, private key, seed phrase, balance, notes.
-- **AES-256 Encryption**: All private keys and seed phrases encrypted locally.
-- **Folder Organization**: Import wallets via CSV, auto-group by filename.
-- **Duplicate Detection**: Smart filter to find and remove duplicate addresses.
-- **Password-Protected Backups**: AES-encrypted `.xkey` files, portable across devices.
-</details>
+Before release, the following checks were run successfully:
 
----
+```bash
+npm run lint
+npm run build
+```
 
-## 🚀 Installation & Setup
+Translation key checks were also run against all 15 locale files.
+
+The Vite production build currently reports a large chunk warning. This is not a runtime error, but future releases may split more screens into dynamic chunks.
+
+## Core Features
+
+- Offline encrypted wallet vault
+- AES-protected local wallet storage
+- PIN and biometric/device authentication support
+- Web and Android support through Capacitor
+- Wallet folders and filtering
+- Wallet tags and tag filtering
+- Batch wallet selection and actions
+- CSV import/export
+- Encrypted portable `.xkey` backups
+- Duplicate detection
+- Analytics dashboard
+- QR scanning and QR transfer utilities
+- Multi-language UI
+
+## Legacy Highlights
+
+Older releases introduced the main architecture and platform foundation:
+
+- React Router based navigation
+- Settings split into General, Security, and Data tabs
+- Lazy wallet rendering for larger vaults
+- Batch wallet operations
+- Drag-and-drop custom ordering
+- Markdown notes
+- JSON and text import support
+- Capacitor 8 migration
+- Android release workflow with signed APK/AAB output
+- Splash screen and launcher icon generation
+- Decoy vault, shake-to-lock, kill switch, auto backup, and clipboard controls
+
+## Installation
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) v22+
-- [Android Studio](https://developer.android.com/studio) (for APK builds)
-- Java 21+
 
-### 1. Clone & Install
+- Node.js 22+
+- Java 21+
+- Android Studio for Android builds
+
+### Install Dependencies
+
 ```bash
-git clone https://github.com/haivcon/xKey.git
-cd xKey
 npm install
 ```
 
-### 2. Run Locally (Web Mode)
+### Run Web Development Server
+
 ```bash
 npm run dev
 ```
 
-### 3. Build & Open Android Studio (1-Click)
+### Build Web App
+
+```bash
+npm run build
+```
+
+### Sync Android Project
+
+```bash
+npm run sync
+```
+
+### Build and Open Android Studio
+
 ```bash
 npm run android
 ```
-> *This automatically runs `vite build`, `cap sync`, and opens the native Android project.*
 
----
+## Release Workflow
 
-## ⚠️ Security Notice
+The GitHub Actions workflow builds and signs release artifacts when a `v*` tag is pushed.
 
-- **Never share your `.xkey` backup files or the password used to encrypt them.**
-- This app stores sensitive Private Keys. Always ensure your device has a secure screen lock (PIN/Password/Biometrics) enabled.
-- If you remove your device's screen lock, Android Keystore will drop biometric keys, rendering the vault inaccessible to protect your assets.
-- **This app is 100% offline.** No data is ever transmitted over the network.
+Example:
 
----
+```bash
+git tag v5.3.0
+git push origin v5.3.0
+```
 
-## 📄 License
+Generated release files:
+
+- `xKey-Release-v5.3.0.apk`
+- `xKey-Release-v5.3.0.aab`
+
+## Security Notice
+
+- Never share private keys, seed phrases, `.xkey` backup files, or backup passwords.
+- CSV export may expose private keys or seed phrases in plain text if those columns are selected.
+- Keep a secure device screen lock enabled.
+- Removing the device screen lock can invalidate Android Keystore-backed authentication keys.
+- xKey stores vault data locally and is designed for offline use.
+
+## License
 
 MIT License
