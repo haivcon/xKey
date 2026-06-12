@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Plus, Copy, Check, QrCode, Wallet, RefreshCw, Keyboard, AlertTriangle, Info, Camera, ChevronDown } from 'lucide-react';
+import { X, Plus, Copy, Check, Wallet, RefreshCw, Keyboard, AlertTriangle, Info, Camera, ChevronDown } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
@@ -18,9 +18,8 @@ const MATH_THEMES = [
   { border: 'border-rose-500/30', bg: 'bg-rose-500/5', text: 'text-rose-400', label: 'text-rose-300', contentBorder: 'border-rose-500/20' }
 ];
 
-export default function CreateWalletModal({ onClose, onSave, onShowQR, existingWallets = [] }) {
+export default function CreateWalletModal({ onClose, onSave, existingWallets = [] }) {
   const [tab, setTab] = useState('manual');
-  const [wallet, setWallet] = useState(null); // Keep for single fallback
   const [generateCount, setGenerateCount] = useState(1);
   const [generatedWallets, setGeneratedWallets] = useState([]);
   const [generating, setGenerating] = useState(false);
@@ -60,9 +59,11 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
       try {
         const w = new ethers.Wallet(manualPK.trim());
         setManualAddress(w.address);
-      } catch (e) {}
+      } catch {
+        // Ignore partial private-key input while the user is typing.
+      }
     }
-  }, [manualPK]);
+  }, [manualPK, manualAddress]);
 
   useEffect(() => {
     if (manualSeed && !manualAddress) {
@@ -75,9 +76,11 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
         }
         setManualAddress(hdNode.address);
         if (hdNode.privateKey) setManualPK(hdNode.privateKey);
-      } catch (e) {}
+      } catch {
+        // Ignore partial seed phrase/path input while the user is typing.
+      }
     }
-  }, [manualSeed, manualDerivationPath]);
+  }, [manualSeed, manualDerivationPath, manualAddress]);
 
   const startVanity = () => {
      isVanityRunningRef.current = true;
@@ -160,7 +163,6 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
           setTimeout(() => {
             setGeneratedWallets(newWallets);
             if (count === 1) {
-              setWallet(newWallets[0]);
               setWalletName(newWallets[0].name);
             }
             setGenerating(false);
@@ -199,7 +201,9 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
             const sizeBytes = new Blob([JSON.stringify(newWallets)]).size;
             let storageInfo = null;
             if (navigator.storage && navigator.storage.estimate) {
-              try { storageInfo = await navigator.storage.estimate(); } catch (e) {}
+              try { storageInfo = await navigator.storage.estimate(); } catch {
+                storageInfo = null;
+              }
             }
             onSave(newWallets);
             setBulkResult({ count, sizeBytes, storageInfo });
@@ -253,7 +257,7 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-surface-900 border border-surface-700 w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-surface-900 border border-surface-700 w-full max-w-lg lg:max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Plus size={18} className="text-brand-400" />
@@ -279,7 +283,7 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
 
           {/* ── Manual Entry Tab ── */}
           {tab === 'manual' && (
-            <>
+            <div className="grid gap-4 lg:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.walletName')}</label>
                 <input type="text" value={walletName} onChange={(e) => setWalletName(e.target.value)} placeholder={t('createWallet.walletNamePlaceholder')}
@@ -328,14 +332,14 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
                 )}
               </div>
 
-              <div>
+              <div className="lg:col-span-2">
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.privateKey')} <span className="text-surface-600">{t('createWallet.optional')}</span></label>
                 <PasswordInput value={manualPK} onChange={(e) => setManualPK(e.target.value)} placeholder={t('createWallet.privateKey') + '...'}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
                 <p className="text-[11px] text-red-400/70 mt-1.5 flex items-start gap-1"><Info size={10} className="mt-0.5 flex-shrink-0" />{t('createWallet.pkExplain')}</p>
               </div>
 
-              <div>
+              <div className="lg:col-span-2">
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.seedPhrase')} <span className="text-surface-600">{t('createWallet.optional')}</span></label>
                 <textarea value={manualSeed} onChange={(e) => setManualSeed(e.target.value)} placeholder="word1 word2 word3 ..." rows={2}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none" />
@@ -360,7 +364,7 @@ export default function CreateWalletModal({ onClose, onSave, onShowQR, existingW
                 <textarea value={manualNotes} onChange={(e) => setManualNotes(e.target.value)} placeholder={t('createWallet.notesPlaceholder')} rows={2}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none" />
               </div>
-            </>
+            </div>
           )}
 
           {/* ── Generate Tab ── */}

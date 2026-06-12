@@ -1,5 +1,4 @@
 import { Preferences } from '@capacitor/preferences';
-import CryptoJS from 'crypto-js';
 
 const SCHEMA_KEY = 'xkey_schema_version';
 const CURRENT_SCHEMA = 3;
@@ -29,7 +28,6 @@ export async function runMigrations(wallets) {
       ...w,
       _id: w._id || uuid(),
     }));
-    version = 1;
     migrated = true;
   }
 
@@ -40,7 +38,6 @@ export async function runMigrations(wallets) {
       network: w.network || 'ETH',
       pinned: w.pinned || false,
     }));
-    version = 2;
     migrated = true;
   }
 
@@ -51,7 +48,6 @@ export async function runMigrations(wallets) {
       ...w,
       _fieldEncrypted: false,
     }));
-    version = 3;
     migrated = true;
   }
 

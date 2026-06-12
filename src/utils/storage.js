@@ -1,7 +1,31 @@
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import CryptoJS from 'crypto-js';
 import { runMigrations } from './migration';
+import CryptoWorker from '../workers/crypto.worker.js?worker';
+
+const cryptoWorker = new CryptoWorker();
+
+const runCryptoWorker = (type, payload) => {
+    return new Promise((resolve, reject) => {
+        const id = Date.now().toString() + Math.random().toString();
+        
+        const handler = (e) => {
+            if (e.data.id === id) {
+                cryptoWorker.removeEventListener('message', handler);
+                if (e.data.success) {
+                    resolve(e.data.result);
+                } else {
+                    reject(new Error(e.data.error));
+                }
+            }
+        };
+        
+        cryptoWorker.addEventListener('message', handler);
+        cryptoWorker.postMessage({ type, payload, id });
+    });
+};
 
 const STORAGE_KEYS = {
     WALLETS: 'xkey_wallets',
@@ -12,51 +36,14 @@ const STORAGE_KEYS = {
 const BIOMETRIC_SERVER = 'app.xkey.vault';
 const BIOMETRIC_USER = 'xkey_vault';
 
-/**
- * Generate a random 32-char string for AES
- */
-const generateRandomKey = () => {
-    return CryptoJS.lib.WordArray.random(32).toString();
-};
-
-/**
- * Derive a secondary key from the primary key for per-field encryption.
- * This means even if the outer encryption is broken, PK/Seed are still protected.
- */
-const deriveFieldKey = (primaryKey) => {
-    return CryptoJS.HmacSHA256(primaryKey, 'xkey_field_salt_v1').toString();
-};
-
-/**
- * Encrypt a single sensitive field (privateKey, seedPhrase)
- */
-const encryptField = (value, fieldKey) => {
-    if (!value) return value;
-    // Prefix with 'xkf:' to identify already-encrypted fields
-    if (typeof value === 'string' && value.startsWith('xkf:')) return value;
-    return 'xkf:' + CryptoJS.AES.encrypt(value, fieldKey).toString();
-};
-
-/**
- * Decrypt a single sensitive field
- */
-const decryptField = (cipher, fieldKey) => {
-    if (!cipher) return cipher;
-    if (typeof cipher !== 'string' || !cipher.startsWith('xkf:')) return cipher;
-    try {
-        const raw = cipher.slice(4); // Remove 'xkf:' prefix
-        const bytes = CryptoJS.AES.decrypt(raw, fieldKey);
-        const result = bytes.toString(CryptoJS.enc.Utf8);
-        return result || cipher; // Return original if decrypt fails
-    } catch {
-        return cipher;
-    }
-};
+// Crypto functions migrated to crypto.worker.js
 
 /**
  * Check if native biometric/face authentication hardware is available.
  */
 export const isBiometricAvailable = async () => {
+    if (!Capacitor.isNativePlatform()) return false;
+
     try {
         const result = await NativeBiometric.isAvailable();
         return result.isAvailable;
@@ -70,6 +57,10 @@ export const isBiometricAvailable = async () => {
  * Only call this when isBiometricAvailable() returns true.
  */
 export const getEncryptionKeyBiometric = async () => {
+    if (!Capacitor.isNativePlatform()) {
+        return getEncryptionKeyFallback();
+    }
+
     await NativeBiometric.verifyIdentity({
         reason: "Unlock xKey",
         title: "xKey Authentication",
@@ -84,7 +75,7 @@ export const getEncryptionKeyBiometric = async () => {
         const msg = (err.message || '').toLowerCase();
         const code = (err.code || '').toLowerCase();
         if (msg.includes('itemnotfound') || msg.includes('not found') || msg.includes('no credentials') || code === 'itemnotfound') {
-            const newKey = generateRandomKey();
+            const newKey = await runCryptoWorker('GENERATE_KEY', {});
             await NativeBiometric.setCredentials({
                 username: BIOMETRIC_USER,
                 password: newKey,
@@ -103,32 +94,9 @@ export const getEncryptionKeyBiometric = async () => {
 export const getEncryptionKeyFallback = async () => {
     const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
     if (value) return value;
-    const newKey = generateRandomKey();
+    const newKey = await runCryptoWorker('GENERATE_KEY', {});
     await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: newKey });
     return newKey;
-};
-
-/**
- * Encrypt data before saving to preferences
- */
-const encryptData = (data, key) => {
-    if (!key) throw new Error("Key required for encryption");
-    return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
-};
-
-/**
- * Decrypt data retrieved from preferences
- */
-const decryptData = (cipherText, key) => {
-    if (!key) throw new Error("Key required for decryption");
-    try {
-        const bytes = CryptoJS.AES.decrypt(cipherText, key);
-        const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-        if (!decryptedStr) throw new Error("Invalid Key");
-        return JSON.parse(decryptedStr);
-    } catch (e) {
-        throw new Error("Invalid Key or corrupted data");
-    }
 };
 
 /**
@@ -138,15 +106,7 @@ const decryptData = (cipherText, key) => {
  */
 export const saveWallets = async (wallets, key, isDecoy = false) => {
     try {
-        const fieldKey = deriveFieldKey(key);
-        // Double-encrypt sensitive fields
-        const protected_ = wallets.map(w => ({
-            ...w,
-            privateKey: encryptField(w.privateKey, fieldKey),
-            seedPhrase: encryptField(w.seedPhrase, fieldKey),
-            _fieldEncrypted: true,
-        }));
-        const encrypted = encryptData(protected_, key);
+        const encrypted = await runCryptoWorker('ENCRYPT_WALLETS', { wallets, key });
         const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
         await Preferences.set({ key: storageKey, value: encrypted });
         return true;
@@ -164,19 +124,11 @@ export const loadWallets = async (key, isDecoy = false) => {
     const { value } = await Preferences.get({ key: storageKey });
     if (!value) return [];
     
-    let wallets = decryptData(value, key);
+    let wallets = await runCryptoWorker('DECRYPT_WALLETS', { cipherText: value, key });
     
     // Run schema migrations
     const { wallets: migrated, migrated: didMigrate } = await runMigrations(wallets);
     wallets = migrated;
-    
-    // Decrypt field-level encryption
-    const fieldKey = deriveFieldKey(key);
-    wallets = wallets.map(w => ({
-        ...w,
-        privateKey: decryptField(w.privateKey, fieldKey),
-        seedPhrase: decryptField(w.seedPhrase, fieldKey),
-    }));
     
     // If migration happened, re-save with new schema + field encryption
     if (didMigrate) {
@@ -214,9 +166,11 @@ export const decryptSetting = (cipher, key) => {
  */
 export const wipeAllData = async () => {
     await Preferences.clear();
+    if (!Capacitor.isNativePlatform()) return;
+
     try {
         await NativeBiometric.deleteCredentials({ server: BIOMETRIC_SERVER });
-    } catch(e) {
+    } catch {
         // Ignore if credential doesn't exist
     }
 };

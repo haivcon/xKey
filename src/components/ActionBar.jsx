@@ -1,14 +1,20 @@
-import { useState } from 'react';
-import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
+
+const QRScannerModal = lazy(() => import('./QRScannerModal'));
 
 export default function ActionBar({
   searchQuery, onSearchChange, sortOrder, onSortChange,
   onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
-  allTags = [], selectionMode, onToggleSelectionMode
+  allTags = [], selectionMode, onToggleSelectionMode,
+  onExportCSV, onExportBackup, onShowDuplicates, duplicateCount = 0, onAnalytics, onAdvancedTools
 }) {
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+  const [showSearchScanner, setShowSearchScanner] = useState(false);
   const t = useT();
 
   const FILTER_OPTIONS = [
@@ -42,30 +48,260 @@ export default function ActionBar({
     { key: 'address-asc', label: t('actionBar.addressAsc') },
   ];
 
+  const closeTools = () => setShowTools(false);
+
+  const extractSearchTarget = (value) => {
+    const text = (value || '').trim();
+    const evmAddress = text.match(/0x[a-fA-F0-9]{40}/);
+    if (evmAddress) return evmAddress[0];
+
+    const tronAddress = text.match(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/);
+    if (tronAddress) return tronAddress[0];
+
+    return text;
+  };
+
+  const handlePasteSearch = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) onSearchChange(extractSearchTarget(text));
+    } catch {
+      // Clipboard read can be denied by the browser; the input remains usable.
+    }
+  };
+
+  const toolGroups = [
+    {
+      key: 'data',
+      title: t('actionBar.toolData'),
+      items: [
+        {
+          key: 'import',
+          label: t('actionBar.importFiles'),
+          desc: t('actionBar.importFilesDesc'),
+          icon: UploadCloud,
+          onClick: () => { onUpload(); closeTools(); },
+          loading,
+        },
+        {
+          key: 'exportCSV',
+          label: t('actionBar.exportCSV'),
+          desc: t('actionBar.exportCSVDesc'),
+          icon: FileDown,
+          tone: 'warning',
+          onClick: () => { onExportCSV(); closeTools(); },
+        },
+        {
+          key: 'exportBackup',
+          label: t('actionBar.exportBackup'),
+          desc: t('actionBar.exportBackupDesc'),
+          icon: FileDown,
+          tone: 'success',
+          onClick: () => { onExportBackup(); closeTools(); },
+        },
+      ],
+    },
+    {
+      key: 'review',
+      title: t('actionBar.toolReview'),
+      items: [
+        {
+          key: 'duplicates',
+          label: t('actionBar.duplicates'),
+          desc: t('actionBar.duplicatesDesc'),
+          icon: AlertTriangle,
+          active: duplicateCount > 0,
+          badge: duplicateCount > 0 ? duplicateCount : null,
+          tone: duplicateCount > 0 ? 'warning' : undefined,
+          onClick: () => { onShowDuplicates(); closeTools(); },
+        },
+        {
+          key: 'analytics',
+          label: t('actionBar.analytics'),
+          desc: t('actionBar.analyticsDesc'),
+          icon: BarChart3,
+          onClick: () => { onAnalytics(); closeTools(); },
+        },
+      ],
+    },
+    {
+      key: 'bulk',
+      title: t('actionBar.toolBulk'),
+      items: [
+        {
+          key: 'bulkNetwork',
+          label: t('actionBar.bulkNetwork'),
+          desc: t('actionBar.bulkNetworkDesc'),
+          icon: Network,
+          onClick: () => { onBulkNetwork(); closeTools(); },
+        },
+        {
+          key: 'selectWallets',
+          label: t('actionBar.selectWallets'),
+          desc: t('actionBar.selectWalletsDesc'),
+          icon: CheckSquare,
+          active: selectionMode,
+          onClick: () => { onToggleSelectionMode(); closeTools(); },
+        },
+        {
+          key: 'advancedTools',
+          label: t('actionBar.advancedTools'),
+          desc: t('actionBar.advancedToolsDesc'),
+          icon: Wrench,
+          onClick: () => { onAdvancedTools(); closeTools(); },
+        },
+      ],
+    },
+  ];
+
+  const desktopTools = toolGroups.flatMap(group => group.items);
+
+  const toolButtonClass = (item) => {
+    if (item.tone === 'warning') {
+      return 'border-amber-500/25 bg-amber-500/10 text-amber-300 hover:bg-amber-500/15';
+    }
+    if (item.tone === 'success') {
+      return 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15';
+    }
+    if (item.active) {
+      return 'border-brand-500/40 bg-brand-500/15 text-brand-300';
+    }
+    return 'border-surface-700 bg-surface-800 text-surface-200 hover:bg-surface-700';
+  };
+
   return (
     <>
-      <div className="flex gap-2 mb-2 mt-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2 mb-2 mt-1">
+        <div className="flex items-stretch gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
           <input type="text" placeholder={t('actionBar.searchPlaceholder')} value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500" />
+            className="h-12 w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-11 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500" />
+          <button
+            type="button"
+            onClick={handlePasteSearch}
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+            title={t('actionBar.pasteSearch')}
+          >
+            <ClipboardPaste size={17} />
+          </button>
         </div>
+        <button onClick={() => setShowSearchScanner(true)} className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-surface-700 bg-surface-800 text-surface-300 transition-colors hover:bg-surface-700 hover:text-white" title={t('actionBar.scanSearch')}>
+          <Camera size={18} />
+        </button>
         <button onClick={() => { setShowFilters(!showFilters); setShowSort(false); }}
-          className={`flex-shrink-0 border px-3 py-3 rounded-lg transition-colors flex items-center justify-center ${activeFilter !== 'all' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-surface-800 border-surface-700 text-surface-300 hover:text-white hover:bg-surface-700'}`}
-          title="Filter"><Filter size={18} /></button>
+          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border transition-colors ${activeFilter !== 'all' ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300' : 'border-surface-700 bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white'}`}
+          title={t('actionBar.filter')}><Filter size={18} /></button>
         <button onClick={() => { setShowSort(!showSort); setShowFilters(false); }}
-          className={`flex-shrink-0 border px-3 py-3 rounded-lg transition-colors flex items-center justify-center ${sortOrder !== 'none' ? 'bg-brand-500/10 border-brand-500/30 text-brand-400' : 'bg-surface-800 border-surface-700 text-surface-300 hover:text-white hover:bg-surface-700'}`}
-          title="Sort"><ArrowDownUp size={18} /></button>
-        <button onClick={onAddWallet} className="flex-shrink-0 bg-brand-600 hover:bg-brand-500 border border-brand-500 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('home.addWallet')}><Plus size={18} /></button>
-        <button onClick={onBulkNetwork} className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title={t('actionBar.bulkNetwork') || 'Bulk Change Network'}><Network size={18} /></button>
-        <button onClick={onToggleSelectionMode} className={`flex-shrink-0 border px-3 py-3 rounded-lg transition-colors flex items-center justify-center ${selectionMode ? 'bg-brand-500/20 border-brand-500/40 text-brand-400' : 'bg-surface-800 hover:bg-surface-700 border-surface-700 text-white'}`} title={t('batch.toggleSelection') || 'Select Wallets'}>
-          <CheckSquare size={18} />
-        </button>
-        <button onClick={onUpload} disabled={loading}
-          className="flex-shrink-0 bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white px-3 py-3 rounded-lg transition-colors flex items-center justify-center" title="Import">
-          {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <UploadCloud size={18} />}
-        </button>
+          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border transition-colors ${sortOrder !== 'none' ? 'border-brand-500/30 bg-brand-500/10 text-brand-300' : 'border-surface-700 bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white'}`}
+          title={t('actionBar.sort')}><ArrowDownUp size={18} /></button>
+        </div>
+        <div className="flex gap-2 xl:hidden">
+          <button
+            onClick={onAddWallet}
+            className="btn-glow flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
+            title={t('home.addWallet')}
+          >
+            <Plus size={18} />
+            <span>{t('home.addWallet')}</span>
+          </button>
+          <button
+            onClick={() => setShowTools(!showTools)}
+            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${showTools ? 'bg-surface-700 border-surface-600 text-white' : 'bg-surface-800 border-surface-700 text-surface-200 hover:bg-surface-700'}`}
+            title={t('actionBar.moreTools')}
+          >
+            <MoreHorizontal size={18} />
+            <span>{t('actionBar.tools')}</span>
+          </button>
+        </div>
+
+        <div className="hidden gap-2 xl:grid xl:grid-cols-4 2xl:grid-cols-5">
+          <button
+            onClick={onAddWallet}
+            className="btn-glow flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
+            title={t('home.addWallet')}
+          >
+            <Plus size={18} />
+            <span className="truncate">{t('home.addWallet')}</span>
+          </button>
+
+          <div className="contents">
+            {desktopTools.map(item => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.key}
+                  onClick={item.onClick}
+                  disabled={item.loading}
+                  className={`relative flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-semibold transition-colors disabled:opacity-60 ${toolButtonClass(item)}`}
+                  title={`${item.label}${item.desc ? ` - ${item.desc}` : ''}`}
+                >
+                  {item.loading ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={18} />}
+                  <span className="truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-yellow-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+      {showTools && createPortal(
+        <div className="fixed inset-0 z-[9998] xl:hidden">
+          <button className="absolute inset-0 w-full bg-black/55 backdrop-blur-sm" onClick={closeTools} aria-label={t('common.close')} />
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[82vh] flex-col overflow-hidden rounded-t-2xl border border-surface-700 bg-surface-950 shadow-2xl">
+            <div className="flex items-center justify-between px-4 pt-4 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white">{t('actionBar.tools')}</h3>
+                <p className="text-xs text-surface-500">{t('actionBar.moreTools')}</p>
+              </div>
+              <button onClick={closeTools} className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {toolGroups.map(group => (
+                <div key={group.key}>
+                  <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                    {group.title}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {group.items.map(item => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          onClick={item.onClick}
+                          disabled={item.loading}
+                          className={`relative flex items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors disabled:opacity-60 ${toolButtonClass(item)}`}
+                        >
+                          <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-black/10">
+                            {item.loading ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={17} />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold">{item.label}</span>
+                            <span className="mt-0.5 block text-xs leading-snug opacity-70">{item.desc}</span>
+                          </span>
+                          {item.badge && (
+                            <span className="mt-1 min-w-5 h-5 px-1.5 bg-yellow-500 text-black text-[11px] font-bold rounded-full flex items-center justify-center">
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {showFilters && (
         <div className="mb-4 bg-surface-800/50 rounded-lg p-3 border border-surface-700">
@@ -113,6 +349,15 @@ export default function ActionBar({
             </button>
           ))}
         </div>
+      )}
+
+      {showSearchScanner && (
+        <Suspense fallback={null}>
+          <QRScannerModal
+            onResult={({ text }) => onSearchChange(extractSearchTarget(text))}
+            onClose={() => setShowSearchScanner(false)}
+          />
+        </Suspense>
       )}
     </>
   );

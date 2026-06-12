@@ -28,8 +28,6 @@ export default function SecurityTab({ onWipe }) {
   const [showClipboard, setShowClipboard] = useState(false);
   const [customAutoLock, setCustomAutoLock] = useState('');
   const [customClipboard, setCustomClipboard] = useState('');
-  const [currentAutoLock, setCurrentAutoLock] = useState('');
-  const [currentClipboard, setCurrentClipboard] = useState('');
 
   // Master Password
   const [showMPSetup, setShowMPSetup] = useState(false);
@@ -44,7 +42,6 @@ export default function SecurityTab({ onWipe }) {
   const [pinNew, setPinNew] = useState('');
   const [pinConfirmVal, setPinConfirmVal] = useState('');
   const [pinError, setPinError] = useState('');
-  const [hasPinSet, setHasPinSet] = useState(false);
 
   // Kill Switch & Decoy
   const [killSwitchEnabled, setKillSwitchEnabled] = useState(false);
@@ -66,24 +63,6 @@ export default function SecurityTab({ onWipe }) {
 
   useEffect(() => {
     const loadSettings = async () => {
-      const { value: al } = await Preferences.get({ key: AUTOLOCK_KEY });
-      if (al) {
-        const opt = AUTOLOCK_OPTIONS.find(o => o.value == al);
-        setCurrentAutoLock(opt ? opt.label : `${Math.round(al / 60000)} min`);
-      } else {
-        setCurrentAutoLock('5 min');
-      }
-
-      const { value: cb } = await Preferences.get({ key: CLIPBOARD_TIMEOUT_KEY });
-      if (cb) {
-        const opt = CLIPBOARD_OPTIONS.find(o => o.value == cb);
-        setCurrentClipboard(opt ? opt.label : `${Math.round(cb / 1000)} s`);
-      } else {
-        setCurrentClipboard('45 s');
-      }
-
-      const { value: pinHash } = await Preferences.get({ key: PIN_HASH_KEY });
-      setHasPinSet(!!pinHash);
       const { value: ks } = await Preferences.get({ key: KILL_SWITCH_KEY });
       setKillSwitchEnabled(ks === 'true');
       const bio = await isBiometricAvailable();
@@ -103,8 +82,6 @@ export default function SecurityTab({ onWipe }) {
     if (!ok) return;
     hapticTap();
     await Preferences.set({ key: AUTOLOCK_KEY, value: String(ms) });
-    const opt = AUTOLOCK_OPTIONS.find(o => o.value == ms);
-    setCurrentAutoLock(opt ? opt.label : `${Math.round(ms / 60000)} min`);
     showToast(t('settings.autoLockSaved'), 'success');
     setShowAutoLock(false);
   };
@@ -114,8 +91,6 @@ export default function SecurityTab({ onWipe }) {
     if (!ok) return;
     hapticTap();
     await Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(ms) });
-    const opt = CLIPBOARD_OPTIONS.find(o => o.value == ms);
-    setCurrentClipboard(opt ? opt.label : `${Math.round(ms / 1000)} s`);
     showToast(t('settings.clipboardSaved'), 'success');
     setShowClipboard(false);
   };

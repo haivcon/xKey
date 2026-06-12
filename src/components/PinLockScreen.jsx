@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import CryptoJS from 'crypto-js';
-import { Delete, Lock, ShieldCheck, ShieldOff, TimerReset } from 'lucide-react';
+import { Delete, Lock, ShieldCheck, TimerReset } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
 

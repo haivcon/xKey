@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Copy, Check, Heart, Send } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clipboard } from '@capacitor/clipboard';
@@ -8,14 +8,9 @@ import { hapticTap, hapticSuccess } from '../utils/haptics';
 export default function DonateModal({ onClose }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState('');
   const [isZoomed, setIsZoomed] = useState(false);
   
   const donateAddress = '0x5c6253e43c834ed82916256681aa70eb8692eddb';
-
-  useEffect(() => {
-    // No longer generating data URL since we use SVG directly
-  }, [donateAddress]);
 
   const handleCopy = async () => {
     try {

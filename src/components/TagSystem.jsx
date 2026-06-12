@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Tag, X, Plus, Check } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Tag, X } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 
 const TAG_COLORS = [

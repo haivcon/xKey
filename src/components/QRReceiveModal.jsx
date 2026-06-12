@@ -26,10 +26,12 @@ export default function QRReceiveModal({ onClose, onImport }) {
         } else {
           scannerRef.current.stop().catch(() => {});
         }
-      } catch (err) {
+      } catch {
         // Ignore synchronous errors like 'Cannot stop, scanner is not running or paused.'
       }
-      try { scannerRef.current.clear(); } catch {}
+      try { scannerRef.current.clear(); } catch {
+        // Scanner may already be cleared by the native camera layer.
+      }
       scannerRef.current = null;
     }
   };
@@ -76,7 +78,9 @@ export default function QRReceiveModal({ onClose, onImport }) {
                   return prev;
                 });
               }
-            } catch (err) {}
+            } catch {
+              // Ignore non-xKey QR payloads and keep scanning.
+            }
           },
           () => {}
         );
@@ -140,7 +144,7 @@ export default function QRReceiveModal({ onClose, onImport }) {
       }));
 
       onImport(importedWallets);
-    } catch (err) {
+    } catch {
       setError(t('settings.incorrectPassword') || 'Failed to decrypt or parse transfer data');
     } finally {
       setDecrypting(false);

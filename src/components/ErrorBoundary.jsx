@@ -27,7 +27,9 @@ export default class ErrorBoundary extends Component {
       try {
         const { wipeAllData } = await import('../utils/storage');
         await wipeAllData();
-      } catch {}
+      } catch (error) {
+        console.error('Failed to wipe vault data', error);
+      }
       window.location.reload();
     }
   };

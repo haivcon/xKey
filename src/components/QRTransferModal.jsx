@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { QrCode, ArrowRight, X, Copy, Check, Lock } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
-import { hapticTap, hapticSuccess } from '../utils/haptics';
+import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
 import PasswordInput from './PasswordInput';
 

@@ -66,7 +66,7 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
             bytes[i] = binString.charCodeAt(i);
           }
           rawString = new TextDecoder().decode(bytes);
-        } catch (e) {
+        } catch {
           showToast(t('common.errorReadingFile') || 'Error reading file data.', 'error');
           setLoading(false);
           return;
@@ -151,7 +151,7 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
       console.error('FilePicker Error:', error);
       setLoading(false);
     }
-  }, [wallets, setWallets, aesKey, isDecoyMode, showToast, t]);
+  }, [importWallets, showToast, t]);
 
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;

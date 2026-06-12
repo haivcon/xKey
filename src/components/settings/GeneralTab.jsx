@@ -5,6 +5,7 @@ import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
 import { hapticTap } from '../../utils/haptics';
 import DonateModal from '../DonateModal';
+import useLiteMode from '../../hooks/useLiteMode';
 
 const THEME_OPTIONS = [
   { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo' },
@@ -20,6 +21,7 @@ export default function GeneralTab() {
   const t = useT();
   const { lang, changeLang } = useLanguage();
   const currentLang = LANGUAGES.find(l => l.code === lang);
+  const { isLiteMode, toggleLiteMode } = useLiteMode();
 
   return (
     <>
@@ -95,6 +97,27 @@ export default function GeneralTab() {
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* ═══ Performance Options ═══ */}
+      <div className="glass-card p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Monitor size={20} className="text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium text-sm">Lite Mode</p>
+              <p className="text-xs text-surface-400">Disable blurs for low-end devices</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { hapticTap(); toggleLiteMode(); }}
+            className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${isLiteMode ? 'bg-emerald-500' : 'bg-surface-600'}`}
+          >
+            <div className={`w-4 h-4 bg-white rounded-full absolute shadow-sm transition-transform ${isLiteMode ? 'right-1 translate-x-0' : 'left-1 translate-x-0'}`} />
+          </button>
         </div>
       </div>
 

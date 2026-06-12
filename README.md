@@ -6,9 +6,21 @@
 
 ---
 
-## 🚀 What's New in v5.1.0
+## 🚀 What's New in v5.2.0
 
-### 🏗️ Major Architecture Refactoring
+### 🌐 xLayer Ecosystem Integration
+- **Unified Portal**: Integrated xBot and xKey into a single monolithic xLayer portal via Vite Multi-Page Application (MPA) architecture.
+- **Tailwind CSS v4**: Upgraded the entire project to Tailwind v4, utilizing native CSS `@theme` and `@import` capabilities.
+- **Glassmorphism UI**: Harmonized design system across the new Landing Page, xBot dashboard, and xKey vault with seamless transition states.
+- **CSS Engine Overhaul**: Fully refactored legacy `@apply` cross-references for strict Tailwind v4 compatibility.
+
+---
+
+<details>
+<summary><b>📦 Previous Features (v5.1.0 & older)</b></summary>
+<br>
+
+### 🏗️ Major Architecture Refactoring (v5.1.0)
 - **App.jsx**: Reduced from **859 → 470 lines** by extracting 4 custom hooks: `useWallets`, `useFileImport`, `useBackButton`, `useShakeToLock`.
 - **SettingsScreen**: Reduced from **928 → 65 lines** by splitting into `GeneralTab`, `SecurityTab`, `DataTab` components.
 - **Lazy Wallet Rendering**: New `WalletList` component with `useLazyList` hook — renders 50 wallets initially, infinite-scrolls more via IntersectionObserver.
@@ -53,6 +65,8 @@
 ### 🛠️ TypeScript Foundation
 - **Incremental Migration Ready**: Added `tsconfig.json` (allowJs=true) and core `types.ts` with `Wallet`, `SortOrder`, `FilterKey` interfaces.
 - **Type Safety**: New files can be written in `.ts`/`.tsx` while existing `.jsx` files continue working.
+
+</details>
 
 ---
 

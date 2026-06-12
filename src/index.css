@@ -400,3 +400,39 @@ html {
   color: rgba(99, 102, 241, 0.9);
   margin-left: 2px;
 }
+
+/* ── Lite Mode (Performance for low-end devices) ── */
+.lite-mode,
+.lite-mode * {
+  backdrop-filter: none !important;
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+.lite-mode .glass-card {
+  background-color: var(--color-surface-900) !important;
+  border: 1px solid var(--color-surface-700) !important;
+}
+
+.lite-mode .btn-glow,
+.lite-mode .btn-glow-danger,
+.lite-mode .btn-glow-success,
+.lite-mode .btn-glow-warning,
+.lite-mode .btn-icon-glow {
+  box-shadow: none !important;
+}
+
+.lite-mode .btn-glow:active,
+.lite-mode .btn-icon-glow:active {
+  transform: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.lite-mode .btn-glow::after {
+  display: none !important;
+}
+
+.lite-mode .fixed.bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}

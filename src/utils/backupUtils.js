@@ -1,5 +1,6 @@
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 import CryptoJS from 'crypto-js';
 
 const encryptBackup = (data, key) => {
@@ -28,6 +29,19 @@ export const exportPortableBackup = async (wallets, config, userPassword) => {
 
         const encryptedData = encryptBackup(backupPayload, userPassword);
         const fileName = `xkey_portable_${new Date().getTime()}.xkey`;
+
+        if (!Capacitor.isNativePlatform()) {
+            const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+            return true;
+        }
 
         // Write to app cache (no permissions needed on any Android version)
         const fileResult = await Filesystem.writeFile({

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ShieldAlert, AlertTriangle } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 
-export default function AuthErrorScreen({ error }) {
+export default function AuthErrorScreen({ error, onRetry }) {
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [wiping, setWiping] = useState(false);
   const t = useT();
@@ -21,7 +21,7 @@ export default function AuthErrorScreen({ error }) {
         <h2 className="text-xl font-bold text-white mb-2">{t('authError.vaultLocked')}</h2>
         <p className="text-surface-400 mb-8">{error}</p>
         <div className="space-y-3">
-          <button onClick={() => window.location.reload()} className="w-full bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-lg font-medium transition-colors">{t('authError.retry')}</button>
+          <button onClick={onRetry || (() => window.location.reload())} className="w-full bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-lg font-medium transition-colors">{t('authError.retry')}</button>
           {error.includes('Invalid Key') && !confirmWipe && (
             <button onClick={() => setConfirmWipe(true)} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-6 py-3 rounded-lg font-medium transition-colors">{t('authError.wipeReset')}</button>
           )}

@@ -53,12 +53,12 @@ export default function MarkdownRenderer({ text, className = '' }) {
       }
 
       // Find next special char
-      const nextSpecial = remaining.search(/[\*`\[]/);
+      const nextSpecial = remaining.search(/[*`[]/);
       if (nextSpecial > 0) {
         parts.push(<span key={`${key}-${idx++}`}>{remaining.slice(0, nextSpecial)}</span>);
         remaining = remaining.slice(nextSpecial);
       } else {
-        parts.push(<span key={`${key}-${idx++}`}>{remaining}</span>);
+        parts.push(<span key={`${key}-tail`}>{remaining}</span>);
         break;
       }
     }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, Lock, ShieldCheck, ShieldAlert, Save, ChevronDown, QrCode, Camera } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets, encryptSetting } from '../../utils/storage';
@@ -9,7 +9,6 @@ import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import PasswordInput from '../PasswordInput';
 import QRTransferModal from '../QRTransferModal';
 import QRReceiveModal from '../QRReceiveModal';
-import DonateModal from '../DonateModal';
 
 export default function DataTab({ aesKey, onImport }) {
   // Auto-Backup
@@ -27,19 +26,18 @@ export default function DataTab({ aesKey, onImport }) {
   const [showQRTransfer, setShowQRTransfer] = useState(false);
   const [showQRReceive, setShowQRReceive] = useState(false);
   const [transferWallets, setTransferWallets] = useState([]);
-  const [showDonate, setShowDonate] = useState(false);
 
   const { showToast } = useToast();
   const t = useT();
 
   // Load saved auto-backup settings
-  useState(() => {
+  useEffect(() => {
     (async () => {
       const { value: abInterval } = await Preferences.get({ key: 'xkey_autobackup_interval' });
       if (abInterval) setAutoBackupInterval(abInterval);
       // Don't load encrypted password into state - user re-enters it
     })();
-  });
+  }, []);
 
   const saveAutoBackup = async (interval) => {
     await Preferences.set({ key: 'xkey_autobackup_interval', value: interval });
@@ -78,7 +76,7 @@ export default function DataTab({ aesKey, onImport }) {
         setBackupPassword('');
         setBackupPasswordConfirm('');
       }
-    } catch (e) {
+    } catch {
       showToast(t('settings.exportError'), 'error');
     }
     setExporting(false);
@@ -234,8 +232,6 @@ export default function DataTab({ aesKey, onImport }) {
           }}
         />
       )}
-
-      {showDonate && <DonateModal onClose={() => setShowDonate(false)} />}
     </>
   );
 }

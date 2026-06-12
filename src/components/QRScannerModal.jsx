@@ -5,9 +5,9 @@ import { useT } from '../contexts/LanguageContext';
 
 export default function QRScannerModal({ onResult, onClose }) {
   const [error, setError] = useState('');
-  const [scanning, setScanning] = useState(false);
   const scannerRef = useRef(null);
   const containerRef = useRef(null);
+  const readerIdRef = useRef(`qr-reader-${Math.random().toString(36).slice(2)}`);
   const onResultRef = useRef(onResult);
   const onCloseRef = useRef(onClose);
   const t = useT();
@@ -22,19 +22,23 @@ export default function QRScannerModal({ onResult, onClose }) {
       stopped = true;
       if (scannerRef.current) {
         scannerRef.current.stop().catch(() => {});
-        try { scannerRef.current.clear(); } catch {}
+        try { scannerRef.current.clear(); } catch {
+          // Scanner may already be cleared by the native camera layer.
+        }
         scannerRef.current = null;
       }
     };
 
     const startScanner = async () => {
       try {
-        scanner = new Html5Qrcode('qr-reader');
+        scanner = new Html5Qrcode(readerIdRef.current);
         scannerRef.current = scanner;
-        setScanning(true);
+        const cameras = await Html5Qrcode.getCameras();
+        const backCamera = cameras.find(camera => /back|rear|environment/i.test(camera.label));
+        const cameraConfig = backCamera?.id || cameras[0]?.id || { facingMode: 'environment' };
 
         await scanner.start(
-          { facingMode: 'environment' },
+          cameraConfig,
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
             if (stopped) return;
@@ -53,7 +57,6 @@ export default function QRScannerModal({ onResult, onClose }) {
       } catch (err) {
         if (!stopped) {
           setError(err.message || 'Camera access denied');
-          setScanning(false);
         }
       }
     };
@@ -61,7 +64,7 @@ export default function QRScannerModal({ onResult, onClose }) {
     startScanner();
 
     return cleanup;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClose = () => {
     if (scannerRef.current) {
@@ -95,7 +98,7 @@ export default function QRScannerModal({ onResult, onClose }) {
             </div>
           ) : (
             <>
-              <div id="qr-reader" ref={containerRef} className="rounded-xl overflow-hidden mb-3" style={{ minHeight: '280px' }} />
+              <div id={readerIdRef.current} ref={containerRef} className="rounded-xl overflow-hidden mb-3" style={{ minHeight: '280px' }} />
               <p className="text-surface-400 text-xs text-center">
                 {t('qrScanner.hint')}
               </p>

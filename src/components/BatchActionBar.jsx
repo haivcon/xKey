@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, FolderInput, Tag, Pin, CheckSquare, Square, X } from 'lucide-react';
+import { Trash2, FolderInput, Tag, Pin, Square, X } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap } from '../utils/haptics';
 
@@ -85,7 +85,7 @@ export default function BatchActionBar({
               value={tagInput}
               onChange={e => setTagInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && tagInput.trim()) { onTag(tagInput.trim().toLowerCase()); setTagInput(''); setShowTagInput(false); } }}
-              placeholder="Enter tag name..."
+              placeholder={t('batch.tagPlaceholder')}
               className="flex-1 bg-surface-900 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 placeholder:text-surface-600"
             />
             <button

@@ -118,8 +118,6 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     setEditMode(false);
   };
 
-  const cancelEdit = () => { setEditMode(false); };
-
   const editInput = (key, label, type = 'text', multiline = false) => (
     <div>
       <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{label}</label>

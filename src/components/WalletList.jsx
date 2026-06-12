@@ -4,7 +4,15 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import WalletCard from './WalletCard';
 import SortableWalletCard from './SortableWalletCard';
 import SkeletonCard from './SkeletonCard';
-import useLazyList from '../hooks/useLazyList';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
+import { useRef, useEffect, useState } from 'react';
+
+const getColumnCount = () => {
+  if (typeof window === 'undefined') return 1;
+  if (window.innerWidth >= 1280) return 3;
+  if (window.innerWidth >= 768) return 2;
+  return 1;
+};
 
 /**
  * Wallet list with lazy rendering and optional drag-and-drop reordering.
@@ -17,9 +25,34 @@ export default function WalletList({
   selectionMode, isSelected, toggleSelect,
   sortOrder, onReorder
 }) {
-  const { visibleItems, hasMore, sentinelRef } = useLazyList(filteredWallets);
-
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
+
+  const listRef = useRef(null);
+  const [listOffset, setListOffset] = useState(0);
+  const [columnCount, setColumnCount] = useState(getColumnCount);
+
+  useEffect(() => {
+    if (listRef.current) {
+      const rect = listRef.current.getBoundingClientRect();
+      setListOffset(rect.top + window.scrollY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setColumnCount(getColumnCount());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const effectiveColumns = isDndEnabled ? 1 : columnCount;
+  const rowCount = Math.ceil(filteredWallets.length / effectiveColumns);
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => 112,
+    overscan: 4,
+    scrollMargin: listOffset,
+  });
 
   // Generate stable IDs for dnd-kit
   const getWalletId = (w, i) => w._id || `${w.address || 'no-addr'}-${w.groupId || 'root'}-${i}`;
@@ -33,12 +66,12 @@ export default function WalletList({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = visibleItems.findIndex((w, i) => getWalletId(w, i) === active.id);
-    const newIndex = visibleItems.findIndex((w, i) => getWalletId(w, i) === over.id);
+    const oldIndex = filteredWallets.findIndex((w, i) => getWalletId(w, i) === active.id);
+    const newIndex = filteredWallets.findIndex((w, i) => getWalletId(w, i) === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     onReorder?.(oldIndex, newIndex);
-  }, [visibleItems, onReorder]);
+  }, [filteredWallets, onReorder]);
 
   const renderCard = (w, i) => (
     <WalletCard
@@ -74,7 +107,47 @@ export default function WalletList({
     );
   }
 
-  const itemIds = visibleItems.map((w, i) => getWalletId(w, i));
+  const itemIds = filteredWallets.map((w, i) => getWalletId(w, i));
+
+  const renderVirtualList = () => (
+    <div ref={listRef} style={{ position: 'relative', width: '100%', height: `${rowVirtualizer.getTotalSize()}px` }}>
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const rowStart = virtualRow.index * effectiveColumns;
+        const rowWallets = filteredWallets.slice(rowStart, rowStart + effectiveColumns);
+
+        const rowContent = rowWallets.map((w, offset) => {
+          const i = rowStart + offset;
+          const id = getWalletId(w, i);
+
+          return isDndEnabled ? (
+            <SortableWalletCard key={id} id={id}>{renderCard(w, i)}</SortableWalletCard>
+          ) : (
+            <div key={id} className="min-w-0">
+              {renderCard(w, i)}
+            </div>
+          );
+        });
+
+        return (
+          <div
+            key={virtualRow.key}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
+            }}
+            className={isDndEnabled ? 'pb-3' : 'grid gap-3 pb-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'}
+          >
+            {rowContent}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="space-y-3">
@@ -85,23 +158,11 @@ export default function WalletList({
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-            {visibleItems.map((w, i) => (
-              <SortableWalletCard key={getWalletId(w, i)} id={getWalletId(w, i)}>
-                {renderCard(w, i)}
-              </SortableWalletCard>
-            ))}
+            {renderVirtualList()}
           </SortableContext>
         </DndContext>
       ) : (
-        visibleItems.map((w, i) => renderCard(w, i))
-      )}
-      {hasMore && (
-        <div ref={sentinelRef} className="flex items-center justify-center py-4">
-          <div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
-          <span className="ml-2 text-sm text-surface-500">
-            {visibleItems.length} / {filteredWallets.length}
-          </span>
-        </div>
+        renderVirtualList()
       )}
     </div>
   );

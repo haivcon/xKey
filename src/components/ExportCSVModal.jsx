@@ -70,7 +70,7 @@ export default function ExportCSVModal({ wallets, onClose }) {
       });
       
       showToast(t('exportCSV.exportSuccess'), 'success');
-    } catch (e) { 
+    } catch { 
       handleCopy(); 
       showToast(t('exportCSV.exportSuccess'), 'success');
     }

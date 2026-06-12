@@ -43,7 +43,9 @@ export const secureCopy = async (text, clearAfterMs = null, onClear = null) => {
             await navigator.clipboard.writeText('');
           }
         } catch {
-          try { await navigator.clipboard.writeText(''); } catch {}
+          try { await navigator.clipboard.writeText(''); } catch {
+            // Some platforms deny clipboard writes outside a direct user gesture.
+          }
         }
         clearTimer = null;
         if (onClear) onClear();

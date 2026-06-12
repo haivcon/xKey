@@ -1,4 +1,4 @@
-import { ArrowLeft, Wallet, TrendingUp, AlertCircle, FolderOpen, KeyRound, Link } from 'lucide-react';
+import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 
 export default function DashboardView({ wallets, onBack }) {
@@ -61,7 +61,7 @@ export default function DashboardView({ wallets, onBack }) {
 
     return (
         <div className="min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
-            <header className="flex items-center justify-between mb-6 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
+            <header className="max-w-7xl mx-auto flex items-center justify-between mb-6 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
                 <button onClick={onBack} className="btn-icon-glow p-2 rounded-full hover:bg-surface-800 transition-colors">
                     <ArrowLeft size={24} className="text-surface-300" />
                 </button>
@@ -71,10 +71,10 @@ export default function DashboardView({ wallets, onBack }) {
                 <div className="w-10"></div>
             </header>
 
-            <div className="max-w-xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                     <div className="glass-card p-4 border border-surface-700">
                         <div className="flex items-center gap-2 mb-2">
                             <Wallet size={16} className="text-brand-400" />
@@ -103,7 +103,7 @@ export default function DashboardView({ wallets, onBack }) {
                         </div>
                         <p className="text-2xl font-bold text-cyan-400">{walletsWithPK}</p>
                     </div>
-                    <div className="glass-card p-4 border border-surface-700 col-span-2">
+                    <div className="glass-card p-4 border border-surface-700 col-span-2 lg:col-span-1">
                         <div className="flex items-center gap-2 mb-2">
                             <Link size={16} className="text-purple-400" />
                             <span className="text-xs text-surface-400">{t('dashboard.withSeed')}</span>
@@ -112,6 +112,7 @@ export default function DashboardView({ wallets, onBack }) {
                     </div>
                 </div>
 
+                <div className="grid lg:grid-cols-2 gap-6">
                 {/* Folder Pie Chart */}
                 <div className="glass-card p-6 border border-surface-700">
                     <h3 className="text-white font-semibold mb-4">{t('dashboard.distribution')}</h3>
@@ -165,7 +166,9 @@ export default function DashboardView({ wallets, onBack }) {
                         </div>
                     </div>
                 </div>
+                </div>
 
+                <div className="grid xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-6">
                 {/* Import Timeline */}
                 <div className="glass-card p-6 border border-surface-700">
                     <h3 className="text-white font-semibold mb-4">{t('dashboard.importTimeline')}</h3>
@@ -182,6 +185,7 @@ export default function DashboardView({ wallets, onBack }) {
                     </div>
                 </div>
 
+                <div className="space-y-6">
                 {/* Tag Distribution */}
                 {(() => {
                     const tagMap = {};
@@ -225,7 +229,6 @@ export default function DashboardView({ wallets, onBack }) {
                     const taggedRate = wallets.filter(w => (w.tags || []).length > 0).length / total;
                     const score = Math.round((pkRate * 40 + seedRate * 40 + taggedRate * 20) * 100);
                     const getColor = (s) => s >= 80 ? 'text-emerald-400' : s >= 50 ? 'text-amber-400' : 'text-red-400';
-                    const getBg = (s) => s >= 80 ? 'from-emerald-500' : s >= 50 ? 'from-amber-500' : 'from-red-500';
                     return (
                         <div className="glass-card p-6 border border-surface-700">
                             <h3 className="text-white font-semibold mb-4">{t('dashboard.securityScore') || 'Vault Health'}</h3>
@@ -255,6 +258,8 @@ export default function DashboardView({ wallets, onBack }) {
                         </div>
                     );
                 })()}
+                </div>
+                </div>
 
                 {/* Total */}
                 <div className="glass-card p-6 border border-brand-500/20 bg-brand-500/5">

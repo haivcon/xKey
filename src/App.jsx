@@ -1,33 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
-  UploadCloud, ShieldAlert, BarChart3, Settings, FileDown, Plus, AlertTriangle, Heart
+  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart
 } from 'lucide-react';
 
-// Components
-import SettingsScreen from './components/SettingsScreen';
-import QRCodeModal from './components/QRCodeModal';
-import DashboardView from './components/DashboardView';
+// Components (Eager loaded)
 import WalletList from './components/WalletList';
 import AuthErrorScreen from './components/AuthErrorScreen';
 import FolderTabs from './components/FolderTabs';
 import ActionBar from './components/ActionBar';
-import ExportCSVModal from './components/ExportCSVModal';
-import CreateWalletModal from './components/CreateWalletModal';
 import DuplicateDetector from './components/DuplicateDetector';
+import AdvancedToolsModal, { SENSITIVE_EXPORT_LOCK_KEY } from './components/AdvancedToolsModal';
 import OnboardingScreen, { ONBOARDED_KEY } from './components/OnboardingScreen';
 import PinLockScreen from './components/PinLockScreen';
-import MoveToFolderModal from './components/MoveToFolderModal';
-import DonateModal from './components/DonateModal';
-import BulkNetworkModal from './components/BulkNetworkModal';
 import BatchActionBar from './components/BatchActionBar';
 import PasswordInput from './components/PasswordInput';
 import AnimatedSplash from './components/AnimatedSplash';
+
+// Components (Lazy loaded)
+const SettingsScreen = lazy(() => import('./components/SettingsScreen'));
+const QRCodeModal = lazy(() => import('./components/QRCodeModal'));
+const DashboardView = lazy(() => import('./components/DashboardView'));
+const ExportCSVModal = lazy(() => import('./components/ExportCSVModal'));
+const CreateWalletModal = lazy(() => import('./components/CreateWalletModal'));
+const MoveToFolderModal = lazy(() => import('./components/MoveToFolderModal'));
+const DonateModal = lazy(() => import('./components/DonateModal'));
+const BulkNetworkModal = lazy(() => import('./components/BulkNetworkModal'));
 import { SplashScreen } from '@capacitor/splash-screen';
 
 // Utils & Hooks
 import { loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
+import { exportPortableBackup } from './utils/backupUtils';
 import { hapticTap, hapticSuccess } from './utils/haptics';
 import useAutoLock from './hooks/useAutoLock';
 import useAutoBackup from './hooks/useAutoBackup';
@@ -36,8 +40,10 @@ import useFileImport from './hooks/useFileImport';
 import useBackButton from './hooks/useBackButton';
 import useShakeToLock from './hooks/useShakeToLock';
 import useBatchSelect from './hooks/useBatchSelect';
-import { useToast } from './contexts/ToastContext';
+import useLiteMode from './hooks/useLiteMode';
 import { useT } from './contexts/LanguageContext';
+import { useToast } from './contexts/ToastContext';
+import { useConfirm } from './contexts/ConfirmContext';
 
 export default function App() {
   // Auth state
@@ -52,11 +58,19 @@ export default function App() {
   // Modals
   const [qrModalData, setQrModalData] = useState({ isOpen: false, data: '', title: '', subtitle: '' });
   const [showExportCSV, setShowExportCSV] = useState(false);
+  const [showBackupExport, setShowBackupExport] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [backupPassword, setBackupPassword] = useState('');
+  const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
+  const [backupExporting, setBackupExporting] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [showBulkNetworkModal, setShowBulkNetworkModal] = useState(false);
   const [movingWallet, setMovingWallet] = useState(null);
   const [showDonate, setShowDonate] = useState(false);
+
+  // Performance hooks
+  useLiteMode();
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -68,8 +82,9 @@ export default function App() {
   const [editingFolder, setEditingFolder] = useState(null);
   const [editFolderName, setEditFolderName] = useState('');
 
-  const { showToast } = useToast();
   const t = useT();
+  const { showToast } = useToast() || {};
+  const showConfirm = useConfirm();
 
   // ─── Custom Hooks ───
   const {
@@ -85,6 +100,7 @@ export default function App() {
     handleBulkNetworkChange, handleSaveWallet,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   } = useWallets(aesKey, isDecoyMode);
+  const totalBalanceText = `$${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
 
   const {
     loading,
@@ -107,6 +123,7 @@ export default function App() {
     showDuplicates, setShowDuplicates,
     showCreateWallet, setShowCreateWallet,
     showExportCSV, setShowExportCSV,
+    showBackupExport, setShowBackupExport,
     qrModalOpen: qrModalData.isOpen, closeQrModal,
   });
 
@@ -215,14 +232,70 @@ export default function App() {
     setNeedsPinAuth(true);
   };
 
+  const closeBackupExport = () => {
+    setShowBackupExport(false);
+    setBackupPassword('');
+    setBackupPasswordConfirm('');
+  };
+
+  const handleExportBackup = async () => {
+    if (!backupPassword || backupPassword.length < 6) {
+      showToast?.(t('settings.passwordMinError'), 'warning');
+      return;
+    }
+    if (backupPassword !== backupPasswordConfirm) {
+      showToast?.(t('settings.passwordMismatch'), 'error');
+      return;
+    }
+
+    setBackupExporting(true);
+    try {
+      const currentWallets = await loadWallets(aesKey, isDecoyMode);
+      const success = await exportPortableBackup(currentWallets || [], null, backupPassword);
+      if (success) {
+        hapticSuccess();
+        showToast?.(t('settings.exportSuccess'), 'success');
+        closeBackupExport();
+      } else {
+        showToast?.(t('settings.exportFailed'), 'error');
+      }
+    } catch {
+      showToast?.(t('settings.exportError'), 'error');
+    } finally {
+      setBackupExporting(false);
+    }
+  };
+
+  const openExportCSV = async () => {
+    const { value } = await Preferences.get({ key: SENSITIVE_EXPORT_LOCK_KEY });
+    if (value === 'true') {
+      const ok = await showConfirm(t('advancedTools.csvLockConfirm'), { danger: true });
+      if (!ok) return;
+    }
+    hapticTap();
+    setShowExportCSV(true);
+  };
+
   // ─── View Router ───
   if (showOnboarding) {
     return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />;
   }
 
-  if (authError) return <AuthErrorScreen error={authError} />;
+  if (authError) {
+    return (
+      <AuthErrorScreen
+        error={authError}
+        onRetry={() => {
+          setAuthError('');
+          setAesKey(null);
+          setVaultLoading(false);
+          setNeedsPinAuth(true);
+        }}
+      />
+    );
+  }
 
-  let mainContent = null;
+  let mainContent;
 
   if (!aesKey) {
     mainContent = (
@@ -234,15 +307,21 @@ export default function App() {
     );
   } else if (location.pathname === '/settings') {
     mainContent = (
-      <SettingsScreen
-        aesKey={aesKey}
-        onBack={() => navigate('/')}
-        onWipe={handleWipe}
-        onImport={(newWallets) => setWallets(newWallets)}
-      />
+      <Suspense fallback={<div className="min-h-screen bg-surface-950 flex items-center justify-center text-brand-500"><Settings className="w-8 h-8 animate-spin" /></div>}>
+        <SettingsScreen
+          aesKey={aesKey}
+          onBack={() => navigate('/')}
+          onWipe={handleWipe}
+          onImport={(newWallets) => setWallets(newWallets)}
+        />
+      </Suspense>
     );
   } else if (location.pathname === '/dashboard') {
-    mainContent = <DashboardView wallets={wallets} onBack={() => navigate('/')} />;
+    mainContent = (
+      <Suspense fallback={<div className="min-h-screen bg-surface-950 flex items-center justify-center text-brand-500"><BarChart3 className="w-8 h-8 animate-pulse" /></div>}>
+        <DashboardView wallets={wallets} onBack={() => navigate('/')} />
+      </Suspense>
+    );
   } else {
     // ─── Home View ───
     mainContent = (
@@ -250,8 +329,9 @@ export default function App() {
       <div className={`min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
 
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-surface-900/80 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
-          <div className="flex justify-between items-center mb-6">
+        <header className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
+          <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1">
@@ -259,28 +339,6 @@ export default function App() {
               </h1>
             </div>
             <div className="flex items-center gap-1">
-              {wallets.length > 0 && (
-                <>
-                  <button onClick={() => { hapticTap(); setShowExportCSV(true); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title="Export CSV">
-                    <FileDown size={18} />
-                  </button>
-                  <button
-                    onClick={() => { hapticTap(); setShowDuplicates(true); }}
-                    className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors relative"
-                    title="Duplicate Detector"
-                  >
-                    <AlertTriangle size={18} />
-                    {duplicateCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {duplicateCount}
-                      </span>
-                    )}
-                  </button>
-                </>
-              )}
-              <button onClick={() => { hapticTap(); navigate('/dashboard'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title="Analytics">
-                <BarChart3 size={18} />
-              </button>
               <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title="Donate">
                 <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
               </button>
@@ -289,27 +347,13 @@ export default function App() {
               </button>
             </div>
           </div>
-
-          {wallets.length > 0 && (
-            <div className="glass-card px-4 py-2 flex justify-between items-center mb-0 mt-1">
-              <div className="flex flex-col">
-                <span className="text-surface-400 text-[10px] font-semibold tracking-wider uppercase">{t('home.totalAssets')}</span>
-                <span className="text-lg font-bold text-white leading-tight">
-                  ${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md">
-                <ShieldAlert size={12} />
-                {t('home.offlineVault')}
-              </div>
-            </div>
-          )}
+          </div>
         </header>
 
-        <main className="p-4 max-w-2xl mx-auto pb-20">
+        <main className="p-4 max-w-7xl mx-auto pb-20">
 
           {wallets.length === 0 ? (
-            <div className="space-y-4 mt-10">
+            <div className="space-y-4 mt-10 max-w-2xl mx-auto">
               <div
                 onClick={() => { hapticTap(); handleFileUpload(); }}
                 className="btn-glow glass-card border-dashed border-2 border-surface-200/20 hover:border-brand-500/50 cursor-pointer p-8 flex flex-col items-center justify-center transition-all group"
@@ -335,65 +379,108 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <>
-              <FolderTabs
-                folders={folders} activeFolder={activeFolder} wallets={wallets}
-                editingFolder={editingFolder} editFolderName={editFolderName}
-                onSelectFolder={(f) => { setActiveFolder(f); }}
-                onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
-                onEditChange={setEditFolderName}
-                onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
-                onDeleteFolder={handleDeleteFolder}
-              />
+            <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
+              <aside className="hidden lg:block">
+                <div className="sticky top-[88px] space-y-3">
+                  <div className="glass-card p-3">
+                    <div className="flex items-center justify-between gap-3 px-2 pb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                        {t('home.folders') || 'Folders'}
+                      </span>
+                      <span className="rounded-full bg-surface-800 px-2.5 py-1 text-xs font-semibold text-surface-100">
+                        {totalBalanceText}
+                      </span>
+                    </div>
+                    <FolderTabs
+                      variant="sidebar"
+                      folders={folders} activeFolder={activeFolder} wallets={wallets}
+                      editingFolder={editingFolder} editFolderName={editFolderName}
+                      onSelectFolder={(f) => { setActiveFolder(f); }}
+                      onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                      onEditChange={setEditFolderName}
+                      onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                      onDeleteFolder={handleDeleteFolder}
+                    />
+                  </div>
+                </div>
+              </aside>
 
-              <ActionBar
-                searchQuery={searchQuery} onSearchChange={setSearchQuery}
-                sortOrder={sortOrder} onSortChange={setSortOrder}
-                activeFilter={activeFilter} onFilterChange={setActiveFilter}
-                onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
-                onBulkNetwork={() => { hapticTap(); setShowBulkNetworkModal(true); }}
-                onUpload={() => { hapticTap(); handleFileUpload(); }}
-                loading={loading}
-                allTags={allTags}
-                selectionMode={selectionMode}
-                onToggleSelectionMode={toggleSelectionMode}
-              />
+              <section className="min-w-0">
+                <div className="sticky top-[72px] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 backdrop-blur-md border-b border-surface-900/80">
+                  <div className="lg:hidden flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <FolderTabs
+                        folders={folders} activeFolder={activeFolder} wallets={wallets}
+                        editingFolder={editingFolder} editFolderName={editFolderName}
+                        onSelectFolder={(f) => { setActiveFolder(f); }}
+                        onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                        onEditChange={setEditFolderName}
+                        onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                        onDeleteFolder={handleDeleteFolder}
+                      />
+                    </div>
+                    <div className="mb-4 flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-right">
+                      <span className="block text-[9px] font-semibold uppercase tracking-wider text-surface-500">{t('home.totalAssets')}</span>
+                      <span className="block text-sm font-bold leading-none text-white">{totalBalanceText}</span>
+                    </div>
+                  </div>
+                  <ActionBar
+                    searchQuery={searchQuery} onSearchChange={setSearchQuery}
+                    sortOrder={sortOrder} onSortChange={setSortOrder}
+                    activeFilter={activeFilter} onFilterChange={setActiveFilter}
+                    onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
+                    onBulkNetwork={() => { hapticTap(); setShowBulkNetworkModal(true); }}
+                    onUpload={() => { hapticTap(); handleFileUpload(); }}
+                    loading={loading}
+                    allTags={allTags}
+                    selectionMode={selectionMode}
+                    onToggleSelectionMode={toggleSelectionMode}
+                    onExportCSV={openExportCSV}
+                    onExportBackup={() => { hapticTap(); setShowBackupExport(true); }}
+                    onShowDuplicates={() => { hapticTap(); setShowDuplicates(true); }}
+                    duplicateCount={duplicateCount}
+                    onAnalytics={() => { hapticTap(); navigate('/dashboard'); }}
+                    onAdvancedTools={() => { hapticTap(); setShowAdvancedTools(true); }}
+                  />
+                </div>
 
-              <WalletList
-                vaultLoading={vaultLoading}
-                filteredWallets={filteredWallets}
-                setQrModalData={setQrModalData}
-                handleDeleteWallet={handleDeleteWallet}
-                handleRenameWallet={handleRenameWallet}
-                handleEditWallet={handleEditWallet}
-                handleTogglePin={handleTogglePin}
-                setMovingWallet={setMovingWallet}
-                t={t}
-                selectionMode={selectionMode}
-                isSelected={isSelected}
-                toggleSelect={toggleSelect}
-                sortOrder={sortOrder}
-                onReorder={handleReorderWallet}
-              />
-            </>
+                <WalletList
+                  vaultLoading={vaultLoading}
+                  filteredWallets={filteredWallets}
+                  setQrModalData={setQrModalData}
+                  handleDeleteWallet={handleDeleteWallet}
+                  handleRenameWallet={handleRenameWallet}
+                  handleEditWallet={handleEditWallet}
+                  handleTogglePin={handleTogglePin}
+                  setMovingWallet={setMovingWallet}
+                  t={t}
+                  selectionMode={selectionMode}
+                  isSelected={isSelected}
+                  toggleSelect={toggleSelect}
+                  sortOrder={sortOrder}
+                  onReorder={handleReorderWallet}
+                />
+              </section>
+            </div>
           )}
         </main>
 
-        {/* Modals */}
-        <QRCodeModal
-          {...qrModalData}
-          onClose={closeQrModal}
-        />
-
-        {showExportCSV && (
-          <ExportCSVModal
-            wallets={filteredWallets}
-            onClose={() => setShowExportCSV(false)}
+        {/* Modals wrapped in Suspense */}
+        <Suspense fallback={null}>
+          <QRCodeModal
+            isOpen={qrModalData.isOpen}
+            onClose={closeQrModal}
+            data={qrModalData.data}
+            title={qrModalData.title}
+            subtitle={qrModalData.subtitle}
           />
-        )}
-
-        {showDonate && <DonateModal onClose={() => setShowDonate(false)} />}
-
+          {showExportCSV && (
+            <ExportCSVModal
+              onClose={() => setShowExportCSV(false)}
+              wallets={filteredWallets}
+              aesKey={aesKey}
+            />
+          )}
         {showCreateWallet && (
           <CreateWalletModal
             onClose={() => setShowCreateWallet(false)}
@@ -427,6 +514,22 @@ export default function App() {
             onSave={(network) => { handleBulkNetworkChange(network); setShowBulkNetworkModal(false); }}
           />
         )}
+        {showDonate && (
+          <DonateModal onClose={() => setShowDonate(false)} />
+        )}
+        </Suspense>
+
+        {showAdvancedTools && (
+          <AdvancedToolsModal
+            wallets={wallets}
+            filteredWallets={filteredWallets}
+            setWallets={setWallets}
+            aesKey={aesKey}
+            isDecoyMode={isDecoyMode}
+            onSearch={setSearchQuery}
+            onClose={() => setShowAdvancedTools(false)}
+          />
+        )}
 
         {/* Password prompt for backup import */}
         {showPasswordPrompt && (
@@ -450,6 +553,46 @@ export default function App() {
                   className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg font-medium transition-colors">{t('common.cancel')}</button>
                 <button onClick={() => { hapticSuccess(); handleImportWithPassword(); }}
                   className="btn-glow btn-glow-success flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg font-medium transition-colors">{t('restore.button')}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showBackupExport && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl p-6">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                <UploadCloud size={22} className="text-emerald-400" />
+              </div>
+              <h3 className="text-white font-bold text-center mb-1">{t('actionBar.exportBackup')}</h3>
+              <p className="text-surface-400 text-sm text-center mb-5">{t('settings.backupSubtitle')}</p>
+              <div className="space-y-3">
+                <PasswordInput
+                  autoFocus
+                  value={backupPassword}
+                  onChange={(e) => setBackupPassword(e.target.value)}
+                  placeholder={t('settings.backupPassword')}
+                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder:text-surface-600"
+                />
+                <PasswordInput
+                  value={backupPasswordConfirm}
+                  onChange={(e) => setBackupPasswordConfirm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleExportBackup()}
+                  placeholder={t('settings.confirmPassword')}
+                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder:text-surface-600"
+                />
+                <div className="bg-yellow-500/5 border border-yellow-500/15 rounded-lg p-2.5 flex gap-2">
+                  <ShieldAlert size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-[11px] text-yellow-300/80 leading-relaxed">{t('settings.passwordWarning')}</p>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => { hapticTap(); closeBackupExport(); }}
+                  className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg font-medium transition-colors">{t('common.cancel')}</button>
+                <button onClick={() => { hapticTap(); handleExportBackup(); }} disabled={backupExporting}
+                  className="btn-glow btn-glow-success flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">
+                  {backupExporting ? t('settings.exporting') : t('settings.exportBackup')}
+                </button>
               </div>
             </div>
           </div>

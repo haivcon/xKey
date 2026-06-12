@@ -12,6 +12,7 @@ export default function useBackButton(modalStates) {
     showDuplicates, setShowDuplicates,
     showCreateWallet, setShowCreateWallet,
     showExportCSV, setShowExportCSV,
+    showBackupExport, setShowBackupExport,
     qrModalOpen, closeQrModal,
   } = modalStates;
 
@@ -24,6 +25,7 @@ export default function useBackButton(modalStates) {
       if (showDuplicates) { setShowDuplicates(false); return; }
       if (showCreateWallet) { setShowCreateWallet(false); return; }
       if (showExportCSV) { setShowExportCSV(false); return; }
+      if (showBackupExport) { setShowBackupExport(false); return; }
       if (qrModalOpen) { closeQrModal(); return; }
       if (location.pathname !== '/') { navigate('/'); return; }
       CapacitorApp.exitApp();
@@ -33,8 +35,8 @@ export default function useBackButton(modalStates) {
       backButtonListener.then(listener => listener.remove());
     };
   }, [
-    showPasswordPrompt, showDuplicates, showCreateWallet, showExportCSV,
+    showPasswordPrompt, showDuplicates, showCreateWallet, showExportCSV, showBackupExport,
     qrModalOpen, location.pathname, setShowPasswordPrompt, setShowDuplicates,
-    setShowCreateWallet, setShowExportCSV, closeQrModal, navigate,
+    setShowCreateWallet, setShowExportCSV, setShowBackupExport, closeQrModal, navigate,
   ]);
 }
