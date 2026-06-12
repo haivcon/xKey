@@ -27,7 +27,6 @@ const CreateWalletModal = lazy(() => import('./components/CreateWalletModal'));
 const MoveToFolderModal = lazy(() => import('./components/MoveToFolderModal'));
 const DonateModal = lazy(() => import('./components/DonateModal'));
 const BulkNetworkModal = lazy(() => import('./components/BulkNetworkModal'));
-import { SplashScreen } from '@capacitor/splash-screen';
 
 // Utils & Hooks
 import { loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
@@ -134,11 +133,6 @@ export default function App() {
 
   // Auto-backup on app open
   useAutoBackup(aesKey);
-
-  // Hide native splash immediately, show our custom animated one
-  useEffect(() => {
-    SplashScreen.hide().catch(() => {});
-  }, []);
 
   // Global Keyboard & Focus Handler
   useEffect(() => {
