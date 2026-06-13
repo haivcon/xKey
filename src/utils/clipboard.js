@@ -1,5 +1,6 @@
 import { hapticTap } from './haptics';
 import { Preferences } from '@capacitor/preferences';
+import { Clipboard } from '@capacitor/clipboard';
 
 let clearTimer = null;
 
@@ -7,6 +8,33 @@ let clearTimer = null;
  * Get the clipboard timeout preference key
  */
 export const CLIPBOARD_TIMEOUT_KEY = 'xkey_clipboard_timeout';
+
+const writeClipboard = async (text) => {
+  try {
+    await Clipboard.write({ string: text, label: 'xKey' });
+    return true;
+  } catch {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+};
+
+const readClipboard = async () => {
+  try {
+    const { value } = await Clipboard.read();
+    return value;
+  } catch {
+    try {
+      return await navigator.clipboard.readText();
+    } catch {
+      return null;
+    }
+  }
+};
 
 /**
  * Copy text to clipboard with auto-clear after specified duration.
@@ -16,7 +44,9 @@ export const CLIPBOARD_TIMEOUT_KEY = 'xkey_clipboard_timeout';
  */
 export const secureCopy = async (text, clearAfterMs = null, onClear = null) => {
   try {
-    await navigator.clipboard.writeText(text);
+    const copied = await writeClipboard(text);
+    if (!copied) return false;
+
     hapticTap();
 
     // Resolve timeout: explicit param > saved preference > 30s default
@@ -38,12 +68,12 @@ export const secureCopy = async (text, clearAfterMs = null, onClear = null) => {
     if (timeout > 0) {
       clearTimer = setTimeout(async () => {
         try {
-          const current = await navigator.clipboard.readText();
+          const current = await readClipboard();
           if (current === text) {
-            await navigator.clipboard.writeText('');
+            await writeClipboard('');
           }
         } catch {
-          try { await navigator.clipboard.writeText(''); } catch {
+          try { await writeClipboard(''); } catch {
             // Some platforms deny clipboard writes outside a direct user gesture.
           }
         }

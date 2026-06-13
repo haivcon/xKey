@@ -6,72 +6,54 @@ The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, 
 
 > Your keys are stored locally. xKey is designed as a private cold-vault style manager, not as a network-connected trading wallet.
 
-## Current Release: v5.4.0
+## Current Release: v5.5.0
 
 ### Release Focus
 
-v5.4.0 focuses on display scaling, QR usability, Android/WebView layout stability, responsive tool surfaces, and localization cleanup. This release improves the experience for users who want to reduce UI scale to see more wallets on screen without breaking QR modals, wallet cards, sticky toolbars, or icons.
+v5.5.0 improves daily wallet access, quick address actions, clipboard reliability, default display density, and Android shake-to-lock behavior. The release focuses on reducing accidental taps, making copy actions verifiable, and ensuring Android builds receive the latest synced web assets.
 
-### Display Scale System
+### Wallet Copy and QR Actions
 
-- Added a persistent Display Scale setting in General Settings.
-- Supports custom scale values from `5%` to `200%`.
-- Added quick presets: `50%`, `75%`, `100%`, `125%`, `150%`, and `200%`.
-- Added a polished custom slider with progress styling and a safer numeric input flow.
-- Fixed manual scale input so users can delete the old value and type a new one without the field immediately snapping back.
-- Applies scale globally through a root CSS variable and Capacitor Preferences.
-- Updated icons on Home, Settings, tool sheets, and major modals so they scale with the UI instead of staying at fixed pixel sizes.
-- Fixed network badges on wallet cards so labels such as `XLAYER` scale correctly.
+- Removed the confusing long-press/tap-to-copy wallet behavior.
+- Added an explicit copy button on each wallet row.
+- Added a direct QR button on each wallet row so users can open the address QR without expanding the wallet.
+- Separated the quick action buttons from the expand arrow with spacing and a visual divider to reduce accidental taps.
+- When copying a wallet address, the wallet row temporarily reveals the full address instead of only the shortened `...` version.
+- Copy success toasts now identify the wallet and the exact copied address.
+- Private key and seed phrase copy buttons now show success/failure notifications without exposing sensitive values in toast messages.
 
-### QR and Camera Improvements
+### Native Clipboard Reliability
 
-- Reworked QR modals to size QR codes from the real viewport using `dvw` and `dvh`.
-- Fixed QR codes being clipped when the user reduces display scale.
-- Added tap-to-zoom for wallet QR codes.
-- Added tap-to-zoom for QR Transfer codes.
-- Added a full-screen QR zoom viewer that fits within the current device screen.
-- Reworked QR Transfer QR sizing to avoid fixed `300px` rendering.
-- Improved QR scanner sizing so the scan box adapts to the device viewport.
-- Added translated camera-denied messages for all supported languages.
+- Updated the clipboard helper to use `@capacitor/clipboard` first on native platforms.
+- Kept `navigator.clipboard` as a fallback for web builds.
+- Copy actions now check the actual copy result before showing a success message.
+- Clipboard auto-clear now uses the same native-first helper path.
 
-### Sticky Layout and Virtual List Fixes
+### Display Density
 
-- Replaced fixed Home sticky offsets with a measured header height.
-- Home toolbar and folder sidebar now follow the real header height after scale changes.
-- Wallet virtual list now re-measures offsets and estimated row size when display scale changes.
-- Fixed cases where wallet cards could be partially covered by the toolbar after scaling.
-- Improved Settings sidebar sticky offset to behave better with scaled UI.
+- Changed the default Display Scale from `100%` to `75%` for new installs and fresh app data.
+- Existing users keep their saved display scale preference until they change it in Settings.
 
-### Responsive Tool and Modal Scaling
+### Shake to Lock Fixes
 
-- Applied scale-aware icon handling to major modals and tool surfaces:
-  - Advanced tools
-  - Create wallet
-  - Donate/support
-  - Duplicate detector
-  - Export CSV
-  - Bulk network change
-  - Move folder
-  - QR receive
-  - QR scanner
-  - QR transfer
-- Kept QR rendering independent from root scale where needed so scan quality and layout remain stable.
+- Fixed Shake to Lock not taking effect immediately after enabling it in Settings.
+- Added a settings-change event so the motion listener reloads preferences without requiring an app restart or background/foreground cycle.
+- Added motion permission handling when enabling Shake to Lock.
+- Added a lock cooldown to prevent repeated lock triggers from a single shake.
+- Limited the shake listener to active unlocked vault sessions.
 
-### Localization Cleanup
+### Localization
 
-- Added translations for the new display scale labels.
-- Added translations for QR zoom hints and camera permission errors.
-- Replaced remaining hardcoded wallet move text with `walletCard.moveBtn`.
-- Updated search placeholders that were still in English across multiple locale files.
-- Verified that every locale contains all English translation keys.
+- Added translations for the new wallet copy, address QR, motion permission, and Shake to Lock status messages across all supported languages.
+- Continued keeping locale coverage aligned so new UI strings do not appear as raw translation keys.
 
 ### Android and Build Updates
 
-- Updated app version to `5.4.0`.
-- Updated Android `versionCode` to `54`.
+- Updated app version to `5.5.0`.
+- Updated Android `versionCode` to `55`.
 - Synced Capacitor Android assets after the production build.
 - Confirmed Android debug build succeeds.
-- Confirmed `.gitignore` excludes the local `1/` workspace so notes, keystores, or local release files are not pushed.
+- Confirmed `.gitignore` keeps the local `1/` workspace out of GitHub.
 
 ### Quality Checks
 
@@ -84,8 +66,6 @@ npx cap sync android
 android/gradlew assembleDebug
 ```
 
-Translation key coverage was also verified across all 15 locale files.
-
 The Vite production build currently reports a large chunk warning. This is not a runtime error, but future releases may split more screens into dynamic chunks.
 
 ## Core Features
@@ -95,7 +75,7 @@ The Vite production build currently reports a large chunk warning. This is not a
 - PIN and biometric/device authentication support
 - Web and Android support through Capacitor
 - Display scale customization
-- Wallet folders and filtering
+- Wallet folders, filtering, sorting, and search
 - Wallet tags and tag filtering
 - Batch wallet selection and actions
 - CSV import/export
@@ -116,20 +96,11 @@ The Vite production build currently reports a large chunk warning. This is not a
 - X: <https://x.com/haivcon>
 - Telegram: <https://t.me/haivcon>
 
-## Legacy Highlights
+## Previous Releases
 
-Older releases introduced and refined the foundation of xKey:
-
-- Responsive wallet grid and compact toolbar redesign
-- Advanced tools grouped by workflow
-- Web authentication fallback and first-run PIN flow
-- Import/export improvements for CSV, JSON, TXT, and `.xkey`
-- Lazy wallet rendering for larger vaults
-- Drag-and-drop custom ordering
-- Markdown notes
-- Decoy vault, shake-to-lock, kill switch, auto backup, and clipboard controls
-- Capacitor 8 migration and Android release workflow
-- Launcher icon and splash screen generation
+- `v5.4.0`: Display scale system, QR viewport fixes, scale-aware icons, sticky layout corrections, and localization cleanup.
+- `v5.3.x`: Android startup stability, responsive tools, web authentication fallback, and release build fixes.
+- `v5.2.x` and earlier: Wallet grid improvements, advanced tools, `.xkey` backup flow, decoy vault, kill switch, auto backup, clipboard controls, Capacitor 8 migration, launcher icon, and splash assets.
 
 ## Installation
 
@@ -176,14 +147,14 @@ The GitHub Actions workflow builds and signs release artifacts when a `v*` tag i
 Example:
 
 ```bash
-git tag v5.4.0
-git push origin v5.4.0
+git tag v5.5.0
+git push origin v5.5.0
 ```
 
 Generated release files:
 
-- `xKey-Release-v5.4.0.apk`
-- `xKey-Release-v5.4.0.aab`
+- `xKey-Release-v5.5.0.apk`
+- `xKey-Release-v5.5.0.aab`
 
 ## Security Notice
 

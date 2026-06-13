@@ -7,6 +7,12 @@ import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
 import { useMasterPassword } from '../../contexts/MasterPasswordContext';
 import { AUTOLOCK_KEY } from '../../hooks/useAutoLock';
+import {
+  requestMotionPermission,
+  SHAKE_SETTINGS_CHANGED_EVENT,
+  SHAKE_SENSITIVITY_KEY,
+  SHAKE_TO_LOCK_KEY,
+} from '../../hooks/useShakeToLock';
 import { CLIPBOARD_TIMEOUT_KEY, CLIPBOARD_OPTIONS } from '../../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../PinLockScreen';
@@ -69,9 +75,9 @@ export default function SecurityTab({ onWipe }) {
       setHasBiometric(bio);
       const { value: decoyHash } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
       setHasDecoyPin(!!decoyHash);
-      const { value: shakeVal } = await Preferences.get({ key: 'xkey_shake_to_lock' });
+      const { value: shakeVal } = await Preferences.get({ key: SHAKE_TO_LOCK_KEY });
       setShakeToLockEnabled(shakeVal === 'true');
-      const { value: shakeSens } = await Preferences.get({ key: 'xkey_shake_sensitivity' });
+      const { value: shakeSens } = await Preferences.get({ key: SHAKE_SENSITIVITY_KEY });
       if (shakeSens) setShakeSensitivity(Number(shakeSens));
     };
     loadSettings();
@@ -168,14 +174,25 @@ export default function SecurityTab({ onWipe }) {
 
   const handleToggleShakeToLock = async () => {
     const newVal = !shakeToLockEnabled;
+    if (newVal) {
+      const hasPermission = await requestMotionPermission();
+      if (!hasPermission) {
+        showToast(t('settings.shakePermissionDenied') || 'Motion permission was denied', 'error');
+        return;
+      }
+    }
+
     setShakeToLockEnabled(newVal);
-    await Preferences.set({ key: 'xkey_shake_to_lock', value: newVal ? 'true' : 'false' });
+    await Preferences.set({ key: SHAKE_TO_LOCK_KEY, value: newVal ? 'true' : 'false' });
+    window.dispatchEvent(new Event(SHAKE_SETTINGS_CHANGED_EVENT));
+    showToast(newVal ? t('settings.shakeToLockEnabled') : t('settings.shakeToLockDisabled'), newVal ? 'success' : 'info');
   };
 
   const handleChangeShakeSensitivity = async (e) => {
     const val = Number(e.target.value);
     setShakeSensitivity(val);
-    await Preferences.set({ key: 'xkey_shake_sensitivity', value: String(val) });
+    await Preferences.set({ key: SHAKE_SENSITIVITY_KEY, value: String(val) });
+    window.dispatchEvent(new Event(SHAKE_SETTINGS_CHANGED_EVENT));
   };
 
   const handleWipe = async () => {

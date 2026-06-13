@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "摇一摇锁定",
     "shakeToLockDesc": "摇晃设备时立即锁定应用",
     "shakeSensitivity": "灵敏度",
+
+    "shakePermissionDenied": "运动权限被拒绝。摇一摇锁定需要传感器访问权限。",
+
+    "shakeToLockEnabled": "摇一摇锁定已开启",
+
+    "shakeToLockDisabled": "摇一摇锁定已关闭",
     "high": "高",
     "medium": "中",
     "low": "低",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "密码错误",
     "changeNetwork": "Change network",
     "addressCopied": "地址已复制",
+    "copyAddress": "复制地址",
+    "showAddressQR": "显示地址二维码",
+    "copyEmpty": "没有可复制的内容",
+    "copyFailed": "复制失败。请重试。",
+    "addressCopiedFull": "已复制 {wallet} 地址：{address}",
+    "fieldCopied": "已复制 {wallet} 的{field}",
     "moveBtn": "移动"
   },
   "actionBar": {

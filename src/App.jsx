@@ -146,7 +146,7 @@ export default function App() {
     qrModalOpen: qrModalData.isOpen, closeQrModal,
   });
 
-  const isAppActive = useShakeToLock(needsPinAuth, vaultLoading, setNeedsPinAuth);
+  const isAppActive = useShakeToLock(needsPinAuth, vaultLoading, setNeedsPinAuth, !!aesKey);
 
   // Auto-lock after idle
   useAutoLock(() => { setNeedsPinAuth(true); }, !!aesKey);

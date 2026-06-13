@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Goyang untuk Mengunci",
     "shakeToLockDesc": "Kunci aplikasi segera saat perangkat digoyangkan",
     "shakeSensitivity": "Sensitivitas",
+
+    "shakePermissionDenied": "Izin gerakan ditolak. Goyang untuk Mengunci memerlukan akses sensor.",
+
+    "shakeToLockEnabled": "Goyang untuk Mengunci aktif",
+
+    "shakeToLockDisabled": "Goyang untuk Mengunci nonaktif",
     "high": "Tinggi",
     "medium": "Sedang",
     "low": "Rendah",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "Alamat disalin",
+    "copyAddress": "Salin alamat",
+    "showAddressQR": "Tampilkan QR alamat",
+    "copyEmpty": "Tidak ada yang disalin",
+    "copyFailed": "Gagal menyalin. Coba lagi.",
+    "addressCopiedFull": "Alamat {wallet} disalin: {address}",
+    "fieldCopied": "{field} untuk {wallet} disalin",
     "moveBtn": "Gerak"
   },
   "actionBar": {

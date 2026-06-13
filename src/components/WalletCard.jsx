@@ -36,44 +36,59 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [editName, setEditName] = useState(wallet.name || '');
   const [editMode, setEditMode] = useState(false);
   const [editFields, setEditFields] = useState({});
-  const [longPressActive, setLongPressActive] = useState(false);
-  const pressTimerRef = useRef(null);
+  const [showFullAddress, setShowFullAddress] = useState(false);
+  const fullAddressTimerRef = useRef(null);
   const t = useT();
   const { showToast } = useToast();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const [showMPPrompt, setShowMPPrompt] = useState(null);
   const [mpInput, setMpInput] = useState('');
 
-  // Long-press quick copy address
-  const handleTouchStart = () => {
-    pressTimerRef.current = setTimeout(() => {
-      if (wallet.address) {
-        secureCopy(wallet.address);
-        hapticSuccess();
-        showToast(t('walletCard.addressCopied', { address: wallet.address.substring(0, 10) }), 'success');
-        setLongPressActive(true);
-      }
-    }, 500);
-  };
-  const handleTouchEnd = () => {
-    clearTimeout(pressTimerRef.current);
-    if (longPressActive) {
-      setLongPressActive(false);
-    }
-  };
-
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
+  useEffect(() => () => clearTimeout(fullAddressTimerRef.current), []);
 
-  const handleCopy = (text, field) => { secureCopy(text); setCopiedField(field); setTimeout(() => setCopiedField(null), 2000); };
+  const revealFullAddress = () => {
+    clearTimeout(fullAddressTimerRef.current);
+    setShowFullAddress(true);
+    fullAddressTimerRef.current = setTimeout(() => setShowFullAddress(false), 10000);
+  };
+
+  const handleCopy = async (text, field, label, options = {}) => {
+    if (!text) {
+      hapticWarning();
+      showToast(t('walletCard.copyEmpty'), 'warning');
+      return;
+    }
+
+    const copied = await secureCopy(text);
+    if (!copied) {
+      hapticWarning();
+      showToast(t('walletCard.copyFailed'), 'error');
+      return;
+    }
+
+    setCopiedField(field);
+    hapticSuccess();
+    setTimeout(() => setCopiedField(null), 2000);
+
+    const walletName = wallet.name || t('walletCard.unnamed');
+    if (options.revealAddress) {
+      revealFullAddress();
+      showToast(t('walletCard.addressCopiedFull', { wallet: walletName, address: text }), 'success');
+      return;
+    }
+
+    showToast(t('walletCard.fieldCopied', { field: label, wallet: walletName }), 'success');
+  };
   const formatDate = (ts) => { if (!ts) return null; const d = new Date(ts); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
 
   const executeSensitiveAction = (actionType) => {
     if (actionType === 'pk') setShowPk(!showPk);
     else if (actionType === 'seed') setShowSeed(!showSeed);
     else if (actionType === 'qr_pk') onShowQR(wallet.privateKey, t('walletCard.privateKey'), 'WARNING');
-    else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk');
-    else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed');
+    else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk', t('walletCard.privateKey'));
+    else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
   };
 
   const handleShowSensitive = async (actionType) => {
@@ -118,6 +133,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     setEditMode(false);
   };
 
+  const displayAddress = wallet.address
+    ? showFullAddress
+      ? wallet.address
+      : `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`
+    : t('walletCard.noAddress');
+
   const editInput = (key, label, type = 'text', multiline = false) => (
     <div>
       <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{label}</label>
@@ -138,12 +159,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
         onClick={() => {
           if (selectionMode) {
             onToggleSelect();
-          } else if (!longPressActive) {
+          } else {
             setExpanded(!expanded);
           }
-        }}
-        onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}
-        onMouseDown={handleTouchStart} onMouseUp={handleTouchEnd} onMouseLeave={handleTouchEnd}>
+        }}>
         <div className="flex items-center gap-3 overflow-hidden">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
             {selectionMode ? (
@@ -178,8 +197,8 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 )}
               </div>
             )}
-            <p className="text-surface-400 text-sm font-mono truncate">
-              {wallet.address ? `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}` : t('walletCard.noAddress')}
+            <p className={`text-surface-400 text-sm font-mono ${showFullAddress ? 'whitespace-normal break-all leading-snug' : 'truncate'}`}>
+              {displayAddress}
             </p>
             {wallet.tags && wallet.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
@@ -191,9 +210,37 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {wallet.balance && parseFloat(wallet.balance) > 0 && (
             <div className="text-right"><p className="text-white font-semibold">${wallet.balance}</p><p className="text-xs text-surface-400">{t('walletCard.balanceLabel')}</p></div>
+          )}
+          {!selectionMode && wallet.address && (
+            <div className="flex items-center gap-2 pr-2 sm:pr-3 border-r border-surface-700/70">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowQR(wallet.address, t('walletCard.address'), wallet.name);
+                }}
+                className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded-lg transition-colors"
+                aria-label={t('walletCard.showAddressQR')}
+                title={t('walletCard.showAddressQR')}
+              >
+                <QrCode size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy(wallet.address, 'address-card', t('walletCard.address'), { revealAddress: true });
+                }}
+                className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg transition-colors"
+                aria-label={t('walletCard.copyAddress')}
+                title={t('walletCard.copyAddress')}
+              >
+                {copiedField === 'address-card' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+              </button>
+            </div>
           )}
           {expanded ? <ChevronUp size={20} className="text-surface-500" /> : <ChevronDown size={20} className="text-surface-500" />}
         </div>
@@ -271,7 +318,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-surface-800 text-brand-300 p-2 rounded text-sm break-all">{wallet.address}</code>
                     <button onClick={() => onShowQR(wallet.address, t('walletCard.address'), wallet.name)} className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded transition-colors"><QrCode size={18} /></button>
-                    <button onClick={() => handleCopy(wallet.address, 'address')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
+                    <button
+                      onClick={() => handleCopy(wallet.address, 'address', t('walletCard.address'), { revealAddress: true })}
+                      className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors"
+                      aria-label={t('walletCard.copyAddress')}
+                      title={t('walletCard.copyAddress')}
+                    >
                       {copiedField === 'address' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                     </button>
                   </div>

@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "हिलाने पर लॉक करें",
     "shakeToLockDesc": "डिवाइस को हिलाने पर तुरंत ऐप लॉक करें",
     "shakeSensitivity": "संवेदनशीलता",
+
+    "shakePermissionDenied": "मोशन अनुमति अस्वीकार की गई। हिलाने पर लॉक करने के लिए सेंसर एक्सेस चाहिए।",
+
+    "shakeToLockEnabled": "हिलाने पर लॉक चालू",
+
+    "shakeToLockDisabled": "हिलाने पर लॉक बंद",
     "high": "उच्च",
     "medium": "मध्यम",
     "low": "निम्न",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "पता कॉपी किया गया",
+    "copyAddress": "पता कॉपी करें",
+    "showAddressQR": "पते का QR दिखाएं",
+    "copyEmpty": "कॉपी करने के लिए कुछ नहीं है",
+    "copyFailed": "कॉपी विफल रही। कृपया फिर कोशिश करें।",
+    "addressCopiedFull": "{wallet} का पता कॉपी हुआ: {address}",
+    "fieldCopied": "{wallet} के लिए {field} कॉपी हुआ",
     "moveBtn": "चलें"
   },
   "actionBar": {

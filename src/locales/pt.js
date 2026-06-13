@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Agitar para Bloquear",
     "shakeToLockDesc": "Bloquear aplicativo imediatamente ao agitar",
     "shakeSensitivity": "Sensibilidade",
+
+    "shakePermissionDenied": "A permissão de movimento foi negada. Agitar para Bloquear precisa de acesso ao sensor.",
+
+    "shakeToLockEnabled": "Agitar para Bloquear ativado",
+
+    "shakeToLockDisabled": "Agitar para Bloquear desativado",
     "high": "Alta",
     "medium": "Média",
     "low": "Baixa",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "Endereço copiado",
+    "copyAddress": "Copiar endereço",
+    "showAddressQR": "Mostrar QR do endereço",
+    "copyEmpty": "Nada para copiar",
+    "copyFailed": "Falha ao copiar. Tente novamente.",
+    "addressCopiedFull": "Endereço de {wallet} copiado: {address}",
+    "fieldCopied": "{field} copiado para {wallet}",
     "moveBtn": "Mover"
   },
   "actionBar": {

@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "เขย่าเพื่อล็อก",
     "shakeToLockDesc": "ล็อกแอปทันทีเมื่อเขย่าอุปกรณ์",
     "shakeSensitivity": "ความไว",
+
+    "shakePermissionDenied": "สิทธิ์การเคลื่อนไหวถูกปฏิเสธ เขย่าเพื่อล็อกต้องใช้การเข้าถึงเซ็นเซอร์",
+
+    "shakeToLockEnabled": "เปิดเขย่าเพื่อล็อกแล้ว",
+
+    "shakeToLockDisabled": "ปิดเขย่าเพื่อล็อกแล้ว",
     "high": "สูง",
     "medium": "ปานกลาง",
     "low": "ต่ำ",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "คัดลอกที่อยู่แล้ว",
+    "copyAddress": "คัดลอกที่อยู่",
+    "showAddressQR": "แสดง QR ที่อยู่",
+    "copyEmpty": "ไม่มีข้อมูลให้คัดลอก",
+    "copyFailed": "คัดลอกไม่สำเร็จ โปรดลองอีกครั้ง",
+    "addressCopiedFull": "คัดลอกที่อยู่ของ {wallet} แล้ว: {address}",
+    "fieldCopied": "คัดลอก {field} ของ {wallet} แล้ว",
     "moveBtn": "ย้าย"
   },
   "actionBar": {

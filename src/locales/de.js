@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Zum Sperren schütteln",
     "shakeToLockDesc": "App sofort sperren, wenn das Gerät geschüttelt wird",
     "shakeSensitivity": "Sensibilität",
+
+    "shakePermissionDenied": "Bewegungsberechtigung wurde abgelehnt. Zum Sperren schütteln benötigt Sensorzugriff.",
+
+    "shakeToLockEnabled": "Zum Sperren schütteln aktiviert",
+
+    "shakeToLockDisabled": "Zum Sperren schütteln deaktiviert",
     "high": "Hoch",
     "medium": "Mittel",
     "low": "Niedrig",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "Adresse kopiert",
+    "copyAddress": "Adresse kopieren",
+    "showAddressQR": "Adress-QR anzeigen",
+    "copyEmpty": "Nichts zu kopieren",
+    "copyFailed": "Kopieren fehlgeschlagen. Bitte erneut versuchen.",
+    "addressCopiedFull": "Adresse von {wallet} kopiert: {address}",
+    "fieldCopied": "{field} für {wallet} kopiert",
     "moveBtn": "Bewegen"
   },
   "actionBar": {

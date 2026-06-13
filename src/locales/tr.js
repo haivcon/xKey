@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Kilitlemek için Salla",
     "shakeToLockDesc": "Cihazı salladığınızda uygulamayı hemen kilitleyin",
     "shakeSensitivity": "Hassasiyet",
+
+    "shakePermissionDenied": "Hareket izni reddedildi. Kilitlemek için Salla sensör erişimi olmadan çalışamaz.",
+
+    "shakeToLockEnabled": "Kilitlemek için Salla açık",
+
+    "shakeToLockDisabled": "Kilitlemek için Salla kapalı",
     "high": "Yüksek",
     "medium": "Orta",
     "low": "Düşük",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "Adres kopyalandı",
+    "copyAddress": "Adresi kopyala",
+    "showAddressQR": "Adres QR kodunu göster",
+    "copyEmpty": "Kopyalanacak bir şey yok",
+    "copyFailed": "Kopyalama başarısız. Tekrar deneyin.",
+    "addressCopiedFull": "{wallet} adresi kopyalandı: {address}",
+    "fieldCopied": "{wallet} için {field} kopyalandı",
     "moveBtn": "Hareket et"
   },
   "actionBar": {

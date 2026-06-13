@@ -97,6 +97,12 @@ export default {
     "shakeToLockTitle": "Shake to Lock",
     "shakeToLockDesc": "Lock app immediately when shaking device",
     "shakeSensitivity": "Sensitivity",
+
+    "shakePermissionDenied": "Motion permission was denied. Shake to Lock cannot work without sensor access.",
+
+    "shakeToLockEnabled": "Shake to Lock enabled",
+
+    "shakeToLockDisabled": "Shake to Lock disabled",
     "high": "High",
     "medium": "Medium",
     "low": "Low",
@@ -263,6 +269,12 @@ export default {
     "masterPasswordWrong": "Wrong master password",
     "changeNetwork": "Tap to change network",
     "addressCopied": "Address copied",
+    "copyAddress": "Copy address",
+    "showAddressQR": "Show address QR",
+    "copyEmpty": "Nothing to copy",
+    "copyFailed": "Copy failed. Please try again.",
+    "addressCopiedFull": "Copied {wallet} address: {address}",
+    "fieldCopied": "Copied {field} for {wallet}",
     "moveBtn": "Move"
   },
   "actionBar": {

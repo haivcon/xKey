@@ -4,7 +4,7 @@ import { Preferences } from '@capacitor/preferences';
 const ThemeContext = createContext(null);
 const THEME_KEY = 'xkey_theme';
 const DISPLAY_SCALE_KEY = 'xkey_display_scale';
-const DEFAULT_DISPLAY_SCALE = 100;
+const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 

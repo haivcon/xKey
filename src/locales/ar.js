@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "اهتز للقفل",
     "shakeToLockDesc": "قفل التطبيق فورًا عند هز الجهاز",
     "shakeSensitivity": "الحساسية",
+
+    "shakePermissionDenied": "تم رفض إذن الحركة. لا يمكن للقفل بالهز العمل بدون الوصول إلى المستشعر.",
+
+    "shakeToLockEnabled": "تم تفعيل القفل بالهز",
+
+    "shakeToLockDisabled": "تم إيقاف القفل بالهز",
     "high": "مرتفع",
     "medium": "متوسط",
     "low": "منخفض",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "تم نسخ العنوان",
+    "copyAddress": "نسخ العنوان",
+    "showAddressQR": "عرض QR العنوان",
+    "copyEmpty": "لا يوجد شيء للنسخ",
+    "copyFailed": "فشل النسخ. حاول مرة أخرى.",
+    "addressCopiedFull": "تم نسخ عنوان {wallet}: {address}",
+    "fieldCopied": "تم نسخ {field} لـ {wallet}",
     "moveBtn": "يتحرك"
   },
   "actionBar": {

@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "シェイクしてロック",
     "shakeToLockDesc": "デバイスを振るとすぐにアプリをロックします",
     "shakeSensitivity": "感度",
+
+    "shakePermissionDenied": "モーション権限が拒否されました。シェイクしてロックにはセンサーアクセスが必要です。",
+
+    "shakeToLockEnabled": "シェイクしてロックを有効にしました",
+
+    "shakeToLockDisabled": "シェイクしてロックを無効にしました",
     "high": "高",
     "medium": "中",
     "low": "低",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "パスワードが違います",
     "changeNetwork": "Change network",
     "addressCopied": "アドレスがコピーされました",
+    "copyAddress": "アドレスをコピー",
+    "showAddressQR": "アドレスQRを表示",
+    "copyEmpty": "コピーする内容がありません",
+    "copyFailed": "コピーに失敗しました。もう一度お試しください。",
+    "addressCopiedFull": "{wallet} のアドレスをコピーしました: {address}",
+    "fieldCopied": "{wallet} の {field} をコピーしました",
     "moveBtn": "動く"
   },
   "actionBar": {

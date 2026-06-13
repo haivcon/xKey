@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Встряхнуть для блокировки",
     "shakeToLockDesc": "Немедленная блокировка при встряхивании",
     "shakeSensitivity": "Чувствительность",
+
+    "shakePermissionDenied": "Доступ к датчикам движения отклонен. Встряхнуть для блокировки не работает без датчиков.",
+
+    "shakeToLockEnabled": "Встряхнуть для блокировки включено",
+
+    "shakeToLockDisabled": "Встряхнуть для блокировки отключено",
     "high": "Высокая",
     "medium": "Средняя",
     "low": "Низкая",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Неверный пароль",
     "changeNetwork": "Change network",
     "addressCopied": "Адрес скопирован",
+    "copyAddress": "Скопировать адрес",
+    "showAddressQR": "Показать QR адреса",
+    "copyEmpty": "Нечего копировать",
+    "copyFailed": "Не удалось скопировать. Попробуйте еще раз.",
+    "addressCopiedFull": "Адрес {wallet} скопирован: {address}",
+    "fieldCopied": "{field} для {wallet} скопировано",
     "moveBtn": "Двигаться"
   },
   "actionBar": {

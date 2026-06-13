@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Lắc để Khóa",
     "shakeToLockDesc": "Khóa ứng dụng ngay lập tức khi lắc điện thoại",
     "shakeSensitivity": "Độ nhạy",
+
+    "shakePermissionDenied": "Quyền cảm biến chuyển động đã bị từ chối. Lắc để Khóa cần quyền cảm biến để hoạt động.",
+
+    "shakeToLockEnabled": "Đã bật Lắc để Khóa",
+
+    "shakeToLockDisabled": "Đã tắt Lắc để Khóa",
     "high": "Cao",
     "medium": "Trung bình",
     "low": "Thấp",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Sai mật khẩu chính",
     "changeNetwork": "Chạm để đổi mạng",
     "addressCopied": "Đã sao chép địa chỉ",
+    "copyAddress": "Sao chép địa chỉ",
+    "showAddressQR": "Hiển thị QR địa chỉ",
+    "copyEmpty": "Không có dữ liệu để sao chép",
+    "copyFailed": "Sao chép thất bại. Vui lòng thử lại.",
+    "addressCopiedFull": "Đã sao chép địa chỉ của {wallet}: {address}",
+    "fieldCopied": "Đã sao chép {field} của {wallet}",
     "moveBtn": "Di chuyển"
   },
   "actionBar": {

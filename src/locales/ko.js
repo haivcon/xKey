@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "흔들어서 잠금",
     "shakeToLockDesc": "기기를 흔들 때 즉시 앱 잠금",
     "shakeSensitivity": "민감도",
+
+    "shakePermissionDenied": "동작 권한이 거부되었습니다. 흔들어서 잠금은 센서 접근이 필요합니다.",
+
+    "shakeToLockEnabled": "흔들어서 잠금 켜짐",
+
+    "shakeToLockDisabled": "흔들어서 잠금 꺼짐",
     "high": "높음",
     "medium": "중간",
     "low": "낮음",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "잘못된 마스터 비밀번호",
     "changeNetwork": "Change network",
     "addressCopied": "주소가 복사되었습니다",
+    "copyAddress": "주소 복사",
+    "showAddressQR": "주소 QR 표시",
+    "copyEmpty": "복사할 내용이 없습니다",
+    "copyFailed": "복사에 실패했습니다. 다시 시도하세요.",
+    "addressCopiedFull": "{wallet} 주소를 복사했습니다: {address}",
+    "fieldCopied": "{wallet}의 {field}을(를) 복사했습니다",
     "moveBtn": "움직이다"
   },
   "actionBar": {

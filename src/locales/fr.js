@@ -98,6 +98,12 @@ export default {
     "shakeToLockTitle": "Secouer pour verrouiller",
     "shakeToLockDesc": "Verrouiller l'application immédiatement en secouant",
     "shakeSensitivity": "Sensibilité",
+
+    "shakePermissionDenied": "L'autorisation de mouvement a été refusée. Secouer pour verrouiller nécessite l'accès aux capteurs.",
+
+    "shakeToLockEnabled": "Secouer pour verrouiller activé",
+
+    "shakeToLockDisabled": "Secouer pour verrouiller désactivé",
     "high": "Élevée",
     "medium": "Moyenne",
     "low": "Faible",
@@ -264,6 +270,12 @@ export default {
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
     "addressCopied": "Adresse copiée",
+    "copyAddress": "Copier l'adresse",
+    "showAddressQR": "Afficher le QR de l'adresse",
+    "copyEmpty": "Rien à copier",
+    "copyFailed": "La copie a échoué. Réessayez.",
+    "addressCopiedFull": "Adresse de {wallet} copiée : {address}",
+    "fieldCopied": "{field} copié pour {wallet}",
     "moveBtn": "Bouger"
   },
   "actionBar": {
