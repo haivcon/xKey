@@ -170,7 +170,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                       const next = NETWORK_KEYS[(idx + 1) % NETWORK_KEYS.length];
                       if (onEdit) onEdit({ network: next });
                     }}
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 transition-all hover:scale-110 ${NETWORK_COLORS[wallet.network].bg} ${NETWORK_COLORS[wallet.network].text}`}
+                    className={`text-[0.625rem] px-[0.375rem] py-[0.125rem] rounded-full font-medium flex-shrink-0 transition-all hover:scale-110 ${NETWORK_COLORS[wallet.network].bg} ${NETWORK_COLORS[wallet.network].text}`}
                     title={t('walletCard.changeNetwork')}
                   >
                     {NETWORK_COLORS[wallet.network].label}
@@ -259,7 +259,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <button onClick={() => { hapticTap(); onPin && onPin(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-amber-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors">{wallet.pinned ? <PinOff size={12} /> : <Pin size={12} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}</button>
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-cyan-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Settings2 size={12} /> {t('walletCard.edit')}</button>
-                {onMove && <button onClick={() => { hapticTap(); onMove(wallet); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><FolderInput size={12} /> Move</button>}
+                {onMove && <button onClick={() => { hapticTap(); onMove(wallet); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><FolderInput size={12} /> {t('walletCard.moveBtn')}</button>}
                 <button onClick={() => { hapticWarning(); onDelete(); }} className="btn-glow btn-glow-danger flex items-center gap-1 text-xs text-surface-400 hover:text-red-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Trash2 size={12} /> {t('walletCard.delete')}</button>
               </div>
 

@@ -60,7 +60,7 @@ export default function DashboardView({ wallets, onBack }) {
     };
 
     return (
-        <div className="min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
+        <div className="app-scaled-icons min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
             <header className="max-w-7xl mx-auto flex items-center justify-between mb-6 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
                 <button onClick={onBack} className="btn-icon-glow p-2 rounded-full hover:bg-surface-800 transition-colors">
                     <ArrowLeft size={24} className="text-surface-300" />

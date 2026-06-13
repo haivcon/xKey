@@ -6,6 +6,7 @@ import SortableWalletCard from './SortableWalletCard';
 import SkeletonCard from './SkeletonCard';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useRef, useEffect, useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const getColumnCount = () => {
   if (typeof window === 'undefined') return 1;
@@ -26,33 +27,34 @@ export default function WalletList({
   sortOrder, onReorder
 }) {
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
+  const { displayScale } = useTheme();
 
   const listRef = useRef(null);
   const [listOffset, setListOffset] = useState(0);
   const [columnCount, setColumnCount] = useState(getColumnCount);
-
-  useEffect(() => {
-    if (listRef.current) {
-      const rect = listRef.current.getBoundingClientRect();
-      setListOffset(rect.top + window.scrollY);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => setColumnCount(getColumnCount());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const effectiveColumns = isDndEnabled ? 1 : columnCount;
   const rowCount = Math.ceil(filteredWallets.length / effectiveColumns);
 
-  const rowVirtualizer = useWindowVirtualizer({
-    count: rowCount,
-    estimateSize: () => 112,
-    overscan: 4,
-    scrollMargin: listOffset,
-  });
+  const measureListOffset = useCallback(() => {
+    if (!listRef.current) return;
+    const rect = listRef.current.getBoundingClientRect();
+    setListOffset(rect.top + window.scrollY);
+  }, []);
+
+  useEffect(() => {
+    measureListOffset();
+    const raf = requestAnimationFrame(measureListOffset);
+    return () => cancelAnimationFrame(raf);
+  }, [measureListOffset, displayScale, filteredWallets.length, effectiveColumns]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setColumnCount(getColumnCount());
+      requestAnimationFrame(measureListOffset);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [measureListOffset]);
 
   // Generate stable IDs for dnd-kit
   const getWalletId = (w, i) => w._id || `${w.address || 'no-addr'}-${w.groupId || 'root'}-${i}`;
@@ -61,6 +63,17 @@ export default function WalletList({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => Math.max(28, 112 * (displayScale / 100)),
+    overscan: 4,
+    scrollMargin: listOffset,
+  });
+
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [rowVirtualizer, displayScale, effectiveColumns, filteredWallets.length]);
 
   const handleDragEnd = useCallback((event) => {
     const { active, over } = event;

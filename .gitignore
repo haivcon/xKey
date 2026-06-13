@@ -62,5 +62,7 @@ google-services.json
 *.xkey.*
 
 # Local scratch / generated folders
+# IMPORTANT: keep the local 1/ workspace out of GitHub. It may contain notes,
+# release drafts, keystores, or other machine-local files.
 1/
 preview/

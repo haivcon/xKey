@@ -256,7 +256,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-surface-900 border border-surface-700 w-full max-w-lg lg:max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">

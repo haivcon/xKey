@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
@@ -13,15 +13,45 @@ const THEME_OPTIONS = [
   { key: 'amoled', icon: Monitor, label: 'settings.amoledMode', color: 'slate' },
 ];
 
+const MIN_DISPLAY_SCALE = 5;
+const MAX_DISPLAY_SCALE = 200;
+const DISPLAY_SCALE_PRESETS = [50, 75, 100, 125, 150, 200];
+
+const clampDisplayScale = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return 100;
+  return Math.min(MAX_DISPLAY_SCALE, Math.max(MIN_DISPLAY_SCALE, parsed));
+};
+
 export default function GeneralTab() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
+  const [scaleInput, setScaleInput] = useState('');
+  const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
 
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale } = useTheme();
   const t = useT();
   const { lang, changeLang } = useLanguage();
   const currentLang = LANGUAGES.find(l => l.code === lang);
   const { isLiteMode, toggleLiteMode } = useLiteMode();
+  const scaleProgress = ((displayScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
+
+  useEffect(() => {
+    if (!isScaleInputFocused) setScaleInput(String(displayScale));
+  }, [displayScale, isScaleInputFocused]);
+
+  const commitScaleInput = () => {
+    if (scaleInput.trim() === '') {
+      setScaleInput(String(displayScale));
+      setIsScaleInputFocused(false);
+      return;
+    }
+
+    const nextScale = clampDisplayScale(scaleInput);
+    setDisplayScale(nextScale);
+    setScaleInput(String(nextScale));
+    setIsScaleInputFocused(false);
+  };
 
   return (
     <>
@@ -100,6 +130,93 @@ export default function GeneralTab() {
         </div>
       </div>
 
+      {/* ═══ Display Scale ═══ */}
+      <div className="glass-card p-4">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <Monitor size={20} className="text-cyan-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
+              <p className="text-xs text-surface-400 leading-relaxed">{t('settings.displayScaleDesc')}</p>
+            </div>
+          </div>
+          <div className="shrink-0 rounded-full bg-surface-800/70 border border-surface-700 px-3 py-1 text-xs font-semibold text-white">
+            {displayScale}%
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+          {DISPLAY_SCALE_PRESETS.map(scale => {
+            const active = displayScale === scale;
+            return (
+              <button
+                key={scale}
+                type="button"
+                onClick={() => { hapticTap(); setDisplayScale(scale); }}
+                className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
+                  active
+                    ? 'border-brand-500/50 bg-brand-500/15 text-white shadow-sm shadow-brand-500/10'
+                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                }`}
+              >
+                {scale}%
+              </button>
+            );
+          })}
+        </div>
+
+        <label className="block text-xs font-medium text-surface-400 mb-1.5">
+          {t('settings.displayScaleCustom')}
+        </label>
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <input
+              type="range"
+              min={MIN_DISPLAY_SCALE}
+              max={MAX_DISPLAY_SCALE}
+              step="5"
+              value={displayScale}
+              onChange={(e) => setDisplayScale(e.target.value)}
+              style={{ '--scale-progress': `${scaleProgress}%` }}
+              className="scale-range"
+            />
+            <div className="mt-2 flex justify-between text-[10px] font-medium text-surface-500">
+              <span>{MIN_DISPLAY_SCALE}%</span>
+              <span>100%</span>
+              <span>{MAX_DISPLAY_SCALE}%</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 rounded-2xl border border-surface-700 bg-surface-950/70 px-3 shadow-inner shadow-black/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/15">
+            <input
+              type="number"
+              min={MIN_DISPLAY_SCALE}
+              max={MAX_DISPLAY_SCALE}
+              step="5"
+              value={scaleInput}
+              onChange={(e) => {
+                setScaleInput(e.target.value);
+              }}
+              onFocus={() => {
+                setIsScaleInputFocused(true);
+                setScaleInput(String(displayScale));
+              }}
+              onBlur={commitScaleInput}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+                if (e.key === 'Escape') {
+                  setScaleInput(String(displayScale));
+                  e.currentTarget.blur();
+                }
+              }}
+              className="w-16 bg-transparent py-2.5 text-right text-base font-bold text-white outline-none"
+            />
+            <span className="text-xs text-surface-400">%</span>
+          </div>
+        </div>
+      </div>
+
       {/* ═══ Performance Options ═══ */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between">
@@ -108,8 +225,8 @@ export default function GeneralTab() {
               <Monitor size={20} className="text-emerald-400" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">Lite Mode</p>
-              <p className="text-xs text-surface-400">Disable blurs for low-end devices</p>
+              <p className="text-white font-medium text-sm">{t('settings.liteMode')}</p>
+              <p className="text-xs text-surface-400">{t('settings.liteModeDesc')}</p>
             </div>
           </div>
           <button
@@ -138,7 +255,7 @@ export default function GeneralTab() {
             onClick={() => setShowDonate(true)}
             className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg shadow-brand-500/20 transition-all active:scale-95"
           >
-            Donate
+            {t('donate.button')}
           </button>
         </div>
       </div>

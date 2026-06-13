@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "変更を確認しますか?",
     "autoBackupSet": "自動バックアップが有効になっています",
     "autoBackupPasswordSaved": "自動バックアップのパスワードが保存されました",
-    "save": "保存"
+    "save": "保存",
+    "displayScale": "表示スケール",
+    "displayScaleDesc": "画面により多くのウォレットと操作項目を表示できるようにUIを縮小します。",
+    "displayScaleCustom": "カスタムスケール (%)",
+    "liteMode": "軽量モード",
+    "liteModeDesc": "低性能端末向けにぼかし効果を無効化します"
   },
   "createWallet": {
     "title": "ウォレット追加",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "QRスキャン",
-    "hint": "QRコードにカメラを向けてください"
+    "hint": "QRコードにカメラを向けてください",
+    "cameraDenied": "カメラへのアクセスが拒否されたか、カメラが見つかりません。アプリの権限を確認してください。"
   },
   "chainBulk": {
     "title": "チェーンラベル",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "QRコードをスキャン",
     "author": "著者",
     "thankYou": "ご支援ありがとうございます！",
-    "website": "Webサイト"
+    "website": "Webサイト",
+    "button": "寄付"
   },
   "moveWallet": {
     "title": "ウォレットを移動",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "次",
     "doneBtn": "完了",
     "hint": "別のデバイスを使用し、『QRでデータを受信』を選択してスキャンしてください"
+  },
+  "qr": {
+    "tapToZoom": "QRをタップして拡大"
   }
 };

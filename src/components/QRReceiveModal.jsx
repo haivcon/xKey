@@ -154,7 +154,7 @@ export default function QRReceiveModal({ onClose, onImport }) {
   const scannedCount = Object.keys(chunks).length;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-white font-bold flex items-center gap-2">

@@ -44,7 +44,7 @@ export default function DonateModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm animate-in fade-in sm:p-4" onClick={onClose}>
+    <div className="app-scaled-icons fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm animate-in fade-in sm:p-4" onClick={onClose}>
       <div
         className="relative w-full max-w-[380px] overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl"
         onClick={e => e.stopPropagation()}

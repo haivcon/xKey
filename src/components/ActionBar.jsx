@@ -251,7 +251,7 @@ export default function ActionBar({
       </div>
 
       {showTools && createPortal(
-        <div className="fixed inset-0 z-[9998] xl:hidden">
+        <div className="app-scaled-icons fixed inset-0 z-[9998] xl:hidden">
           <button className="absolute inset-0 w-full bg-black/55 backdrop-blur-sm" onClick={closeTools} aria-label={t('common.close')} />
           <div className="absolute inset-x-0 bottom-0 flex max-h-[72vh] flex-col overflow-hidden rounded-t-xl border border-surface-700 bg-surface-950 shadow-2xl sm:max-h-[82vh] sm:rounded-t-2xl">
             <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3">

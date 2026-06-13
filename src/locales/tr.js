@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Değişikliği onaylıyor musunuz?",
     "autoBackupSet": "Otomatik yedekleme etkin",
     "autoBackupPasswordSaved": "Otomatik yedekleme şifresi kaydedildi",
-    "save": "Kaydet"
+    "save": "Kaydet",
+    "displayScale": "Görüntü ölçeği",
+    "displayScaleDesc": "Ekranda daha fazla cüzdan ve kontrol görmek için arayüz ölçeğini küçültün.",
+    "displayScaleCustom": "Özel ölçek (%)",
+    "liteMode": "Hafif mod",
+    "liteModeDesc": "Düşük güçlü cihazlar için bulanıklığı kapatır"
   },
   "createWallet": {
     "title": "Cüzdan Ekle",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Hareket et"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Adres, ad veya notlara göre ara...",
     "allWallets": "Tüm Cüzdanlar",
     "hasPk": "Özel Anahtarı Var",
     "hasSeed": "Tohum İfadesi Var",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "QR Kodunu Tara",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Kamera erişimi reddedildi veya kamera bulunamadı. Uygulama izinlerini kontrol edin."
   },
   "chainBulk": {
     "title": "Zincir Etiketleri",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "QR Kodunu Tara",
     "author": "Yazar",
     "thankYou": "Desteğiniz için teşekkür ederim!",
-    "website": "Web sitesi"
+    "website": "Web sitesi",
+    "button": "Bağış yap"
   },
   "moveWallet": {
     "title": "Cüzdanı Taşı",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Sonraki",
     "doneBtn": "Tamamlandı",
     "hint": "Başka bir cihaz kullanın ve taramak için 'Veriyi QR ile al'ı seçin"
+  },
+  "qr": {
+    "tapToZoom": "Büyütmek için QR koduna dokunun"
   }
 };

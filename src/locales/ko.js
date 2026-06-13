@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "변경을 확인하시겠습니까?",
     "autoBackupSet": "자동 백업 사용 설정됨",
     "autoBackupPasswordSaved": "자동 백업 비밀번호 저장됨",
-    "save": "저장"
+    "save": "저장",
+    "displayScale": "표시 배율",
+    "displayScaleDesc": "화면에 더 많은 지갑과 도구를 볼 수 있도록 인터페이스 배율을 줄입니다.",
+    "displayScaleCustom": "사용자 지정 배율 (%)",
+    "liteMode": "라이트 모드",
+    "liteModeDesc": "저사양 기기에서 블러 효과를 비활성화합니다"
   },
   "createWallet": {
     "title": "지갑 추가",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "QR 코드 스캔",
-    "hint": "주소, 개인 키 또는 시드 구문이 포함된 QR 코드에 카메라를 향하세요"
+    "hint": "주소, 개인 키 또는 시드 구문이 포함된 QR 코드에 카메라를 향하세요",
+    "cameraDenied": "카메라 접근이 거부되었거나 카메라를 찾을 수 없습니다. 앱 권한을 확인하세요."
   },
   "chainBulk": {
     "title": "체인 라벨",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "QR 코드 스캔",
     "author": "작가",
     "thankYou": "지원해 주셔서 감사합니다!",
-    "website": "웹사이트"
+    "website": "웹사이트",
+    "button": "후원"
   },
   "moveWallet": {
     "title": "지갑 이동",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "다음",
     "doneBtn": "완료",
     "hint": "다른 기기를 사용하고 'QR로 데이터 받기'를 선택하여 스캔하세요"
+  },
+  "qr": {
+    "tapToZoom": "QR을 탭하여 확대"
   }
 };

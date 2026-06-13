@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Änderung bestätigen?",
     "autoBackupSet": "Automatische Sicherung aktiviert",
     "autoBackupPasswordSaved": "Automatische Sicherungspasswort gespeichert",
-    "save": "Speichern"
+    "save": "Speichern",
+    "displayScale": "Anzeigeskalierung",
+    "displayScaleDesc": "Verkleinert die Oberfläche, damit mehr Wallets und Bedienelemente sichtbar sind.",
+    "displayScaleCustom": "Eigene Skalierung (%)",
+    "liteMode": "Lite-Modus",
+    "liteModeDesc": "Unschärfe für schwächere Geräte deaktivieren"
   },
   "createWallet": {
     "title": "Wallet hinzufügen",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Bewegen"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Nach Adresse, Name, Notizen suchen...",
     "allWallets": "Alle Wallets",
     "hasPk": "Hat privaten Schlüssel",
     "hasSeed": "Hat Seed-Phrase",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "QR-Code scannen",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Kamerazugriff verweigert oder keine Kamera gefunden. Bitte App-Berechtigungen prüfen."
   },
   "chainBulk": {
     "title": "Chain-Labels",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "QR-Code scannen",
     "author": "Autor",
     "thankYou": "Danke für Ihre Unterstützung!",
-    "website": "Website"
+    "website": "Website",
+    "button": "Spenden"
   },
   "moveWallet": {
     "title": "Brieftasche verschieben",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Weiter",
     "doneBtn": "Fertig",
     "hint": "Verwenden Sie ein anderes Gerät und wählen Sie 'Daten per QR empfangen', um zu scannen"
+  },
+  "qr": {
+    "tapToZoom": "QR antippen zum Vergrößern"
   }
 };

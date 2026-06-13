@@ -131,7 +131,12 @@ export default {
     "changeConfirm": "Confirm change?",
     "autoBackupSet": "Auto backup enabled",
     "autoBackupPasswordSaved": "Auto backup password saved",
-    "save": "Save"
+    "save": "Save",
+    "displayScale": "Display scale",
+    "displayScaleDesc": "Reduce the interface scale to fit more wallets and controls on screen.",
+    "displayScaleCustom": "Custom scale (%)",
+    "liteMode": "Lite Mode",
+    "liteModeDesc": "Disable blurs for low-end devices"
   },
   "createWallet": {
     "title": "Add Wallet",
@@ -447,7 +452,8 @@ export default {
   },
   "qrScanner": {
     "title": "Scan QR Code",
-    "hint": "Point camera at a QR code containing an address, private key, or seed phrase"
+    "hint": "Point camera at a QR code containing an address, private key, or seed phrase",
+    "cameraDenied": "Camera access denied or no camera found. Please check app permissions."
   },
   "pinLock": {
     "enterPin": "Enter PIN",
@@ -483,7 +489,8 @@ export default {
     "scanQR": "Scan QR Code",
     "author": "Author",
     "thankYou": "Thank you for your support!",
-    "website": "Website"
+    "website": "Website",
+    "button": "Donate"
   },
   "moveWallet": {
     "title": "Move Wallet",
@@ -509,5 +516,8 @@ export default {
     "nextBtn": "Next",
     "doneBtn": "Done",
     "hint": "Use another device and select 'Receive data via QR' to scan"
+  },
+  "qr": {
+    "tapToZoom": "Tap QR to enlarge"
   }
 };

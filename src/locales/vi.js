@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Xác nhận thay đổi?",
     "autoBackupSet": "Đã bật tự động sao lưu",
     "autoBackupPasswordSaved": "Đã lưu mật khẩu tự động sao lưu",
-    "save": "Lưu"
+    "save": "Lưu",
+    "displayScale": "Tỷ lệ hiển thị",
+    "displayScaleDesc": "Giảm tỷ lệ giao diện để nhìn thấy nhiều ví và công cụ hơn.",
+    "displayScaleCustom": "Tùy chỉnh tỷ lệ (%)",
+    "liteMode": "Chế độ nhẹ",
+    "liteModeDesc": "Tắt hiệu ứng mờ cho thiết bị yếu"
   },
   "createWallet": {
     "title": "Thêm ví",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "Quét mã QR",
-    "hint": "Hướng camera vào mã QR chứa địa chỉ hoặc khóa"
+    "hint": "Hướng camera vào mã QR chứa địa chỉ hoặc khóa",
+    "cameraDenied": "Không thể truy cập camera hoặc không tìm thấy camera. Vui lòng kiểm tra quyền của ứng dụng."
   },
   "chainBulk": {
     "title": "Nhãn Chain",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "Quét mã QR",
     "author": "Tác giả",
     "thankYou": "Cảm ơn bạn đã ủng hộ!",
-    "website": "Trang web"
+    "website": "Trang web",
+    "button": "Ủng hộ"
   },
   "moveWallet": {
     "title": "Di chuyển Ví",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Tiếp",
     "doneBtn": "Hoàn tất",
     "hint": "Dùng thiết bị khác chọn 'Nhận dữ liệu qua QR' để quét"
+  },
+  "qr": {
+    "tapToZoom": "Chạm vào mã QR để phóng to"
   }
 };

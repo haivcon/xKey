@@ -20,6 +20,7 @@ export default function QRTransferModal({ wallets, onClose }) {
   const [currentChunk, setCurrentChunk] = useState(0);
   const [qrImages, setQrImages] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
 
   const totalChunks = qrImages.length;
 
@@ -80,8 +81,8 @@ export default function QRTransferModal({ wallets, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl p-6" onClick={e => e.stopPropagation()}>
+    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
+      <div className="qr-modal-panel rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <QrCode size={20} className="text-brand-400" />
@@ -130,10 +131,15 @@ export default function QRTransferModal({ wallets, onClose }) {
             </div>
 
             {/* QR Code */}
-            <div className="flex justify-center py-2">
-              <div className="bg-white rounded-xl p-3 shadow-lg ring-1 ring-white/10">
-                <QRCodeSVG value={qrImages[currentChunk]} size={300} />
-              </div>
+            <div className="flex justify-center py-1">
+              <button
+                type="button"
+                onClick={() => setZoomed(true)}
+                className="qr-fit-box bg-white p-3 shadow-lg ring-1 ring-white/10 transition-transform active:scale-[0.98]"
+                title={t('qr.tapToZoom')}
+              >
+                <QRCodeSVG value={qrImages[currentChunk]} size={1200} bgColor="#ffffff" fgColor="#000000" className="h-full w-full" />
+              </button>
             </div>
 
             {/* Navigation */}
@@ -161,6 +167,16 @@ export default function QRTransferModal({ wallets, onClose }) {
           </div>
         )}
       </div>
+      {zoomed && qrImages[currentChunk] && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/90 p-3" onClick={(e) => { e.stopPropagation(); setZoomed(false); }}>
+          <button className="absolute right-4 top-4 rounded-full bg-surface-800 p-3 text-white" onClick={() => setZoomed(false)} aria-label={t('common.close')}>
+            <X size={20} />
+          </button>
+          <div className="qr-zoom-box bg-white p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <QRCodeSVG value={qrImages[currentChunk]} size={1400} bgColor="#ffffff" fgColor="#000000" className="h-full w-full" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

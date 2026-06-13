@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Confirmer le changement ?",
     "autoBackupSet": "Sauvegarde automatique activée",
     "autoBackupPasswordSaved": "Mot de passe de sauvegarde automatique enregistré",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "displayScale": "Échelle d’affichage",
+    "displayScaleDesc": "Réduit l’échelle de l’interface pour afficher plus de portefeuilles et de contrôles.",
+    "displayScaleCustom": "Échelle personnalisée (%)",
+    "liteMode": "Mode léger",
+    "liteModeDesc": "Désactive les flous pour les appareils peu puissants"
   },
   "createWallet": {
     "title": "Ajouter un portefeuille",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Bouger"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Rechercher par adresse, nom, notes...",
     "allWallets": "Tous les portefeuilles",
     "hasPk": "A une clé privée",
     "hasSeed": "A une phrase de récupération",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "Scanner le code QR",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Accès à la caméra refusé ou aucune caméra trouvée. Vérifiez les autorisations de l’application."
   },
   "chainBulk": {
     "title": "Étiquettes de chaîne",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "Scanner le code QR",
     "author": "Auteur",
     "thankYou": "Merci pour votre soutien !",
-    "website": "Site web"
+    "website": "Site web",
+    "button": "Faire un don"
   },
   "moveWallet": {
     "title": "Déplacer le portefeuille",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Suivant",
     "doneBtn": "terminé",
     "hint": "Utilisez un autre appareil et sélectionnez 'Recevoir des données via QR' pour scanner"
+  },
+  "qr": {
+    "tapToZoom": "Touchez le QR pour agrandir"
   }
 };

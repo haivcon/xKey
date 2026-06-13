@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Konfirmasi perubahan?",
     "autoBackupSet": "Cadangan otomatis diaktifkan",
     "autoBackupPasswordSaved": "Kata sandi cadangan otomatis disimpan",
-    "save": "Simpan"
+    "save": "Simpan",
+    "displayScale": "Skala tampilan",
+    "displayScaleDesc": "Perkecil skala antarmuka agar lebih banyak dompet dan kontrol terlihat di layar.",
+    "displayScaleCustom": "Skala khusus (%)",
+    "liteMode": "Mode ringan",
+    "liteModeDesc": "Nonaktifkan blur untuk perangkat kelas rendah"
   },
   "createWallet": {
     "title": "Tambah Dompet",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Gerak"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Cari berdasarkan alamat, nama, catatan...",
     "allWallets": "Semua Dompet",
     "hasPk": "Memiliki Kunci Privat",
     "hasSeed": "Memiliki Frasa Benih",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "Pindai Kode QR",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Akses kamera ditolak atau kamera tidak ditemukan. Periksa izin aplikasi."
   },
   "chainBulk": {
     "title": "Label Chain",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "Pindai Kode QR",
     "author": "Penulis",
     "thankYou": "Terima kasih atas dukungan Anda!",
-    "website": "Situs web"
+    "website": "Situs web",
+    "button": "Donasi"
   },
   "moveWallet": {
     "title": "Pindahkan Dompet",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Berikutnya",
     "doneBtn": "Selesai",
     "hint": "Gunakan perangkat lain dan pilih 'Terima data melalui QR' untuk memindai"
+  },
+  "qr": {
+    "tapToZoom": "Ketuk QR untuk memperbesar"
   }
 };

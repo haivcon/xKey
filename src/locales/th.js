@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "ยืนยันการเปลี่ยนแปลงหรือไม่?",
     "autoBackupSet": "เปิดการสำรองข้อมูลอัตโนมัติ",
     "autoBackupPasswordSaved": "รหัสผ่านสำรองอัตโนมัติถูกบันทึก",
-    "save": "บันทึก"
+    "save": "บันทึก",
+    "displayScale": "สเกลการแสดงผล",
+    "displayScaleDesc": "ลดขนาดอินเทอร์เฟซเพื่อให้เห็นกระเป๋าและเครื่องมือได้มากขึ้นบนหน้าจอ",
+    "displayScaleCustom": "สเกลกำหนดเอง (%)",
+    "liteMode": "โหมดเบา",
+    "liteModeDesc": "ปิดเอฟเฟกต์เบลอสำหรับอุปกรณ์สเปกต่ำ"
   },
   "createWallet": {
     "title": "เพิ่มกระเป๋าเงิน",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "ย้าย"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "ค้นหาตามที่อยู่ ชื่อ หรือบันทึก...",
     "allWallets": "กระเป๋าเงินทั้งหมด",
     "hasPk": "มีคีย์ส่วนตัว",
     "hasSeed": "มีวลีช่วยจำ",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "สแกน QR โค้ด",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "ไม่สามารถเข้าถึงกล้องหรือไม่พบกล้อง โปรดตรวจสอบสิทธิ์ของแอป"
   },
   "chainBulk": {
     "title": "ป้ายกำกับ Chain",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "สแกน QR โค้ด",
     "author": "ผู้แต่ง",
     "thankYou": "ขอบคุณสำหรับการสนับสนุนของคุณ!",
-    "website": "เว็บไซต์"
+    "website": "เว็บไซต์",
+    "button": "สนับสนุน"
   },
   "moveWallet": {
     "title": "ย้ายกระเป๋าสตางค์",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "ถัดไป",
     "doneBtn": "เสร็จแล้ว",
     "hint": "ใช้เครื่องมืออื่นแล้วเลือก 'รับข้อมูลผ่าน QR' เพื่อสแกน"
+  },
+  "qr": {
+    "tapToZoom": "แตะ QR เพื่อขยาย"
   }
 };

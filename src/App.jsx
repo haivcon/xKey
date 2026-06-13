@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
@@ -67,6 +67,7 @@ export default function App() {
   const [showBulkNetworkModal, setShowBulkNetworkModal] = useState(false);
   const [movingWallet, setMovingWallet] = useState(null);
   const [showDonate, setShowDonate] = useState(false);
+  const homeHeaderRef = useRef(null);
 
   // Performance hooks
   useLiteMode();
@@ -100,6 +101,25 @@ export default function App() {
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   } = useWallets(aesKey, isDecoyMode);
   const totalBalanceText = `$${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+
+  useEffect(() => {
+    const header = homeHeaderRef.current;
+    if (!header || location.pathname !== '/') return undefined;
+
+    const updateHeaderHeight = () => {
+      document.documentElement.style.setProperty('--home-header-height', `${header.offsetHeight}px`);
+    };
+
+    updateHeaderHeight();
+    const resizeObserver = new ResizeObserver(updateHeaderHeight);
+    resizeObserver.observe(header);
+    window.addEventListener('resize', updateHeaderHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, [location.pathname]);
 
   const {
     loading,
@@ -320,10 +340,10 @@ export default function App() {
     // ─── Home View ───
     mainContent = (
       <>
-      <div className={`min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
+      <div className={`app-scaled-icons min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
 
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
+        <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
           <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -375,7 +395,7 @@ export default function App() {
           ) : (
             <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
               <aside className="hidden lg:block">
-                <div className="sticky top-[88px] space-y-3">
+                <div className="sticky top-[calc(var(--home-header-height)+1rem)] space-y-3">
                   <div className="glass-card p-3">
                     <div className="flex items-center justify-between gap-3 px-2 pb-2">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
@@ -400,7 +420,7 @@ export default function App() {
               </aside>
 
               <section className="min-w-0">
-                <div className="sticky top-[72px] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 backdrop-blur-md border-b border-surface-900/80">
+                <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 backdrop-blur-md border-b border-surface-900/80">
                   <div className="lg:hidden flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <FolderTabs

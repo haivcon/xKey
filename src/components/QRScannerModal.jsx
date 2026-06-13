@@ -11,6 +11,7 @@ export default function QRScannerModal({ onResult, onClose }) {
   const onResultRef = useRef(onResult);
   const onCloseRef = useRef(onClose);
   const t = useT();
+  const cameraDeniedMessage = t('qrScanner.cameraDenied');
   onResultRef.current = onResult;
   onCloseRef.current = onClose;
 
@@ -36,10 +37,11 @@ export default function QRScannerModal({ onResult, onClose }) {
         const cameras = await Html5Qrcode.getCameras();
         const backCamera = cameras.find(camera => /back|rear|environment/i.test(camera.label));
         const cameraConfig = backCamera?.id || cameras[0]?.id || { facingMode: 'environment' };
+        const qrboxSize = Math.max(180, Math.min(320, Math.floor(Math.min(window.innerWidth, window.innerHeight) * 0.7)));
 
         await scanner.start(
           cameraConfig,
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } },
           (decodedText) => {
             if (stopped) return;
             const text = decodedText.trim();
@@ -56,7 +58,7 @@ export default function QRScannerModal({ onResult, onClose }) {
         );
       } catch (err) {
         if (!stopped) {
-          setError(err.message || 'Camera access denied');
+          setError(err.message || cameraDeniedMessage);
         }
       }
     };
@@ -64,7 +66,7 @@ export default function QRScannerModal({ onResult, onClose }) {
     startScanner();
 
     return cleanup;
-  }, []);
+  }, [cameraDeniedMessage]);
 
   const handleClose = () => {
     if (scannerRef.current) {
@@ -76,7 +78,7 @@ export default function QRScannerModal({ onResult, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-white font-bold flex items-center gap-2">
@@ -98,7 +100,7 @@ export default function QRScannerModal({ onResult, onClose }) {
             </div>
           ) : (
             <>
-              <div id={readerIdRef.current} ref={containerRef} className="rounded-xl overflow-hidden mb-3" style={{ minHeight: '280px' }} />
+              <div id={readerIdRef.current} ref={containerRef} className="rounded-xl overflow-hidden mb-3" style={{ minHeight: 'min(70dvw, 320px)' }} />
               <p className="text-surface-400 text-xs text-center">
                 {t('qrScanner.hint')}
               </p>

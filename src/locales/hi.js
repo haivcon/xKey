@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "परिवर्तन की पुष्टि करें?",
     "autoBackupSet": "स्वचालित बैकअप सक्षम हुआ",
     "autoBackupPasswordSaved": "स्वचालित बैकअप पासवर्ड सहेजा गया",
-    "save": "सहेजें"
+    "save": "सहेजें",
+    "displayScale": "डिस्प्ले स्केल",
+    "displayScaleDesc": "स्क्रीन पर अधिक वॉलेट और नियंत्रण दिखाने के लिए इंटरफ़ेस का आकार घटाएं।",
+    "displayScaleCustom": "कस्टम स्केल (%)",
+    "liteMode": "लाइट मोड",
+    "liteModeDesc": "कमज़ोर डिवाइस के लिए ब्लर बंद करें"
   },
   "createWallet": {
     "title": "वॉलेट जोड़ें",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "चलें"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "पते, नाम या नोट्स से खोजें...",
     "allWallets": "सभी वॉलेट",
     "hasPk": "प्राइवेट कुंजी है",
     "hasSeed": "सीड फ्रेज़ है",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "क्यूआर कोड स्कैन करें",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "कैमरा एक्सेस अस्वीकार हुआ या कैमरा नहीं मिला। कृपया ऐप अनुमतियां जांचें।"
   },
   "chainBulk": {
     "title": "चेन लेबल",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "क्यूआर कोड स्कैन करें",
     "author": "लेखक",
     "thankYou": "आपके समर्थन के लिए धन्यवाद!",
-    "website": "वेबसाइट"
+    "website": "वेबसाइट",
+    "button": "दान करें"
   },
   "moveWallet": {
     "title": "वॉलेट स्थानांतरित करें",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "अगला",
     "doneBtn": "समाप्त",
     "hint": "किसी अन्य डिवाइस का उपयोग करें और स्कैन करने के लिए 'QR के माध्यम से डेटा प्राप्त करें' चुनें"
+  },
+  "qr": {
+    "tapToZoom": "QR बड़ा करने के लिए टैप करें"
   }
 };

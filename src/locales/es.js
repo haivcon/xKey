@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "¿Confirmar cambio?",
     "autoBackupSet": "Copia de seguridad automática activada",
     "autoBackupPasswordSaved": "Contraseña de copia de seguridad automática guardada",
-    "save": "Guardar"
+    "save": "Guardar",
+    "displayScale": "Escala de visualización",
+    "displayScaleDesc": "Reduce la escala de la interfaz para ver más wallets y controles en pantalla.",
+    "displayScaleCustom": "Escala personalizada (%)",
+    "liteMode": "Modo ligero",
+    "liteModeDesc": "Desactiva desenfoques en dispositivos de gama baja"
   },
   "createWallet": {
     "title": "Añadir billetera",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Mover"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Buscar por dirección, nombre o notas...",
     "allWallets": "Todas",
     "hasPk": "Tiene clave privada",
     "hasSeed": "Tiene frase semilla",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "Escanear código QR",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Acceso a la cámara denegado o no se encontró cámara. Revisa los permisos de la app."
   },
   "chainBulk": {
     "title": "Etiquetas de cadena",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "Escanear código QR",
     "author": "Autor",
     "thankYou": "¡Gracias por tu apoyo!",
-    "website": "Sitio web"
+    "website": "Sitio web",
+    "button": "Donar"
   },
   "moveWallet": {
     "title": "Mover cartera",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Siguiente",
     "doneBtn": "hecho",
     "hint": "Usa otro dispositivo y selecciona 'Recibir datos vía QR' para escanear"
+  },
+  "qr": {
+    "tapToZoom": "Toca el QR para ampliar"
   }
 };

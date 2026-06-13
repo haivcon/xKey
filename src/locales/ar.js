@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "تأكيد التغيير؟",
     "autoBackupSet": "تم تمكين النسخ الاحتياطي التلقائي",
     "autoBackupPasswordSaved": "تم حفظ كلمة مرور النسخ الاحتياطي التلقائي",
-    "save": "يحفظ"
+    "save": "يحفظ",
+    "displayScale": "مقياس العرض",
+    "displayScaleDesc": "قلل حجم الواجهة لعرض المزيد من المحافظ وعناصر التحكم على الشاشة.",
+    "displayScaleCustom": "مقياس مخصص (%)",
+    "liteMode": "الوضع الخفيف",
+    "liteModeDesc": "تعطيل التمويه للأجهزة الضعيفة"
   },
   "createWallet": {
     "title": "إضافة محفظة",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "يتحرك"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "ابحث بالعنوان أو الاسم أو الملاحظات...",
     "allWallets": "جميع المحافظ",
     "hasPk": "لديه مفتاح خاص",
     "hasSeed": "لديه عبارة استرداد",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "مسح رمز الاستجابة السريعة",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "تم رفض الوصول إلى الكاميرا أو لم يتم العثور على كاميرا. يرجى التحقق من أذونات التطبيق."
   },
   "chainBulk": {
     "title": "تسميات السلسلة",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "مسح رمز الاستجابة السريعة",
     "author": "مؤلف",
     "thankYou": "شكرا لدعمكم!",
-    "website": "الموقع"
+    "website": "الموقع",
+    "button": "تبرع"
   },
   "moveWallet": {
     "title": "نقل المحفظة",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "التالي",
     "doneBtn": "منتهي",
     "hint": "استخدم جهازًا آخر وحدد \"تلقي البيانات عبر QR\" للمسح الضوئي"
+  },
+  "qr": {
+    "tapToZoom": "اضغط على رمز QR للتكبير"
   }
 };

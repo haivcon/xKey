@@ -79,7 +79,7 @@ export default function ExportCSVModal({ wallets, onClose }) {
   const hasSensitive = [...selected].some(k => COLUMNS.find(c => c.key === k)?.sensitive);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-surface-900 border border-surface-700 w-full max-w-md rounded-2xl shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-lg font-bold text-white">{t('exportCSV.title')}</h2>

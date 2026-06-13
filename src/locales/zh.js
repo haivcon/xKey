@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "确认更改？",
     "autoBackupSet": "自动备份已启用",
     "autoBackupPasswordSaved": "自动备份密码已保存",
-    "save": "保存"
+    "save": "保存",
+    "displayScale": "显示比例",
+    "displayScaleDesc": "缩小界面比例，以便在屏幕上查看更多钱包和控件。",
+    "displayScaleCustom": "自定义比例 (%)",
+    "liteMode": "轻量模式",
+    "liteModeDesc": "为低端设备关闭模糊效果"
   },
   "createWallet": {
     "title": "添加钱包",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "扫描二维码",
-    "hint": "将相机对准QR码"
+    "hint": "将相机对准QR码",
+    "cameraDenied": "摄像头访问被拒绝或未找到摄像头。请检查应用权限。"
   },
   "chainBulk": {
     "title": "链标签",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "扫描二维码",
     "author": "作者",
     "thankYou": "感谢您的支持！",
-    "website": "网站"
+    "website": "网站",
+    "button": "捐赠"
   },
   "moveWallet": {
     "title": "移动钱包",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "下一步",
     "doneBtn": "完成",
     "hint": "使用另一台设备并选择“通过QR接收数据”进行扫描"
+  },
+  "qr": {
+    "tapToZoom": "点击二维码放大"
   }
 };

@@ -407,7 +407,7 @@ export default function AdvancedToolsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4">
+    <div className="app-scaled-icons fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4">
       <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-surface-700 bg-surface-950 shadow-2xl sm:max-h-[90vh] sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-surface-800 px-3 py-2.5 sm:px-4 sm:py-3">
           <div className="flex items-center gap-2">

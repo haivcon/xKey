@@ -132,7 +132,12 @@ export default {
     "changeConfirm": "Confirmar alteração?",
     "autoBackupSet": "Backup automático ativado",
     "autoBackupPasswordSaved": "Senha de backup automático salva",
-    "save": "Salvar"
+    "save": "Salvar",
+    "displayScale": "Escala de exibição",
+    "displayScaleDesc": "Reduza a escala da interface para ver mais carteiras e controles na tela.",
+    "displayScaleCustom": "Escala personalizada (%)",
+    "liteMode": "Modo leve",
+    "liteModeDesc": "Desativa desfoques em dispositivos mais fracos"
   },
   "createWallet": {
     "title": "Adicionar carteira",
@@ -262,7 +267,7 @@ export default {
     "moveBtn": "Mover"
   },
   "actionBar": {
-    "searchPlaceholder": "Search by address, name, notes...",
+    "searchPlaceholder": "Buscar por endereço, nome, notas...",
     "allWallets": "Todas as carteiras",
     "hasPk": "Tem chave privada",
     "hasSeed": "Tem frase semente",
@@ -448,7 +453,8 @@ export default {
   },
   "qrScanner": {
     "title": "Digitalizar código QR",
-    "hint": "Point camera at a QR code"
+    "hint": "Point camera at a QR code",
+    "cameraDenied": "Acesso à câmera negado ou nenhuma câmera encontrada. Verifique as permissões do app."
   },
   "chainBulk": {
     "title": "Rótulos de Chain",
@@ -499,7 +505,8 @@ export default {
     "scanQR": "Digitalizar código QR",
     "author": "Autor",
     "thankYou": "Obrigado pelo seu apoio!",
-    "website": "Site"
+    "website": "Site",
+    "button": "Doar"
   },
   "moveWallet": {
     "title": "Mover Carteira",
@@ -525,5 +532,8 @@ export default {
     "nextBtn": "Próximo",
     "doneBtn": "Concluído",
     "hint": "Use outro dispositivo e selecione 'Receber dados via QR' para escanear"
+  },
+  "qr": {
+    "tapToZoom": "Toque no QR para ampliar"
   }
 };
