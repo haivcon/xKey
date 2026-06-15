@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Perkecil skala antarmuka agar lebih banyak dompet dan kontrol terlihat di layar.",
     "displayScaleCustom": "Skala khusus (%)",
     "liteMode": "Mode ringan",
-    "liteModeDesc": "Nonaktifkan blur untuk perangkat kelas rendah"
+    "liteModeDesc": "Nonaktifkan blur untuk perangkat kelas rendah",
+
+    "feedback": "Umpan balik",
+
+    "feedbackDesc": "Atur suara dan getaran aplikasi",
+
+    "soundFeedback": "Suara",
+
+    "vibrationFeedback": "Getaran"
   },
   "createWallet": {
     "title": "Tambah Dompet",

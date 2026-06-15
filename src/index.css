@@ -87,7 +87,7 @@ body.keyboard-open .overflow-auto {
 }
 
 .scale-range::-webkit-slider-runnable-track {
-  height: 0.75rem;
+  height: 0.5rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
@@ -96,25 +96,25 @@ body.keyboard-open .overflow-auto {
 }
 
 .scale-range::-webkit-slider-thumb {
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-top: -0.56rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: -0.47rem;
   appearance: none;
   -webkit-appearance: none;
   border-radius: 999px;
-  border: 3px solid #ffffff;
+  border: 0.25rem solid #ffffff;
   background: var(--color-brand-500);
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.38), 0 0 0 6px rgba(14, 165, 233, 0.12);
+  box-shadow: 0 5px 16px rgba(14, 165, 233, 0.36), 0 0 0 0.45rem rgba(14, 165, 233, 0.12);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .scale-range:active::-webkit-slider-thumb {
   transform: scale(1.08);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5), 0 0 0 9px rgba(14, 165, 233, 0.16);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.48), 0 0 0 0.65rem rgba(14, 165, 233, 0.16);
 }
 
 .scale-range::-moz-range-track {
-  height: 0.75rem;
+  height: 0.5rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(31, 35, 46, 0.9);
@@ -122,18 +122,18 @@ body.keyboard-open .overflow-auto {
 }
 
 .scale-range::-moz-range-progress {
-  height: 0.75rem;
+  height: 0.5rem;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--color-brand-500), var(--color-emerald-500));
 }
 
 .scale-range::-moz-range-thumb {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1rem;
+  height: 1rem;
   border-radius: 999px;
-  border: 3px solid #ffffff;
+  border: 0.25rem solid #ffffff;
   background: var(--color-brand-500);
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.38), 0 0 0 6px rgba(14, 165, 233, 0.12);
+  box-shadow: 0 5px 16px rgba(14, 165, 233, 0.36), 0 0 0 0.45rem rgba(14, 165, 233, 0.12);
 }
 
 /* ── Light Theme Override ── */
@@ -513,8 +513,14 @@ html {
 .lite-mode,
 .lite-mode * {
   backdrop-filter: none !important;
-  animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
+}
+
+.lite-mode .animate-pulse,
+.lite-mode .animate-spin,
+.lite-mode .logo-animated,
+.lite-mode .animated-splash {
+  animation: none !important;
 }
 
 .lite-mode .glass-card {

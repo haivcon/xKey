@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "قلل حجم الواجهة لعرض المزيد من المحافظ وعناصر التحكم على الشاشة.",
     "displayScaleCustom": "مقياس مخصص (%)",
     "liteMode": "الوضع الخفيف",
-    "liteModeDesc": "تعطيل التمويه للأجهزة الضعيفة"
+    "liteModeDesc": "تعطيل التمويه للأجهزة الضعيفة",
+
+    "feedback": "الملاحظات",
+
+    "feedbackDesc": "التحكم في صوت واهتزاز التطبيق",
+
+    "soundFeedback": "الصوت",
+
+    "vibrationFeedback": "الاهتزاز"
   },
   "createWallet": {
     "title": "إضافة محفظة",

@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Giảm tỷ lệ giao diện để nhìn thấy nhiều ví và công cụ hơn.",
     "displayScaleCustom": "Tùy chỉnh tỷ lệ (%)",
     "liteMode": "Chế độ nhẹ",
-    "liteModeDesc": "Tắt hiệu ứng mờ cho thiết bị yếu"
+    "liteModeDesc": "Tắt hiệu ứng mờ cho thiết bị yếu",
+
+    "feedback": "Phản hồi",
+
+    "feedbackDesc": "Bật tắt âm thanh và rung của ứng dụng",
+
+    "soundFeedback": "Âm thanh",
+
+    "vibrationFeedback": "Rung"
   },
   "createWallet": {
     "title": "Thêm ví",

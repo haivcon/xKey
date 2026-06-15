@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "स्क्रीन पर अधिक वॉलेट और नियंत्रण दिखाने के लिए इंटरफ़ेस का आकार घटाएं।",
     "displayScaleCustom": "कस्टम स्केल (%)",
     "liteMode": "लाइट मोड",
-    "liteModeDesc": "कमज़ोर डिवाइस के लिए ब्लर बंद करें"
+    "liteModeDesc": "कमज़ोर डिवाइस के लिए ब्लर बंद करें",
+
+    "feedback": "फीडबैक",
+
+    "feedbackDesc": "ऐप की ध्वनि और कंपन प्रतिक्रिया नियंत्रित करें",
+
+    "soundFeedback": "ध्वनि",
+
+    "vibrationFeedback": "कंपन"
   },
   "createWallet": {
     "title": "वॉलेट जोड़ें",

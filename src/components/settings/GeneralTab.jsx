@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
-import { hapticTap } from '../../utils/haptics';
+import {
+  getFeedbackSettings,
+  hapticSuccess,
+  hapticTap,
+  setSoundEnabled,
+  setVibrationEnabled,
+} from '../../utils/haptics';
 import DonateModal from '../DonateModal';
 import useLiteMode from '../../hooks/useLiteMode';
 
@@ -28,6 +34,7 @@ export default function GeneralTab() {
   const [showDonate, setShowDonate] = useState(false);
   const [scaleInput, setScaleInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
+  const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
 
   const { theme, setTheme, displayScale, setDisplayScale } = useTheme();
   const t = useT();
@@ -51,6 +58,23 @@ export default function GeneralTab() {
     setDisplayScale(nextScale);
     setScaleInput(String(nextScale));
     setIsScaleInputFocused(false);
+  };
+
+  const toggleFeedback = async (type) => {
+    if (type === 'sound') {
+      const next = !feedbackSettings.soundEnabled;
+      setSoundEnabled(next);
+      setFeedbackSettings(getFeedbackSettings());
+      if (next) hapticSuccess();
+      else hapticTap();
+      return;
+    }
+
+    const next = !feedbackSettings.vibrationEnabled;
+    await setVibrationEnabled(next);
+    setFeedbackSettings(getFeedbackSettings());
+    if (next) hapticSuccess();
+    else hapticTap();
   };
 
   return (
@@ -167,11 +191,17 @@ export default function GeneralTab() {
           })}
         </div>
 
-        <label className="block text-xs font-medium text-surface-400 mb-1.5">
-          {t('settings.displayScaleCustom')}
-        </label>
-        <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <label className="text-xs font-medium text-surface-400">
+            {t('settings.displayScaleCustom')}
+          </label>
+          <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-[11px] font-semibold text-brand-300">
+            {MIN_DISPLAY_SCALE}-{MAX_DISPLAY_SCALE}%
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
+          <div className="grid grid-cols-[1fr_5.5rem] items-center gap-3">
             <input
               type="range"
               min={MIN_DISPLAY_SCALE}
@@ -182,38 +212,94 @@ export default function GeneralTab() {
               style={{ '--scale-progress': `${scaleProgress}%` }}
               className="scale-range"
             />
-            <div className="mt-2 flex justify-between text-[10px] font-medium text-surface-500">
+            <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/15">
+              <input
+                type="number"
+                min={MIN_DISPLAY_SCALE}
+                max={MAX_DISPLAY_SCALE}
+                step="5"
+                inputMode="numeric"
+                value={scaleInput}
+                onChange={(e) => {
+                  setScaleInput(e.target.value);
+                }}
+                onFocus={() => {
+                  setIsScaleInputFocused(true);
+                  setScaleInput(String(displayScale));
+                }}
+                onBlur={commitScaleInput}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                  if (e.key === 'Escape') {
+                    setScaleInput(String(displayScale));
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-12 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
+              />
+              <span className="text-xs font-semibold text-surface-400">%</span>
+            </div>
+          </div>
+
+          <div className="mt-2 grid grid-cols-[1fr_5.5rem] gap-3">
+            <div className="flex justify-between text-[10px] font-semibold text-surface-500">
               <span>{MIN_DISPLAY_SCALE}%</span>
               <span>100%</span>
               <span>{MAX_DISPLAY_SCALE}%</span>
             </div>
+            <div />
           </div>
-          <div className="flex items-center gap-1 rounded-2xl border border-surface-700 bg-surface-950/70 px-3 shadow-inner shadow-black/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/15">
-            <input
-              type="number"
-              min={MIN_DISPLAY_SCALE}
-              max={MAX_DISPLAY_SCALE}
-              step="5"
-              value={scaleInput}
-              onChange={(e) => {
-                setScaleInput(e.target.value);
-              }}
-              onFocus={() => {
-                setIsScaleInputFocused(true);
-                setScaleInput(String(displayScale));
-              }}
-              onBlur={commitScaleInput}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur();
-                if (e.key === 'Escape') {
-                  setScaleInput(String(displayScale));
-                  e.currentTarget.blur();
-                }
-              }}
-              className="w-16 bg-transparent py-2.5 text-right text-base font-bold text-white outline-none"
-            />
-            <span className="text-xs text-surface-400">%</span>
+        </div>
+      </div>
+
+      {/* ═══ Feedback Options ═══ */}
+      <div className="glass-card p-4">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+            <Volume2 size={20} className="text-sky-400" />
           </div>
+          <div>
+            <p className="text-white font-medium text-sm">{t('settings.feedback')}</p>
+            <p className="text-xs text-surface-400">{t('settings.feedbackDesc')}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => toggleFeedback('sound')}
+            className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
+              feedbackSettings.soundEnabled
+                ? 'border-sky-500/40 bg-sky-500/10 text-white'
+                : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
+            }`}
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Volume2 size={16} />
+              {t('settings.soundFeedback')}
+            </span>
+            <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.soundEnabled ? 'bg-sky-500' : 'bg-surface-600'}`}>
+              <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.soundEnabled ? 'translate-x-4' : ''}`} />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => toggleFeedback('vibration')}
+            className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
+              feedbackSettings.vibrationEnabled
+                ? 'border-emerald-500/40 bg-emerald-500/10 text-white'
+                : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
+            }`}
+          >
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Smartphone size={16} />
+              {t('settings.vibrationFeedback')}
+            </span>
+            <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.vibrationEnabled ? 'bg-emerald-500' : 'bg-surface-600'}`}>
+              <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.vibrationEnabled ? 'translate-x-4' : ''}`} />
+            </span>
+          </button>
         </div>
       </div>
 

@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "ลดขนาดอินเทอร์เฟซเพื่อให้เห็นกระเป๋าและเครื่องมือได้มากขึ้นบนหน้าจอ",
     "displayScaleCustom": "สเกลกำหนดเอง (%)",
     "liteMode": "โหมดเบา",
-    "liteModeDesc": "ปิดเอฟเฟกต์เบลอสำหรับอุปกรณ์สเปกต่ำ"
+    "liteModeDesc": "ปิดเอฟเฟกต์เบลอสำหรับอุปกรณ์สเปกต่ำ",
+
+    "feedback": "การตอบสนอง",
+
+    "feedbackDesc": "ควบคุมเสียงและการสั่นของแอป",
+
+    "soundFeedback": "เสียง",
+
+    "vibrationFeedback": "การสั่น"
   },
   "createWallet": {
     "title": "เพิ่มกระเป๋าเงิน",

@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "缩小界面比例，以便在屏幕上查看更多钱包和控件。",
     "displayScaleCustom": "自定义比例 (%)",
     "liteMode": "轻量模式",
-    "liteModeDesc": "为低端设备关闭模糊效果"
+    "liteModeDesc": "为低端设备关闭模糊效果",
+
+    "feedback": "反馈",
+
+    "feedbackDesc": "控制应用声音和振动反馈",
+
+    "soundFeedback": "声音",
+
+    "vibrationFeedback": "振动"
   },
   "createWallet": {
     "title": "添加钱包",

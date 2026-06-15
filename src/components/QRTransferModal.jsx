@@ -82,7 +82,11 @@ export default function QRTransferModal({ wallets, onClose }) {
 
   return (
     <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
-      <div className="qr-modal-panel rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:p-6" onClick={e => e.stopPropagation()}>
+      <div
+        className="qr-modal-panel rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:p-6"
+        onClick={e => e.stopPropagation()}
+        onPointerDown={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <QrCode size={20} className="text-brand-400" />
@@ -105,6 +109,7 @@ export default function QRTransferModal({ wallets, onClose }) {
                 onKeyDown={e => e.key === 'Enter' && handleStart()}
                 placeholder={t('qrTransfer.passwordPlaceholder')}
                 wrapperClassName="flex-1"
+                autoFocus
                 className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
             </div>

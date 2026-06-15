@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Reduza a escala da interface para ver mais carteiras e controles na tela.",
     "displayScaleCustom": "Escala personalizada (%)",
     "liteMode": "Modo leve",
-    "liteModeDesc": "Desativa desfoques em dispositivos mais fracos"
+    "liteModeDesc": "Desativa desfoques em dispositivos mais fracos",
+
+    "feedback": "Feedback",
+
+    "feedbackDesc": "Controlar som e vibração do app",
+
+    "soundFeedback": "Som",
+
+    "vibrationFeedback": "Vibração"
   },
   "createWallet": {
     "title": "Adicionar carteira",

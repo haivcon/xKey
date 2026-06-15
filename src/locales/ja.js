@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "画面により多くのウォレットと操作項目を表示できるようにUIを縮小します。",
     "displayScaleCustom": "カスタムスケール (%)",
     "liteMode": "軽量モード",
-    "liteModeDesc": "低性能端末向けにぼかし効果を無効化します"
+    "liteModeDesc": "低性能端末向けにぼかし効果を無効化します",
+
+    "feedback": "フィードバック",
+
+    "feedbackDesc": "アプリの音と振動を制御します",
+
+    "soundFeedback": "サウンド",
+
+    "vibrationFeedback": "振動"
   },
   "createWallet": {
     "title": "ウォレット追加",

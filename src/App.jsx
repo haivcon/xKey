@@ -31,7 +31,7 @@ const BulkNetworkModal = lazy(() => import('./components/BulkNetworkModal'));
 // Utils & Hooks
 import { loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
 import { exportPortableBackup } from './utils/backupUtils';
-import { hapticTap, hapticSuccess } from './utils/haptics';
+import { hapticTap, hapticSuccess, initFeedbackSettings } from './utils/haptics';
 import useAutoLock from './hooks/useAutoLock';
 import useAutoBackup from './hooks/useAutoBackup';
 import useWallets from './hooks/useWallets';
@@ -71,6 +71,10 @@ export default function App() {
 
   // Performance hooks
   useLiteMode();
+
+  useEffect(() => {
+    initFeedbackSettings();
+  }, []);
 
   // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);

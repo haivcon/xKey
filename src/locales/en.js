@@ -142,7 +142,15 @@ export default {
     "displayScaleDesc": "Reduce the interface scale to fit more wallets and controls on screen.",
     "displayScaleCustom": "Custom scale (%)",
     "liteMode": "Lite Mode",
-    "liteModeDesc": "Disable blurs for low-end devices"
+    "liteModeDesc": "Disable blurs for low-end devices",
+
+    "feedback": "Feedback",
+
+    "feedbackDesc": "Control app sound and vibration feedback",
+
+    "soundFeedback": "Sound",
+
+    "vibrationFeedback": "Vibration"
   },
   "createWallet": {
     "title": "Add Wallet",

@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Réduit l’échelle de l’interface pour afficher plus de portefeuilles et de contrôles.",
     "displayScaleCustom": "Échelle personnalisée (%)",
     "liteMode": "Mode léger",
-    "liteModeDesc": "Désactive les flous pour les appareils peu puissants"
+    "liteModeDesc": "Désactive les flous pour les appareils peu puissants",
+
+    "feedback": "Retour",
+
+    "feedbackDesc": "Contrôler les sons et vibrations de l'application",
+
+    "soundFeedback": "Son",
+
+    "vibrationFeedback": "Vibration"
   },
   "createWallet": {
     "title": "Ajouter un portefeuille",

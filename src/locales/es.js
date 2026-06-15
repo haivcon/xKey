@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Reduce la escala de la interfaz para ver más wallets y controles en pantalla.",
     "displayScaleCustom": "Escala personalizada (%)",
     "liteMode": "Modo ligero",
-    "liteModeDesc": "Desactiva desenfoques en dispositivos de gama baja"
+    "liteModeDesc": "Desactiva desenfoques en dispositivos de gama baja",
+
+    "feedback": "Respuesta",
+
+    "feedbackDesc": "Controla el sonido y la vibración de la app",
+
+    "soundFeedback": "Sonido",
+
+    "vibrationFeedback": "Vibración"
   },
   "createWallet": {
     "title": "Añadir billetera",

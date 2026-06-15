@@ -6,51 +6,51 @@ The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, 
 
 > Your keys are stored locally. xKey is designed as a private cold-vault style manager, not as a network-connected trading wallet.
 
-## Current Release: v5.5.0
+## Current Release: v5.6.0
 
 ### Release Focus
 
-v5.5.0 improves daily wallet access, quick address actions, clipboard reliability, default display density, and Android shake-to-lock behavior. The release focuses on reducing accidental taps, making copy actions verifiable, and ensuring Android builds receive the latest synced web assets.
+v5.6.0 improves mobile comfort, feedback controls, QR transfer reliability, and Android native integration. The release focuses on making Settings easier to use, keeping Lite Mode visually stable, and ensuring the Android project receives the latest synced Capacitor assets.
 
-### Wallet Copy and QR Actions
+### Sound and Vibration Feedback
 
-- Removed the confusing long-press/tap-to-copy wallet behavior.
-- Added an explicit copy button on each wallet row.
-- Added a direct QR button on each wallet row so users can open the address QR without expanding the wallet.
-- Separated the quick action buttons from the expand arrow with spacing and a visual divider to reduce accidental taps.
-- When copying a wallet address, the wallet row temporarily reveals the full address instead of only the shortened `...` version.
-- Copy success toasts now identify the wallet and the exact copied address.
-- Private key and seed phrase copy buttons now show success/failure notifications without exposing sensitive values in toast messages.
+- Added app-level sound and vibration settings under General Settings.
+- Added native Android haptic feedback through `@capacitor/haptics`.
+- Kept browser vibration and Web Audio fallbacks for web builds.
+- Improved Web Audio startup by resuming the audio context inside user-triggered actions.
+- Increased feedback tone duration and volume so sound feedback is easier to notice on Android WebView.
+- Persisted feedback preferences through Capacitor Preferences with local storage fallback.
 
-### Native Clipboard Reliability
+### Display Scale Controls
 
-- Updated the clipboard helper to use `@capacitor/clipboard` first on native platforms.
-- Kept `navigator.clipboard` as a fallback for web builds.
-- Copy actions now check the actual copy result before showing a success message.
-- Clipboard auto-clear now uses the same native-first helper path.
+- Redesigned the custom display scale slider to look more balanced on mobile.
+- Reduced the slider thumb and track size for a cleaner Settings layout.
+- Rebuilt the manual percentage input so it aligns with the slider and remains easy to edit.
+- Added numeric mobile keyboard support for manual scale entry.
+- Kept the supported scale range at `5%` to `200%`.
 
-### Display Density
+### Lite Mode Stability
 
-- Changed the default Display Scale from `100%` to `75%` for new installs and fresh app data.
-- Existing users keep their saved display scale preference until they change it in Settings.
+- Fixed Lite Mode causing animated logo and donate elements to flicker continuously.
+- Lite Mode now disables selected pulse/spin animations instead of forcing ultra-short animation durations.
+- Blur effects remain disabled in Lite Mode for better performance on weaker devices.
 
-### Shake to Lock Fixes
+### QR Transfer Input Fixes
 
-- Fixed Shake to Lock not taking effect immediately after enabling it in Settings.
-- Added a settings-change event so the motion listener reloads preferences without requiring an app restart or background/foreground cycle.
-- Added motion permission handling when enabling Shake to Lock.
-- Added a lock cooldown to prevent repeated lock triggers from a single shake.
-- Limited the shake listener to active unlocked vault sessions.
+- Fixed password input focus issues in the QR transfer modal.
+- Prevented modal pointer events from stealing focus from password fields.
+- Added autofocus to the QR transfer password field so users can enter the password faster.
 
 ### Localization
 
-- Added translations for the new wallet copy, address QR, motion permission, and Shake to Lock status messages across all supported languages.
+- Added translations for the new feedback settings across all supported languages.
 - Continued keeping locale coverage aligned so new UI strings do not appear as raw translation keys.
 
 ### Android and Build Updates
 
-- Updated app version to `5.5.0`.
-- Updated Android `versionCode` to `55`.
+- Updated app version to `5.6.0`.
+- Updated Android `versionCode` to `56`.
+- Added and synced the Capacitor Haptics Android plugin.
 - Synced Capacitor Android assets after the production build.
 - Confirmed Android debug build succeeds.
 - Confirmed `.gitignore` keeps the local `1/` workspace out of GitHub.
@@ -98,6 +98,7 @@ The Vite production build currently reports a large chunk warning. This is not a
 
 ## Previous Releases
 
+- `v5.5.0`: Wallet row copy/QR actions, native clipboard reliability, default `75%` display scale, and Android Shake to Lock fixes.
 - `v5.4.0`: Display scale system, QR viewport fixes, scale-aware icons, sticky layout corrections, and localization cleanup.
 - `v5.3.x`: Android startup stability, responsive tools, web authentication fallback, and release build fixes.
 - `v5.2.x` and earlier: Wallet grid improvements, advanced tools, `.xkey` backup flow, decoy vault, kill switch, auto backup, clipboard controls, Capacitor 8 migration, launcher icon, and splash assets.
@@ -147,14 +148,14 @@ The GitHub Actions workflow builds and signs release artifacts when a `v*` tag i
 Example:
 
 ```bash
-git tag v5.5.0
-git push origin v5.5.0
+git tag v5.6.0
+git push origin v5.6.0
 ```
 
 Generated release files:
 
-- `xKey-Release-v5.5.0.apk`
-- `xKey-Release-v5.5.0.aab`
+- `xKey-Release-v5.6.0.apk`
+- `xKey-Release-v5.6.0.aab`
 
 ## Security Notice
 

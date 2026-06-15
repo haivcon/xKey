@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Verkleinert die Oberfläche, damit mehr Wallets und Bedienelemente sichtbar sind.",
     "displayScaleCustom": "Eigene Skalierung (%)",
     "liteMode": "Lite-Modus",
-    "liteModeDesc": "Unschärfe für schwächere Geräte deaktivieren"
+    "liteModeDesc": "Unschärfe für schwächere Geräte deaktivieren",
+
+    "feedback": "Feedback",
+
+    "feedbackDesc": "App-Sound und Vibration steuern",
+
+    "soundFeedback": "Ton",
+
+    "vibrationFeedback": "Vibration"
   },
   "createWallet": {
     "title": "Wallet hinzufügen",

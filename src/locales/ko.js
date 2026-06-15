@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "화면에 더 많은 지갑과 도구를 볼 수 있도록 인터페이스 배율을 줄입니다.",
     "displayScaleCustom": "사용자 지정 배율 (%)",
     "liteMode": "라이트 모드",
-    "liteModeDesc": "저사양 기기에서 블러 효과를 비활성화합니다"
+    "liteModeDesc": "저사양 기기에서 블러 효과를 비활성화합니다",
+
+    "feedback": "피드백",
+
+    "feedbackDesc": "앱 소리와 진동 피드백 제어",
+
+    "soundFeedback": "소리",
+
+    "vibrationFeedback": "진동"
   },
   "createWallet": {
     "title": "지갑 추가",

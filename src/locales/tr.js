@@ -143,7 +143,15 @@ export default {
     "displayScaleDesc": "Ekranda daha fazla cüzdan ve kontrol görmek için arayüz ölçeğini küçültün.",
     "displayScaleCustom": "Özel ölçek (%)",
     "liteMode": "Hafif mod",
-    "liteModeDesc": "Düşük güçlü cihazlar için bulanıklığı kapatır"
+    "liteModeDesc": "Düşük güçlü cihazlar için bulanıklığı kapatır",
+
+    "feedback": "Geri bildirim",
+
+    "feedbackDesc": "Uygulama sesi ve titreşimini kontrol edin",
+
+    "soundFeedback": "Ses",
+
+    "vibrationFeedback": "Titreşim"
   },
   "createWallet": {
     "title": "Cüzdan Ekle",

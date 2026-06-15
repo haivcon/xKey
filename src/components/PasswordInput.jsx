@@ -22,7 +22,7 @@ export default function PasswordInput({ className, wrapperClassName = "w-full", 
   };
 
   return (
-    <div className={wrapClass}>
+    <div className={wrapClass} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
       <input 
         ref={inputRef}
         type={show ? 'text' : 'password'} 
