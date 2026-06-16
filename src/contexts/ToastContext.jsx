@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { logActionHistory } from '../utils/actionHistory';
 
 const ToastContext = createContext(null);
 
@@ -47,6 +48,34 @@ const TOAST_STYLES = {
   },
 };
 
+const ADDRESS_PATTERN = /(0x[a-fA-F0-9]{40})/;
+const COPY_WORDS = ['copied', 'copy', 'sao chép', 'đã sao chép', 'copiado', 'kopiert', 'コピー', '복사', 'скоп'];
+
+const formatToastMessage = (message) => {
+  const raw = String(message ?? '').replace(/\s+/g, ' ').trim();
+  const address = raw.match(ADDRESS_PATTERN)?.[1] || '';
+  const looksLikeCopy = COPY_WORDS.some(word => raw.toLowerCase().includes(word));
+  if (!address || !looksLikeCopy) return { title: raw, address: '' };
+
+  const title = raw
+    .replace(address, '')
+    .replace(/[:：]\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return { title: title || raw, address };
+};
+
+const getToastDuration = (type, duration, message) => {
+  if (Number.isFinite(duration)) return duration;
+  const raw = String(message || '').toLowerCase();
+  if (ADDRESS_PATTERN.test(raw) || raw.includes('copied') || raw.includes('sao chép')) return 2200;
+  if (type === 'error') return 6000;
+  if (type === 'warning') return 4500;
+  if (type === 'success') return 2600;
+  return 3200;
+};
+
 function ToastItem({ toast, onDismiss }) {
   const [progress, setProgress] = useState(100);
   const [exiting, setExiting] = useState(false);
@@ -78,24 +107,40 @@ function ToastItem({ toast, onDismiss }) {
 
   const style = TOAST_STYLES[toast.type] || TOAST_STYLES.info;
   const Icon = TOAST_ICONS[toast.type] || Info;
+  const formatted = formatToastMessage(toast.message);
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border shadow-2xl backdrop-blur-xl transition-all duration-250
+      className={`relative max-h-[28dvh] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-xl transition-all duration-250
         ${style.bg} ${style.border}
         ${exiting ? 'animate-toast-exit' : 'animate-toast-enter'}`}
-      style={{ maxWidth: '400px', width: '100%' }}
+      style={{ width: 'min(420px, calc(100vw - 28px))', fontSize: 'calc(1rem * var(--app-display-scale, 1))' }}
     >
-      <div className="flex items-start gap-3 px-4 py-3.5">
-        <div className="flex-shrink-0 mt-0.5">
-          <Icon size={18} className={style.icon} />
+      <div className="flex items-center gap-2.5 px-3 py-2.5 text-center sm:gap-3 sm:px-4">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+          <Icon size={17} className={style.icon} />
         </div>
-        <p className={`flex-1 text-sm font-medium leading-snug ${style.text}`}>
-          {toast.message}
-        </p>
+        {formatted.address ? (
+          <div className={`min-w-0 flex-1 overflow-hidden text-center ${style.text}`}>
+            <p className="truncate text-[0.82em] font-semibold leading-tight">{formatted.title}</p>
+            <p className="mt-0.5 whitespace-nowrap font-mono font-bold leading-tight text-[clamp(0.56rem,2.55vw,0.78rem)]">
+              {formatted.address}
+            </p>
+          </div>
+        ) : (
+          <p className={`min-w-0 flex-1 overflow-hidden break-words text-center text-[0.82em] font-semibold leading-snug ${style.text}`}
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {toast.message}
+          </p>
+        )}
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 mt-0.5 p-0.5 rounded-full hover:bg-white/10 transition-colors"
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
         >
           <X size={14} className="text-white/40" />
         </button>
@@ -114,12 +159,14 @@ function ToastItem({ toast, onDismiss }) {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback((message, type = 'info', duration = 3000) => {
+  const showToast = useCallback((message, type = 'info', duration) => {
     const id = ++toastId;
+    const resolvedDuration = getToastDuration(type, duration, message);
+    logActionHistory(message, type).catch(() => {});
     setToasts(prev => {
       // Keep max 3 toasts visible
       const limited = prev.length >= 3 ? prev.slice(1) : prev;
-      return [...limited, { id, message, type, duration }];
+      return [...limited, { id, message, type, duration: resolvedDuration }];
     });
   }, []);
 
@@ -131,10 +178,12 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* Toast Container — top-center, safe area aware */}
-      <div className="fixed top-0 left-0 right-0 z-[200] flex flex-col items-center gap-2 pt-[env(safe-area-inset-top,12px)] px-4 pointer-events-none"
-           style={{ paddingTop: 'max(env(safe-area-inset-top, 12px), 12px)' }}>
+      <div
+        className="fixed left-0 right-0 z-[200] flex flex-col items-center gap-2 px-3 pointer-events-none"
+        style={{ top: 'max(env(safe-area-inset-top, 0px), 0px)', paddingTop: 12 }}
+      >
         {toasts.map(t => (
-          <div key={t.id} className="pointer-events-auto w-full flex justify-center">
+          <div key={t.id} className="pointer-events-auto flex w-full justify-center">
             <ToastItem toast={t} onDismiss={dismiss} />
           </div>
         ))}

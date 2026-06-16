@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Brankas terkunci",
+    "subtitle": "Gunakan kunci perangkat untuk membuka xKey.",
+    "checking": "Memeriksa keamanan perangkat...",
+    "setupRequired": "Atur kunci layar di perangkat ini sebelum menggunakan xKey.",
+    "setupTitle": "Kunci perangkat diperlukan",
+    "setupBody": "Buka pengaturan keamanan Android dan atur PIN, kata sandi, pola, sidik jari, atau buka kunci wajah. Setelah itu kembali ke xKey dan buka lagi.",
+    "openSettings": "Buka pengaturan keamanan",
+    "settingsError": "Tidak dapat membuka pengaturan keamanan.",
+    "unlockButton": "Buka dengan kunci perangkat",
+    "unlocking": "Membuka...",
+    "readyTitle": "Siap dibuka",
+    "readyBody": "Gunakan kunci perangkat saat ini: sidik jari, wajah, PIN, kata sandi, atau pola. Jika kunci perangkat berubah, xKey akan mencoba memperbarui perlindungan otomatis.",
+    "authCanceled": "Autentikasi dibatalkan",
+    "unlockFailed": "Vault tidak dapat dibuka",
+    "tryAgainHint": "Konfirmasi kunci perangkat lalu ketuk buka lagi.",
+    "unrecoverableTitle": "Kunci vault tidak dapat dipulihkan",
+    "unrecoverableBody": "Keamanan perangkat berubah dan xKey tidak dapat membuka kunci tersimpan. Pulihkan cadangan .xkey atau reset vault jika tidak ada cadangan."
+  },
   "common": {
     "cancel": "Batal",
     "save": "Simpan",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Hapus semua dompet di folder \"{name}\"?",
     "movedToFolder": "Dipindahkan ke folder",
     "folders": "Folder"
+  },
+  "assetBalance": {
+    "title": "Edit saldo aset",
+    "unitLabel": "Unit aset",
+    "unitHint": "Gunakan $, USDT, VND, poin, atau label khusus.",
+    "filteredCount": "{count} dompet ditampilkan",
+    "saved": "Saldo aset diperbarui",
+    "searchPlaceholder": "Cari nama dompet, alamat, atau jaringan...",
+    "importCsv": "Impor CSV",
+    "restoreDraftConfirm": "Pulihkan perubahan saldo yang belum disimpan?",
+    "unitConfirm": "Unit aset hanya mengubah label, bukan konversi kurs. Lanjutkan?",
+    "importCsvError": "CSV harus memiliki kolom address dan balance.",
+    "importedCsv": "Saldo diimpor untuk {count} dompet",
+    "filter_all": "Semua",
+    "filter_positive": "Ada saldo",
+    "filter_zero": "Nol",
+    "filter_changed": "Diubah",
+    "changed": "Diubah",
+    "setZero": "Set 0",
+    "undo": "Urungkan",
+    "activeCount": "{count} aktif",
+    "changedCount": "{count} diubah",
+    "newTotal": "Total baru"
   },
   "restore": {
     "title": "Pulihkan Cadangan",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Keamanan",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Kunci otomatis setelah tidak aktif",
+    "autoLockSaved": "Waktu kunci otomatis disimpan",
+    "customMinutes": "Waktu khusus (menit)",
+    "autoLockRangeError": "Masukkan waktu antara 1 menit sampai 24 jam.",
+    "autoLockMinutes": "mnt",
+    "autoLockCurrent": "Saat ini",
+    "autoLockDesc": "Kunci vault otomatis setelah aplikasi tidak digunakan selama waktu ini.",
+    "clipboardClear": "Hapus otomatis clipboard",
+    "clipboardSaved": "Waktu clipboard disimpan",
+    "customSeconds": "Waktu khusus (detik)",
+    "clipboardMinutes": "mnt",
+    "clipboardSeconds": "dtk",
+    "clipboardNever": "Jangan hapus otomatis",
+    "clipboardRangeError": "Masukkan 5 detik sampai 24 jam, atau pilih ∞ untuk menonaktifkan hapus otomatis.",
+    "clipboardDesc": "xKey menghapus data sensitif yang disalin hanya jika clipboard masih berisi nilai xKey yang sama.",
+    "clipboardCurrent": "Saat ini",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Goyang untuk Mengunci",
     "shakeToLockDesc": "Kunci aplikasi segera saat perangkat digoyangkan",
     "shakeSensitivity": "Sensitivitas",
-
     "shakePermissionDenied": "Izin gerakan ditolak. Goyang untuk Mengunci memerlukan akses sensor.",
-
     "shakeToLockEnabled": "Goyang untuk Mengunci aktif",
-
     "shakeToLockDisabled": "Goyang untuk Mengunci nonaktif",
     "high": "Tinggi",
     "medium": "Sedang",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Skala khusus (%)",
     "liteMode": "Mode ringan",
     "liteModeDesc": "Nonaktifkan blur untuk perangkat kelas rendah",
-
     "feedback": "Umpan balik",
-
     "feedbackDesc": "Atur suara dan getaran aplikasi",
-
     "soundFeedback": "Suara",
-
-    "vibrationFeedback": "Getaran"
+    "vibrationFeedback": "Getaran",
+    "walletDensity": "Kepadatan dompet",
+    "walletDensityDesc": "Pilih seberapa ringkas kartu dompet di beranda.",
+    "walletDensityComfortable": "Nyaman",
+    "walletDensityCompact": "Ringkas",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Riwayat aktivitas",
+    "activityHistoryDesc": "Aksi dan notifikasi aman terbaru.",
+    "clearHistory": "Hapus",
+    "noActivityHistory": "Belum ada aktivitas."
   },
   "createWallet": {
     "title": "Tambah Dompet",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Tidak Ada Alamat",
     "balanceLabel": "Saldo",
     "rename": "Ganti Nama",
+    "editBalance": "Edit saldo",
     "delete": "Hapus",
     "edit": "Edit",
     "editWallet": "Edit Dompet",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Clipboard dihapus",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Penulis",
     "thankYou": "Terima kasih atas dukungan Anda!",
     "website": "Situs web",
-    "button": "Donasi"
+    "button": "Donasi",
+    "network": "Jaringan",
+    "address": "Alamat donasi",
+    "copyAddress": "Salin alamat",
+    "copiedAddress": "Alamat disalin",
+    "networkNote": "XLAYER, ETH, BSC, dan jaringan EVM lainnya"
   },
   "moveWallet": {
     "title": "Pindahkan Dompet",
@@ -554,6 +614,13 @@ export default {
     "hint": "Gunakan perangkat lain dan pilih 'Terima data melalui QR' untuk memindai"
   },
   "qr": {
-    "tapToZoom": "Ketuk QR untuk memperbesar"
+    "tapToZoom": "Ketuk QR untuk memperbesar",
+    "share": "Bagikan",
+    "saveImage": "Simpan",
+    "saved": "Tersimpan",
+    "sensitiveWarning": "QR ini berisi data dompet sensitif. Pindai atau bagikan hanya di tempat pribadi."
+  },
+  "privacyShield": {
+    "subtitle": "Dilindungi saat tidak aktif"
   }
 };

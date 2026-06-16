@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Kho bị khóa",
+    "subtitle": "Dùng khóa thiết bị để mở xKey.",
+    "checking": "Đang kiểm tra bảo mật thiết bị...",
+    "setupRequired": "Hãy đặt khóa màn hình cho thiết bị trước khi dùng xKey.",
+    "setupTitle": "Cần khóa thiết bị",
+    "setupBody": "Mở cài đặt bảo mật Android và đặt PIN, mật khẩu, mẫu hình, vân tay hoặc mở khóa khuôn mặt. Sau đó quay lại xKey và mở khóa lại.",
+    "openSettings": "Mở cài đặt bảo mật",
+    "settingsError": "Không thể mở cài đặt bảo mật.",
+    "unlockButton": "Mở bằng khóa thiết bị",
+    "unlocking": "Đang mở khóa...",
+    "readyTitle": "Sẵn sàng mở khóa",
+    "readyBody": "Dùng khóa thiết bị hiện tại: vân tay, khuôn mặt, mã PIN, mật khẩu hoặc mẫu hình. Nếu bạn đổi cách khóa thiết bị, xKey sẽ tự cập nhật lớp bảo vệ khi có thể.",
+    "authCanceled": "Đã hủy xác thực",
+    "unlockFailed": "Không thể mở khóa kho",
+    "tryAgainHint": "Hãy xác nhận khóa thiết bị rồi bấm mở khóa lại.",
+    "unrecoverableTitle": "Không thể khôi phục khóa kho",
+    "unrecoverableBody": "Bảo mật thiết bị đã thay đổi và xKey không mở được khóa đã lưu. Hãy khôi phục từ bản sao lưu .xkey hoặc đặt lại kho nếu không còn bản sao lưu."
+  },
   "common": {
     "cancel": "Hủy",
     "save": "Lưu",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Xóa tất cả ví trong thư mục \"{name}\"?",
     "movedToFolder": "Đã di chuyển vào thư mục",
     "folders": "Thư mục"
+  },
+  "assetBalance": {
+    "title": "Sửa số dư tài sản",
+    "unitLabel": "Đơn vị tài sản",
+    "unitHint": "Dùng $, USDT, VND, điểm hoặc nhãn tùy chỉnh.",
+    "filteredCount": "Đang hiển thị {count} ví",
+    "saved": "Đã cập nhật số dư tài sản",
+    "searchPlaceholder": "Tìm tên ví, địa chỉ hoặc mạng...",
+    "importCsv": "Nhập CSV",
+    "restoreDraftConfirm": "Khôi phục các chỉnh sửa số dư chưa lưu?",
+    "unitConfirm": "Đổi đơn vị tài sản chỉ đổi nhãn hiển thị, không tự quy đổi tỷ giá. Tiếp tục?",
+    "importCsvError": "CSV phải có cột address và balance.",
+    "importedCsv": "Đã nhập số dư cho {count} ví",
+    "filter_all": "Tất cả",
+    "filter_positive": "Có số dư",
+    "filter_zero": "Bằng 0",
+    "filter_changed": "Đã sửa",
+    "changed": "Đã sửa",
+    "setZero": "Đặt 0",
+    "undo": "Hoàn tác",
+    "activeCount": "{count} ví có số dư",
+    "changedCount": "{count} đã sửa",
+    "newTotal": "Tổng mới"
   },
   "restore": {
     "title": "Khôi phục bản sao lưu",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Bảo mật",
     "securityDesc": "Khóa tự động, clipboard, mật khẩu chính",
-    "autoLock": "Thời gian tự khóa",
+    "autoLock": "Tự khóa sau khi không thao tác",
     "autoLockSaved": "Đã lưu thời gian tự khóa",
-    "customMinutes": "Tùy chỉnh (phút)",
+    "customMinutes": "Tự nhập thời gian (phút)",
+    "autoLockRangeError": "Nhập thời gian từ 1 phút đến 24 giờ.",
+    "autoLockMinutes": "phút",
+    "autoLockCurrent": "Hiện tại",
+    "autoLockDesc": "Tự động khóa kho khi ứng dụng không được sử dụng trong khoảng thời gian này.",
     "clipboardClear": "Tự xóa clipboard",
-    "clipboardSaved": "Đã lưu thời gian clipboard",
-    "customSeconds": "Tùy chỉnh (giây)",
+    "clipboardSaved": "Đã lưu thời gian tự xóa clipboard",
+    "customSeconds": "Tự nhập thời gian (giây)",
+    "clipboardMinutes": "phút",
+    "clipboardSeconds": "giây",
+    "clipboardNever": "Không tự xóa",
+    "clipboardRangeError": "Nhập từ 5 giây đến 24 giờ, hoặc chọn ∞ để tắt tự xóa.",
+    "clipboardDesc": "xKey chỉ xóa dữ liệu nhạy cảm đã sao chép nếu clipboard vẫn còn đúng giá trị xKey đó.",
+    "clipboardCurrent": "Hiện tại",
     "masterPassword": "Mật khẩu chính",
     "masterPasswordDesc": "Lớp bảo vệ thêm khi xem Khóa Riêng Tư và Cụm Từ",
     "setMasterPassword": "Đặt mật khẩu chính",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Lắc để Khóa",
     "shakeToLockDesc": "Khóa ứng dụng ngay lập tức khi lắc điện thoại",
     "shakeSensitivity": "Độ nhạy",
-
     "shakePermissionDenied": "Quyền cảm biến chuyển động đã bị từ chối. Lắc để Khóa cần quyền cảm biến để hoạt động.",
-
     "shakeToLockEnabled": "Đã bật Lắc để Khóa",
-
     "shakeToLockDisabled": "Đã tắt Lắc để Khóa",
     "high": "Cao",
     "medium": "Trung bình",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Tùy chỉnh tỷ lệ (%)",
     "liteMode": "Chế độ nhẹ",
     "liteModeDesc": "Tắt hiệu ứng mờ cho thiết bị yếu",
-
     "feedback": "Phản hồi",
-
     "feedbackDesc": "Bật tắt âm thanh và rung của ứng dụng",
-
     "soundFeedback": "Âm thanh",
-
-    "vibrationFeedback": "Rung"
+    "vibrationFeedback": "Rung",
+    "walletDensity": "Mật độ ví",
+    "walletDensityDesc": "Chọn mức gọn của thẻ ví trên trang chủ.",
+    "walletDensityComfortable": "Dễ nhìn",
+    "walletDensityCompact": "Gọn",
+    "walletDensityUltra": "Rất gọn",
+    "activityHistory": "Lịch sử thao tác",
+    "activityHistoryDesc": "Các thao tác và thông báo an toàn gần đây.",
+    "clearHistory": "Xóa",
+    "noActivityHistory": "Chưa có thao tác nào."
   },
   "createWallet": {
     "title": "Thêm ví",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Không có địa chỉ",
     "balanceLabel": "Số dư",
     "rename": "Đổi tên",
+    "editBalance": "Sửa số dư",
     "delete": "Xóa",
     "edit": "Sửa",
     "editWallet": "Chỉnh sửa ví",
@@ -526,7 +581,12 @@ export default {
     "author": "Tác giả",
     "thankYou": "Cảm ơn bạn đã ủng hộ!",
     "website": "Trang web",
-    "button": "Ủng hộ"
+    "button": "Ủng hộ",
+    "network": "Mạng",
+    "address": "Địa chỉ ủng hộ",
+    "copyAddress": "Sao chép địa chỉ",
+    "copiedAddress": "Đã sao chép địa chỉ",
+    "networkNote": "XLAYER, ETH, BSC,... (EVM)"
   },
   "moveWallet": {
     "title": "Di chuyển Ví",
@@ -554,6 +614,13 @@ export default {
     "hint": "Dùng thiết bị khác chọn 'Nhận dữ liệu qua QR' để quét"
   },
   "qr": {
-    "tapToZoom": "Chạm vào mã QR để phóng to"
+    "tapToZoom": "Chạm vào mã QR để phóng to",
+    "share": "Chia sẻ",
+    "saveImage": "Lưu",
+    "saved": "Đã lưu",
+    "sensitiveWarning": "QR này chứa dữ liệu ví nhạy cảm. Chỉ quét hoặc chia sẻ ở nơi riêng tư."
+  },
+  "privacyShield": {
+    "subtitle": "Được che khi không hoạt động"
   }
 };

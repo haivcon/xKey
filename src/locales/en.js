@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Vault locked",
+    "subtitle": "Use your device lock to unlock xKey.",
+    "checking": "Checking device security...",
+    "setupRequired": "Set a screen lock on this device before using xKey.",
+    "setupTitle": "Device lock required",
+    "setupBody": "Open Android security settings and set a PIN, password, pattern, fingerprint, or face unlock. Then return to xKey and unlock again.",
+    "openSettings": "Open security settings",
+    "settingsError": "Unable to open security settings.",
+    "unlockButton": "Unlock with device lock",
+    "unlocking": "Unlocking...",
+    "readyTitle": "Ready to unlock",
+    "readyBody": "Use your current device lock: fingerprint, face, PIN, password, or pattern. If you change the device lock, xKey will try to update the protection automatically.",
+    "authCanceled": "Authentication canceled",
+    "unlockFailed": "Could not unlock the vault",
+    "tryAgainHint": "Confirm your device lock and tap unlock again.",
+    "unrecoverableTitle": "Vault key cannot be recovered",
+    "unrecoverableBody": "Device security changed and xKey cannot open the stored key. Restore a .xkey backup or reset the vault if you no longer have a backup."
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",
@@ -32,6 +51,29 @@ export default {
     "movedToFolder": "Moved to folder",
     "folders": "Folders"
   },
+  "assetBalance": {
+    "title": "Edit asset balances",
+    "unitLabel": "Asset unit",
+    "unitHint": "Use $, USDT, VND, points, or any custom label.",
+    "filteredCount": "{count} wallets shown",
+    "saved": "Asset balances updated",
+    "searchPlaceholder": "Search wallet name, address, or network...",
+    "importCsv": "Import CSV",
+    "restoreDraftConfirm": "Restore unsaved balance edits?",
+    "unitConfirm": "Changing the asset unit only changes the label, not exchange rates. Continue?",
+    "importCsvError": "CSV must include address and balance columns.",
+    "importedCsv": "Imported balances for {count} wallets",
+    "filter_all": "All",
+    "filter_positive": "Has balance",
+    "filter_zero": "Zero",
+    "filter_changed": "Changed",
+    "changed": "Changed",
+    "setZero": "Set 0",
+    "undo": "Undo",
+    "activeCount": "{count} active",
+    "changedCount": "{count} changed",
+    "newTotal": "New total"
+  },
   "restore": {
     "title": "Restore Backup",
     "desc": "Enter the password used when this backup was created.",
@@ -49,12 +91,22 @@ export default {
     "languageDesc": "Select your preferred language",
     "security": "Security",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock Timeout",
+    "autoLock": "Auto-lock after inactivity",
     "autoLockSaved": "Auto-lock timeout saved",
-    "customMinutes": "Custom (minutes)",
+    "customMinutes": "Custom time (minutes)",
+    "autoLockRangeError": "Enter a time from 1 minute to 24 hours.",
+    "autoLockMinutes": "min",
+    "autoLockCurrent": "Current",
+    "autoLockDesc": "Automatically lock the vault after the app has not been used for this long.",
     "clipboardClear": "Clipboard Auto-Clear",
     "clipboardSaved": "Clipboard timeout saved",
-    "customSeconds": "Custom (seconds)",
+    "customSeconds": "Custom time (seconds)",
+    "clipboardMinutes": "min",
+    "clipboardSeconds": "sec",
+    "clipboardNever": "Do not auto-clear",
+    "clipboardRangeError": "Enter 5 seconds to 24 hours, or choose ∞ to disable auto-clear.",
+    "clipboardDesc": "xKey clears copied sensitive data only if the clipboard still contains the same xKey value.",
+    "clipboardCurrent": "Current",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Optional extra layer for viewing Private Keys and Seed Phrases",
     "setMasterPassword": "Set Master Password",
@@ -97,11 +149,8 @@ export default {
     "shakeToLockTitle": "Shake to Lock",
     "shakeToLockDesc": "Lock app immediately when shaking device",
     "shakeSensitivity": "Sensitivity",
-
     "shakePermissionDenied": "Motion permission was denied. Shake to Lock cannot work without sensor access.",
-
     "shakeToLockEnabled": "Shake to Lock enabled",
-
     "shakeToLockDisabled": "Shake to Lock disabled",
     "high": "High",
     "medium": "Medium",
@@ -143,14 +192,19 @@ export default {
     "displayScaleCustom": "Custom scale (%)",
     "liteMode": "Lite Mode",
     "liteModeDesc": "Disable blurs for low-end devices",
-
     "feedback": "Feedback",
-
     "feedbackDesc": "Control app sound and vibration feedback",
-
     "soundFeedback": "Sound",
-
-    "vibrationFeedback": "Vibration"
+    "vibrationFeedback": "Vibration",
+    "walletDensity": "Wallet density",
+    "walletDensityDesc": "Choose how compact wallet cards appear on the home screen.",
+    "walletDensityComfortable": "Comfort",
+    "walletDensityCompact": "Compact",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Activity history",
+    "activityHistoryDesc": "Recent safe app actions and notifications.",
+    "clearHistory": "Clear",
+    "noActivityHistory": "No activity yet."
   },
   "createWallet": {
     "title": "Add Wallet",
@@ -255,6 +309,7 @@ export default {
     "noAddress": "No Address",
     "balanceLabel": "Balance",
     "rename": "Rename",
+    "editBalance": "Edit balance",
     "delete": "Delete",
     "edit": "Edit",
     "editWallet": "Edit Wallet",
@@ -510,7 +565,12 @@ export default {
     "author": "Author",
     "thankYou": "Thank you for your support!",
     "website": "Website",
-    "button": "Donate"
+    "button": "Donate",
+    "network": "Network",
+    "address": "Donation address",
+    "copyAddress": "Copy address",
+    "copiedAddress": "Address copied",
+    "networkNote": "XLAYER, ETH, BSC, and other EVM networks"
   },
   "moveWallet": {
     "title": "Move Wallet",
@@ -538,6 +598,13 @@ export default {
     "hint": "Use another device and select 'Receive data via QR' to scan"
   },
   "qr": {
-    "tapToZoom": "Tap QR to enlarge"
+    "tapToZoom": "Tap QR to enlarge",
+    "share": "Share",
+    "saveImage": "Save",
+    "saved": "Saved",
+    "sensitiveWarning": "This QR contains sensitive wallet data. Only scan or share it in a private place."
+  },
+  "privacyShield": {
+    "subtitle": "Protected while inactive"
   }
 };

@@ -24,16 +24,17 @@ export default function WalletList({
   setQrModalData, handleDeleteWallet, handleRenameWallet,
   handleEditWallet, handleTogglePin, setMovingWallet, t,
   selectionMode, isSelected, toggleSelect,
-  sortOrder, onReorder
+  sortOrder, onReorder, assetUnit
 }) {
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
-  const { displayScale } = useTheme();
+  const { displayScale, walletDensity } = useTheme();
 
   const listRef = useRef(null);
   const [listOffset, setListOffset] = useState(0);
   const [columnCount, setColumnCount] = useState(getColumnCount);
   const effectiveColumns = isDndEnabled ? 1 : columnCount;
   const rowCount = Math.ceil(filteredWallets.length / effectiveColumns);
+  const densityRowSize = walletDensity === 'ultra' ? 78 : walletDensity === 'compact' ? 92 : 112;
 
   const measureListOffset = useCallback(() => {
     if (!listRef.current) return;
@@ -45,7 +46,7 @@ export default function WalletList({
     measureListOffset();
     const raf = requestAnimationFrame(measureListOffset);
     return () => cancelAnimationFrame(raf);
-  }, [measureListOffset, displayScale, filteredWallets.length, effectiveColumns]);
+  }, [measureListOffset, displayScale, walletDensity, filteredWallets.length, effectiveColumns]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -66,14 +67,14 @@ export default function WalletList({
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () => Math.max(28, 112 * (displayScale / 100)),
+    estimateSize: () => Math.max(28, densityRowSize * (displayScale / 100)),
     overscan: 4,
     scrollMargin: listOffset,
   });
 
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [rowVirtualizer, displayScale, effectiveColumns, filteredWallets.length]);
+  }, [rowVirtualizer, displayScale, walletDensity, effectiveColumns, filteredWallets.length]);
 
   const handleDragEnd = useCallback((event) => {
     const { active, over } = event;
@@ -99,6 +100,8 @@ export default function WalletList({
       selectionMode={selectionMode}
       isSelected={selectionMode ? isSelected(w) : false}
       onToggleSelect={() => toggleSelect(w)}
+      assetUnit={assetUnit}
+      density={walletDensity}
     />
   );
 

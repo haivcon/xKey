@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "保险库已锁定",
+    "subtitle": "使用设备锁解锁 xKey。",
+    "checking": "正在检查设备安全性...",
+    "setupRequired": "使用 xKey 前，请先为此设备设置屏幕锁。",
+    "setupTitle": "需要设备锁",
+    "setupBody": "打开 Android 安全设置，并设置 PIN、密码、图案、指纹或人脸解锁。然后返回 xKey 重新解锁。",
+    "openSettings": "打开安全设置",
+    "settingsError": "无法打开安全设置。",
+    "unlockButton": "使用设备锁解锁",
+    "unlocking": "正在解锁...",
+    "readyTitle": "可以解锁",
+    "readyBody": "使用当前设备锁：指纹、面容、PIN、密码或图案。如果你更改设备锁，xKey 会尝试自动更新保护。",
+    "authCanceled": "身份验证已取消",
+    "unlockFailed": "无法解锁保险库",
+    "tryAgainHint": "请确认设备锁，然后再次点击解锁。",
+    "unrecoverableTitle": "无法恢复保险库密钥",
+    "unrecoverableBody": "设备安全设置已更改，xKey 无法打开已保存的密钥。请恢复 .xkey 备份；如果没有备份，请重置保险库。"
+  },
   "common": {
     "cancel": "取消",
     "save": "保存",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "删除文件夹 \"{name}\" 中的所有钱包？",
     "movedToFolder": "已移至文件夹",
     "folders": "文件夹"
+  },
+  "assetBalance": {
+    "title": "编辑资产余额",
+    "unitLabel": "资产单位",
+    "unitHint": "可使用 $、USDT、VND、积分或自定义标签。",
+    "filteredCount": "显示 {count} 个钱包",
+    "saved": "资产余额已更新",
+    "searchPlaceholder": "搜索钱包名称、地址或网络...",
+    "importCsv": "导入 CSV",
+    "restoreDraftConfirm": "恢复未保存的余额编辑？",
+    "unitConfirm": "资产单位只会更改显示标签，不会进行汇率换算。继续？",
+    "importCsvError": "CSV 必须包含 address 和 balance 列。",
+    "importedCsv": "已为 {count} 个钱包导入余额",
+    "filter_all": "全部",
+    "filter_positive": "有余额",
+    "filter_zero": "零余额",
+    "filter_changed": "已更改",
+    "changed": "已更改",
+    "setZero": "设为 0",
+    "undo": "撤销",
+    "activeCount": "{count} 个活跃",
+    "changedCount": "{count} 个已更改",
+    "newTotal": "新总计"
   },
   "restore": {
     "title": "恢复备份",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "安全",
     "securityDesc": "自动锁定、剪贴板、主密码",
-    "autoLock": "自动锁定时间",
-    "autoLockSaved": "已保存",
-    "customMinutes": "自定义（分钟）",
+    "autoLock": "无操作后自动锁定",
+    "autoLockSaved": "已保存自动锁定时间",
+    "customMinutes": "自定义时间（分钟）",
+    "autoLockRangeError": "请输入 1 分钟到 24 小时之间的时间。",
+    "autoLockMinutes": "分钟",
+    "autoLockCurrent": "当前",
+    "autoLockDesc": "应用在这段时间内没有操作时，自动锁定保险库。",
     "clipboardClear": "自动清除剪贴板",
-    "clipboardSaved": "已保存",
-    "customSeconds": "自定义（秒）",
+    "clipboardSaved": "已保存剪贴板清除时间",
+    "customSeconds": "自定义时间（秒）",
+    "clipboardMinutes": "分钟",
+    "clipboardSeconds": "秒",
+    "clipboardNever": "不自动清除",
+    "clipboardRangeError": "请输入 5 秒到 24 小时，或选择 ∞ 关闭自动清除。",
+    "clipboardDesc": "只有当剪贴板仍然是同一个 xKey 值时，xKey 才会清除已复制的敏感数据。",
+    "clipboardCurrent": "当前",
     "masterPassword": "主密码",
     "masterPasswordDesc": "查看私钥时的额外保护",
     "setMasterPassword": "设置主密码",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "摇一摇锁定",
     "shakeToLockDesc": "摇晃设备时立即锁定应用",
     "shakeSensitivity": "灵敏度",
-
     "shakePermissionDenied": "运动权限被拒绝。摇一摇锁定需要传感器访问权限。",
-
     "shakeToLockEnabled": "摇一摇锁定已开启",
-
     "shakeToLockDisabled": "摇一摇锁定已关闭",
     "high": "高",
     "medium": "中",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "自定义比例 (%)",
     "liteMode": "轻量模式",
     "liteModeDesc": "为低端设备关闭模糊效果",
-
     "feedback": "反馈",
-
     "feedbackDesc": "控制应用声音和振动反馈",
-
     "soundFeedback": "声音",
-
-    "vibrationFeedback": "振动"
+    "vibrationFeedback": "振动",
+    "walletDensity": "钱包密度",
+    "walletDensityDesc": "选择首页钱包卡片的紧凑程度。",
+    "walletDensityComfortable": "舒适",
+    "walletDensityCompact": "紧凑",
+    "walletDensityUltra": "超紧凑",
+    "activityHistory": "活动历史",
+    "activityHistoryDesc": "最近的安全操作和通知。",
+    "clearHistory": "清除",
+    "noActivityHistory": "暂无活动。"
   },
   "createWallet": {
     "title": "添加钱包",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "无地址",
     "balanceLabel": "余额",
     "rename": "重命名",
+    "editBalance": "编辑余额",
     "delete": "删除",
     "edit": "编辑",
     "editWallet": "编辑钱包",
@@ -273,7 +328,7 @@ export default {
     "unpin": "取消置顶",
     "pinned": "已置顶",
     "network": "网络",
-    "clipboardCleared": "已清除",
+    "clipboardCleared": "剪贴板已清除",
     "masterPasswordRequired": "输入主密码",
     "masterPasswordWrong": "密码错误",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "作者",
     "thankYou": "感谢您的支持！",
     "website": "网站",
-    "button": "捐赠"
+    "button": "捐赠",
+    "network": "网络",
+    "address": "捐赠地址",
+    "copyAddress": "复制地址",
+    "copiedAddress": "地址已复制",
+    "networkNote": "XLAYER、ETH、BSC 等 EVM 网络"
   },
   "moveWallet": {
     "title": "移动钱包",
@@ -554,6 +614,13 @@ export default {
     "hint": "使用另一台设备并选择“通过QR接收数据”进行扫描"
   },
   "qr": {
-    "tapToZoom": "点击二维码放大"
+    "tapToZoom": "点击二维码放大",
+    "share": "分享",
+    "saveImage": "保存",
+    "saved": "已保存",
+    "sensitiveWarning": "此二维码包含敏感钱包数据。请只在私密环境中扫描或分享。"
+  },
+  "privacyShield": {
+    "subtitle": "非活动时已保护"
   }
 };

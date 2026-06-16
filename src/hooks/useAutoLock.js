@@ -1,8 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Preferences } from '@capacitor/preferences';
+import { App as CapacitorApp } from '@capacitor/app';
 
 const AUTOLOCK_KEY = 'xkey_autolock_ms';
 const DEFAULT_MS = 5 * 60 * 1000; // 5 minutes
+const AUTOLOCK_SETTINGS_CHANGED_EVENT = 'xkey-autolock-settings-changed';
 
 /**
  * Auto-lock the vault after N minutes of inactivity.
@@ -12,16 +14,17 @@ export default function useAutoLock(onLock, enabled = true) {
   const timerRef = useRef(null);
   const onLockRef = useRef(onLock);
   const timeoutRef = useRef(DEFAULT_MS);
+  const backgroundAtRef = useRef(0);
   onLockRef.current = onLock;
 
-  // Load saved timeout on mount
-  useEffect(() => {
-    Preferences.get({ key: AUTOLOCK_KEY }).then(({ value }) => {
-      if (value) {
-        const ms = parseInt(value);
-        if (ms > 0) timeoutRef.current = ms;
-      }
-    }).catch(() => {});
+  const loadTimeout = useCallback(async () => {
+    try {
+      const { value } = await Preferences.get({ key: AUTOLOCK_KEY });
+      const ms = Number.parseInt(value, 10);
+      timeoutRef.current = Number.isFinite(ms) && ms > 0 ? ms : DEFAULT_MS;
+    } catch {
+      timeoutRef.current = DEFAULT_MS;
+    }
   }, []);
 
   const resetTimer = useCallback(() => {
@@ -37,14 +40,38 @@ export default function useAutoLock(onLock, enabled = true) {
     if (!enabled) return;
 
     const events = ['touchstart', 'mousemove', 'keydown', 'scroll', 'click'];
+    const reloadSettings = async () => {
+      await loadTimeout();
+      resetTimer();
+    };
+
     events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
-    resetTimer(); // start on mount
+    window.addEventListener(AUTOLOCK_SETTINGS_CHANGED_EVENT, reloadSettings);
+    const appStateListener = CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+      if (!isActive) {
+        backgroundAtRef.current = Date.now();
+        if (timerRef.current) clearTimeout(timerRef.current);
+        return;
+      }
+
+      await loadTimeout();
+      const backgroundAt = backgroundAtRef.current;
+      backgroundAtRef.current = 0;
+      if (backgroundAt && Date.now() - backgroundAt >= timeoutRef.current) {
+        onLockRef.current();
+      } else {
+        resetTimer();
+      }
+    });
+    reloadSettings();
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       events.forEach(e => window.removeEventListener(e, resetTimer));
+      window.removeEventListener(AUTOLOCK_SETTINGS_CHANGED_EVENT, reloadSettings);
+      appStateListener.then(listener => listener.remove());
     };
-  }, [resetTimer, enabled]);
+  }, [resetTimer, enabled, loadTimeout]);
 }
 
-export { AUTOLOCK_KEY, DEFAULT_MS };
+export { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT };

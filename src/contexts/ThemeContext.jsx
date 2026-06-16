@@ -4,6 +4,7 @@ import { Preferences } from '@capacitor/preferences';
 const ThemeContext = createContext(null);
 const THEME_KEY = 'xkey_theme';
 const DISPLAY_SCALE_KEY = 'xkey_display_scale';
+const WALLET_DENSITY_KEY = 'xkey_wallet_density';
 const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
@@ -32,6 +33,7 @@ const applyDisplayScale = (scale) => {
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState('dark');
   const [displayScale, setDisplayScaleState] = useState(DEFAULT_DISPLAY_SCALE);
+  const [walletDensity, setWalletDensityState] = useState('comfortable');
 
   useEffect(() => {
     applyDisplayScale(DEFAULT_DISPLAY_SCALE);
@@ -48,6 +50,12 @@ export function ThemeProvider({ children }) {
       setDisplayScaleState(nextScale);
       applyDisplayScale(nextScale);
     }).catch(() => {});
+
+    Preferences.get({ key: WALLET_DENSITY_KEY }).then(({ value }) => {
+      if (['comfortable', 'compact', 'ultra'].includes(value)) {
+        setWalletDensityState(value);
+      }
+    }).catch(() => {});
   }, []);
 
   const setTheme = useCallback((next) => {
@@ -63,6 +71,12 @@ export function ThemeProvider({ children }) {
     Preferences.set({ key: DISPLAY_SCALE_KEY, value: String(nextScale) }).catch(() => {});
   }, []);
 
+  const setWalletDensity = useCallback((next) => {
+    const normalized = ['comfortable', 'compact', 'ultra'].includes(next) ? next : 'comfortable';
+    setWalletDensityState(normalized);
+    Preferences.set({ key: WALLET_DENSITY_KEY, value: normalized }).catch(() => {});
+  }, []);
+
   // Legacy toggle for backward compat
   const toggleTheme = useCallback(() => {
     setThemeState(prev => {
@@ -74,7 +88,7 @@ export function ThemeProvider({ children }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity }}>
       {children}
     </ThemeContext.Provider>
   );

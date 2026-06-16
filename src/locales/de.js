@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Tresor gesperrt",
+    "subtitle": "Verwende die Gerätesperre, um xKey zu entsperren.",
+    "checking": "Gerätesicherheit wird geprüft...",
+    "setupRequired": "Richte zuerst eine Displaysperre auf diesem Gerät ein.",
+    "setupTitle": "Gerätesperre erforderlich",
+    "setupBody": "Öffne die Android-Sicherheitseinstellungen und richte PIN, Passwort, Muster, Fingerabdruck oder Gesichtserkennung ein. Kehre danach zu xKey zurück und entsperre erneut.",
+    "openSettings": "Sicherheitseinstellungen öffnen",
+    "settingsError": "Sicherheitseinstellungen können nicht geöffnet werden.",
+    "unlockButton": "Mit Gerätesperre entsperren",
+    "unlocking": "Entsperren...",
+    "readyTitle": "Bereit zum Entsperren",
+    "readyBody": "Verwende deine aktuelle Gerätesperre: Fingerabdruck, Gesicht, PIN, Passwort oder Muster. Wenn du die Gerätesperre änderst, aktualisiert xKey den Schutz automatisch.",
+    "authCanceled": "Authentifizierung abgebrochen",
+    "unlockFailed": "Tresor konnte nicht entsperrt werden",
+    "tryAgainHint": "Bestätige deine Gerätesperre und tippe erneut auf Entsperren.",
+    "unrecoverableTitle": "Tresorschlüssel kann nicht wiederhergestellt werden",
+    "unrecoverableBody": "Die Gerätesicherheit wurde geändert und xKey kann den gespeicherten Schlüssel nicht öffnen. Stelle ein .xkey-Backup wieder her oder setze den Tresor zurück, wenn du kein Backup mehr hast."
+  },
   "common": {
     "cancel": "Abbrechen",
     "save": "Speichern",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Alle Wallets im Ordner \"{name}\" löschen?",
     "movedToFolder": "In Ordner verschoben",
     "folders": "Ordner"
+  },
+  "assetBalance": {
+    "title": "Vermögenssalden bearbeiten",
+    "unitLabel": "Vermögenseinheit",
+    "unitHint": "Nutze $, USDT, VND, Punkte oder eine eigene Bezeichnung.",
+    "filteredCount": "{count} Wallets angezeigt",
+    "saved": "Vermögenssalden aktualisiert",
+    "searchPlaceholder": "Wallet-Name, Adresse oder Netzwerk suchen...",
+    "importCsv": "CSV importieren",
+    "restoreDraftConfirm": "Nicht gespeicherte Guthabenänderungen wiederherstellen?",
+    "unitConfirm": "Die Einheit ändert nur die Anzeige, keine Wechselkurse. Fortfahren?",
+    "importCsvError": "CSV muss die Spalten address und balance enthalten.",
+    "importedCsv": "Guthaben für {count} Wallets importiert",
+    "filter_all": "Alle",
+    "filter_positive": "Mit Guthaben",
+    "filter_zero": "Null",
+    "filter_changed": "Geändert",
+    "changed": "Geändert",
+    "setZero": "Auf 0 setzen",
+    "undo": "Rückgängig",
+    "activeCount": "{count} aktiv",
+    "changedCount": "{count} geändert",
+    "newTotal": "Neue Summe"
   },
   "restore": {
     "title": "Backup wiederherstellen",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Sicherheit",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Auto-Sperre nach Inaktivität",
+    "autoLockSaved": "Auto-Sperre gespeichert",
+    "customMinutes": "Eigene Zeit (Minuten)",
+    "autoLockRangeError": "Gib eine Zeit zwischen 1 Minute und 24 Stunden ein.",
+    "autoLockMinutes": "Min.",
+    "autoLockCurrent": "Aktuell",
+    "autoLockDesc": "Sperrt den Tresor automatisch, nachdem die App für diese Zeit nicht benutzt wurde.",
+    "clipboardClear": "Zwischenablage automatisch löschen",
+    "clipboardSaved": "Zeit zum Löschen der Zwischenablage gespeichert",
+    "customSeconds": "Eigene Zeit (Sekunden)",
+    "clipboardMinutes": "Min.",
+    "clipboardSeconds": "Sek.",
+    "clipboardNever": "Nicht automatisch löschen",
+    "clipboardRangeError": "Gib 5 Sekunden bis 24 Stunden ein oder wähle ∞, um das automatische Löschen zu deaktivieren.",
+    "clipboardDesc": "xKey löscht sensible kopierte Inhalte nur, wenn sie nicht durch etwas Neues ersetzt wurden.",
+    "clipboardCurrent": "Aktuell",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Zum Sperren schütteln",
     "shakeToLockDesc": "App sofort sperren, wenn das Gerät geschüttelt wird",
     "shakeSensitivity": "Sensibilität",
-
     "shakePermissionDenied": "Bewegungsberechtigung wurde abgelehnt. Zum Sperren schütteln benötigt Sensorzugriff.",
-
     "shakeToLockEnabled": "Zum Sperren schütteln aktiviert",
-
     "shakeToLockDisabled": "Zum Sperren schütteln deaktiviert",
     "high": "Hoch",
     "medium": "Mittel",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Eigene Skalierung (%)",
     "liteMode": "Lite-Modus",
     "liteModeDesc": "Unschärfe für schwächere Geräte deaktivieren",
-
     "feedback": "Feedback",
-
     "feedbackDesc": "App-Sound und Vibration steuern",
-
     "soundFeedback": "Ton",
-
-    "vibrationFeedback": "Vibration"
+    "vibrationFeedback": "Vibration",
+    "walletDensity": "Wallet-Dichte",
+    "walletDensityDesc": "Wähle, wie kompakt Wallet-Karten auf der Startseite erscheinen.",
+    "walletDensityComfortable": "Bequem",
+    "walletDensityCompact": "Kompakt",
+    "walletDensityUltra": "Sehr kompakt",
+    "activityHistory": "Aktivitätsverlauf",
+    "activityHistoryDesc": "Letzte sichere App-Aktionen und Hinweise.",
+    "clearHistory": "Leeren",
+    "noActivityHistory": "Noch keine Aktivität."
   },
   "createWallet": {
     "title": "Wallet hinzufügen",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Keine Adresse",
     "balanceLabel": "Guthaben",
     "rename": "Umbenennen",
+    "editBalance": "Guthaben bearbeiten",
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "editWallet": "Wallet bearbeiten",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Zwischenablage gelöscht",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Autor",
     "thankYou": "Danke für Ihre Unterstützung!",
     "website": "Website",
-    "button": "Spenden"
+    "button": "Spenden",
+    "network": "Netzwerk",
+    "address": "Spendenadresse",
+    "copyAddress": "Adresse kopieren",
+    "copiedAddress": "Adresse kopiert",
+    "networkNote": "XLAYER, ETH, BSC und andere EVM-Netzwerke"
   },
   "moveWallet": {
     "title": "Brieftasche verschieben",
@@ -554,6 +614,13 @@ export default {
     "hint": "Verwenden Sie ein anderes Gerät und wählen Sie 'Daten per QR empfangen', um zu scannen"
   },
   "qr": {
-    "tapToZoom": "QR antippen zum Vergrößern"
+    "tapToZoom": "QR antippen zum Vergrößern",
+    "share": "Teilen",
+    "saveImage": "Speichern",
+    "saved": "Gespeichert",
+    "sensitiveWarning": "Dieser QR-Code enthält sensible Wallet-Daten. Scanne oder teile ihn nur privat."
+  },
+  "privacyShield": {
+    "subtitle": "Geschützt bei Inaktivität"
   }
 };

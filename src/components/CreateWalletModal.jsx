@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import QRScannerModal from './QRScannerModal';
 import PasswordInput from './PasswordInput';
+import { formatAmountInput, normalizeAmountInput } from '../utils/amountFormat';
 
 const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 
@@ -250,7 +251,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       showToast(t('createWallet.fillRequired'), 'warning');
       return;
     }
-    onSave({ name: walletName || 'Manual Wallet', address: manualAddress.trim(), privateKey: manualPK.trim(), seedPhrase: manualSeed.trim(), balance: manualBalance.trim() || '0.00', notes: manualNotes.trim(), network: manualNetwork, createdAt: Date.now() });
+    onSave({ name: walletName || 'Manual Wallet', address: manualAddress.trim(), privateKey: manualPK.trim(), seedPhrase: manualSeed.trim(), balance: normalizeAmountInput(manualBalance) || '0.00', notes: manualNotes.trim(), network: manualNetwork, createdAt: Date.now() });
     showToast(duplicateWarning ? t('createWallet.walletAddedDuplicate') : t('createWallet.walletAdded'), 'success');
     onClose();
   };
@@ -355,7 +356,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.balance')} <span className="text-surface-600">({t('createWallet.optional')})</span></label>
-                <input type="text" value={manualBalance} onChange={(e) => setManualBalance(e.target.value)} placeholder="0.00"
+                <input type="text" inputMode="decimal" value={formatAmountInput(manualBalance)} onChange={(e) => setManualBalance(normalizeAmountInput(e.target.value))} placeholder="0.00"
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
               </div>
 

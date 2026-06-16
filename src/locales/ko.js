@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "금고가 잠겼습니다",
+    "subtitle": "기기 잠금으로 xKey를 잠금 해제하세요.",
+    "checking": "기기 보안을 확인하는 중...",
+    "setupRequired": "xKey를 사용하기 전에 이 기기에 화면 잠금을 설정하세요.",
+    "setupTitle": "기기 잠금 필요",
+    "setupBody": "Android 보안 설정을 열고 PIN, 비밀번호, 패턴, 지문 또는 얼굴 잠금을 설정하세요. 그런 다음 xKey로 돌아와 다시 잠금 해제하세요.",
+    "openSettings": "보안 설정 열기",
+    "settingsError": "보안 설정을 열 수 없습니다.",
+    "unlockButton": "기기 잠금으로 해제",
+    "unlocking": "잠금 해제 중...",
+    "readyTitle": "잠금 해제 준비됨",
+    "readyBody": "현재 기기 잠금(지문, 얼굴, PIN, 비밀번호 또는 패턴)을 사용하세요. 기기 잠금을 변경하면 xKey가 보호를 자동으로 업데이트합니다.",
+    "authCanceled": "인증이 취소되었습니다",
+    "unlockFailed": "보관함을 열 수 없습니다",
+    "tryAgainHint": "기기 잠금을 확인한 뒤 다시 잠금 해제를 누르세요.",
+    "unrecoverableTitle": "보관함 키를 복구할 수 없습니다",
+    "unrecoverableBody": "기기 보안이 변경되어 xKey가 저장된 키를 열 수 없습니다. .xkey 백업을 복원하거나 백업이 없으면 보관함을 초기화하세요."
+  },
   "common": {
     "cancel": "취소",
     "save": "저장",
@@ -32,6 +51,29 @@ export default {
     "movedToFolder": "폴더로 이동됨",
     "folders": "폴더"
   },
+  "assetBalance": {
+    "title": "자산 잔액 수정",
+    "unitLabel": "자산 단위",
+    "unitHint": "$, USDT, VND, 포인트 또는 사용자 지정 라벨을 사용할 수 있습니다.",
+    "filteredCount": "{count}개 지갑 표시 중",
+    "saved": "자산 잔액이 업데이트되었습니다",
+    "searchPlaceholder": "지갑 이름, 주소 또는 네트워크 검색...",
+    "importCsv": "CSV 가져오기",
+    "restoreDraftConfirm": "저장하지 않은 잔액 편집을 복원할까요?",
+    "unitConfirm": "자산 단위는 표시 라벨만 바꾸며 환율 변환은 하지 않습니다. 계속할까요?",
+    "importCsvError": "CSV에는 address 및 balance 열이 필요합니다.",
+    "importedCsv": "{count}개 지갑의 잔액을 가져왔습니다",
+    "filter_all": "전체",
+    "filter_positive": "잔액 있음",
+    "filter_zero": "0",
+    "filter_changed": "변경됨",
+    "changed": "변경됨",
+    "setZero": "0 설정",
+    "undo": "되돌리기",
+    "activeCount": "{count}개 활성",
+    "changedCount": "{count}개 변경",
+    "newTotal": "새 합계"
+  },
   "restore": {
     "title": "백업 복원",
     "desc": "이 백업을 만들 때 사용한 비밀번호를 입력하세요.",
@@ -49,12 +91,22 @@ export default {
     "languageDesc": "선호하는 언어를 선택하세요",
     "security": "보안",
     "securityDesc": "자동 잠금, 클립보드, 마스터 비밀번호",
-    "autoLock": "자동 잠금 시간",
-    "autoLockSaved": "자동 잠금 시간 저장됨",
-    "customMinutes": "사용자 지정 (분)",
+    "autoLock": "사용하지 않을 때 자동 잠금",
+    "autoLockSaved": "자동 잠금 시간이 저장되었습니다",
+    "customMinutes": "직접 입력 (분)",
+    "autoLockRangeError": "1분에서 24시간 사이로 입력하세요.",
+    "autoLockMinutes": "분",
+    "autoLockCurrent": "현재",
+    "autoLockDesc": "앱을 이 시간 동안 사용하지 않으면 보관함을 자동으로 잠급니다.",
     "clipboardClear": "클립보드 자동 삭제",
-    "clipboardSaved": "클립보드 시간 저장됨",
-    "customSeconds": "사용자 지정 (초)",
+    "clipboardSaved": "클립보드 시간이 저장되었습니다",
+    "customSeconds": "직접 입력 (초)",
+    "clipboardMinutes": "분",
+    "clipboardSeconds": "초",
+    "clipboardNever": "자동 삭제 안 함",
+    "clipboardRangeError": "5초에서 24시간 사이로 입력하거나 ∞를 선택해 자동 삭제를 끄세요.",
+    "clipboardDesc": "xKey는 클립보드에 같은 xKey 값이 남아 있을 때만 복사한 민감 데이터를 지웁니다.",
+    "clipboardCurrent": "현재",
     "masterPassword": "마스터 비밀번호",
     "masterPasswordDesc": "개인 키 및 시드 구문 조회 시 추가 보호 계층",
     "setMasterPassword": "마스터 비밀번호 설정",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "흔들어서 잠금",
     "shakeToLockDesc": "기기를 흔들 때 즉시 앱 잠금",
     "shakeSensitivity": "민감도",
-
     "shakePermissionDenied": "동작 권한이 거부되었습니다. 흔들어서 잠금은 센서 접근이 필요합니다.",
-
     "shakeToLockEnabled": "흔들어서 잠금 켜짐",
-
     "shakeToLockDisabled": "흔들어서 잠금 꺼짐",
     "high": "높음",
     "medium": "중간",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "사용자 지정 배율 (%)",
     "liteMode": "라이트 모드",
     "liteModeDesc": "저사양 기기에서 블러 효과를 비활성화합니다",
-
     "feedback": "피드백",
-
     "feedbackDesc": "앱 소리와 진동 피드백 제어",
-
     "soundFeedback": "소리",
-
-    "vibrationFeedback": "진동"
+    "vibrationFeedback": "진동",
+    "walletDensity": "지갑 밀도",
+    "walletDensityDesc": "홈 화면 지갑 카드의 표시 밀도를 선택합니다.",
+    "walletDensityComfortable": "편안함",
+    "walletDensityCompact": "간결",
+    "walletDensityUltra": "초간결",
+    "activityHistory": "활동 기록",
+    "activityHistoryDesc": "최근 안전한 앱 작업과 알림입니다.",
+    "clearHistory": "지우기",
+    "noActivityHistory": "아직 활동이 없습니다."
   },
   "createWallet": {
     "title": "지갑 추가",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "주소 없음",
     "balanceLabel": "잔액",
     "rename": "이름 변경",
+    "editBalance": "잔액 수정",
     "delete": "삭제",
     "edit": "편집",
     "editWallet": "지갑 편집",
@@ -273,7 +328,7 @@ export default {
     "unpin": "고정 해제",
     "pinned": "고정됨",
     "network": "네트워크",
-    "clipboardCleared": "클립보드 삭제됨",
+    "clipboardCleared": "클립보드가 삭제되었습니다",
     "masterPasswordRequired": "마스터 비밀번호를 입력하세요",
     "masterPasswordWrong": "잘못된 마스터 비밀번호",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "작가",
     "thankYou": "지원해 주셔서 감사합니다!",
     "website": "웹사이트",
-    "button": "후원"
+    "button": "후원",
+    "network": "네트워크",
+    "address": "후원 주소",
+    "copyAddress": "주소 복사",
+    "copiedAddress": "주소가 복사됨",
+    "networkNote": "XLAYER, ETH, BSC 등 EVM 네트워크"
   },
   "moveWallet": {
     "title": "지갑 이동",
@@ -554,6 +614,13 @@ export default {
     "hint": "다른 기기를 사용하고 'QR로 데이터 받기'를 선택하여 스캔하세요"
   },
   "qr": {
-    "tapToZoom": "QR을 탭하여 확대"
+    "tapToZoom": "QR을 탭하여 확대",
+    "share": "공유",
+    "saveImage": "저장",
+    "saved": "저장됨",
+    "sensitiveWarning": "이 QR에는 민감한 지갑 데이터가 포함되어 있습니다. 비공개 장소에서만 스캔하거나 공유하세요."
+  },
+  "privacyShield": {
+    "subtitle": "비활성 상태 보호 중"
   }
 };

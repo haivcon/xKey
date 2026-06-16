@@ -54,6 +54,10 @@ android/app/release/
 # Signing keys and secrets
 *.keystore
 *.jks
+*.p12
+*.pem
+*.key
+*.properties.local
 keystore_base64.txt
 google-services.json
 
@@ -66,4 +70,8 @@ google-services.json
 # release drafts, keystores, or other machine-local files.
 1/
 1/**
+local-notes/
+release-drafts/
+*.tmp
+*.bak
 preview/

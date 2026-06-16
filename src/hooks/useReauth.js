@@ -1,4 +1,6 @@
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
+import { authenticateDeviceCredential, isDeviceCredentialAvailable } from '../utils/deviceCredential';
 
 /**
  * Trigger a biometric/lock-screen re-authentication.
@@ -7,6 +9,14 @@ import { NativeBiometric } from '@capgo/capacitor-native-biometric';
  */
 export async function reauthenticate(reason = 'Confirm this action') {
   try {
+    if (Capacitor.isNativePlatform() && await isDeviceCredentialAvailable()) {
+      await authenticateDeviceCredential({
+        title: 'Security Verification',
+        subtitle: reason,
+      });
+      return true;
+    }
+
     const { isAvailable } = await NativeBiometric.isAvailable();
     if (!isAvailable) return true; // No biometrics → user already authenticated via app PIN
 

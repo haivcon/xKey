@@ -4,6 +4,7 @@ import { hapticTap } from '../utils/haptics';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useT } from '../contexts/LanguageContext';
+import { parseAmount } from '../utils/amountFormat';
 
 /**
  * Hook encapsulating all wallet CRUD operations.
@@ -36,8 +37,8 @@ export default function useWallets(aesKey, isDecoyMode) {
     if (!matchSearch) return false;
     if (activeFilter === 'hasPk') return !!w.privateKey;
     if (activeFilter === 'hasSeed') return !!w.seedPhrase;
-    if (activeFilter === 'hasBalance') return (parseFloat(w.balance || 0) || 0) > 0;
-    if (activeFilter === 'empty') return (parseFloat(w.balance || 0) || 0) === 0;
+    if (activeFilter === 'hasBalance') return parseAmount(w.balance) > 0;
+    if (activeFilter === 'empty') return parseAmount(w.balance) === 0;
     if (activeFilter === 'pinned') return !!w.pinned;
     if (activeFilter.startsWith('net:')) return (w.network || 'ETH') === activeFilter.slice(4);
     if (activeFilter.startsWith('tag:')) return (w.tags || []).includes(activeFilter.slice(4));
@@ -50,8 +51,8 @@ export default function useWallets(aesKey, isDecoyMode) {
       case 'name-desc': return (b.name || '').localeCompare(a.name || '');
       case 'date-desc': return (b.createdAt || 0) - (a.createdAt || 0);
       case 'date-asc': return (a.createdAt || 0) - (b.createdAt || 0);
-      case 'balance-desc': return (parseFloat(b.balance || 0) || 0) - (parseFloat(a.balance || 0) || 0);
-      case 'balance-asc': return (parseFloat(a.balance || 0) || 0) - (parseFloat(b.balance || 0) || 0);
+      case 'balance-desc': return parseAmount(b.balance) - parseAmount(a.balance);
+      case 'balance-asc': return parseAmount(a.balance) - parseAmount(b.balance);
       case 'address-asc': return (a.address || '').localeCompare(b.address || '');
       case 'custom': return 0; // preserve array order for manual drag
       default: return 0;
@@ -60,8 +61,7 @@ export default function useWallets(aesKey, isDecoyMode) {
 
   // Derived: total balance of filtered wallets
   const totalBalance = useMemo(() => filteredWallets.reduce((acc, w) => {
-    const val = parseFloat(w.balance || 0);
-    return acc + (isNaN(val) ? 0 : val);
+    return acc + parseAmount(w.balance);
   }, 0), [filteredWallets]);
 
   // Derived: all unique tags across wallets

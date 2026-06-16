@@ -11,6 +11,7 @@ export default function DonateModal({ onClose }) {
   const [isZoomed, setIsZoomed] = useState(false);
   
   const donateAddress = '0x5c6253e43c834ed82916256681aa70eb8692eddb';
+  const donateNetwork = 'XLAYER';
 
   const handleCopy = async () => {
     try {
@@ -73,38 +74,58 @@ export default function DonateModal({ onClose }) {
           </p>
 
           <div className="glass-card mb-2.5 rounded-xl border border-brand-500/20 bg-surface-800/50 p-2.5 shadow-inner">
-            <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5">
-              <div className="flex flex-col items-center">
-                {donateAddress ? (
-                  <div
-                    className="cursor-pointer rounded-xl bg-white p-2 shadow-lg ring-1 ring-white/10 transition-transform hover:scale-105 active:scale-95"
-                    onClick={() => { hapticTap(); setIsZoomed(true); }}
-                  >
-                    <QRCodeSVG value={donateAddress} size={128} />
-                  </div>
-                ) : (
-                  <div className="h-32 w-32 animate-pulse rounded-xl bg-surface-800"></div>
-                )}
-                <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-wider text-surface-500">
+            <div className="flex flex-col items-center gap-2.5">
+              {donateAddress ? (
+                <div
+                  className="cursor-pointer rounded-2xl bg-white p-3 shadow-lg ring-1 ring-white/10 transition-transform hover:scale-105 active:scale-95"
+                  onClick={() => { hapticTap(); setIsZoomed(true); }}
+                >
+                  <QRCodeSVG value={donateAddress} size={168} />
+                </div>
+              ) : (
+                <div className="h-44 w-44 animate-pulse rounded-2xl bg-surface-800"></div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+                <span className="rounded-full bg-orange-500/15 px-3 py-1 text-[11px] font-bold text-orange-400">
+                  {t('donate.network')}: {donateNetwork}
+                </span>
+                <span className="rounded-full bg-surface-900/80 px-3 py-1 text-[10px] font-semibold text-surface-400 ring-1 ring-surface-700/80">
+                  {t('donate.networkNote')}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
                   {t('donate.scanQR')}
-                </p>
+                </span>
               </div>
 
-              <div className="flex min-w-0 flex-col justify-between gap-2">
-              <div 
-                onClick={handleCopy}
-                className="group flex min-w-0 cursor-pointer items-start justify-between gap-2 rounded-lg border border-surface-700 bg-surface-950/50 p-2 transition-colors hover:bg-surface-900"
-              >
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <p className="mb-0.5 text-[10px] text-surface-400">{t('donate.author')}: ＤＯＲＥＭＯＮ (@haivcon)</p>
-                  <p className="break-all font-mono text-[10px] leading-tight text-brand-300 sm:text-[11px]">{donateAddress}</p>
+              <div className="w-full rounded-xl border border-surface-700 bg-surface-950/50 p-2.5">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">{t('donate.address')}</p>
+                    <p className="text-[10px] text-surface-400">{t('donate.author')}: ＤＯＲＥＭＯＮ (@haivcon)</p>
+                  </div>
+                  {copied && (
+                    <span className="flex-shrink-0 rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-semibold text-emerald-400">
+                      {t('donate.copiedAddress')}
+                    </span>
+                  )}
                 </div>
-                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-500/10 transition-colors group-hover:bg-brand-500/20">
-                  {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} className="text-brand-400" />}
-                </div>
+                <p className="mb-2 break-all rounded-lg bg-surface-900 px-2.5 py-2 font-mono text-[10px] leading-tight text-brand-300 sm:text-[11px]">{donateAddress}</p>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
+                    copied
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'bg-brand-600 text-white hover:bg-brand-500'
+                  }`}
+                >
+                  {copied ? <Check size={17} /> : <Copy size={17} />}
+                  {copied ? t('donate.copiedAddress') : t('donate.copyAddress')}
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-1.5 min-[360px]:grid-cols-2">
+              <div className="grid w-full grid-cols-1 gap-1.5 min-[360px]:grid-cols-2">
                 <button
                   type="button"
                   onClick={handleOpenGithub}
@@ -123,7 +144,6 @@ export default function DonateModal({ onClose }) {
                   <Globe2 size={15} />
                   <span className="truncate">{t('donate.website')}</span>
                 </button>
-              </div>
               </div>
             </div>
           </div>

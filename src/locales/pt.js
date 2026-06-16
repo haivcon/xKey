@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Cofre bloqueado",
+    "subtitle": "Use o bloqueio do dispositivo para desbloquear o xKey.",
+    "checking": "Verificando a segurança do dispositivo...",
+    "setupRequired": "Configure um bloqueio de tela neste dispositivo antes de usar o xKey.",
+    "setupTitle": "Bloqueio do dispositivo necessário",
+    "setupBody": "Abra as configurações de segurança do Android e defina PIN, senha, padrão, impressão digital ou desbloqueio facial. Depois volte ao xKey e desbloqueie novamente.",
+    "openSettings": "Abrir configurações de segurança",
+    "settingsError": "Não foi possível abrir as configurações de segurança.",
+    "unlockButton": "Desbloquear com o dispositivo",
+    "unlocking": "Desbloqueando...",
+    "readyTitle": "Pronto para desbloquear",
+    "readyBody": "Use o bloqueio atual do dispositivo: impressão digital, rosto, PIN, senha ou padrão. Se você alterar o bloqueio, o xKey tentará atualizar a proteção automaticamente.",
+    "authCanceled": "Autenticação cancelada",
+    "unlockFailed": "Não foi possível desbloquear o cofre",
+    "tryAgainHint": "Confirme o bloqueio do dispositivo e toque em desbloquear novamente.",
+    "unrecoverableTitle": "A chave do cofre não pode ser recuperada",
+    "unrecoverableBody": "A segurança do dispositivo mudou e o xKey não consegue abrir a chave salva. Restaure um backup .xkey ou redefina o cofre se não tiver backup."
+  },
   "common": {
     "cancel": "Cancelar",
     "save": "Salvar",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Excluir todas as carteiras na pasta \"{name}\"?",
     "movedToFolder": "Movido para a pasta",
     "folders": "Pastas"
+  },
+  "assetBalance": {
+    "title": "Editar saldos de ativos",
+    "unitLabel": "Unidade do ativo",
+    "unitHint": "Use $, USDT, VND, pontos ou qualquer rótulo personalizado.",
+    "filteredCount": "{count} carteiras exibidas",
+    "saved": "Saldos de ativos atualizados",
+    "searchPlaceholder": "Buscar nome, endereço ou rede...",
+    "importCsv": "Importar CSV",
+    "restoreDraftConfirm": "Restaurar edições de saldo não salvas?",
+    "unitConfirm": "A unidade muda apenas o rótulo, não converte câmbio. Continuar?",
+    "importCsvError": "O CSV deve incluir as colunas address e balance.",
+    "importedCsv": "Saldos importados para {count} carteiras",
+    "filter_all": "Todas",
+    "filter_positive": "Com saldo",
+    "filter_zero": "Zero",
+    "filter_changed": "Alteradas",
+    "changed": "Alterado",
+    "setZero": "Definir 0",
+    "undo": "Desfazer",
+    "activeCount": "{count} ativas",
+    "changedCount": "{count} alteradas",
+    "newTotal": "Novo total"
   },
   "restore": {
     "title": "Restaurar backup",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Segurança",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Bloqueio automático por inatividade",
+    "autoLockSaved": "Tempo de bloqueio automático salvo",
+    "customMinutes": "Tempo personalizado (minutos)",
+    "autoLockRangeError": "Digite um tempo entre 1 minuto e 24 horas.",
+    "autoLockMinutes": "min",
+    "autoLockCurrent": "Atual",
+    "autoLockDesc": "Bloqueia o cofre automaticamente quando o app não for usado por este período.",
+    "clipboardClear": "Limpeza automática da área de transferência",
+    "clipboardSaved": "Tempo da área de transferência salvo",
+    "customSeconds": "Tempo personalizado (segundos)",
+    "clipboardMinutes": "min",
+    "clipboardSeconds": "s",
+    "clipboardNever": "Não limpar automaticamente",
+    "clipboardRangeError": "Digite de 5 segundos a 24 horas, ou escolha ∞ para desativar a limpeza automática.",
+    "clipboardDesc": "O xKey limpa dados sensíveis copiados apenas se a área de transferência ainda contiver o mesmo valor do xKey.",
+    "clipboardCurrent": "Atual",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Agitar para Bloquear",
     "shakeToLockDesc": "Bloquear aplicativo imediatamente ao agitar",
     "shakeSensitivity": "Sensibilidade",
-
     "shakePermissionDenied": "A permissão de movimento foi negada. Agitar para Bloquear precisa de acesso ao sensor.",
-
     "shakeToLockEnabled": "Agitar para Bloquear ativado",
-
     "shakeToLockDisabled": "Agitar para Bloquear desativado",
     "high": "Alta",
     "medium": "Média",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Escala personalizada (%)",
     "liteMode": "Modo leve",
     "liteModeDesc": "Desativa desfoques em dispositivos mais fracos",
-
     "feedback": "Feedback",
-
     "feedbackDesc": "Controlar som e vibração do app",
-
     "soundFeedback": "Som",
-
-    "vibrationFeedback": "Vibração"
+    "vibrationFeedback": "Vibração",
+    "walletDensity": "Densidade das carteiras",
+    "walletDensityDesc": "Escolha quão compactos ficam os cartões de carteira.",
+    "walletDensityComfortable": "Conforto",
+    "walletDensityCompact": "Compacto",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Histórico de atividade",
+    "activityHistoryDesc": "Ações e notificações seguras recentes.",
+    "clearHistory": "Limpar",
+    "noActivityHistory": "Ainda sem atividade."
   },
   "createWallet": {
     "title": "Adicionar carteira",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Sem endereço",
     "balanceLabel": "Saldo",
     "rename": "Renomear",
+    "editBalance": "Editar saldo",
     "delete": "Excluir",
     "edit": "Editar",
     "editWallet": "Editar carteira",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Área de transferência limpa",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Autor",
     "thankYou": "Obrigado pelo seu apoio!",
     "website": "Site",
-    "button": "Doar"
+    "button": "Doar",
+    "network": "Rede",
+    "address": "Endereço de doação",
+    "copyAddress": "Copiar endereço",
+    "copiedAddress": "Endereço copiado",
+    "networkNote": "XLAYER, ETH, BSC e outras redes EVM"
   },
   "moveWallet": {
     "title": "Mover Carteira",
@@ -554,6 +614,13 @@ export default {
     "hint": "Use outro dispositivo e selecione 'Receber dados via QR' para escanear"
   },
   "qr": {
-    "tapToZoom": "Toque no QR para ampliar"
+    "tapToZoom": "Toque no QR para ampliar",
+    "share": "Compartilhar",
+    "saveImage": "Salvar",
+    "saved": "Salvo",
+    "sensitiveWarning": "Este QR contém dados sensíveis da carteira. Digitalize ou compartilhe apenas em local privado."
+  },
+  "privacyShield": {
+    "subtitle": "Protegido quando inativo"
   }
 };

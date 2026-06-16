@@ -105,7 +105,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }) {
           if (newPin === confirmPin) {
             await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(newPin) });
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
-            onSuccess();
+            onSuccess(false, { createdPin: true });
           } else {
             triggerShake();
             setError(t('pinLock.pinsNotMatch'));

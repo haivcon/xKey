@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Bóveda bloqueada",
+    "subtitle": "Usa el bloqueo del dispositivo para desbloquear xKey.",
+    "checking": "Comprobando la seguridad del dispositivo...",
+    "setupRequired": "Configura un bloqueo de pantalla en este dispositivo antes de usar xKey.",
+    "setupTitle": "Se requiere bloqueo del dispositivo",
+    "setupBody": "Abre los ajustes de seguridad de Android y configura un PIN, contraseña, patrón, huella o desbloqueo facial. Luego vuelve a xKey y desbloquea de nuevo.",
+    "openSettings": "Abrir ajustes de seguridad",
+    "settingsError": "No se pueden abrir los ajustes de seguridad.",
+    "unlockButton": "Desbloquear con el dispositivo",
+    "unlocking": "Desbloqueando...",
+    "readyTitle": "Listo para desbloquear",
+    "readyBody": "Usa el bloqueo actual del dispositivo: huella, rostro, PIN, contraseña o patrón. Si cambias el bloqueo del dispositivo, xKey intentará actualizar la protección automáticamente.",
+    "authCanceled": "Autenticación cancelada",
+    "unlockFailed": "No se pudo desbloquear la bóveda",
+    "tryAgainHint": "Confirma el bloqueo del dispositivo y toca desbloquear otra vez.",
+    "unrecoverableTitle": "No se puede recuperar la clave de la bóveda",
+    "unrecoverableBody": "La seguridad del dispositivo cambió y xKey no puede abrir la clave guardada. Restaura una copia .xkey o restablece la bóveda si ya no tienes copia."
+  },
   "common": {
     "cancel": "Cancelar",
     "save": "Guardar",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "¿Eliminar todas las billeteras en \"{name}\"?",
     "movedToFolder": "Movido a la carpeta",
     "folders": "Carpetas"
+  },
+  "assetBalance": {
+    "title": "Editar saldos de activos",
+    "unitLabel": "Unidad del activo",
+    "unitHint": "Usa $, USDT, VND, puntos o cualquier etiqueta personalizada.",
+    "filteredCount": "{count} wallets mostradas",
+    "saved": "Saldos de activos actualizados",
+    "searchPlaceholder": "Buscar nombre, dirección o red...",
+    "importCsv": "Importar CSV",
+    "restoreDraftConfirm": "¿Restaurar cambios de saldo sin guardar?",
+    "unitConfirm": "La unidad solo cambia la etiqueta, no convierte tipos de cambio. ¿Continuar?",
+    "importCsvError": "El CSV debe incluir columnas address y balance.",
+    "importedCsv": "Saldos importados para {count} billeteras",
+    "filter_all": "Todas",
+    "filter_positive": "Con saldo",
+    "filter_zero": "Cero",
+    "filter_changed": "Cambiadas",
+    "changed": "Cambiado",
+    "setZero": "Poner 0",
+    "undo": "Deshacer",
+    "activeCount": "{count} activas",
+    "changedCount": "{count} cambiadas",
+    "newTotal": "Nuevo total"
   },
   "restore": {
     "title": "Restaurar respaldo",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Seguridad",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Bloqueo automático por inactividad",
+    "autoLockSaved": "Tiempo de bloqueo automático guardado",
+    "customMinutes": "Tiempo personalizado (minutos)",
+    "autoLockRangeError": "Introduce un tiempo entre 1 minuto y 24 horas.",
+    "autoLockMinutes": "min",
+    "autoLockCurrent": "Actual",
+    "autoLockDesc": "Bloquea la bóveda automáticamente cuando la app no se use durante este tiempo.",
+    "clipboardClear": "Borrado automático del portapapeles",
+    "clipboardSaved": "Tiempo del portapapeles guardado",
+    "customSeconds": "Tiempo personalizado (segundos)",
+    "clipboardMinutes": "min",
+    "clipboardSeconds": "s",
+    "clipboardNever": "No borrar automáticamente",
+    "clipboardRangeError": "Introduce de 5 segundos a 24 horas, o elige ∞ para desactivar el borrado automático.",
+    "clipboardDesc": "xKey borra datos sensibles copiados solo si el portapapeles aún contiene el mismo valor de xKey.",
+    "clipboardCurrent": "Actual",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Agitar para bloquear",
     "shakeToLockDesc": "Bloquear la aplicación inmediatamente al agitar el dispositivo",
     "shakeSensitivity": "Sensibilidad",
-
     "shakePermissionDenied": "Se denegó el permiso de movimiento. Agitar para bloquear necesita acceso al sensor.",
-
     "shakeToLockEnabled": "Agitar para bloquear activado",
-
     "shakeToLockDisabled": "Agitar para bloquear desactivado",
     "high": "Alto",
     "medium": "Medio",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Escala personalizada (%)",
     "liteMode": "Modo ligero",
     "liteModeDesc": "Desactiva desenfoques en dispositivos de gama baja",
-
     "feedback": "Respuesta",
-
     "feedbackDesc": "Controla el sonido y la vibración de la app",
-
     "soundFeedback": "Sonido",
-
-    "vibrationFeedback": "Vibración"
+    "vibrationFeedback": "Vibración",
+    "walletDensity": "Densidad de wallets",
+    "walletDensityDesc": "Elige qué tan compactas se ven las tarjetas de wallets.",
+    "walletDensityComfortable": "Cómoda",
+    "walletDensityCompact": "Compacta",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Historial de actividad",
+    "activityHistoryDesc": "Acciones y avisos seguros recientes.",
+    "clearHistory": "Borrar",
+    "noActivityHistory": "Aún no hay actividad."
   },
   "createWallet": {
     "title": "Añadir billetera",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Sin dirección",
     "balanceLabel": "Saldo",
     "rename": "Renombrar",
+    "editBalance": "Editar saldo",
     "delete": "Eliminar",
     "edit": "Editar",
     "editWallet": "Editar billetera",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Portapapeles borrado",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Autor",
     "thankYou": "¡Gracias por tu apoyo!",
     "website": "Sitio web",
-    "button": "Donar"
+    "button": "Donar",
+    "network": "Red",
+    "address": "Dirección de donación",
+    "copyAddress": "Copiar dirección",
+    "copiedAddress": "Dirección copiada",
+    "networkNote": "XLAYER, ETH, BSC y otras redes EVM"
   },
   "moveWallet": {
     "title": "Mover cartera",
@@ -554,6 +614,13 @@ export default {
     "hint": "Usa otro dispositivo y selecciona 'Recibir datos vía QR' para escanear"
   },
   "qr": {
-    "tapToZoom": "Toca el QR para ampliar"
+    "tapToZoom": "Toca el QR para ampliar",
+    "share": "Compartir",
+    "saveImage": "Guardar",
+    "saved": "Guardado",
+    "sensitiveWarning": "Este QR contiene datos sensibles de la wallet. Escanéalo o compártelo solo en privado."
+  },
+  "privacyShield": {
+    "subtitle": "Protegido mientras está inactivo"
   }
 };

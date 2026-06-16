@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare } from 'lucide-react';
+import { Wallet, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import MarkdownRenderer from './MarkdownRenderer';
@@ -8,6 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useMasterPassword } from '../contexts/MasterPasswordContext';
 import PasswordInput from './PasswordInput';
 import { TagBadge, TagEditor } from './TagSystem';
+import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -27,7 +28,7 @@ const NETWORK_KEYS = Object.keys(NETWORK_COLORS);
 
 export { NETWORK_COLORS, NETWORK_KEYS };
 
-export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin, onMove, selectionMode, isSelected, onToggleSelect }) {
+export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdit, onPin, onMove, selectionMode, isSelected, onToggleSelect, assetUnit, density = 'comfortable' }) {
   const [expanded, setExpanded] = useState(false);
   const [showPk, setShowPk] = useState(false);
   const [showSeed, setShowSeed] = useState(false);
@@ -43,6 +44,16 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const [showMPPrompt, setShowMPPrompt] = useState(null);
   const [mpInput, setMpInput] = useState('');
+  const isCompact = density === 'compact';
+  const isUltraCompact = density === 'ultra';
+  const cardPadding = isUltraCompact ? 'p-2.5' : isCompact ? 'p-3' : 'p-4';
+  const rowGap = isUltraCompact ? 'gap-2' : 'gap-3';
+  const iconBox = isUltraCompact ? 'w-8 h-8' : isCompact ? 'w-9 h-9' : 'w-10 h-10';
+  const iconSize = isUltraCompact ? 16 : isCompact ? 18 : 20;
+  const titleClass = isUltraCompact ? 'text-sm' : 'text-base';
+  const addressClass = isUltraCompact ? 'text-[0.72rem]' : isCompact ? 'text-[0.8rem]' : 'text-sm';
+  const actionButtonClass = isUltraCompact ? 'p-1.5' : 'p-2';
+  const actionIconSize = isUltraCompact ? 16 : 18;
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
@@ -129,7 +140,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   const saveEdit = () => {
     hapticSuccess();
-    if (onEdit) onEdit(editFields);
+    if (onEdit) onEdit({ ...editFields, balance: normalizeAmountInput(editFields.balance) });
     setEditMode(false);
   };
 
@@ -153,9 +164,25 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     </div>
   );
 
+  const editBalanceInput = () => (
+    <div>
+      <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{t('createWallet.balance')}</label>
+      <div className="flex items-center overflow-hidden rounded-lg border border-surface-700 bg-surface-800 focus-within:border-brand-500">
+        <span className="flex-shrink-0 pl-3 pr-2 text-sm font-semibold text-surface-400">{assetUnit || '$'}</span>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={formatAmountInput(editFields.balance)}
+          onChange={(e) => setEditFields(p => ({ ...p, balance: normalizeAmountInput(e.target.value) }))}
+          className="min-w-0 flex-1 appearance-none rounded-r-lg bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-surface-600"
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className={`glass-card overflow-hidden border transition-all relative ${isSelected ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5' : 'border-surface-700 hover:border-brand-500/30'}`}>
-      <div className="p-4 flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50"
+      <div className={`${cardPadding} flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50`}
         onClick={() => {
           if (selectionMode) {
             onToggleSelect();
@@ -163,12 +190,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             setExpanded(!expanded);
           }
         }}>
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
+        <div className={`flex items-center ${rowGap} overflow-hidden`}>
+          <div className={`${iconBox} rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
             {selectionMode ? (
-              isSelected ? <CheckSquare size={20} /> : <Square size={20} />
+              isSelected ? <CheckSquare size={iconSize} /> : <Square size={iconSize} />
             ) : (
-              <Wallet size={20} />
+              <Wallet size={iconSize} />
             )}
           </div>
           <div className="min-w-0">
@@ -178,7 +205,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 onBlur={() => { onRename(editName); setRenaming(false); }} onKeyDown={(e) => { if (e.key === 'Enter') { onRename(editName); setRenaming(false); } }} />
             ) : (
               <div className="flex items-center gap-2">
-                <h3 className="text-white font-medium truncate">{wallet.name || t('walletCard.unnamed')}</h3>
+                <h3 className={`text-white font-medium truncate ${titleClass}`}>{wallet.name || t('walletCard.unnamed')}</h3>
                 {wallet.pinned && <Pin size={12} className="text-amber-400 flex-shrink-0" />}
                 {wallet.network && NETWORK_COLORS[wallet.network] && (
                   <button
@@ -189,7 +216,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                       const next = NETWORK_KEYS[(idx + 1) % NETWORK_KEYS.length];
                       if (onEdit) onEdit({ network: next });
                     }}
-                    className={`text-[0.625rem] px-[0.375rem] py-[0.125rem] rounded-full font-medium flex-shrink-0 transition-all hover:scale-110 ${NETWORK_COLORS[wallet.network].bg} ${NETWORK_COLORS[wallet.network].text}`}
+                    className={`${isUltraCompact ? 'text-[0.55rem] px-1.5 py-px' : 'text-[0.625rem] px-[0.375rem] py-[0.125rem]'} rounded-full font-medium flex-shrink-0 transition-all hover:scale-110 ${NETWORK_COLORS[wallet.network].bg} ${NETWORK_COLORS[wallet.network].text}`}
                     title={t('walletCard.changeNetwork')}
                   >
                     {NETWORK_COLORS[wallet.network].label}
@@ -197,7 +224,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 )}
               </div>
             )}
-            <p className={`text-surface-400 text-sm font-mono ${showFullAddress ? 'whitespace-normal break-all leading-snug' : 'truncate'}`}>
+            <p className={`text-surface-400 font-mono ${showFullAddress ? 'whitespace-nowrap text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : `truncate ${addressClass}`}`}>
               {displayAddress}
             </p>
             {wallet.tags && wallet.tags.length > 0 && (
@@ -210,9 +237,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {wallet.balance && parseFloat(wallet.balance) > 0 && (
-            <div className="text-right"><p className="text-white font-semibold">${wallet.balance}</p><p className="text-xs text-surface-400">{t('walletCard.balanceLabel')}</p></div>
+        <div className={`flex items-center ${isUltraCompact ? 'gap-2' : 'gap-3'}`}>
+          {parseAmount(wallet.balance) > 0 && (
+            <div className="text-right">
+              <p className="text-white font-semibold">{formatAssetValue(wallet.balance, assetUnit)}</p>
+              <p className="text-xs text-surface-400">{t('walletCard.balanceLabel')}</p>
+            </div>
           )}
           {!selectionMode && wallet.address && (
             <div className="flex items-center gap-2 pr-2 sm:pr-3 border-r border-surface-700/70">
@@ -222,11 +252,11 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   e.stopPropagation();
                   onShowQR(wallet.address, t('walletCard.address'), wallet.name);
                 }}
-                className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded-lg transition-colors"
+                className={`${actionButtonClass} bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded-lg transition-colors`}
                 aria-label={t('walletCard.showAddressQR')}
                 title={t('walletCard.showAddressQR')}
               >
-                <QrCode size={18} />
+                <QrCode size={actionIconSize} />
               </button>
               <button
                 type="button"
@@ -234,15 +264,15 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   e.stopPropagation();
                   handleCopy(wallet.address, 'address-card', t('walletCard.address'), { revealAddress: true });
                 }}
-                className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg transition-colors"
+                className={`${actionButtonClass} bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg transition-colors`}
                 aria-label={t('walletCard.copyAddress')}
                 title={t('walletCard.copyAddress')}
               >
-                {copiedField === 'address-card' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                {copiedField === 'address-card' ? <Check size={actionIconSize} className="text-green-400" /> : <Copy size={actionIconSize} />}
               </button>
             </div>
           )}
-          {expanded ? <ChevronUp size={20} className="text-surface-500" /> : <ChevronDown size={20} className="text-surface-500" />}
+          {expanded ? <ChevronUp size={iconSize} className="text-surface-500" /> : <ChevronDown size={iconSize} className="text-surface-500" />}
         </div>
       </div>
 
@@ -260,7 +290,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               {editInput('address', t('walletCard.address'))}
               {editInput('privateKey', t('walletCard.privateKey'), 'password')}
               {editInput('seedPhrase', t('walletCard.seedPhrase'), 'text', true)}
-              {editInput('balance', t('createWallet.balance'), 'number')}
+              {editBalanceInput()}
               {editInput('notes', t('walletCard.notes'), 'text', true)}
               <TagEditor
                 tags={editFields.tags || []}
@@ -305,6 +335,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => { hapticTap(); onPin && onPin(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-amber-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors">{wallet.pinned ? <PinOff size={12} /> : <Pin size={12} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}</button>
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
+                <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Coins size={12} /> {t('walletCard.editBalance')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-cyan-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Settings2 size={12} /> {t('walletCard.edit')}</button>
                 {onMove && <button onClick={() => { hapticTap(); onMove(wallet); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><FolderInput size={12} /> {t('walletCard.moveBtn')}</button>}
                 <button onClick={() => { hapticWarning(); onDelete(); }} className="btn-glow btn-glow-danger flex items-center gap-1 text-xs text-surface-400 hover:text-red-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Trash2 size={12} /> {t('walletCard.delete')}</button>
@@ -316,7 +347,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 block">{t('walletCard.address')}</label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-surface-800 text-brand-300 p-2 rounded text-sm break-all">{wallet.address}</code>
+                    <code className="min-w-0 flex-1 whitespace-nowrap rounded bg-surface-800 p-2 font-mono text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight text-brand-300">{wallet.address}</code>
                     <button onClick={() => onShowQR(wallet.address, t('walletCard.address'), wallet.name)} className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded transition-colors"><QrCode size={18} /></button>
                     <button
                       onClick={() => handleCopy(wallet.address, 'address', t('walletCard.address'), { revealAddress: true })}

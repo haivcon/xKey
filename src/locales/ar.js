@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "الخزنة مقفلة",
+    "subtitle": "استخدم قفل الجهاز لفتح xKey.",
+    "checking": "جارٍ التحقق من أمان الجهاز...",
+    "setupRequired": "اضبط قفل شاشة على هذا الجهاز قبل استخدام xKey.",
+    "setupTitle": "قفل الجهاز مطلوب",
+    "setupBody": "افتح إعدادات أمان Android واضبط رمز PIN أو كلمة مرور أو نمطًا أو بصمة إصبع أو فتحًا بالوجه. ثم ارجع إلى xKey وافتح القفل مرة أخرى.",
+    "openSettings": "فتح إعدادات الأمان",
+    "settingsError": "تعذر فتح إعدادات الأمان.",
+    "unlockButton": "فتح بقفل الجهاز",
+    "unlocking": "جارٍ الفتح...",
+    "readyTitle": "جاهز لإلغاء القفل",
+    "readyBody": "استخدم قفل جهازك الحالي: بصمة، وجه، PIN، كلمة مرور أو نمط. إذا غيرت طريقة القفل، سيحاول xKey تحديث الحماية تلقائيا.",
+    "authCanceled": "تم إلغاء التحقق",
+    "unlockFailed": "تعذر إلغاء قفل الخزنة",
+    "tryAgainHint": "تحقق من قفل الجهاز ثم اضغط زر إلغاء القفل مرة أخرى.",
+    "unrecoverableTitle": "لا يمكن استرداد مفتاح الخزنة",
+    "unrecoverableBody": "تم تغيير أمان الجهاز ولا يستطيع xKey فتح المفتاح المخزن. استعد نسخة .xkey الاحتياطية أو أعد ضبط الخزنة إذا لم تعد تملك نسخة احتياطية."
+  },
   "common": {
     "cancel": "إلغاء",
     "save": "حفظ",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "حذف جميع المحافظ في المجلد \"{name}\"؟",
     "movedToFolder": "تم النقل إلى المجلد",
     "folders": "المجلدات"
+  },
+  "assetBalance": {
+    "title": "تعديل أرصدة الأصول",
+    "unitLabel": "وحدة الأصل",
+    "unitHint": "استخدم $ أو USDT أو VND أو النقاط أو أي تسمية مخصصة.",
+    "filteredCount": "تم عرض {count} محافظ",
+    "saved": "تم تحديث أرصدة الأصول",
+    "searchPlaceholder": "ابحث باسم المحفظة أو العنوان أو الشبكة...",
+    "importCsv": "استيراد CSV",
+    "restoreDraftConfirm": "استعادة تعديلات الرصيد غير المحفوظة؟",
+    "unitConfirm": "تغيير وحدة الأصل يغير التسمية فقط ولا يحول أسعار الصرف. متابعة؟",
+    "importCsvError": "يجب أن يحتوي CSV على عمودي address و balance.",
+    "importedCsv": "تم استيراد أرصدة {count} محافظ",
+    "filter_all": "الكل",
+    "filter_positive": "به رصيد",
+    "filter_zero": "صفر",
+    "filter_changed": "معدل",
+    "changed": "معدل",
+    "setZero": "تعيين 0",
+    "undo": "تراجع",
+    "activeCount": "{count} نشطة",
+    "changedCount": "{count} معدلة",
+    "newTotal": "الإجمالي الجديد"
   },
   "restore": {
     "title": "استعادة النسخة الاحتياطية",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "حماية",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "مهلة القفل التلقائي",
+    "autoLockSaved": "تم حفظ مهلة القفل التلقائي",
+    "customMinutes": "مدة مخصصة (دقائق)",
+    "autoLockRangeError": "أدخل مدة بين دقيقة واحدة و 24 ساعة.",
+    "autoLockMinutes": "دقيقة",
+    "autoLockCurrent": "القيمة الحالية",
+    "autoLockDesc": "اقفل الخزنة تلقائيا بعد عدم استخدام التطبيق لهذه المدة.",
+    "clipboardClear": "مسح الحافظة تلقائيا",
+    "clipboardSaved": "تم حفظ وقت مسح الحافظة",
+    "customSeconds": "وقت مخصص (ثوان)",
+    "clipboardMinutes": "دقيقة",
+    "clipboardSeconds": "ثانية",
+    "clipboardNever": "لا يمسح تلقائيا",
+    "clipboardRangeError": "أدخل مدة 5 ثوان إلى 24 ساعة، أو اختر ∞ لإيقاف المسح التلقائي.",
+    "clipboardDesc": "يمسح xKey النصوص الحساسة من الحافظة فقط إذا لم يتم استبدالها بنص آخر.",
+    "clipboardCurrent": "القيمة الحالية",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "اهتز للقفل",
     "shakeToLockDesc": "قفل التطبيق فورًا عند هز الجهاز",
     "shakeSensitivity": "الحساسية",
-
     "shakePermissionDenied": "تم رفض إذن الحركة. لا يمكن للقفل بالهز العمل بدون الوصول إلى المستشعر.",
-
     "shakeToLockEnabled": "تم تفعيل القفل بالهز",
-
     "shakeToLockDisabled": "تم إيقاف القفل بالهز",
     "high": "مرتفع",
     "medium": "متوسط",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "مقياس مخصص (%)",
     "liteMode": "الوضع الخفيف",
     "liteModeDesc": "تعطيل التمويه للأجهزة الضعيفة",
-
     "feedback": "الملاحظات",
-
     "feedbackDesc": "التحكم في صوت واهتزاز التطبيق",
-
     "soundFeedback": "الصوت",
-
-    "vibrationFeedback": "الاهتزاز"
+    "vibrationFeedback": "الاهتزاز",
+    "walletDensity": "كثافة المحافظ",
+    "walletDensityDesc": "اختر مدى ضغط بطاقات المحافظ في الصفحة الرئيسية.",
+    "walletDensityComfortable": "مريح",
+    "walletDensityCompact": "مضغوط",
+    "walletDensityUltra": "مضغوط جدا",
+    "activityHistory": "سجل النشاط",
+    "activityHistoryDesc": "أحدث الإجراءات والتنبيهات الآمنة.",
+    "clearHistory": "مسح",
+    "noActivityHistory": "لا يوجد نشاط بعد."
   },
   "createWallet": {
     "title": "إضافة محفظة",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "لا يوجد عنوان",
     "balanceLabel": "الرصيد",
     "rename": "إعادة تسمية",
+    "editBalance": "تعديل الرصيد",
     "delete": "حذف",
     "edit": "تعديل",
     "editWallet": "تعديل المحفظة",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "تم مسح الحافظة",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "مؤلف",
     "thankYou": "شكرا لدعمكم!",
     "website": "الموقع",
-    "button": "تبرع"
+    "button": "تبرع",
+    "network": "الشبكة",
+    "address": "عنوان التبرع",
+    "copyAddress": "نسخ العنوان",
+    "copiedAddress": "تم نسخ العنوان",
+    "networkNote": "XLAYER و ETH و BSC وشبكات EVM الأخرى"
   },
   "moveWallet": {
     "title": "نقل المحفظة",
@@ -554,6 +614,13 @@ export default {
     "hint": "استخدم جهازًا آخر وحدد \"تلقي البيانات عبر QR\" للمسح الضوئي"
   },
   "qr": {
-    "tapToZoom": "اضغط على رمز QR للتكبير"
+    "tapToZoom": "اضغط على رمز QR للتكبير",
+    "share": "مشاركة",
+    "saveImage": "حفظ",
+    "saved": "تم الحفظ",
+    "sensitiveWarning": "يحتوي رمز QR هذا على بيانات محفظة حساسة. امسحه أو شاركه في مكان خاص فقط."
+  },
+  "privacyShield": {
+    "subtitle": "محمي عند عدم النشاط"
   }
 };

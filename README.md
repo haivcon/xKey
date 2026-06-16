@@ -1,59 +1,77 @@
 # xKey - Offline Web3 Wallet Vault
 
-**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, notes, tags, folders, backups, QR workflows, and batch operations in a local encrypted app.
+**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, notes, tags, folders, backups, QR workflows, asset balances, and batch operations in a local encrypted app.
 
-The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, biometric/device authentication support, Android packaging, and localization across 15 languages.
+The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, Android Device Credential support, Android packaging, and localization across 15 languages.
 
 > Your keys are stored locally. xKey is designed as a private cold-vault style manager, not as a network-connected trading wallet.
 
-## Current Release: v5.6.0
+## Current Release: v5.7.0
 
 ### Release Focus
 
-v5.6.0 improves mobile comfort, feedback controls, QR transfer reliability, and Android native integration. The release focuses on making Settings easier to use, keeping Lite Mode visually stable, and ensuring the Android project receives the latest synced Capacitor assets.
+v5.7.0 improves Android-ready security, dense mobile layouts, wallet balance management, QR workflows, notification behavior, and localization coverage. This release focuses on making xKey more comfortable on real phones while keeping sensitive data protected.
 
-### Sound and Vibration Feedback
+### Android Device Credential Unlock
 
-- Added app-level sound and vibration settings under General Settings.
-- Added native Android haptic feedback through `@capacitor/haptics`.
-- Kept browser vibration and Web Audio fallbacks for web builds.
-- Improved Web Audio startup by resuming the audio context inside user-triggered actions.
-- Increased feedback tone duration and volume so sound feedback is easier to notice on Android WebView.
-- Persisted feedback preferences through Capacitor Preferences with local storage fallback.
+- Added Android Device Credential unlock for native builds.
+- Users can unlock with fingerprint, face unlock, device PIN, password, or pattern through the Android system prompt.
+- Added an Android Keystore-backed device credential plugin for protected vault key access after system authentication.
+- Added clear setup guidance when the device has no screen lock configured.
+- Improved recovery behavior when Android security settings change while xKey is installed.
 
-### Display Scale Controls
+### Asset Balance Management
 
-- Redesigned the custom display scale slider to look more balanced on mobile.
-- Reduced the slider thumb and track size for a cleaner Settings layout.
-- Rebuilt the manual percentage input so it aligns with the slider and remains easy to edit.
-- Added numeric mobile keyboard support for manual scale entry.
-- Kept the supported scale range at `5%` to `200%`.
+- Added a full asset balance editor from the total-assets control.
+- Added per-wallet balance editing with formatted numeric input.
+- Added quick balance actions such as `+100`, `+1000`, `-100`, and reset to zero.
+- Added search, filters, CSV import, changed-state tracking, and a sticky save summary.
+- Added customizable asset unit labels such as `$`, `USDT`, `VND`, `CNY`, `KRW`, `JPY`, `EUR`, `RUB`, `INR`, and custom text.
 
-### Lite Mode Stability
+### Home Layout and Wallet Actions
 
-- Fixed Lite Mode causing animated logo and donate elements to flicker continuously.
-- Lite Mode now disables selected pulse/spin animations instead of forcing ultra-short animation durations.
-- Blur effects remain disabled in Lite Mode for better performance on weaker devices.
+- Added wallet density modes: comfortable, compact, and ultra compact.
+- Improved scale-aware icons, network badges, wallet row sizing, and virtualized list measurement.
+- Added direct QR and copy actions on wallet cards.
+- Copying a wallet address now reveals the full address briefly and shows a compact, scale-aware notification.
+- Improved full-address display so addresses fit better on narrow screens.
 
-### QR Transfer Input Fixes
+### Notifications, History, and Privacy
 
-- Fixed password input focus issues in the QR transfer modal.
-- Prevented modal pointer events from stealing focus from password fields.
-- Added autofocus to the QR transfer password field so users can enter the password faster.
+- Toast notifications now respect the user display scale.
+- Long copy notifications are limited to a clean two-line layout.
+- Added type-aware toast duration for success, warning, error, and copy actions.
+- Added safe activity history in General Settings for recent app actions and notifications.
+- Added a stronger privacy shield when the app becomes inactive.
 
-### Localization
+### QR, Donate, and Network Notes
 
-- Added translations for the new feedback settings across all supported languages.
-- Continued keeping locale coverage aligned so new UI strings do not appear as raw translation keys.
+- Added QR share and save actions.
+- Added warning text for sensitive QR codes such as private keys or seed phrases.
+- Improved QR sizing so generated QR codes fit the device viewport more reliably.
+- Improved the donate modal layout, project links, copy action, and network note.
+- Added the donate network note: `XLAYER, ETH, BSC, and other EVM networks`.
+
+### Settings and Feedback
+
+- Added sound and vibration controls for app feedback.
+- Improved the display scale slider and manual percentage input.
+- Kept supported display scale from `5%` to `200%`.
+- Fixed Lite Mode flicker by disabling selected animations without breaking layout.
+- Added configurable auto-lock and clipboard cleanup settings with clearer current values.
 
 ### Android and Build Updates
 
-- Updated app version to `5.6.0`.
-- Updated Android `versionCode` to `56`.
-- Added and synced the Capacitor Haptics Android plugin.
-- Synced Capacitor Android assets after the production build.
-- Confirmed Android debug build succeeds.
-- Confirmed `.gitignore` keeps the local `1/` workspace out of GitHub.
+- Updated app version to `5.7.0`.
+- Updated Android `versionCode` to `57`.
+- Synced the latest production web assets into the Android project.
+- Expanded `.gitignore` for local release drafts, temporary files, and signing secrets.
+- Confirmed the local `1/` workspace remains ignored and is not included in Git.
+
+### Localization
+
+- Added full translations for new wallet density, activity history, QR, donate, privacy, security, asset balance, sound, vibration, and scale-related UI.
+- Checked locale coverage so new features do not render raw translation keys.
 
 ### Quality Checks
 
@@ -72,17 +90,19 @@ The Vite production build currently reports a large chunk warning. This is not a
 
 - Offline encrypted wallet vault
 - AES-protected local wallet storage
-- PIN and biometric/device authentication support
+- Android Device Credential and web fallback authentication
 - Web and Android support through Capacitor
 - Display scale customization
+- Wallet density modes
 - Wallet folders, filtering, sorting, and search
 - Wallet tags and tag filtering
+- Asset balance tracking with custom unit labels
 - Batch wallet selection and actions
 - CSV import/export
 - Encrypted portable `.xkey` backups
 - Duplicate detection
 - Analytics dashboard
-- QR scanning and QR transfer utilities
+- QR scanning, QR display, QR sharing, and QR transfer utilities
 - Multi-language UI
 
 ## Supported Languages
@@ -98,6 +118,7 @@ The Vite production build currently reports a large chunk warning. This is not a
 
 ## Previous Releases
 
+- `v5.6.0`: Sound and vibration feedback, display scale controls, Lite Mode stability, QR transfer input fixes, and Android haptics sync.
 - `v5.5.0`: Wallet row copy/QR actions, native clipboard reliability, default `75%` display scale, and Android Shake to Lock fixes.
 - `v5.4.0`: Display scale system, QR viewport fixes, scale-aware icons, sticky layout corrections, and localization cleanup.
 - `v5.3.x`: Android startup stability, responsive tools, web authentication fallback, and release build fixes.
@@ -148,21 +169,21 @@ The GitHub Actions workflow builds and signs release artifacts when a `v*` tag i
 Example:
 
 ```bash
-git tag v5.6.0
-git push origin v5.6.0
+git tag v5.7.0
+git push origin v5.7.0
 ```
 
 Generated release files:
 
-- `xKey-Release-v5.6.0.apk`
-- `xKey-Release-v5.6.0.aab`
+- `xKey-Release-v5.7.0.apk`
+- `xKey-Release-v5.7.0.aab`
 
 ## Security Notice
 
 - Never share private keys, seed phrases, `.xkey` backup files, or backup passwords.
 - CSV export may expose private keys or seed phrases in plain text if those columns are selected.
 - Keep a secure device screen lock enabled.
-- Removing the device screen lock can invalidate Android Keystore-backed authentication keys.
+- Removing or changing the device screen lock can invalidate Android Keystore-backed authentication keys.
 - xKey stores vault data locally and is designed for offline use.
 
 ## License

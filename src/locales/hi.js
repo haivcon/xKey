@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "वॉल्ट लॉक है",
+    "subtitle": "xKey खोलने के लिए डिवाइस लॉक का उपयोग करें।",
+    "checking": "डिवाइस सुरक्षा जांची जा रही है...",
+    "setupRequired": "xKey उपयोग करने से पहले इस डिवाइस पर स्क्रीन लॉक सेट करें।",
+    "setupTitle": "डिवाइस लॉक आवश्यक है",
+    "setupBody": "Android सुरक्षा सेटिंग खोलें और PIN, पासवर्ड, पैटर्न, फिंगरप्रिंट या फेस अनलॉक सेट करें। फिर xKey पर वापस आएं और दोबारा अनलॉक करें।",
+    "openSettings": "सुरक्षा सेटिंग खोलें",
+    "settingsError": "सुरक्षा सेटिंग नहीं खुल सकी।",
+    "unlockButton": "डिवाइस लॉक से खोलें",
+    "unlocking": "अनलॉक हो रहा है...",
+    "readyTitle": "अनलॉक के लिए तैयार",
+    "readyBody": "अपने मौजूदा डिवाइस लॉक का उपयोग करें: फिंगरप्रिंट, फेस, PIN, पासवर्ड या पैटर्न। अगर आप डिवाइस लॉक बदलते हैं, तो xKey सुरक्षा को अपने आप अपडेट करने की कोशिश करेगा।",
+    "authCanceled": "प्रमाणीकरण रद्द हुआ",
+    "unlockFailed": "वॉल्ट अनलॉक नहीं हो सका",
+    "tryAgainHint": "अपने डिवाइस लॉक की पुष्टि करें और फिर से अनलॉक दबाएं।",
+    "unrecoverableTitle": "वॉल्ट कुंजी पुनर्प्राप्त नहीं हो सकती",
+    "unrecoverableBody": "डिवाइस सुरक्षा बदल गई है और xKey सहेजी गई कुंजी नहीं खोल सकता। .xkey बैकअप पुनर्स्थापित करें या बैकअप न हो तो वॉल्ट रीसेट करें।"
+  },
   "common": {
     "cancel": "रद्द करें",
     "save": "सहेजें",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "फ़ोल्डर \"{name}\" के सभी वॉलेट हटाएं?",
     "movedToFolder": "फ़ोल्डर में स्थानांतरित किया गया",
     "folders": "फ़ोल्डर"
+  },
+  "assetBalance": {
+    "title": "एसेट बैलेंस संपादित करें",
+    "unitLabel": "एसेट यूनिट",
+    "unitHint": "$, USDT, VND, पॉइंट या कोई कस्टम लेबल उपयोग करें।",
+    "filteredCount": "{count} वॉलेट दिख रहे हैं",
+    "saved": "एसेट बैलेंस अपडेट हुए",
+    "searchPlaceholder": "वॉलेट नाम, पता या नेटवर्क खोजें...",
+    "importCsv": "CSV आयात करें",
+    "restoreDraftConfirm": "बिना सहेजे बैलेंस बदलाव पुनर्स्थापित करें?",
+    "unitConfirm": "एसेट यूनिट केवल लेबल बदलती है, विनिमय दर नहीं। जारी रखें?",
+    "importCsvError": "CSV में address और balance कॉलम होने चाहिए।",
+    "importedCsv": "{count} वॉलेट के बैलेंस आयात किए गए",
+    "filter_all": "सभी",
+    "filter_positive": "बैलेंस है",
+    "filter_zero": "शून्य",
+    "filter_changed": "बदला हुआ",
+    "changed": "बदला हुआ",
+    "setZero": "0 करें",
+    "undo": "पूर्ववत",
+    "activeCount": "{count} सक्रिय",
+    "changedCount": "{count} बदले",
+    "newTotal": "नया कुल"
   },
   "restore": {
     "title": "बैकअप पुनर्स्थापित करें",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "सुरक्षा",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "निष्क्रियता के बाद ऑटो-लॉक",
+    "autoLockSaved": "ऑटो-लॉक समय सेव किया गया",
+    "customMinutes": "कस्टम समय (मिनट)",
+    "autoLockRangeError": "1 मिनट से 24 घंटे के बीच समय दर्ज करें।",
+    "autoLockMinutes": "मिनट",
+    "autoLockCurrent": "मौजूदा",
+    "autoLockDesc": "ऐप इतने समय तक उपयोग न होने पर वॉल्ट को अपने आप लॉक करें।",
+    "clipboardClear": "क्लिपबोर्ड अपने आप साफ करें",
+    "clipboardSaved": "क्लिपबोर्ड समय सेव किया गया",
+    "customSeconds": "कस्टम समय (सेकंड)",
+    "clipboardMinutes": "मिनट",
+    "clipboardSeconds": "सेकंड",
+    "clipboardNever": "अपने आप साफ न करें",
+    "clipboardRangeError": "5 सेकंड से 24 घंटे तक दर्ज करें, या ऑटो-क्लियर बंद करने के लिए ∞ चुनें।",
+    "clipboardDesc": "xKey संवेदनशील कॉपी किए गए डेटा को तभी साफ करता है जब क्लिपबोर्ड में वही xKey मान अब भी मौजूद हो।",
+    "clipboardCurrent": "मौजूदा",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "हिलाने पर लॉक करें",
     "shakeToLockDesc": "डिवाइस को हिलाने पर तुरंत ऐप लॉक करें",
     "shakeSensitivity": "संवेदनशीलता",
-
     "shakePermissionDenied": "मोशन अनुमति अस्वीकार की गई। हिलाने पर लॉक करने के लिए सेंसर एक्सेस चाहिए।",
-
     "shakeToLockEnabled": "हिलाने पर लॉक चालू",
-
     "shakeToLockDisabled": "हिलाने पर लॉक बंद",
     "high": "उच्च",
     "medium": "मध्यम",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "कस्टम स्केल (%)",
     "liteMode": "लाइट मोड",
     "liteModeDesc": "कमज़ोर डिवाइस के लिए ब्लर बंद करें",
-
     "feedback": "फीडबैक",
-
     "feedbackDesc": "ऐप की ध्वनि और कंपन प्रतिक्रिया नियंत्रित करें",
-
     "soundFeedback": "ध्वनि",
-
-    "vibrationFeedback": "कंपन"
+    "vibrationFeedback": "कंपन",
+    "walletDensity": "वॉलेट घनत्व",
+    "walletDensityDesc": "होम स्क्रीन पर वॉलेट कार्ड कितने कॉम्पैक्ट दिखें चुनें।",
+    "walletDensityComfortable": "आरामदायक",
+    "walletDensityCompact": "कॉम्पैक्ट",
+    "walletDensityUltra": "अल्ट्रा",
+    "activityHistory": "गतिविधि इतिहास",
+    "activityHistoryDesc": "हाल की सुरक्षित ऐप क्रियाएं और सूचनाएं।",
+    "clearHistory": "साफ करें",
+    "noActivityHistory": "अभी कोई गतिविधि नहीं।"
   },
   "createWallet": {
     "title": "वॉलेट जोड़ें",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "कोई पता नहीं",
     "balanceLabel": "शेष राशि",
     "rename": "नाम बदलें",
+    "editBalance": "बैलेंस संपादित करें",
     "delete": "हटाएं",
     "edit": "संपादित करें",
     "editWallet": "वॉलेट संपादित करें",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "क्लिपबोर्ड साफ हुआ",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "लेखक",
     "thankYou": "आपके समर्थन के लिए धन्यवाद!",
     "website": "वेबसाइट",
-    "button": "दान करें"
+    "button": "दान करें",
+    "network": "नेटवर्क",
+    "address": "दान पता",
+    "copyAddress": "पता कॉपी करें",
+    "copiedAddress": "पता कॉपी हुआ",
+    "networkNote": "XLAYER, ETH, BSC और अन्य EVM नेटवर्क"
   },
   "moveWallet": {
     "title": "वॉलेट स्थानांतरित करें",
@@ -554,6 +614,13 @@ export default {
     "hint": "किसी अन्य डिवाइस का उपयोग करें और स्कैन करने के लिए 'QR के माध्यम से डेटा प्राप्त करें' चुनें"
   },
   "qr": {
-    "tapToZoom": "QR बड़ा करने के लिए टैप करें"
+    "tapToZoom": "QR बड़ा करने के लिए टैप करें",
+    "share": "शेयर",
+    "saveImage": "सेव",
+    "saved": "सेव हुआ",
+    "sensitiveWarning": "इस QR में संवेदनशील वॉलेट डेटा है। इसे केवल निजी स्थान पर स्कैन या शेयर करें।"
+  },
+  "privacyShield": {
+    "subtitle": "निष्क्रिय होने पर सुरक्षित"
   }
 };

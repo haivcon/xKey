@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Coffre verrouillé",
+    "subtitle": "Utilisez le verrouillage de l’appareil pour déverrouiller xKey.",
+    "checking": "Vérification de la sécurité de l’appareil...",
+    "setupRequired": "Configurez un verrouillage d’écran sur cet appareil avant d’utiliser xKey.",
+    "setupTitle": "Verrouillage de l’appareil requis",
+    "setupBody": "Ouvrez les paramètres de sécurité Android et configurez un code PIN, un mot de passe, un schéma, une empreinte digitale ou la reconnaissance faciale. Revenez ensuite dans xKey et déverrouillez à nouveau.",
+    "openSettings": "Ouvrir les paramètres de sécurité",
+    "settingsError": "Impossible d’ouvrir les paramètres de sécurité.",
+    "unlockButton": "Déverrouiller avec l’appareil",
+    "unlocking": "Déverrouillage...",
+    "readyTitle": "Prêt à déverrouiller",
+    "readyBody": "Utilisez le verrouillage actuel de l’appareil : empreinte, visage, code PIN, mot de passe ou schéma. Si vous le modifiez, xKey essaiera de mettre à jour la protection automatiquement.",
+    "authCanceled": "Authentification annulée",
+    "unlockFailed": "Impossible de déverrouiller le coffre",
+    "tryAgainHint": "Confirmez le verrouillage de l’appareil puis appuyez de nouveau sur déverrouiller.",
+    "unrecoverableTitle": "La clé du coffre ne peut pas être récupérée",
+    "unrecoverableBody": "La sécurité de l’appareil a changé et xKey ne peut pas ouvrir la clé enregistrée. Restaurez une sauvegarde .xkey ou réinitialisez le coffre si vous n’avez plus de sauvegarde."
+  },
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Supprimer tous les portefeuilles du dossier \"{name}\" ?",
     "movedToFolder": "Déplacé vers le dossier",
     "folders": "Dossiers"
+  },
+  "assetBalance": {
+    "title": "Modifier les soldes",
+    "unitLabel": "Unité d’actif",
+    "unitHint": "Utilisez $, USDT, VND, points ou une étiquette personnalisée.",
+    "filteredCount": "{count} portefeuilles affichés",
+    "saved": "Soldes mis à jour",
+    "searchPlaceholder": "Rechercher nom, adresse ou réseau...",
+    "importCsv": "Importer CSV",
+    "restoreDraftConfirm": "Restaurer les modifications de solde non enregistrées ?",
+    "unitConfirm": "L’unité modifie seulement le libellé, sans conversion de taux. Continuer ?",
+    "importCsvError": "Le CSV doit contenir les colonnes address et balance.",
+    "importedCsv": "Soldes importés pour {count} portefeuilles",
+    "filter_all": "Tous",
+    "filter_positive": "Avec solde",
+    "filter_zero": "Zéro",
+    "filter_changed": "Modifiés",
+    "changed": "Modifié",
+    "setZero": "Mettre à 0",
+    "undo": "Annuler",
+    "activeCount": "{count} actifs",
+    "changedCount": "{count} modifiés",
+    "newTotal": "Nouveau total"
   },
   "restore": {
     "title": "Restaurer la sauvegarde",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Sécurité",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Verrouillage automatique après inactivité",
+    "autoLockSaved": "Délai de verrouillage enregistré",
+    "customMinutes": "Durée personnalisée (minutes)",
+    "autoLockRangeError": "Saisissez une durée entre 1 minute et 24 heures.",
+    "autoLockMinutes": "min",
+    "autoLockCurrent": "Actuel",
+    "autoLockDesc": "Verrouille automatiquement le coffre après cette durée sans utilisation de l'application.",
+    "clipboardClear": "Effacement automatique du presse-papiers",
+    "clipboardSaved": "Délai du presse-papiers enregistré",
+    "customSeconds": "Durée personnalisée (secondes)",
+    "clipboardMinutes": "min",
+    "clipboardSeconds": "s",
+    "clipboardNever": "Ne pas effacer automatiquement",
+    "clipboardRangeError": "Saisissez de 5 secondes à 24 heures, ou choisissez ∞ pour désactiver l’effacement automatique.",
+    "clipboardDesc": "xKey efface les données sensibles copiées uniquement si le presse-papiers contient encore la même valeur xKey.",
+    "clipboardCurrent": "Actuel",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Secouer pour verrouiller",
     "shakeToLockDesc": "Verrouiller l'application immédiatement en secouant",
     "shakeSensitivity": "Sensibilité",
-
     "shakePermissionDenied": "L'autorisation de mouvement a été refusée. Secouer pour verrouiller nécessite l'accès aux capteurs.",
-
     "shakeToLockEnabled": "Secouer pour verrouiller activé",
-
     "shakeToLockDisabled": "Secouer pour verrouiller désactivé",
     "high": "Élevée",
     "medium": "Moyenne",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Échelle personnalisée (%)",
     "liteMode": "Mode léger",
     "liteModeDesc": "Désactive les flous pour les appareils peu puissants",
-
     "feedback": "Retour",
-
     "feedbackDesc": "Contrôler les sons et vibrations de l'application",
-
     "soundFeedback": "Son",
-
-    "vibrationFeedback": "Vibration"
+    "vibrationFeedback": "Vibration",
+    "walletDensity": "Densité des wallets",
+    "walletDensityDesc": "Choisissez la compacité des cartes wallet sur l’accueil.",
+    "walletDensityComfortable": "Confort",
+    "walletDensityCompact": "Compact",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Historique d’activité",
+    "activityHistoryDesc": "Actions et notifications sûres récentes.",
+    "clearHistory": "Effacer",
+    "noActivityHistory": "Aucune activité pour le moment."
   },
   "createWallet": {
     "title": "Ajouter un portefeuille",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Pas d'adresse",
     "balanceLabel": "Solde",
     "rename": "Renommer",
+    "editBalance": "Modifier le solde",
     "delete": "Supprimer",
     "edit": "Modifier",
     "editWallet": "Modifier le portefeuille",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Presse-papiers effacé",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Auteur",
     "thankYou": "Merci pour votre soutien !",
     "website": "Site web",
-    "button": "Faire un don"
+    "button": "Faire un don",
+    "network": "Réseau",
+    "address": "Adresse de don",
+    "copyAddress": "Copier l’adresse",
+    "copiedAddress": "Adresse copiée",
+    "networkNote": "XLAYER, ETH, BSC et autres réseaux EVM"
   },
   "moveWallet": {
     "title": "Déplacer le portefeuille",
@@ -554,6 +614,13 @@ export default {
     "hint": "Utilisez un autre appareil et sélectionnez 'Recevoir des données via QR' pour scanner"
   },
   "qr": {
-    "tapToZoom": "Touchez le QR pour agrandir"
+    "tapToZoom": "Touchez le QR pour agrandir",
+    "share": "Partager",
+    "saveImage": "Enregistrer",
+    "saved": "Enregistré",
+    "sensitiveWarning": "Ce QR contient des données sensibles du wallet. Scannez-le ou partagez-le uniquement en privé."
+  },
+  "privacyShield": {
+    "subtitle": "Protégé en inactivité"
   }
 };

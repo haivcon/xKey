@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "คลังถูกล็อก",
+    "subtitle": "ใช้การล็อกของอุปกรณ์เพื่อปลดล็อก xKey",
+    "checking": "กำลังตรวจสอบความปลอดภัยของอุปกรณ์...",
+    "setupRequired": "โปรดตั้งค่าการล็อกหน้าจอบนอุปกรณ์นี้ก่อนใช้ xKey",
+    "setupTitle": "ต้องใช้การล็อกอุปกรณ์",
+    "setupBody": "เปิดการตั้งค่าความปลอดภัยของ Android แล้วตั้งค่า PIN, รหัสผ่าน, รูปแบบ, ลายนิ้วมือ หรือปลดล็อกด้วยใบหน้า จากนั้นกลับมาที่ xKey แล้วปลดล็อกอีกครั้ง",
+    "openSettings": "เปิดการตั้งค่าความปลอดภัย",
+    "settingsError": "ไม่สามารถเปิดการตั้งค่าความปลอดภัยได้",
+    "unlockButton": "ปลดล็อกด้วยอุปกรณ์",
+    "unlocking": "กำลังปลดล็อก...",
+    "readyTitle": "พร้อมปลดล็อก",
+    "readyBody": "ใช้การล็อกอุปกรณ์ปัจจุบัน: ลายนิ้วมือ ใบหน้า PIN รหัสผ่าน หรือรูปแบบ หากเปลี่ยนการล็อกอุปกรณ์ xKey จะพยายามอัปเดตการป้องกันอัตโนมัติ",
+    "authCanceled": "ยกเลิกการยืนยันตัวตน",
+    "unlockFailed": "ปลดล็อกคลังไม่ได้",
+    "tryAgainHint": "ยืนยันการล็อกอุปกรณ์ แล้วแตะปลดล็อกอีกครั้ง",
+    "unrecoverableTitle": "กู้คืนกุญแจคลังไม่ได้",
+    "unrecoverableBody": "ความปลอดภัยของอุปกรณ์เปลี่ยนไป และ xKey เปิดกุญแจที่บันทึกไว้ไม่ได้ ให้กู้คืนไฟล์สำรอง .xkey หรือรีเซ็ตคลังหากไม่มีไฟล์สำรอง"
+  },
   "common": {
     "cancel": "ยกเลิก",
     "save": "บันทึก",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "ลบกระเป๋าเงินทั้งหมดในโฟลเดอร์ \"{name}\"?",
     "movedToFolder": "ย้ายไปยังโฟลเดอร์",
     "folders": "โฟลเดอร์"
+  },
+  "assetBalance": {
+    "title": "แก้ไขยอดสินทรัพย์",
+    "unitLabel": "หน่วยสินทรัพย์",
+    "unitHint": "ใช้ $, USDT, VND, คะแนน หรือป้ายกำกับที่กำหนดเอง",
+    "filteredCount": "แสดง {count} กระเป๋า",
+    "saved": "อัปเดตยอดสินทรัพย์แล้ว",
+    "searchPlaceholder": "ค้นหาชื่อกระเป๋า ที่อยู่ หรือเครือข่าย...",
+    "importCsv": "นำเข้า CSV",
+    "restoreDraftConfirm": "กู้คืนการแก้ไขยอดเงินที่ยังไม่ได้บันทึกหรือไม่?",
+    "unitConfirm": "หน่วยสินทรัพย์เปลี่ยนเฉพาะป้ายชื่อ ไม่ได้แปลงอัตราแลกเปลี่ยน ดำเนินการต่อ?",
+    "importCsvError": "CSV ต้องมีคอลัมน์ address และ balance",
+    "importedCsv": "นำเข้ายอดเงินสำหรับ {count} กระเป๋าแล้ว",
+    "filter_all": "ทั้งหมด",
+    "filter_positive": "มียอดเงิน",
+    "filter_zero": "ศูนย์",
+    "filter_changed": "แก้ไขแล้ว",
+    "changed": "แก้ไขแล้ว",
+    "setZero": "ตั้ง 0",
+    "undo": "ย้อนกลับ",
+    "activeCount": "{count} ใช้งาน",
+    "changedCount": "{count} แก้ไข",
+    "newTotal": "ยอดรวมใหม่"
   },
   "restore": {
     "title": "กู้คืนข้อมูลสำรอง",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "ความปลอดภัย",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "ล็อกอัตโนมัติเมื่อไม่ได้ใช้งาน",
+    "autoLockSaved": "บันทึกเวลาล็อกอัตโนมัติแล้ว",
+    "customMinutes": "กำหนดเอง (นาที)",
+    "autoLockRangeError": "ใส่เวลาระหว่าง 1 นาทีถึง 24 ชั่วโมง",
+    "autoLockMinutes": "นาที",
+    "autoLockCurrent": "ปัจจุบัน",
+    "autoLockDesc": "ล็อกคลังอัตโนมัติเมื่อไม่ได้ใช้งานแอปตามเวลานี้",
+    "clipboardClear": "ล้างคลิปบอร์ดอัตโนมัติ",
+    "clipboardSaved": "บันทึกเวลาคลิปบอร์ดแล้ว",
+    "customSeconds": "กำหนดเอง (วินาที)",
+    "clipboardMinutes": "นาที",
+    "clipboardSeconds": "วินาที",
+    "clipboardNever": "ไม่ล้างอัตโนมัติ",
+    "clipboardRangeError": "ใส่เวลา 5 วินาทีถึง 24 ชั่วโมง หรือเลือก ∞ เพื่อปิดการล้างอัตโนมัติ",
+    "clipboardDesc": "xKey จะล้างข้อมูลสำคัญที่คัดลอกเฉพาะเมื่อคลิปบอร์ดยังมีค่า xKey เดิมอยู่",
+    "clipboardCurrent": "ปัจจุบัน",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "เขย่าเพื่อล็อก",
     "shakeToLockDesc": "ล็อกแอปทันทีเมื่อเขย่าอุปกรณ์",
     "shakeSensitivity": "ความไว",
-
     "shakePermissionDenied": "สิทธิ์การเคลื่อนไหวถูกปฏิเสธ เขย่าเพื่อล็อกต้องใช้การเข้าถึงเซ็นเซอร์",
-
     "shakeToLockEnabled": "เปิดเขย่าเพื่อล็อกแล้ว",
-
     "shakeToLockDisabled": "ปิดเขย่าเพื่อล็อกแล้ว",
     "high": "สูง",
     "medium": "ปานกลาง",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "สเกลกำหนดเอง (%)",
     "liteMode": "โหมดเบา",
     "liteModeDesc": "ปิดเอฟเฟกต์เบลอสำหรับอุปกรณ์สเปกต่ำ",
-
     "feedback": "การตอบสนอง",
-
     "feedbackDesc": "ควบคุมเสียงและการสั่นของแอป",
-
     "soundFeedback": "เสียง",
-
-    "vibrationFeedback": "การสั่น"
+    "vibrationFeedback": "การสั่น",
+    "walletDensity": "ความหนาแน่นกระเป๋า",
+    "walletDensityDesc": "เลือกความกะทัดรัดของการ์ดกระเป๋าในหน้าแรก",
+    "walletDensityComfortable": "สบายตา",
+    "walletDensityCompact": "กะทัดรัด",
+    "walletDensityUltra": "กะทัดรัดมาก",
+    "activityHistory": "ประวัติกิจกรรม",
+    "activityHistoryDesc": "การทำงานและการแจ้งเตือนที่ปลอดภัยล่าสุด",
+    "clearHistory": "ล้าง",
+    "noActivityHistory": "ยังไม่มีกิจกรรม"
   },
   "createWallet": {
     "title": "เพิ่มกระเป๋าเงิน",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "ไม่มีที่อยู่",
     "balanceLabel": "ยอดคงเหลือ",
     "rename": "เปลี่ยนชื่อ",
+    "editBalance": "แก้ไขยอดเงิน",
     "delete": "ลบ",
     "edit": "แก้ไข",
     "editWallet": "แก้ไขกระเป๋าเงิน",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "ล้างคลิปบอร์ดแล้ว",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "ผู้แต่ง",
     "thankYou": "ขอบคุณสำหรับการสนับสนุนของคุณ!",
     "website": "เว็บไซต์",
-    "button": "สนับสนุน"
+    "button": "สนับสนุน",
+    "network": "เครือข่าย",
+    "address": "ที่อยู่สำหรับสนับสนุน",
+    "copyAddress": "คัดลอกที่อยู่",
+    "copiedAddress": "คัดลอกที่อยู่แล้ว",
+    "networkNote": "XLAYER, ETH, BSC และเครือข่าย EVM อื่นๆ"
   },
   "moveWallet": {
     "title": "ย้ายกระเป๋าสตางค์",
@@ -554,6 +614,13 @@ export default {
     "hint": "ใช้เครื่องมืออื่นแล้วเลือก 'รับข้อมูลผ่าน QR' เพื่อสแกน"
   },
   "qr": {
-    "tapToZoom": "แตะ QR เพื่อขยาย"
+    "tapToZoom": "แตะ QR เพื่อขยาย",
+    "share": "แชร์",
+    "saveImage": "บันทึก",
+    "saved": "บันทึกแล้ว",
+    "sensitiveWarning": "QR นี้มีข้อมูลกระเป๋าที่ละเอียดอ่อน โปรดสแกนหรือแชร์ในที่ส่วนตัวเท่านั้น"
+  },
+  "privacyShield": {
+    "subtitle": "ป้องกันเมื่อไม่ได้ใช้งาน"
   }
 };

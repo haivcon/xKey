@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 import {
   UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart
 } from 'lucide-react';
@@ -13,7 +14,8 @@ import ActionBar from './components/ActionBar';
 import DuplicateDetector from './components/DuplicateDetector';
 import AdvancedToolsModal, { SENSITIVE_EXPORT_LOCK_KEY } from './components/AdvancedToolsModal';
 import OnboardingScreen, { ONBOARDED_KEY } from './components/OnboardingScreen';
-import PinLockScreen from './components/PinLockScreen';
+import PinLockScreen, { PIN_HASH_KEY } from './components/PinLockScreen';
+import DeviceUnlockScreen from './components/DeviceUnlockScreen';
 import BatchActionBar from './components/BatchActionBar';
 import PasswordInput from './components/PasswordInput';
 import AnimatedSplash from './components/AnimatedSplash';
@@ -27,11 +29,22 @@ const CreateWalletModal = lazy(() => import('./components/CreateWalletModal'));
 const MoveToFolderModal = lazy(() => import('./components/MoveToFolderModal'));
 const DonateModal = lazy(() => import('./components/DonateModal'));
 const BulkNetworkModal = lazy(() => import('./components/BulkNetworkModal'));
+const AssetBalanceModal = lazy(() => import('./components/AssetBalanceModal'));
 
 // Utils & Hooks
-import { loadWallets, isBiometricAvailable, getEncryptionKeyBiometric, getEncryptionKeyFallback } from './utils/storage';
+import {
+  loadWallets,
+  saveWallets,
+  isBiometricAvailable,
+  getEncryptionKeyBiometric,
+  getEncryptionKeyFallback,
+  hasFallbackEncryptionKey,
+  persistFallbackEncryptionKey,
+  persistBiometricEncryptionKey,
+} from './utils/storage';
 import { exportPortableBackup } from './utils/backupUtils';
 import { hapticTap, hapticSuccess, initFeedbackSettings } from './utils/haptics';
+import { formatAssetValue } from './utils/amountFormat';
 import useAutoLock from './hooks/useAutoLock';
 import useAutoBackup from './hooks/useAutoBackup';
 import useWallets from './hooks/useWallets';
@@ -43,6 +56,8 @@ import useLiteMode from './hooks/useLiteMode';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
+
+const ASSET_UNIT_KEY = 'xkey_asset_unit';
 
 export default function App() {
   // Auth state
@@ -67,6 +82,8 @@ export default function App() {
   const [showBulkNetworkModal, setShowBulkNetworkModal] = useState(false);
   const [movingWallet, setMovingWallet] = useState(null);
   const [showDonate, setShowDonate] = useState(false);
+  const [showAssetBalance, setShowAssetBalance] = useState(false);
+  const [assetUnit, setAssetUnit] = useState('$');
   const homeHeaderRef = useRef(null);
 
   // Performance hooks
@@ -81,6 +98,7 @@ export default function App() {
   const [vaultLoading, setVaultLoading] = useState(true);
   const [needsPinAuth, setNeedsPinAuth] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
   // Folder editing
   const [editingFolder, setEditingFolder] = useState(null);
@@ -104,7 +122,34 @@ export default function App() {
     handleBulkNetworkChange, handleSaveWallet,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   } = useWallets(aesKey, isDecoyMode);
-  const totalBalanceText = `$${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  const totalBalanceText = formatAssetValue(totalBalance, assetUnit);
+
+  useEffect(() => {
+    Preferences.get({ key: ASSET_UNIT_KEY }).then(({ value }) => {
+      if (value) setAssetUnit(value);
+    }).catch(() => {});
+  }, []);
+
+  const updateAssetUnit = useCallback((unit) => {
+    const nextUnit = unit || '$';
+    setAssetUnit(nextUnit);
+    Preferences.set({ key: ASSET_UNIT_KEY, value: nextUnit }).catch(() => {});
+  }, []);
+
+  const handleSaveAssetBalances = useCallback(async (changes) => {
+    const changeMap = new Map(changes.map(change => [change.wallet, change.balance]));
+    const idMap = new Map(changes.filter(change => change.wallet._id).map(change => [change.wallet._id, change.balance]));
+    const updated = wallets.map(wallet => {
+      if (idMap.has(wallet._id)) return { ...wallet, balance: idMap.get(wallet._id) };
+      if (changeMap.has(wallet)) return { ...wallet, balance: changeMap.get(wallet) };
+      return wallet;
+    });
+    setWallets(updated);
+    await saveWallets(updated, aesKey, isDecoyMode);
+    hapticSuccess();
+    showToast?.(t('assetBalance.saved'), 'success');
+    setShowAssetBalance(false);
+  }, [wallets, setWallets, aesKey, isDecoyMode, showToast, t]);
 
   useEffect(() => {
     const header = homeHeaderRef.current;
@@ -147,6 +192,11 @@ export default function App() {
     showCreateWallet, setShowCreateWallet,
     showExportCSV, setShowExportCSV,
     showBackupExport, setShowBackupExport,
+    showAdvancedTools, setShowAdvancedTools,
+    showBulkNetworkModal, setShowBulkNetworkModal,
+    showAssetBalance, setShowAssetBalance,
+    movingWallet, setMovingWallet,
+    showDonate, setShowDonate,
     qrModalOpen: qrModalData.isOpen, closeQrModal,
   });
 
@@ -199,11 +249,27 @@ export default function App() {
 
         const hasBio = await isBiometricAvailable();
         if (hasBio) {
-          const key = await getEncryptionKeyBiometric();
-          setAesKey(key);
-          const savedWallets = await loadWallets(key);
-          if (savedWallets && savedWallets.length > 0) {
-            setWallets(savedWallets);
+          if (useDeviceCredentialUnlock) {
+            setNeedsPinAuth(true);
+          } else {
+            try {
+              const key = await getEncryptionKeyBiometric();
+              setAesKey(key);
+              const savedWallets = await loadWallets(key);
+              if (savedWallets && savedWallets.length > 0) {
+                setWallets(savedWallets);
+              }
+            } catch (bioErr) {
+              const [{ value: pinHash }, hasFallbackKey] = await Promise.all([
+                Preferences.get({ key: PIN_HASH_KEY }),
+                hasFallbackEncryptionKey(),
+              ]);
+              if (pinHash && hasFallbackKey) {
+                setNeedsPinAuth(true);
+              } else {
+                throw bioErr;
+              }
+            }
           }
         } else {
           setNeedsPinAuth(true);
@@ -214,13 +280,19 @@ export default function App() {
       setVaultLoading(false);
     };
     authenticate();
-  }, [showSplash, setWallets]);
+  }, [showSplash, setWallets, useDeviceCredentialUnlock]);
 
   // Called after PIN verification succeeds
-  const handlePinSuccess = async (isDecoy = false) => {
+  const handlePinSuccess = async (isDecoy = false, options = {}) => {
     try {
       setIsDecoyMode(isDecoy);
-      const key = await getEncryptionKeyFallback();
+      const key = aesKey || await getEncryptionKeyFallback({ createIfMissing: !!options.createdPin });
+      if (aesKey) {
+        await persistFallbackEncryptionKey(aesKey);
+      }
+      if (!isDecoy) {
+        persistBiometricEncryptionKey(key).catch(() => {});
+      }
       setAesKey(key);
       const savedWallets = await loadWallets(key, isDecoy);
       if (savedWallets && savedWallets.length > 0) {
@@ -233,6 +305,15 @@ export default function App() {
       setAuthError(err.message || "Failed to load vault.");
     }
   };
+
+  const handleDeviceUnlock = useCallback(async () => {
+    setIsDecoyMode(false);
+    const key = await getEncryptionKeyBiometric();
+    setAesKey(key);
+    const savedWallets = await loadWallets(key);
+    setWallets(savedWallets && savedWallets.length > 0 ? savedWallets : []);
+    setNeedsPinAuth(false);
+  }, [setWallets]);
 
   // Self-destruct
   const handleSelfDestruct = async () => {
@@ -337,7 +418,7 @@ export default function App() {
   } else if (location.pathname === '/dashboard') {
     mainContent = (
       <Suspense fallback={<div className="min-h-screen bg-surface-950 flex items-center justify-center text-brand-500"><BarChart3 className="w-8 h-8 animate-pulse" /></div>}>
-        <DashboardView wallets={wallets} onBack={() => navigate('/')} />
+        <DashboardView wallets={wallets} onBack={() => navigate('/')} assetUnit={assetUnit} />
       </Suspense>
     );
   } else {
@@ -405,9 +486,14 @@ export default function App() {
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
                         {t('home.folders') || 'Folders'}
                       </span>
-                      <span className="rounded-full bg-surface-800 px-2.5 py-1 text-xs font-semibold text-surface-100">
+                      <button
+                        type="button"
+                        onClick={() => { hapticTap(); setShowAssetBalance(true); }}
+                        className="rounded-full bg-surface-800 px-2.5 py-1 text-xs font-semibold text-surface-100 hover:bg-surface-700"
+                        title={t('assetBalance.title')}
+                      >
                         {totalBalanceText}
-                      </span>
+                      </button>
                     </div>
                     <FolderTabs
                       variant="sidebar"
@@ -437,10 +523,14 @@ export default function App() {
                         onDeleteFolder={handleDeleteFolder}
                       />
                     </div>
-                    <div className="mb-4 flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => { hapticTap(); setShowAssetBalance(true); }}
+                      className="mb-4 flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-right hover:bg-surface-800"
+                    >
                       <span className="block text-[9px] font-semibold uppercase tracking-wider text-surface-500">{t('home.totalAssets')}</span>
                       <span className="block text-sm font-bold leading-none text-white">{totalBalanceText}</span>
-                    </div>
+                    </button>
                   </div>
                   <ActionBar
                     searchQuery={searchQuery} onSearchChange={setSearchQuery}
@@ -477,6 +567,7 @@ export default function App() {
                   toggleSelect={toggleSelect}
                   sortOrder={sortOrder}
                   onReorder={handleReorderWallet}
+                  assetUnit={assetUnit}
                 />
               </section>
             </div>
@@ -534,6 +625,17 @@ export default function App() {
         )}
         {showDonate && (
           <DonateModal onClose={() => setShowDonate(false)} />
+        )}
+        {showAssetBalance && (
+          <AssetBalanceModal
+            wallets={filteredWallets}
+            assetUnit={assetUnit}
+            totalBalance={totalBalance}
+            onClose={() => setShowAssetBalance(false)}
+            onSave={handleSaveAssetBalances}
+            onUnitChange={updateAssetUnit}
+            t={t}
+          />
         )}
         </Suspense>
 
@@ -642,7 +744,11 @@ export default function App() {
       </div>
       {needsPinAuth && !vaultLoading && (
         <div className="fixed inset-0 z-[10000] bg-surface-950">
-          <PinLockScreen onSuccess={handlePinSuccess} onSelfDestruct={handleSelfDestruct} />
+          {useDeviceCredentialUnlock ? (
+            <DeviceUnlockScreen onUnlock={handleDeviceUnlock} />
+          ) : (
+            <PinLockScreen onSuccess={handlePinSuccess} onSelfDestruct={handleSelfDestruct} />
+          )}
           {!isAppActive && (
             <div className="fixed inset-0 z-[10001] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
               <div className="text-[40px] font-bold text-white/30 tracking-[2px]">xKey</div>
@@ -651,8 +757,11 @@ export default function App() {
         </div>
       )}
       {!isAppActive && !needsPinAuth && (
-        <div className="fixed inset-0 z-[9999] bg-surface-950/80 backdrop-blur-xl flex items-center justify-center">
-          <div className="text-[40px] font-bold text-white/30 tracking-[2px] animate-pulse">xKey</div>
+        <div className="fixed inset-0 z-[9999] bg-surface-950/95 backdrop-blur-xl flex items-center justify-center">
+          <div className="rounded-2xl border border-surface-800 bg-surface-900/80 px-8 py-6 text-center shadow-2xl">
+            <div className="text-[34px] font-bold text-white/50 tracking-[2px]">xKey</div>
+            <div className="mt-1 text-xs font-medium text-surface-500">{t('privacyShield.subtitle')}</div>
+          </div>
         </div>
       )}
     </>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone, Rows3, Clock3, Trash2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -12,6 +12,7 @@ import {
 } from '../../utils/haptics';
 import DonateModal from '../DonateModal';
 import useLiteMode from '../../hooks/useLiteMode';
+import { clearActionHistory, getActionHistory } from '../../utils/actionHistory';
 
 const THEME_OPTIONS = [
   { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo' },
@@ -22,6 +23,11 @@ const THEME_OPTIONS = [
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 const DISPLAY_SCALE_PRESETS = [50, 75, 100, 125, 150, 200];
+const DENSITY_OPTIONS = [
+  { key: 'comfortable', label: 'settings.walletDensityComfortable' },
+  { key: 'compact', label: 'settings.walletDensityCompact' },
+  { key: 'ultra', label: 'settings.walletDensityUltra' },
+];
 
 const clampDisplayScale = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -35,8 +41,9 @@ export default function GeneralTab() {
   const [scaleInput, setScaleInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
   const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
+  const [actionHistory, setActionHistory] = useState([]);
 
-  const { theme, setTheme, displayScale, setDisplayScale } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity } = useTheme();
   const t = useT();
   const { lang, changeLang } = useLanguage();
   const currentLang = LANGUAGES.find(l => l.code === lang);
@@ -46,6 +53,17 @@ export default function GeneralTab() {
   useEffect(() => {
     if (!isScaleInputFocused) setScaleInput(String(displayScale));
   }, [displayScale, isScaleInputFocused]);
+
+  useEffect(() => {
+    let mounted = true;
+    getActionHistory().then(items => { if (mounted) setActionHistory(items); });
+    const handleUpdate = (event) => setActionHistory(event.detail || []);
+    window.addEventListener('xkey-action-history-updated', handleUpdate);
+    return () => {
+      mounted = false;
+      window.removeEventListener('xkey-action-history-updated', handleUpdate);
+    };
+  }, []);
 
   const commitScaleInput = () => {
     if (scaleInput.trim() === '') {
@@ -252,6 +270,38 @@ export default function GeneralTab() {
         </div>
       </div>
 
+      {/* ═══ Wallet Density ═══ */}
+      <div className="glass-card p-4">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+            <Rows3 size={20} className="text-violet-400" />
+          </div>
+          <div>
+            <p className="text-white font-medium text-sm">{t('settings.walletDensity')}</p>
+            <p className="text-xs text-surface-400">{t('settings.walletDensityDesc')}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {DENSITY_OPTIONS.map(option => {
+            const active = walletDensity === option.key;
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => { hapticTap(); setWalletDensity(option.key); }}
+                className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all ${
+                  active
+                    ? 'border-violet-500/50 bg-violet-500/15 text-white'
+                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                }`}
+              >
+                {t(option.label)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ═══ Feedback Options ═══ */}
       <div className="glass-card p-4">
         <div className="mb-3 flex items-center gap-3">
@@ -300,6 +350,48 @@ export default function GeneralTab() {
               <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.vibrationEnabled ? 'translate-x-4' : ''}`} />
             </span>
           </button>
+        </div>
+      </div>
+
+      {/* ═══ Action History ═══ */}
+      <div className="glass-card p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Clock3 size={20} className="text-amber-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium text-sm">{t('settings.activityHistory')}</p>
+              <p className="text-xs text-surface-400">{t('settings.activityHistoryDesc')}</p>
+            </div>
+          </div>
+          {actionHistory.length > 0 && (
+            <button
+              type="button"
+              onClick={async () => {
+                hapticTap();
+                await clearActionHistory();
+              }}
+              className="flex items-center gap-1 rounded-lg border border-surface-700 bg-surface-800/60 px-2.5 py-2 text-xs font-semibold text-surface-300 hover:text-red-300"
+            >
+              <Trash2 size={13} />
+              {t('settings.clearHistory')}
+            </button>
+          )}
+        </div>
+        <div className="space-y-2">
+          {actionHistory.length === 0 ? (
+            <p className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-3 text-center text-xs text-surface-400">
+              {t('settings.noActivityHistory')}
+            </p>
+          ) : (
+            actionHistory.slice(0, 6).map(item => (
+              <div key={item.id} className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-2">
+                <p className="line-clamp-2 text-xs font-medium text-surface-200">{item.message}</p>
+                <p className="mt-1 text-[10px] text-surface-500">{new Date(item.ts).toLocaleString()}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

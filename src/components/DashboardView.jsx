@@ -1,7 +1,8 @@
 import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
+import { formatAssetValue, parseAmount } from '../utils/amountFormat';
 
-export default function DashboardView({ wallets, onBack }) {
+export default function DashboardView({ wallets, onBack, assetUnit = '$' }) {
     const t = useT();
 
     // Folder distribution
@@ -10,7 +11,7 @@ export default function DashboardView({ wallets, onBack }) {
         const g = w.groupId || 'Imported';
         if (!folderMap[g]) folderMap[g] = { count: 0, total: 0 };
         folderMap[g].count++;
-        folderMap[g].total += parseFloat(w.balance || 0) || 0;
+        folderMap[g].total += parseAmount(w.balance);
     });
     const folderEntries = Object.entries(folderMap).sort((a, b) => b[1].total - a[1].total);
 
@@ -20,7 +21,7 @@ export default function DashboardView({ wallets, onBack }) {
         const n = w.network || 'ETH';
         if (!chainMap[n]) chainMap[n] = { count: 0, total: 0 };
         chainMap[n].count++;
-        chainMap[n].total += parseFloat(w.balance || 0) || 0;
+        chainMap[n].total += parseAmount(w.balance);
     });
     const chainEntries = Object.entries(chainMap).sort((a, b) => b[1].count - a[1].count);
 
@@ -37,8 +38,8 @@ export default function DashboardView({ wallets, onBack }) {
     });
     const maxTimeline = Math.max(...timeline.map(d => d.count), 1);
 
-    const totalBalance = wallets.reduce((s, w) => s + (parseFloat(w.balance || 0) || 0), 0);
-    const activeWallets = wallets.filter(w => (parseFloat(w.balance || 0) || 0) > 0).length;
+    const totalBalance = wallets.reduce((s, w) => s + parseAmount(w.balance), 0);
+    const activeWallets = wallets.filter(w => parseAmount(w.balance) > 0).length;
     const emptyWallets = wallets.length - activeWallets;
     const walletsWithPK = wallets.filter(w => w.privateKey).length;
     const walletsWithSeed = wallets.filter(w => w.seedPhrase).length;
@@ -133,7 +134,7 @@ export default function DashboardView({ wallets, onBack }) {
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }}></div>
                                     <span className="text-surface-300 truncate flex-1">{name}</span>
                                     <span className="text-surface-500 text-xs flex-shrink-0">{data.count}w</span>
-                                    <span className="text-white font-medium text-xs flex-shrink-0">${data.total.toFixed(2)}</span>
+                                    <span className="text-white font-medium text-xs flex-shrink-0">{formatAssetValue(data.total, assetUnit)}</span>
                                 </div>
                             ))}
                         </div>
@@ -160,7 +161,7 @@ export default function DashboardView({ wallets, onBack }) {
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: chainColors[i % chainColors.length] }}></div>
                                     <span className="text-surface-300 truncate flex-1">{name}</span>
                                     <span className="text-surface-500 text-xs flex-shrink-0">{data.count}w</span>
-                                    <span className="text-white font-medium text-xs flex-shrink-0">${data.total.toFixed(2)}</span>
+                                    <span className="text-white font-medium text-xs flex-shrink-0">{formatAssetValue(data.total, assetUnit)}</span>
                                 </div>
                             ))}
                         </div>
@@ -264,7 +265,7 @@ export default function DashboardView({ wallets, onBack }) {
                 {/* Total */}
                 <div className="glass-card p-6 border border-brand-500/20 bg-brand-500/5">
                     <p className="text-surface-400 text-xs uppercase tracking-wider mb-1">{t('dashboard.totalValue')}</p>
-                    <p className="text-3xl font-bold text-white">${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</p>
+                    <p className="text-3xl font-bold text-white">{formatAssetValue(totalBalance, assetUnit)}</p>
                 </div>
             </div>
         </div>

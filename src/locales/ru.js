@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Хранилище заблокировано",
+    "subtitle": "Используйте блокировку устройства, чтобы открыть xKey.",
+    "checking": "Проверка безопасности устройства...",
+    "setupRequired": "Перед использованием xKey настройте блокировку экрана на устройстве.",
+    "setupTitle": "Требуется блокировка устройства",
+    "setupBody": "Откройте настройки безопасности Android и задайте PIN-код, пароль, графический ключ, отпечаток пальца или разблокировку по лицу. Затем вернитесь в xKey и разблокируйте снова.",
+    "openSettings": "Открыть настройки безопасности",
+    "settingsError": "Не удалось открыть настройки безопасности.",
+    "unlockButton": "Разблокировать устройством",
+    "unlocking": "Разблокировка...",
+    "readyTitle": "Готово к разблокировке",
+    "readyBody": "Используйте текущую блокировку устройства: отпечаток, лицо, PIN, пароль или графический ключ. Если вы измените блокировку, xKey попробует обновить защиту автоматически.",
+    "authCanceled": "Аутентификация отменена",
+    "unlockFailed": "Не удалось открыть хранилище",
+    "tryAgainHint": "Подтвердите блокировку устройства и нажмите разблокировку снова.",
+    "unrecoverableTitle": "Ключ хранилища нельзя восстановить",
+    "unrecoverableBody": "Безопасность устройства изменилась, и xKey не может открыть сохраненный ключ. Восстановите резервную копию .xkey или сбросьте хранилище, если копии нет."
+  },
   "common": {
     "cancel": "Отмена",
     "save": "Сохранить",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "Удалить все кошельки в папке \"{name}\"?",
     "movedToFolder": "Перемещено в папку",
     "folders": "Папки"
+  },
+  "assetBalance": {
+    "title": "Изменить балансы активов",
+    "unitLabel": "Единица актива",
+    "unitHint": "Используйте $, USDT, VND, баллы или свой ярлык.",
+    "filteredCount": "Показано кошельков: {count}",
+    "saved": "Балансы активов обновлены",
+    "searchPlaceholder": "Поиск по имени кошелька, адресу или сети...",
+    "importCsv": "Импорт CSV",
+    "restoreDraftConfirm": "Восстановить несохраненные правки баланса?",
+    "unitConfirm": "Единица актива меняет только подпись, без пересчета курса. Продолжить?",
+    "importCsvError": "CSV должен содержать столбцы address и balance.",
+    "importedCsv": "Импортированы балансы для {count} кошельков",
+    "filter_all": "Все",
+    "filter_positive": "С балансом",
+    "filter_zero": "Ноль",
+    "filter_changed": "Изменено",
+    "changed": "Изменено",
+    "setZero": "В 0",
+    "undo": "Отменить",
+    "activeCount": "{count} активных",
+    "changedCount": "{count} изменено",
+    "newTotal": "Новая сумма"
   },
   "restore": {
     "title": "Восстановить резервную копию",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Безопасность",
     "securityDesc": "Автоблокировка, буфер, мастер-пароль",
-    "autoLock": "Автоблокировка",
-    "autoLockSaved": "Сохранено",
-    "customMinutes": "Свое (минуты)",
-    "clipboardClear": "Автоочистка буфера",
-    "clipboardSaved": "Сохранено",
-    "customSeconds": "Свое (секунды)",
+    "autoLock": "Автоблокировка при бездействии",
+    "autoLockSaved": "Время автоблокировки сохранено",
+    "customMinutes": "Свое время (минуты)",
+    "autoLockRangeError": "Введите время от 1 минуты до 24 часов.",
+    "autoLockMinutes": "мин",
+    "autoLockCurrent": "Сейчас",
+    "autoLockDesc": "Автоматически блокировать хранилище, если приложение не используется указанное время.",
+    "clipboardClear": "Автоочистка буфера обмена",
+    "clipboardSaved": "Время очистки буфера сохранено",
+    "customSeconds": "Свое время (секунды)",
+    "clipboardMinutes": "мин",
+    "clipboardSeconds": "с",
+    "clipboardNever": "Не очищать автоматически",
+    "clipboardRangeError": "Введите от 5 секунд до 24 часов или выберите ∞, чтобы отключить автоочистку.",
+    "clipboardDesc": "xKey очищает скопированные секретные данные только если в буфере все еще то же значение xKey.",
+    "clipboardCurrent": "Сейчас",
     "masterPassword": "Мастер-пароль",
     "masterPasswordDesc": "Доп. защита для просмотра ключей",
     "setMasterPassword": "Установить",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Встряхнуть для блокировки",
     "shakeToLockDesc": "Немедленная блокировка при встряхивании",
     "shakeSensitivity": "Чувствительность",
-
     "shakePermissionDenied": "Доступ к датчикам движения отклонен. Встряхнуть для блокировки не работает без датчиков.",
-
     "shakeToLockEnabled": "Встряхнуть для блокировки включено",
-
     "shakeToLockDisabled": "Встряхнуть для блокировки отключено",
     "high": "Высокая",
     "medium": "Средняя",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Пользовательский масштаб (%)",
     "liteMode": "Облегчённый режим",
     "liteModeDesc": "Отключает размытие для слабых устройств",
-
     "feedback": "Отклик",
-
     "feedbackDesc": "Управление звуком и вибрацией приложения",
-
     "soundFeedback": "Звук",
-
-    "vibrationFeedback": "Вибрация"
+    "vibrationFeedback": "Вибрация",
+    "walletDensity": "Плотность кошельков",
+    "walletDensityDesc": "Выберите, насколько компактно показывать карточки кошельков.",
+    "walletDensityComfortable": "Обычная",
+    "walletDensityCompact": "Компактная",
+    "walletDensityUltra": "Очень компактная",
+    "activityHistory": "История действий",
+    "activityHistoryDesc": "Недавние безопасные действия и уведомления.",
+    "clearHistory": "Очистить",
+    "noActivityHistory": "Действий пока нет."
   },
   "createWallet": {
     "title": "Добавить кошелёк",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Нет адреса",
     "balanceLabel": "Баланс",
     "rename": "Переименовать",
+    "editBalance": "Изменить баланс",
     "delete": "Удалить",
     "edit": "Редактировать",
     "editWallet": "Редактировать кошелёк",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Открепить",
     "pinned": "Закреплен",
     "network": "Сеть",
-    "clipboardCleared": "Буфер очищен",
+    "clipboardCleared": "Буфер обмена очищен",
     "masterPasswordRequired": "Введите мастер-пароль",
     "masterPasswordWrong": "Неверный пароль",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Автор",
     "thankYou": "Спасибо за вашу поддержку!",
     "website": "Сайт",
-    "button": "Поддержать"
+    "button": "Поддержать",
+    "network": "Сеть",
+    "address": "Адрес для поддержки",
+    "copyAddress": "Копировать адрес",
+    "copiedAddress": "Адрес скопирован",
+    "networkNote": "XLAYER, ETH, BSC и другие EVM-сети"
   },
   "moveWallet": {
     "title": "Переместить кошелек",
@@ -554,6 +614,13 @@ export default {
     "hint": "Используйте другое устройство и выберите «Получить данные через QR», чтобы отсканировать"
   },
   "qr": {
-    "tapToZoom": "Нажмите QR, чтобы увеличить"
+    "tapToZoom": "Нажмите QR, чтобы увеличить",
+    "share": "Поделиться",
+    "saveImage": "Сохранить",
+    "saved": "Сохранено",
+    "sensitiveWarning": "Этот QR содержит конфиденциальные данные кошелька. Сканируйте или делитесь им только приватно."
+  },
+  "privacyShield": {
+    "subtitle": "Защищено при бездействии"
   }
 };

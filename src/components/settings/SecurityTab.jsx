@@ -6,7 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
 import { useMasterPassword } from '../../contexts/MasterPasswordContext';
-import { AUTOLOCK_KEY } from '../../hooks/useAutoLock';
+import { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT } from '../../hooks/useAutoLock';
 import {
   requestMotionPermission,
   SHAKE_SETTINGS_CHANGED_EVENT,
@@ -32,6 +32,8 @@ export default function SecurityTab({ onWipe }) {
   // Auto-lock & clipboard
   const [showAutoLock, setShowAutoLock] = useState(false);
   const [showClipboard, setShowClipboard] = useState(false);
+  const [currentAutoLockMs, setCurrentAutoLockMs] = useState(DEFAULT_MS);
+  const [currentClipboardMs, setCurrentClipboardMs] = useState(30000);
   const [customAutoLock, setCustomAutoLock] = useState('');
   const [customClipboard, setCustomClipboard] = useState('');
 
@@ -79,26 +81,72 @@ export default function SecurityTab({ onWipe }) {
       setShakeToLockEnabled(shakeVal === 'true');
       const { value: shakeSens } = await Preferences.get({ key: SHAKE_SENSITIVITY_KEY });
       if (shakeSens) setShakeSensitivity(Number(shakeSens));
+      const { value: autoLockMs } = await Preferences.get({ key: AUTOLOCK_KEY });
+      const ms = Number.parseInt(autoLockMs, 10);
+      setCurrentAutoLockMs(Number.isFinite(ms) && ms > 0 ? ms : DEFAULT_MS);
+      const { value: clipboardMs } = await Preferences.get({ key: CLIPBOARD_TIMEOUT_KEY });
+      const clipboardTimeout = Number.parseInt(clipboardMs, 10);
+      setCurrentClipboardMs(Number.isFinite(clipboardTimeout) && clipboardTimeout >= 0 ? clipboardTimeout : 30000);
     };
     loadSettings();
   }, []);
 
   const saveAutoLock = async (ms) => {
+    const safeMs = Number.parseInt(ms, 10);
+    if (!Number.isFinite(safeMs) || safeMs < 60000 || safeMs > 24 * 60 * 60 * 1000) {
+      showToast(t('settings.autoLockRangeError'), 'warning');
+      return;
+    }
     const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
     if (!ok) return;
     hapticTap();
-    await Preferences.set({ key: AUTOLOCK_KEY, value: String(ms) });
+    await Preferences.set({ key: AUTOLOCK_KEY, value: String(safeMs) });
+    setCurrentAutoLockMs(safeMs);
+    setCustomAutoLock('');
+    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
     showToast(t('settings.autoLockSaved'), 'success');
     setShowAutoLock(false);
   };
 
+  const saveCustomAutoLock = () => {
+    const minutes = Number.parseInt(customAutoLock, 10);
+    saveAutoLock(minutes * 60000);
+  };
+
+  const formatAutoLock = (ms) => {
+    const minutes = Math.round(ms / 60000);
+    if (minutes < 60) return `${minutes} ${t('settings.autoLockMinutes')}`;
+    const hours = minutes / 60;
+    return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
+  };
+
   const saveClipboard = async (ms) => {
+    const safeMs = Number.parseInt(ms, 10);
+    if (!Number.isFinite(safeMs) || safeMs < 0 || (safeMs > 0 && safeMs < 5000) || safeMs > 24 * 60 * 60 * 1000) {
+      showToast(t('settings.clipboardRangeError'), 'warning');
+      return;
+    }
     const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
     if (!ok) return;
     hapticTap();
-    await Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(ms) });
+    await Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(safeMs) });
+    setCurrentClipboardMs(safeMs);
+    setCustomClipboard('');
     showToast(t('settings.clipboardSaved'), 'success');
     setShowClipboard(false);
+  };
+
+  const saveCustomClipboard = () => {
+    const seconds = Number.parseInt(customClipboard, 10);
+    saveClipboard(seconds * 1000);
+  };
+
+  const formatClipboardTimeout = (ms) => {
+    if (ms === 0) return t('settings.clipboardNever');
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) return `${seconds} ${t('settings.clipboardSeconds')}`;
+    const minutes = seconds / 60;
+    return `${Number.isInteger(minutes) ? minutes : minutes.toFixed(1)} ${t('settings.clipboardMinutes')}`;
   };
 
   const handleSetMP = async () => {
@@ -230,21 +278,26 @@ export default function SecurityTab({ onWipe }) {
         </button>
         {showAutoLock && (
           <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center justify-between rounded-xl border border-surface-700/60 bg-surface-900/70 px-3 py-2">
+              <span className="text-xs text-surface-400">{t('settings.autoLockCurrent')}</span>
+              <span className="text-sm font-semibold text-brand-300">{formatAutoLock(currentAutoLockMs)}</span>
+            </div>
+            <p className="text-xs leading-relaxed text-surface-500">{t('settings.autoLockDesc')}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {AUTOLOCK_OPTIONS.map(opt => (
                 <button key={opt.value} onClick={() => saveAutoLock(opt.value)}
-                  className="btn-glow px-4 py-2 bg-surface-800 hover:bg-surface-700 text-surface-300 text-xs rounded-lg transition-colors">
+                  className={`btn-glow px-4 py-2 text-xs rounded-lg transition-colors ${currentAutoLockMs === opt.value ? 'bg-brand-500/20 text-brand-200 border border-brand-500/50' : 'bg-surface-800 hover:bg-surface-700 text-surface-300 border border-transparent'}`}>
                   {opt.label}
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[1fr_auto] gap-2">
               <input type="number" value={customAutoLock} onChange={e => setCustomAutoLock(e.target.value)}
-                placeholder={t('settings.customMinutes')} min="1"
+                placeholder={t('settings.customMinutes')} min="1" max="1440" inputMode="numeric"
                 onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
-                className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
-              <button onClick={() => { const m = parseInt(customAutoLock); if (m > 0) saveAutoLock(m * 60000); }}
-                className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs">{t('common.save')}</button>
+                className="min-w-0 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+              <button onClick={saveCustomAutoLock}
+                className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
             </div>
           </div>
         )}
@@ -260,21 +313,26 @@ export default function SecurityTab({ onWipe }) {
         </button>
         {showClipboard && (
           <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center justify-between rounded-xl border border-surface-700/60 bg-surface-900/70 px-3 py-2">
+              <span className="text-xs text-surface-400">{t('settings.clipboardCurrent')}</span>
+              <span className="text-sm font-semibold text-brand-300">{formatClipboardTimeout(currentClipboardMs)}</span>
+            </div>
+            <p className="text-xs leading-relaxed text-surface-500">{t('settings.clipboardDesc')}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
               {CLIPBOARD_OPTIONS.map(opt => (
                 <button key={opt.value} onClick={() => saveClipboard(opt.value)}
-                  className="btn-glow px-4 py-2 bg-surface-800 hover:bg-surface-700 text-surface-300 text-xs rounded-lg transition-colors">
+                  className={`btn-glow px-4 py-2 text-xs rounded-lg transition-colors ${currentClipboardMs === opt.value ? 'bg-brand-500/20 text-brand-200 border border-brand-500/50' : 'bg-surface-800 hover:bg-surface-700 text-surface-300 border border-transparent'}`}>
                   {opt.label}
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-[1fr_auto] gap-2">
               <input type="number" value={customClipboard} onChange={e => setCustomClipboard(e.target.value)}
-                placeholder={t('settings.customSeconds')} min="5"
+                placeholder={t('settings.customSeconds')} min="5" max="86400" inputMode="numeric"
                 onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
-                className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
-              <button onClick={() => { const s = parseInt(customClipboard); if (s >= 5) saveClipboard(s * 1000); }}
-                className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs">{t('common.save')}</button>
+                className="min-w-0 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+              <button onClick={saveCustomClipboard}
+                className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
             </div>
           </div>
         )}

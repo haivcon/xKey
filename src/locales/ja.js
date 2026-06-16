@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "保管庫がロックされています",
+    "subtitle": "端末のロックでxKeyを解除してください。",
+    "checking": "端末のセキュリティを確認中...",
+    "setupRequired": "xKeyを使う前に、この端末で画面ロックを設定してください。",
+    "setupTitle": "端末ロックが必要です",
+    "setupBody": "Androidのセキュリティ設定を開き、PIN、パスワード、パターン、指紋、または顔認証を設定してください。その後xKeyに戻って再度ロックを解除します。",
+    "openSettings": "セキュリティ設定を開く",
+    "settingsError": "セキュリティ設定を開けません。",
+    "unlockButton": "端末ロックで解除",
+    "unlocking": "解除中...",
+    "readyTitle": "ロック解除の準備ができました",
+    "readyBody": "現在の端末ロックを使用します: 指紋、顔認証、PIN、パスワード、またはパターン。端末ロックを変更した場合、xKey は保護を自動更新します。",
+    "authCanceled": "認証がキャンセルされました",
+    "unlockFailed": "保管庫を解除できませんでした",
+    "tryAgainHint": "端末ロックを確認して、もう一度ロック解除をタップしてください。",
+    "unrecoverableTitle": "保管庫キーを復元できません",
+    "unrecoverableBody": "端末のセキュリティが変更され、保存済みキーを開けません。.xkey バックアップを復元するか、バックアップがない場合は保管庫をリセットしてください。"
+  },
   "common": {
     "cancel": "キャンセル",
     "save": "保存",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "フォルダ\"{name}\"のすべてのウォレットを削除しますか？",
     "movedToFolder": "フォルダーに移動しました",
     "folders": "フォルダー"
+  },
+  "assetBalance": {
+    "title": "資産残高を編集",
+    "unitLabel": "資産単位",
+    "unitHint": "$、USDT、VND、ポイント、任意のラベルを使用できます。",
+    "filteredCount": "{count} 個のウォレットを表示中",
+    "saved": "資産残高を更新しました",
+    "searchPlaceholder": "ウォレット名、アドレス、ネットワークを検索...",
+    "importCsv": "CSVをインポート",
+    "restoreDraftConfirm": "未保存の残高編集を復元しますか？",
+    "unitConfirm": "資産単位は表示ラベルのみを変更し、為替換算は行いません。続行しますか？",
+    "importCsvError": "CSVには address と balance 列が必要です。",
+    "importedCsv": "{count} 個のウォレットの残高をインポートしました",
+    "filter_all": "すべて",
+    "filter_positive": "残高あり",
+    "filter_zero": "ゼロ",
+    "filter_changed": "変更済み",
+    "changed": "変更済み",
+    "setZero": "0にする",
+    "undo": "元に戻す",
+    "activeCount": "{count} 件有効",
+    "changedCount": "{count} 件変更",
+    "newTotal": "新しい合計"
   },
   "restore": {
     "title": "バックアップを復元",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "セキュリティ",
     "securityDesc": "自動ロック、クリップボード、マスターパスワード",
-    "autoLock": "自動ロック",
-    "autoLockSaved": "保存しました",
-    "customMinutes": "カスタム（分）",
+    "autoLock": "操作しない時間で自動ロック",
+    "autoLockSaved": "自動ロック時間を保存しました",
+    "customMinutes": "カスタム時間（分）",
+    "autoLockRangeError": "1分から24時間までの時間を入力してください。",
+    "autoLockMinutes": "分",
+    "autoLockCurrent": "現在",
+    "autoLockDesc": "この時間アプリを操作しなかった場合、保管庫を自動でロックします。",
     "clipboardClear": "クリップボード自動削除",
-    "clipboardSaved": "保存しました",
-    "customSeconds": "カスタム（秒）",
+    "clipboardSaved": "クリップボード時間を保存しました",
+    "customSeconds": "カスタム時間（秒）",
+    "clipboardMinutes": "分",
+    "clipboardSeconds": "秒",
+    "clipboardNever": "自動削除しない",
+    "clipboardRangeError": "5秒から24時間までを入力するか、∞ を選んで自動削除を無効にしてください。",
+    "clipboardDesc": "xKey は、クリップボードに同じ xKey 値が残っている場合だけ、コピーした機密データを削除します。",
+    "clipboardCurrent": "現在",
     "masterPassword": "マスターパスワード",
     "masterPasswordDesc": "秘密鍵閲覧時の追加保護",
     "setMasterPassword": "設定",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "シェイクしてロック",
     "shakeToLockDesc": "デバイスを振るとすぐにアプリをロックします",
     "shakeSensitivity": "感度",
-
     "shakePermissionDenied": "モーション権限が拒否されました。シェイクしてロックにはセンサーアクセスが必要です。",
-
     "shakeToLockEnabled": "シェイクしてロックを有効にしました",
-
     "shakeToLockDisabled": "シェイクしてロックを無効にしました",
     "high": "高",
     "medium": "中",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "カスタムスケール (%)",
     "liteMode": "軽量モード",
     "liteModeDesc": "低性能端末向けにぼかし効果を無効化します",
-
     "feedback": "フィードバック",
-
     "feedbackDesc": "アプリの音と振動を制御します",
-
     "soundFeedback": "サウンド",
-
-    "vibrationFeedback": "振動"
+    "vibrationFeedback": "振動",
+    "walletDensity": "ウォレット密度",
+    "walletDensityDesc": "ホーム画面のウォレットカードの詰め方を選択します。",
+    "walletDensityComfortable": "標準",
+    "walletDensityCompact": "コンパクト",
+    "walletDensityUltra": "超コンパクト",
+    "activityHistory": "操作履歴",
+    "activityHistoryDesc": "安全な最近の操作と通知です。",
+    "clearHistory": "消去",
+    "noActivityHistory": "操作履歴はまだありません。"
   },
   "createWallet": {
     "title": "ウォレット追加",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "アドレスなし",
     "balanceLabel": "残高",
     "rename": "名前変更",
+    "editBalance": "残高を編集",
     "delete": "削除",
     "edit": "編集",
     "editWallet": "ウォレット編集",
@@ -273,7 +328,7 @@ export default {
     "unpin": "解除",
     "pinned": "ピン留め済",
     "network": "ネットワーク",
-    "clipboardCleared": "削除済み",
+    "clipboardCleared": "クリップボードを削除しました",
     "masterPasswordRequired": "パスワードを入力",
     "masterPasswordWrong": "パスワードが違います",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "著者",
     "thankYou": "ご支援ありがとうございます！",
     "website": "Webサイト",
-    "button": "寄付"
+    "button": "寄付",
+    "network": "ネットワーク",
+    "address": "寄付アドレス",
+    "copyAddress": "アドレスをコピー",
+    "copiedAddress": "アドレスをコピーしました",
+    "networkNote": "XLAYER、ETH、BSC などの EVM ネットワーク"
   },
   "moveWallet": {
     "title": "ウォレットを移動",
@@ -554,6 +614,13 @@ export default {
     "hint": "別のデバイスを使用し、『QRでデータを受信』を選択してスキャンしてください"
   },
   "qr": {
-    "tapToZoom": "QRをタップして拡大"
+    "tapToZoom": "QRをタップして拡大",
+    "share": "共有",
+    "saveImage": "保存",
+    "saved": "保存済み",
+    "sensitiveWarning": "このQRには機密ウォレットデータが含まれます。安全な場所でのみスキャンまたは共有してください。"
+  },
+  "privacyShield": {
+    "subtitle": "非アクティブ時に保護中"
   }
 };

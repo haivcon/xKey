@@ -1,4 +1,23 @@
 export default {
+  "deviceUnlock": {
+    "title": "Kasa kilitli",
+    "subtitle": "xKey’i açmak için cihaz kilidini kullanın.",
+    "checking": "Cihaz güvenliği kontrol ediliyor...",
+    "setupRequired": "xKey’i kullanmadan önce bu cihazda ekran kilidi ayarlayın.",
+    "setupTitle": "Cihaz kilidi gerekli",
+    "setupBody": "Android güvenlik ayarlarını açın ve PIN, parola, desen, parmak izi veya yüz kilidi ayarlayın. Sonra xKey’e dönüp tekrar kilidi açın.",
+    "openSettings": "Güvenlik ayarlarını aç",
+    "settingsError": "Güvenlik ayarları açılamadı.",
+    "unlockButton": "Cihaz kilidiyle aç",
+    "unlocking": "Kilit açılıyor...",
+    "readyTitle": "Kilidi açmaya hazır",
+    "readyBody": "Mevcut cihaz kilidini kullanın: parmak izi, yüz, PIN, parola veya desen. Cihaz kilidini değiştirirseniz xKey korumayı otomatik güncellemeye çalışır.",
+    "authCanceled": "Kimlik doğrulama iptal edildi",
+    "unlockFailed": "Kasa açılamadı",
+    "tryAgainHint": "Cihaz kilidini doğrulayın ve tekrar kilidi açın.",
+    "unrecoverableTitle": "Kasa anahtarı kurtarılamıyor",
+    "unrecoverableBody": "Cihaz güvenliği değişti ve xKey kayıtlı anahtarı açamıyor. Bir .xkey yedeğini geri yükleyin veya yedeğiniz yoksa kasayı sıfırlayın."
+  },
   "common": {
     "cancel": "İptal",
     "save": "Kaydet",
@@ -31,6 +50,29 @@ export default {
     "deleteFolderConfirm": "\"{name}\" klasöründeki tüm cüzdanları sil?",
     "movedToFolder": "Klasöre taşındı",
     "folders": "Klasörler"
+  },
+  "assetBalance": {
+    "title": "Varlık bakiyelerini düzenle",
+    "unitLabel": "Varlık birimi",
+    "unitHint": "$, USDT, VND, puan veya özel bir etiket kullanın.",
+    "filteredCount": "{count} cüzdan gösteriliyor",
+    "saved": "Varlık bakiyeleri güncellendi",
+    "searchPlaceholder": "Cüzdan adı, adres veya ağ ara...",
+    "importCsv": "CSV içe aktar",
+    "restoreDraftConfirm": "Kaydedilmemiş bakiye düzenlemeleri geri yüklensin mi?",
+    "unitConfirm": "Varlık birimi yalnızca etiketi değiştirir, kur dönüşümü yapmaz. Devam edilsin mi?",
+    "importCsvError": "CSV address ve balance sütunlarını içermelidir.",
+    "importedCsv": "{count} cüzdan için bakiyeler içe aktarıldı",
+    "filter_all": "Tümü",
+    "filter_positive": "Bakiyesi var",
+    "filter_zero": "Sıfır",
+    "filter_changed": "Değişti",
+    "changed": "Değişti",
+    "setZero": "0 yap",
+    "undo": "Geri al",
+    "activeCount": "{count} aktif",
+    "changedCount": "{count} değişti",
+    "newTotal": "Yeni toplam"
   },
   "restore": {
     "title": "Yedeği Geri Yükle",
@@ -70,12 +112,22 @@ export default {
     "amoledMode": "AMOLED",
     "security": "Güvenlik",
     "securityDesc": "Auto-lock, clipboard, master password",
-    "autoLock": "Auto-Lock",
-    "autoLockSaved": "Saved",
-    "customMinutes": "Custom (min)",
-    "clipboardClear": "Clipboard Auto-Clear",
-    "clipboardSaved": "Saved",
-    "customSeconds": "Custom (sec)",
+    "autoLock": "Kullanılmadığında otomatik kilitle",
+    "autoLockSaved": "Otomatik kilit süresi kaydedildi",
+    "customMinutes": "Özel süre (dakika)",
+    "autoLockRangeError": "1 dakika ile 24 saat arasında bir süre girin.",
+    "autoLockMinutes": "dk",
+    "autoLockCurrent": "Geçerli",
+    "autoLockDesc": "Uygulama bu süre boyunca kullanılmazsa kasayı otomatik olarak kilitler.",
+    "clipboardClear": "Panoyu otomatik temizle",
+    "clipboardSaved": "Pano süresi kaydedildi",
+    "customSeconds": "Özel süre (saniye)",
+    "clipboardMinutes": "dk",
+    "clipboardSeconds": "sn",
+    "clipboardNever": "Otomatik temizleme",
+    "clipboardRangeError": "5 saniye ile 24 saat arası girin veya otomatik temizlemeyi kapatmak için ∞ seçin.",
+    "clipboardDesc": "xKey, kopyalanan hassas veriyi yalnızca panoda aynı xKey değeri duruyorsa temizler.",
+    "clipboardCurrent": "Geçerli",
     "masterPassword": "Master Password",
     "masterPasswordDesc": "Extra protection for viewing keys",
     "setMasterPassword": "Set",
@@ -98,11 +150,8 @@ export default {
     "shakeToLockTitle": "Kilitlemek için Salla",
     "shakeToLockDesc": "Cihazı salladığınızda uygulamayı hemen kilitleyin",
     "shakeSensitivity": "Hassasiyet",
-
     "shakePermissionDenied": "Hareket izni reddedildi. Kilitlemek için Salla sensör erişimi olmadan çalışamaz.",
-
     "shakeToLockEnabled": "Kilitlemek için Salla açık",
-
     "shakeToLockDisabled": "Kilitlemek için Salla kapalı",
     "high": "Yüksek",
     "medium": "Orta",
@@ -144,14 +193,19 @@ export default {
     "displayScaleCustom": "Özel ölçek (%)",
     "liteMode": "Hafif mod",
     "liteModeDesc": "Düşük güçlü cihazlar için bulanıklığı kapatır",
-
     "feedback": "Geri bildirim",
-
     "feedbackDesc": "Uygulama sesi ve titreşimini kontrol edin",
-
     "soundFeedback": "Ses",
-
-    "vibrationFeedback": "Titreşim"
+    "vibrationFeedback": "Titreşim",
+    "walletDensity": "Cüzdan yoğunluğu",
+    "walletDensityDesc": "Ana ekranda cüzdan kartlarının ne kadar sıkı görüneceğini seçin.",
+    "walletDensityComfortable": "Rahat",
+    "walletDensityCompact": "Kompakt",
+    "walletDensityUltra": "Ultra",
+    "activityHistory": "Etkinlik geçmişi",
+    "activityHistoryDesc": "Son güvenli uygulama işlemleri ve bildirimler.",
+    "clearHistory": "Temizle",
+    "noActivityHistory": "Henüz etkinlik yok."
   },
   "createWallet": {
     "title": "Cüzdan Ekle",
@@ -256,6 +310,7 @@ export default {
     "noAddress": "Adres Yok",
     "balanceLabel": "Bakiye",
     "rename": "Yeniden Adlandır",
+    "editBalance": "Bakiyeyi düzenle",
     "delete": "Sil",
     "edit": "Düzenle",
     "editWallet": "Cüzdanı Düzenle",
@@ -273,7 +328,7 @@ export default {
     "unpin": "Unpin",
     "pinned": "Pinned",
     "network": "Network",
-    "clipboardCleared": "Clipboard cleared",
+    "clipboardCleared": "Pano temizlendi",
     "masterPasswordRequired": "Enter master password",
     "masterPasswordWrong": "Wrong password",
     "changeNetwork": "Change network",
@@ -526,7 +581,12 @@ export default {
     "author": "Yazar",
     "thankYou": "Desteğiniz için teşekkür ederim!",
     "website": "Web sitesi",
-    "button": "Bağış yap"
+    "button": "Bağış yap",
+    "network": "Ağ",
+    "address": "Bağış adresi",
+    "copyAddress": "Adresi kopyala",
+    "copiedAddress": "Adres kopyalandı",
+    "networkNote": "XLAYER, ETH, BSC ve diğer EVM ağları"
   },
   "moveWallet": {
     "title": "Cüzdanı Taşı",
@@ -554,6 +614,13 @@ export default {
     "hint": "Başka bir cihaz kullanın ve taramak için 'Veriyi QR ile al'ı seçin"
   },
   "qr": {
-    "tapToZoom": "Büyütmek için QR koduna dokunun"
+    "tapToZoom": "Büyütmek için QR koduna dokunun",
+    "share": "Paylaş",
+    "saveImage": "Kaydet",
+    "saved": "Kaydedildi",
+    "sensitiveWarning": "Bu QR hassas cüzdan verileri içerir. Yalnızca özel bir yerde tarayın veya paylaşın."
+  },
+  "privacyShield": {
+    "subtitle": "Pasifken korunuyor"
   }
 };
