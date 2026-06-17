@@ -1,16 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
-const LETTERS = ['x', 'K', 'e', 'y'];
 const LETTER_DELAY = 250;   // ms between each letter
 const HOLD_DURATION = 800;  // ms to hold after all visible
 const FADE_DURATION = 500;  // ms for fade-out
 
 export default function AnimatedSplash({ onFinish }) {
-  const [visibleCount, setVisibleCount] = useState(0); // 0..3 (4 letters)
+  const [visibleCount, setVisibleCount] = useState(0);
   const [fading, setFading] = useState(false);
+  const [channel, setChannel] = useState('web');
 
   useEffect(() => {
-    const total = LETTERS.length;
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cancelled = false;
+    CapacitorApp.getInfo()
+      .then((info) => {
+        if (cancelled) return;
+        setChannel(info?.id?.endsWith('.github') ? 'github' : 'play');
+      })
+      .catch(() => {
+        if (!cancelled) setChannel('play');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const brandText = channel === 'github' ? 'xKey Github' : 'xKey';
+  const letters = useMemo(() => Array.from(brandText), [brandText]);
+
+  useEffect(() => {
+    const total = letters.length;
     let step = 0;
     let timer;
 
@@ -35,16 +58,17 @@ export default function AnimatedSplash({ onFinish }) {
     timer = setTimeout(showNext, 300);
 
     return () => clearTimeout(timer);
-  }, [onFinish]);
+  }, [letters.length, onFinish]);
 
   const renderChar = (char, index) => {
     const isVisible = index < visibleCount;
     const isJustAppeared = index === visibleCount - 1;
+    const isSpace = char === ' ';
 
     return (
       <span
         key={index}
-        className="splash-letter"
+        className={`splash-letter${isSpace ? ' splash-letter-space' : ''}`}
         style={{
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.5)',
@@ -56,10 +80,12 @@ export default function AnimatedSplash({ onFinish }) {
               : 'none',
         }}
       >
-        {char}
+        {isSpace ? '\u00A0' : char}
       </span>
     );
   };
+
+  const badgeVisible = visibleCount >= letters.length;
 
   return (
     <div
@@ -72,8 +98,26 @@ export default function AnimatedSplash({ onFinish }) {
       {/* Subtle radial glow behind text */}
       <div className="splash-glow" />
 
-      <div className="splash-text">
-        {LETTERS.map((ch, i) => renderChar(ch, i))}
+      <div className="splash-brand-stack">
+        <img src="/logo.png" alt="" className="splash-logo" />
+        <div className="splash-text">
+          {letters.map((ch, i) => renderChar(ch, i))}
+        </div>
+        {channel === 'github' ? (
+          <div className={`splash-channel-badge splash-channel-github${badgeVisible ? ' is-visible' : ''}`}>
+            <span className="splash-github-mark" aria-hidden="true">Git</span>
+            <span>GitHub build</span>
+          </div>
+        ) : channel === 'play' ? (
+          <div className={`splash-channel-badge splash-channel-play${badgeVisible ? ' is-visible' : ''}`}>
+            <span className="splash-play-mark" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span>Google Play</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );
