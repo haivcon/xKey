@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import { useT } from './LanguageContext';
 
 const ConfirmContext = createContext(null);
@@ -12,30 +12,60 @@ function ConfirmDialog({ state, onAnswer }) {
   const t = useT();
   if (!state) return null;
 
+  const tone = state.danger
+    ? {
+        iconWrap: 'bg-red-500/10 border-red-500/20',
+        icon: 'text-red-400',
+        confirm: 'btn-glow-danger bg-red-600 hover:bg-red-500 text-white',
+        ring: 'shadow-[0_20px_70px_rgba(239,68,68,0.16)]'
+      }
+    : {
+        iconWrap: 'bg-amber-500/10 border-amber-500/20',
+        icon: 'text-amber-400',
+        confirm: 'bg-brand-600 hover:bg-brand-500 text-white',
+        ring: 'shadow-[0_20px_70px_rgba(14,165,233,0.14)]'
+      };
+  const Icon = state.danger ? AlertTriangle : ShieldCheck;
+
   return (
-    <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-slide-down">
-      <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl p-6">
-        <div className="flex items-start gap-3 mb-6">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${state.danger ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
-            {state.danger
-              ? <AlertTriangle size={20} className="text-red-400" />
-              : <ShieldCheck size={20} className="text-amber-400" />
-            }
+    <div className="app-scaled-icons fixed inset-0 z-[210] flex items-center justify-center bg-black/65 p-3 backdrop-blur-md animate-slide-down sm:p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`w-full max-w-[min(92dvw,28rem)] overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 ${tone.ring}`}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-surface-800 p-4 sm:p-5">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border ${tone.iconWrap}`}>
+              <Icon size={21} className={tone.icon} />
+            </div>
+            <div className="min-w-0 pt-0.5">
+              <h3 className="text-base font-bold leading-snug text-white">{state.title || (state.danger ? t('common.warning') : t('common.confirm'))}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-surface-300">{state.message}</p>
+            </div>
           </div>
-          <p className="text-white text-sm leading-relaxed pt-2">{state.message}</p>
-        </div>
-        <div className="flex gap-3">
           <button
             onClick={() => onAnswer(false)}
-            className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 font-medium py-2.5 rounded-lg transition-colors"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+            aria-label={t('common.cancel')}
           >
-            {t('common.cancel')}
+            <X size={18} />
           </button>
+        </div>
+        <div className={`grid gap-3 p-4 sm:p-5 ${state.hideCancel ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {!state.hideCancel && (
+            <button
+              onClick={() => onAnswer(false)}
+              className="btn-glow rounded-xl border border-surface-700 bg-surface-800 px-4 py-3 text-sm font-semibold text-surface-200 transition-colors hover:bg-surface-700"
+            >
+              {state.cancelText || t('common.cancel')}
+            </button>
+          )}
           <button
             onClick={() => onAnswer(true)}
-            className={`btn-glow flex-1 font-medium py-2.5 rounded-lg transition-colors ${state.danger ? 'btn-glow-danger bg-red-600 hover:bg-red-500 text-white' : 'bg-brand-600 hover:bg-brand-500 text-white'}`}
+            className={`btn-glow rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${tone.confirm}`}
           >
-            {t('common.confirm')}
+            {state.confirmText || t('common.confirm')}
           </button>
         </div>
       </div>
@@ -46,9 +76,9 @@ function ConfirmDialog({ state, onAnswer }) {
 export function ConfirmProvider({ children }) {
   const [state, setState] = useState(null);
 
-  const confirm = useCallback((message, { danger = false } = {}) => {
+  const confirm = useCallback((message, { danger = false, title, confirmText, cancelText, hideCancel = false } = {}) => {
     return new Promise(resolve => {
-      setState({ message, resolve, danger });
+      setState({ message, resolve, danger, title, confirmText, cancelText, hideCancel });
     });
   }, []);
 

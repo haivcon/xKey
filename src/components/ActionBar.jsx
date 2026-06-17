@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
+import { readClipboard } from '../utils/clipboard';
 
 const QRScannerModal = lazy(() => import('./QRScannerModal'));
 
@@ -63,7 +64,7 @@ export default function ActionBar({
 
   const handlePasteSearch = async () => {
     try {
-      const text = await navigator.clipboard.readText();
+      const text = await readClipboard();
       if (text) onSearchChange(extractSearchTarget(text));
     } catch {
       // Clipboard read can be denied by the browser; the input remains usable.
@@ -176,7 +177,18 @@ export default function ActionBar({
         <div className="relative min-w-0 flex-1">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
           <input type="text" placeholder={t('actionBar.searchPlaceholder')} value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
-            className="h-12 w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-11 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500" />
+            className="h-12 w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-20 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500" />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              className="absolute right-10 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+              title={t('actionBar.clearSearch')}
+              aria-label={t('actionBar.clearSearch')}
+            >
+              <X size={16} />
+            </button>
+          )}
           <button
             type="button"
             onClick={handlePasteSearch}

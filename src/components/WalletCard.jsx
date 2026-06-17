@@ -54,6 +54,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const addressClass = isUltraCompact ? 'text-[0.72rem]' : isCompact ? 'text-[0.8rem]' : 'text-sm';
   const actionButtonClass = isUltraCompact ? 'p-1.5' : 'p-2';
   const actionIconSize = isUltraCompact ? 16 : 18;
+  const isNewWallet = wallet.newUntil ? wallet.newUntil > Date.now() : !!wallet.isNew;
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
@@ -181,7 +182,13 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   );
 
   return (
-    <div className={`glass-card overflow-hidden border transition-all relative ${isSelected ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5' : 'border-surface-700 hover:border-brand-500/30'}`}>
+    <div className={`glass-card overflow-hidden border transition-all relative ${
+      isSelected
+        ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5'
+        : isNewWallet
+          ? 'border-emerald-400/70 shadow-[0_0_0_1px_rgba(52,211,153,0.35),0_0_28px_rgba(52,211,153,0.22)] bg-emerald-500/5'
+          : 'border-surface-700 hover:border-brand-500/30'
+    }`}>
       <div className={`${cardPadding} flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50`}
         onClick={() => {
           if (selectionMode) {
@@ -221,6 +228,11 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   >
                     {NETWORK_COLORS[wallet.network].label}
                   </button>
+                )}
+                {isNewWallet && (
+                  <span className={`${isUltraCompact ? 'text-[0.5rem] px-1.5 py-px' : 'text-[0.55rem] px-1.5 py-[0.0625rem]'} rounded-full border border-emerald-400/60 bg-emerald-500/12 font-black uppercase leading-none tracking-wide text-emerald-300 shadow-[0_0_14px_rgba(52,211,153,0.18)]`}>
+                    {t('walletCard.new')}
+                  </span>
                 )}
               </div>
             )}

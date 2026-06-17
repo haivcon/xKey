@@ -6,7 +6,7 @@ import './index.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useT } from './contexts/LanguageContext';
 import { MasterPasswordProvider } from './contexts/MasterPasswordContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -63,20 +63,27 @@ function Boot() {
   return <AppComponent />;
 }
 
+function LocalizedErrorBoundary({ children }) {
+  const t = useT();
+  return <ErrorBoundary t={t}>{children}</ErrorBoundary>;
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <HashRouter>
         <LanguageProvider>
-          <ThemeProvider>
-            <MasterPasswordProvider>
-              <ToastProvider>
-                <ConfirmProvider>
-                  <Boot />
-                </ConfirmProvider>
-              </ToastProvider>
-            </MasterPasswordProvider>
-          </ThemeProvider>
+          <LocalizedErrorBoundary>
+            <ThemeProvider>
+              <MasterPasswordProvider>
+                <ToastProvider>
+                  <ConfirmProvider>
+                    <Boot />
+                  </ConfirmProvider>
+                </ToastProvider>
+              </MasterPasswordProvider>
+            </ThemeProvider>
+          </LocalizedErrorBoundary>
         </LanguageProvider>
       </HashRouter>
     </ErrorBoundary>

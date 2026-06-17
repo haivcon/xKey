@@ -7,7 +7,7 @@ import { Component } from 'react';
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, showDetails: false };
+    this.state = { hasError: false, error: null, showDetails: false, showResetConfirm: false };
   }
 
   static getDerivedStateFromError(error) {
@@ -23,21 +23,20 @@ export default class ErrorBoundary extends Component {
   };
 
   handleReset = async () => {
-    if (window.confirm('This will DELETE all vault data permanently. Are you sure?')) {
-      try {
-        const { wipeAllData } = await import('../utils/storage');
-        await wipeAllData();
-      } catch (error) {
-        console.error('Failed to wipe vault data', error);
-      }
-      window.location.reload();
+    try {
+      const { wipeAllData } = await import('../utils/storage');
+      await wipeAllData();
+    } catch (error) {
+      console.error('Failed to wipe vault data', error);
     }
+    window.location.reload();
   };
 
   render() {
     if (!this.state.hasError) return this.props.children;
 
-    const { error, showDetails } = this.state;
+    const { error, showDetails, showResetConfirm } = this.state;
+    const t = this.props.t || ((key) => key);
 
     return (
       <div style={{
@@ -53,31 +52,31 @@ export default class ErrorBoundary extends Component {
           }}>
             ⚠️
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">{this.props.t?.('common.error') || 'Something went wrong'}</h2>
+          <h2 className="text-xl font-bold text-white mb-2">{t('common.error') || 'Something went wrong'}</h2>
           <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5' }}>
-            {this.props.t?.('common.errorDesc') || 'xKey encountered an unexpected error. Your data is safe — try reloading the app.'}
+            {t('common.errorDesc') || 'xKey encountered an unexpected error. Your data is safe. Try reloading the app.'}
           </p>
 
           <button onClick={this.handleReload} style={{
             width: '100%', padding: '12px', borderRadius: '10px', border: 'none', cursor: 'pointer',
             background: '#0ea5e9', color: '#fff', fontWeight: '600', fontSize: '14px', marginBottom: '10px'
           }}>
-              {this.props.t?.('common.reload') || 'Reload App'}
+              {t('common.reload') || 'Reload App'}
           </button>
 
-          <button onClick={this.handleReset} style={{
+          <button onClick={() => this.setState({ showResetConfirm: true })} style={{
             width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.3)',
             background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: '600', fontSize: '14px',
             cursor: 'pointer', marginBottom: '16px'
           }}>
-              {this.props.t?.('authError.wipeReset') || 'Wipe & Reset (Last Resort)'}
+              {t('authError.wipeReset') || 'Wipe & Reset (Last Resort)'}
           </button>
 
           <button onClick={() => this.setState({ showDetails: !showDetails })} style={{
             background: 'none', border: 'none', color: '#64748b', fontSize: '12px', cursor: 'pointer',
             textDecoration: 'underline'
           }}>
-            {showDetails ? 'Hide Details' : 'Show Error Details'}
+            {showDetails ? t('common.hideDetails') : t('common.showDetails')}
           </button>
 
           {showDetails && (
@@ -92,6 +91,41 @@ export default class ErrorBoundary extends Component {
             </pre>
           )}
         </div>
+
+        {showResetConfirm && (
+          <div style={{
+            position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)', padding: '16px', zIndex: 9999
+          }}>
+            <div style={{
+              width: 'min(92vw, 420px)', background: '#0f1115', border: '1px solid #2a2f3d',
+              borderRadius: '18px', overflow: 'hidden', boxShadow: '0 24px 80px rgba(239,68,68,0.18)'
+            }}>
+              <div style={{ padding: '20px', borderBottom: '1px solid #1f232e', textAlign: 'left' }}>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginBottom: '8px' }}>
+                  {t('common.warning') || 'Warning'}
+                </div>
+                <div style={{ fontSize: '14px', lineHeight: 1.5, color: '#d1d5db' }}>
+                  {t('common.resetWarningBody') || 'This will DELETE all vault data permanently. Are you sure?'}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '16px' }}>
+                <button
+                  onClick={() => this.setState({ showResetConfirm: false })}
+                  style={{ padding: '12px', borderRadius: '12px', border: '1px solid #2a2f3d', background: '#161921', color: '#d1d5db', fontWeight: 700 }}
+                >
+                  {t('common.cancel') || 'Cancel'}
+                </button>
+                <button
+                  onClick={this.handleReset}
+                  style={{ padding: '12px', borderRadius: '12px', border: 'none', background: '#dc2626', color: '#fff', fontWeight: 800 }}
+                >
+                  {t('common.confirm') || 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -1,10 +1,14 @@
-import { useState, useMemo, useCallback } from 'react';
-import { saveWallets } from '../utils/storage';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Preferences } from '@capacitor/preferences';
+import { decryptSetting, encryptSetting, saveWallets } from '../utils/storage';
 import { hapticTap } from '../utils/haptics';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useT } from '../contexts/LanguageContext';
 import { parseAmount } from '../utils/amountFormat';
+
+const CUSTOM_FOLDERS_KEY = 'xkey_custom_folders';
+const DECOY_CUSTOM_FOLDERS_KEY = 'xkey_decoy_custom_folders';
 
 /**
  * Hook encapsulating all wallet CRUD operations.
@@ -16,15 +20,45 @@ export default function useWallets(aesKey, isDecoyMode) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('none');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [customFolders, setCustomFolders] = useState([]);
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
   const t = useT();
 
+  useEffect(() => {
+    const storageKey = isDecoyMode ? DECOY_CUSTOM_FOLDERS_KEY : CUSTOM_FOLDERS_KEY;
+    if (!aesKey) return;
+    setCustomFolders([]);
+    Preferences.get({ key: storageKey })
+      .then(({ value }) => {
+        if (!value) {
+          setCustomFolders([]);
+          return;
+        }
+        const decoded = decryptSetting(value, aesKey);
+        const parsed = JSON.parse(decoded);
+        if (Array.isArray(parsed)) {
+          setCustomFolders(parsed.filter(Boolean));
+        }
+      })
+      .catch(() => {
+        setCustomFolders([]);
+      });
+  }, [aesKey, isDecoyMode]);
+
+  const persistCustomFolders = useCallback(async (nextFolders) => {
+    const normalized = [...new Set(nextFolders.map(f => String(f || '').trim()).filter(Boolean))];
+    setCustomFolders(normalized);
+    const storageKey = isDecoyMode ? DECOY_CUSTOM_FOLDERS_KEY : CUSTOM_FOLDERS_KEY;
+    await Preferences.set({ key: storageKey, value: encryptSetting(JSON.stringify(normalized), aesKey) });
+    return normalized;
+  }, [aesKey, isDecoyMode]);
+
   // Derived: folder list
   const folders = useMemo(
-    () => ['All', ...new Set(wallets.map(w => w.groupId || 'Imported'))],
-    [wallets]
+    () => ['All', ...new Set([...customFolders, ...wallets.map(w => w.groupId || 'Imported')])],
+    [wallets, customFolders]
   );
 
   // Derived: filtered & sorted wallets
@@ -117,17 +151,48 @@ export default function useWallets(aesKey, isDecoyMode) {
     const ok = await showConfirm(t('home.deleteFolderConfirm', { name: folderName }), { danger: true });
     if (!ok) return;
     const updated = wallets.filter(w => (w.groupId || 'Imported') !== folderName);
-    await persist(updated);
+    await Promise.all([
+      persist(updated),
+      persistCustomFolders(customFolders.filter(f => f !== folderName))
+    ]);
     setActiveFolder('All');
     showToast(t('home.folderDeleted', { name: folderName }), 'info');
-  }, [wallets, persist, showConfirm, showToast, t]);
+  }, [wallets, persist, persistCustomFolders, customFolders, showConfirm, showToast, t]);
 
   const handleRenameFolder = useCallback(async (oldName, newName) => {
-    if (!newName || newName === oldName) return;
-    const updated = wallets.map(w => (w.groupId || 'Imported') === oldName ? { ...w, groupId: newName } : w);
-    await persist(updated);
-    if (activeFolder === oldName) setActiveFolder(newName);
-  }, [wallets, persist, activeFolder]);
+    const trimmed = String(newName || '').trim();
+    if (!trimmed || trimmed === oldName || trimmed === 'All') return;
+    if (folders.some(f => f !== oldName && f.toLowerCase() === trimmed.toLowerCase())) {
+      showToast(t('home.folderExists', { name: trimmed }), 'warning');
+      return;
+    }
+    const updated = wallets.map(w => (w.groupId || 'Imported') === oldName ? { ...w, groupId: trimmed } : w);
+    const renamedCustomFolders = customFolders.map(f => f === oldName ? trimmed : f);
+    if (!renamedCustomFolders.includes(trimmed) && wallets.every(w => (w.groupId || 'Imported') !== oldName)) {
+      renamedCustomFolders.push(trimmed);
+    }
+    await Promise.all([
+      persist(updated),
+      persistCustomFolders(renamedCustomFolders)
+    ]);
+    if (activeFolder === oldName) setActiveFolder(trimmed);
+  }, [wallets, persist, persistCustomFolders, customFolders, activeFolder, folders, showToast, t]);
+
+  const handleCreateFolder = useCallback(async (folderName) => {
+    const trimmed = String(folderName || '').trim();
+    if (!trimmed || trimmed === 'All') {
+      showToast(t('home.folderInvalid'), 'warning');
+      return false;
+    }
+    if (folders.some(f => f.toLowerCase() === trimmed.toLowerCase())) {
+      showToast(t('home.folderExists', { name: trimmed }), 'warning');
+      return false;
+    }
+    await persistCustomFolders([...customFolders, trimmed]);
+    setActiveFolder(trimmed);
+    showToast(t('home.folderCreated', { name: trimmed }), 'success');
+    return true;
+  }, [folders, customFolders, persistCustomFolders, showToast, t]);
 
   const handleRenameWallet = useCallback(async (wallet, newName) => {
     const updated = wallets.map(w => {
@@ -156,15 +221,19 @@ export default function useWallets(aesKey, isDecoyMode) {
   const handleSaveWallet = useCallback(async (newWalletData) => {
     const newWalletsArr = Array.isArray(newWalletData) ? newWalletData : [newWalletData];
     const folder = activeFolder !== 'All' ? activeFolder : 'Created';
+    const now = Date.now();
     const processed = newWalletsArr.map(w => ({
       ...w,
       groupId: w.groupId || folder,
       network: w.network || 'ETH',
       pinned: false,
-      createdAt: w.createdAt || Date.now()
+      createdAt: w.createdAt || now,
+      isNew: true,
+      newUntil: now + 24 * 60 * 60 * 1000
     }));
     const updated = [...processed, ...wallets];
     await persist(updated);
+    return processed;
   }, [wallets, persist, activeFolder]);
 
   const handleTogglePin = useCallback(async (wallet) => {
@@ -177,13 +246,19 @@ export default function useWallets(aesKey, isDecoyMode) {
   }, [wallets, persist]);
 
   const handleMoveWallet = useCallback(async (wallet, newFolder) => {
+    const targetFolder = String(newFolder || '').trim();
+    if (!targetFolder) return;
     const updated = wallets.map(w => {
-      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: newFolder } : w;
-      return (w === wallet) ? { ...w, groupId: newFolder } : w;
+      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: targetFolder } : w;
+      return (w === wallet) ? { ...w, groupId: targetFolder } : w;
     });
-    await persist(updated);
-    showToast(t('home.movedToFolder', { folder: newFolder }), 'success');
-  }, [wallets, persist, showToast, t]);
+    const shouldRememberFolder = !folders.some(f => f.toLowerCase() === targetFolder.toLowerCase());
+    await Promise.all([
+      persist(updated),
+      shouldRememberFolder ? persistCustomFolders([...customFolders, targetFolder]) : Promise.resolve()
+    ]);
+    showToast(t('home.movedToFolder', { folder: targetFolder }), 'success');
+  }, [wallets, persist, folders, customFolders, persistCustomFolders, showToast, t]);
 
   const handleReorderWallet = useCallback(async (oldIndex, newIndex) => {
     // Reorder within the full wallets array based on filteredWallets positions
@@ -212,7 +287,7 @@ export default function useWallets(aesKey, isDecoyMode) {
     handleDeleteWallet, handleDeleteWalletDirect,
     handleDeleteFolder, handleRenameFolder,
     handleRenameWallet, handleEditWallet,
-    handleBulkNetworkChange, handleSaveWallet,
+    handleBulkNetworkChange, handleCreateFolder, handleSaveWallet,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   };
 }

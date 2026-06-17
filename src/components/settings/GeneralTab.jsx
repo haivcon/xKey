@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone, Rows3, Clock3, Trash2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
@@ -13,6 +13,7 @@ import {
 import DonateModal from '../DonateModal';
 import useLiteMode from '../../hooks/useLiteMode';
 import { clearActionHistory, getActionHistory } from '../../utils/actionHistory';
+import { useConfirm } from '../../contexts/ConfirmContext';
 
 const THEME_OPTIONS = [
   { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo' },
@@ -38,21 +39,30 @@ const clampDisplayScale = (value) => {
 export default function GeneralTab() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showDonate, setShowDonate] = useState(false);
+  const [draftScale, setDraftScale] = useState(null);
   const [scaleInput, setScaleInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
   const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
   const [actionHistory, setActionHistory] = useState([]);
+  const scaleConfirmingRef = useRef(false);
 
   const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity } = useTheme();
   const t = useT();
+  const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
   const currentLang = LANGUAGES.find(l => l.code === lang);
   const { isLiteMode, toggleLiteMode } = useLiteMode();
-  const scaleProgress = ((displayScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
+  const visibleScale = draftScale ?? displayScale;
+  const scaleProgress = ((visibleScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
 
   useEffect(() => {
+    setDraftScale(displayScale);
     if (!isScaleInputFocused) setScaleInput(String(displayScale));
   }, [displayScale, isScaleInputFocused]);
+
+  useEffect(() => {
+    if (!isScaleInputFocused) setScaleInput(String(visibleScale));
+  }, [visibleScale, isScaleInputFocused]);
 
   useEffect(() => {
     let mounted = true;
@@ -65,17 +75,50 @@ export default function GeneralTab() {
     };
   }, []);
 
+  const requestScaleChange = async (value) => {
+    const nextScale = clampDisplayScale(value);
+    setDraftScale(nextScale);
+    setScaleInput(String(nextScale));
+
+    if (nextScale === displayScale) return;
+    if (scaleConfirmingRef.current) return;
+
+    scaleConfirmingRef.current = true;
+    const ok = await showConfirm(
+      t('settings.displayScaleConfirmMessage', { from: displayScale, to: nextScale }),
+      {
+        title: t('settings.displayScaleConfirmTitle'),
+        confirmText: t('settings.applyScale'),
+        cancelText: t('common.cancel')
+      }
+    );
+    scaleConfirmingRef.current = false;
+
+    if (ok) {
+      setDisplayScale(nextScale);
+      hapticSuccess();
+      return;
+    }
+
+    setDraftScale(displayScale);
+    setScaleInput(String(displayScale));
+  };
+
   const commitScaleInput = () => {
     if (scaleInput.trim() === '') {
       setScaleInput(String(displayScale));
+      setDraftScale(displayScale);
       setIsScaleInputFocused(false);
       return;
     }
 
     const nextScale = clampDisplayScale(scaleInput);
-    setDisplayScale(nextScale);
-    setScaleInput(String(nextScale));
     setIsScaleInputFocused(false);
+    requestScaleChange(nextScale);
+  };
+
+  const commitScaleDraft = (value = visibleScale) => {
+    requestScaleChange(value);
   };
 
   const toggleFeedback = async (type) => {
@@ -196,7 +239,7 @@ export default function GeneralTab() {
               <button
                 key={scale}
                 type="button"
-                onClick={() => { hapticTap(); setDisplayScale(scale); }}
+                onClick={() => { hapticTap(); requestScaleChange(scale); }}
                 className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
                   active
                     ? 'border-brand-500/50 bg-brand-500/15 text-white shadow-sm shadow-brand-500/10'
@@ -225,8 +268,15 @@ export default function GeneralTab() {
               min={MIN_DISPLAY_SCALE}
               max={MAX_DISPLAY_SCALE}
               step="5"
-              value={displayScale}
-              onChange={(e) => setDisplayScale(e.target.value)}
+              value={visibleScale}
+              onChange={(e) => {
+                const nextScale = clampDisplayScale(e.target.value);
+                setDraftScale(nextScale);
+                if (!isScaleInputFocused) setScaleInput(String(nextScale));
+              }}
+              onPointerUp={(e) => commitScaleDraft(e.currentTarget.value)}
+              onTouchEnd={(e) => commitScaleDraft(e.currentTarget.value)}
+              onBlur={(e) => commitScaleDraft(e.currentTarget.value)}
               style={{ '--scale-progress': `${scaleProgress}%` }}
               className="scale-range"
             />
@@ -243,7 +293,7 @@ export default function GeneralTab() {
                 }}
                 onFocus={() => {
                   setIsScaleInputFocused(true);
-                  setScaleInput(String(displayScale));
+                  setScaleInput(String(visibleScale));
                 }}
                 onBlur={commitScaleInput}
                 onKeyDown={(e) => {

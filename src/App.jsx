@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
 import {
-  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart
+  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart, FolderPlus
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -53,6 +53,7 @@ import useBackButton from './hooks/useBackButton';
 import useShakeToLock from './hooks/useShakeToLock';
 import useBatchSelect from './hooks/useBatchSelect';
 import useLiteMode from './hooks/useLiteMode';
+import useAppVersion from './hooks/useAppVersion';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
@@ -103,10 +104,13 @@ export default function App() {
   // Folder editing
   const [editingFolder, setEditingFolder] = useState(null);
   const [editFolderName, setEditFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   const t = useT();
   const { showToast } = useToast() || {};
   const showConfirm = useConfirm();
+  const appVersion = useAppVersion();
 
   // ─── Custom Hooks ───
   const {
@@ -119,7 +123,7 @@ export default function App() {
     handleDeleteWallet, handleDeleteWalletDirect,
     handleDeleteFolder, handleRenameFolder,
     handleRenameWallet, handleEditWallet,
-    handleBulkNetworkChange, handleSaveWallet,
+    handleBulkNetworkChange, handleCreateFolder, handleSaveWallet,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   } = useWallets(aesKey, isDecoyMode);
   const totalBalanceText = formatAssetValue(totalBalance, assetUnit);
@@ -136,7 +140,7 @@ export default function App() {
     Preferences.set({ key: ASSET_UNIT_KEY, value: nextUnit }).catch(() => {});
   }, []);
 
-  const handleSaveAssetBalances = useCallback(async (changes) => {
+  const handleSaveAssetBalances = useCallback(async (changes, options = {}) => {
     const changeMap = new Map(changes.map(change => [change.wallet, change.balance]));
     const idMap = new Map(changes.filter(change => change.wallet._id).map(change => [change.wallet._id, change.balance]));
     const updated = wallets.map(wallet => {
@@ -146,10 +150,45 @@ export default function App() {
     });
     setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
-    hapticSuccess();
-    showToast?.(t('assetBalance.saved'), 'success');
-    setShowAssetBalance(false);
+    if (!options.silent) {
+      hapticSuccess();
+      showToast?.(t('assetBalance.saved'), 'success');
+      setShowAssetBalance(false);
+    }
   }, [wallets, setWallets, aesKey, isDecoyMode, showToast, t]);
+
+  const handleCreateWalletSave = useCallback(async (walletData) => {
+    const savedWallets = await handleSaveWallet(walletData);
+    const firstSaved = Array.isArray(savedWallets) ? savedWallets[0] : savedWallets;
+    if (firstSaved?.groupId) {
+      setActiveFolder(firstSaved.groupId);
+      setSearchQuery('');
+      setActiveFilter('all');
+      setSortOrder('none');
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+    return savedWallets;
+  }, [handleSaveWallet, setActiveFolder, setSearchQuery, setActiveFilter, setSortOrder]);
+
+  const startCreateFolder = useCallback(() => {
+    setEditingFolder(null);
+    setNewFolderName('');
+    setCreatingFolder(true);
+  }, []);
+
+  const finishCreateFolder = useCallback(async (name) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) {
+      setCreatingFolder(false);
+      setNewFolderName('');
+      return;
+    }
+    const created = await handleCreateFolder(trimmed);
+    if (created) {
+      setCreatingFolder(false);
+      setNewFolderName('');
+    }
+  }, [handleCreateFolder]);
 
   useEffect(() => {
     const header = homeHeaderRef.current;
@@ -430,12 +469,17 @@ export default function App() {
         {/* Header */}
         <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
           <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center">
+          <div className="relative flex justify-between items-center">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
               <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1">
                 {t('home.title')}
               </h1>
+            </div>
+            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="whitespace-nowrap rounded-full border border-brand-500/25 bg-brand-500/10 px-[0.625rem] py-[0.25rem] text-[0.625rem] font-semibold leading-none text-brand-200 shadow-sm shadow-brand-500/10 sm:px-[0.75rem] sm:text-[0.6875rem]">
+                {appVersion.version}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title="Donate">
@@ -453,6 +497,34 @@ export default function App() {
 
           {wallets.length === 0 ? (
             <div className="space-y-4 mt-10 max-w-2xl mx-auto">
+              <div className="glass-card p-3">
+                {creatingFolder ? (
+                  <input
+                    autoFocus
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onBlur={() => finishCreateFolder(newFolderName)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') finishCreateFolder(newFolderName);
+                      if (e.key === 'Escape') {
+                        setCreatingFolder(false);
+                        setNewFolderName('');
+                      }
+                    }}
+                    placeholder={t('moveWallet.newFolderName')}
+                    className="w-full rounded-xl border border-brand-500 bg-surface-800 px-4 py-3 text-sm font-medium text-white outline-none placeholder:text-surface-500"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { hapticTap(); startCreateFolder(); }}
+                    className="btn-glow flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-surface-700 bg-surface-900 px-4 py-3 text-sm font-semibold text-surface-300 transition-colors hover:border-brand-400/60 hover:bg-brand-500/10 hover:text-brand-200"
+                  >
+                    <FolderPlus size={18} />
+                    {t('home.createFolder')}
+                  </button>
+                )}
+              </div>
               <div
                 onClick={() => { hapticTap(); handleFileUpload(); }}
                 className="btn-glow glass-card border-dashed border-2 border-surface-200/20 hover:border-brand-500/50 cursor-pointer p-8 flex flex-col items-center justify-center transition-all group"
@@ -499,11 +571,16 @@ export default function App() {
                       variant="sidebar"
                       folders={folders} activeFolder={activeFolder} wallets={wallets}
                       editingFolder={editingFolder} editFolderName={editFolderName}
+                      creatingFolder={creatingFolder} newFolderName={newFolderName}
                       onSelectFolder={(f) => { setActiveFolder(f); }}
                       onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
                       onEditChange={setEditFolderName}
                       onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
                       onDeleteFolder={handleDeleteFolder}
+                      onStartCreate={startCreateFolder}
+                      onCreateChange={setNewFolderName}
+                      onFinishCreate={finishCreateFolder}
+                      createFolderLabel={t('home.createFolder')}
                     />
                   </div>
                 </div>
@@ -516,11 +593,16 @@ export default function App() {
                       <FolderTabs
                         folders={folders} activeFolder={activeFolder} wallets={wallets}
                         editingFolder={editingFolder} editFolderName={editFolderName}
+                        creatingFolder={creatingFolder} newFolderName={newFolderName}
                         onSelectFolder={(f) => { setActiveFolder(f); }}
                         onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
                         onEditChange={setEditFolderName}
                         onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
                         onDeleteFolder={handleDeleteFolder}
+                        onStartCreate={startCreateFolder}
+                        onCreateChange={setNewFolderName}
+                        onFinishCreate={finishCreateFolder}
+                        createFolderLabel={t('home.createFolder')}
                       />
                     </div>
                     <button
@@ -593,9 +675,12 @@ export default function App() {
         {showCreateWallet && (
           <CreateWalletModal
             onClose={() => setShowCreateWallet(false)}
-            onSave={handleSaveWallet}
+            onSave={handleCreateWalletSave}
             onShowQR={(data, title, subtitle) => setQrModalData({ isOpen: true, data, title, subtitle })}
             existingWallets={wallets}
+            folders={folders}
+            activeFolder={activeFolder}
+            allTags={allTags}
           />
         )}
 
@@ -610,7 +695,7 @@ export default function App() {
         {movingWallet && (
           <MoveToFolderModal
             wallet={movingWallet}
-            folders={['All', ...new Set(wallets.map(w => w.groupId || 'Imported'))]}
+            folders={folders}
             onMove={handleMoveWallet}
             onClose={() => setMovingWallet(null)}
           />

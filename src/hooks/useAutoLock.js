@@ -5,6 +5,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 const AUTOLOCK_KEY = 'xkey_autolock_ms';
 const DEFAULT_MS = 5 * 60 * 1000; // 5 minutes
 const AUTOLOCK_SETTINGS_CHANGED_EVENT = 'xkey-autolock-settings-changed';
+const APP_ACTIVITY_EVENT = 'xkey-app-activity';
 
 /**
  * Auto-lock the vault after N minutes of inactivity.
@@ -46,6 +47,7 @@ export default function useAutoLock(onLock, enabled = true) {
     };
 
     events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+    window.addEventListener(APP_ACTIVITY_EVENT, resetTimer);
     window.addEventListener(AUTOLOCK_SETTINGS_CHANGED_EVENT, reloadSettings);
     const appStateListener = CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
       if (!isActive) {
@@ -68,10 +70,11 @@ export default function useAutoLock(onLock, enabled = true) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       events.forEach(e => window.removeEventListener(e, resetTimer));
+      window.removeEventListener(APP_ACTIVITY_EVENT, resetTimer);
       window.removeEventListener(AUTOLOCK_SETTINGS_CHANGED_EVENT, reloadSettings);
       appStateListener.then(listener => listener.remove());
     };
   }, [resetTimer, enabled, loadTimeout]);
 }
 
-export { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT };
+export { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT, APP_ACTIVITY_EVENT };

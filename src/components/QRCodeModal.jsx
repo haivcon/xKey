@@ -2,6 +2,8 @@ import { X, Copy, Check, Share2, Download, ShieldAlert } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 import { useT } from '../contexts/LanguageContext';
+import { Capacitor } from '@capacitor/core';
+import { hapticSuccess, hapticWarning } from '../utils/haptics';
 
 export default function QRCodeModal({ data, title, subtitle, isOpen, onClose }) {
     const [copied, setCopied] = useState(false);
@@ -12,32 +14,125 @@ export default function QRCodeModal({ data, title, subtitle, isOpen, onClose }) 
 
     if (!isOpen) return null;
 
-    const handleCopy = () => { navigator.clipboard.writeText(data); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    const safeFileName = `${String(title || 'xkey-qr').replace(/[^\w.-]+/g, '_')}_${Date.now()}.svg`;
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(data);
+            setCopied(true);
+            hapticSuccess();
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            hapticWarning();
+        }
+    };
+
     const isSensitive = /private|seed|warning|khóa|khoa|cụm|cum|mnemonic/i.test(`${title || ''} ${subtitle || ''}`)
         || String(data || '').trim().split(/\s+/).length >= 12
         || /^(0x)?[a-fA-F0-9]{64}$/.test(String(data || '').trim());
 
-    const downloadSvg = () => {
+    const getSvgXml = () => {
         const svg = qrRef.current?.querySelector('svg');
-        if (!svg) return;
-        const xml = new XMLSerializer().serializeToString(svg);
+        if (!svg) return '';
+        const cloned = svg.cloneNode(true);
+        cloned.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        return new XMLSerializer().serializeToString(cloned);
+    };
+
+    const writeNativeSvg = async (xml) => {
+        const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+        return Filesystem.writeFile({
+            path: safeFileName,
+            data: xml,
+            directory: Directory.Cache,
+            encoding: Encoding.UTF8,
+        });
+    };
+
+    const downloadSvg = async () => {
+        const xml = getSvgXml();
+        if (!xml) {
+            hapticWarning();
+            return;
+        }
+
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const { Share } = await import('@capacitor/share');
+                const fileResult = await writeNativeSvg(xml);
+                await Share.share({
+                    title: title || 'xKey QR',
+                    text: title || 'xKey QR',
+                    url: fileResult.uri,
+                    dialogTitle: t('qr.saveImage'),
+                });
+                setSaved(true);
+                hapticSuccess();
+                setTimeout(() => setSaved(false), 2000);
+                return;
+            } catch {
+                await handleCopy();
+                return;
+            }
+        }
+
         const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${String(title || 'xkey-qr').replace(/[^\w.-]+/g, '_')}.svg`;
+        a.download = safeFileName;
         document.body.appendChild(a);
         a.click();
         a.remove();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 500);
         setSaved(true);
+        hapticSuccess();
         setTimeout(() => setSaved(false), 2000);
     };
 
     const handleShare = async () => {
+        const xml = getSvgXml();
+
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const { Share } = await import('@capacitor/share');
+                if (xml) {
+                    const fileResult = await writeNativeSvg(xml);
+                    await Share.share({
+                        title: title || 'xKey QR',
+                        text: data,
+                        url: fileResult.uri,
+                        dialogTitle: t('qr.share'),
+                    });
+                } else {
+                    await Share.share({ title: title || 'xKey QR', text: data, dialogTitle: t('qr.share') });
+                }
+                hapticSuccess();
+                return;
+            } catch (error) {
+                if (error?.message?.toLowerCase?.().includes('cancel')) return;
+                await handleCopy();
+                return;
+            }
+        }
+
+        if (navigator.share && xml) {
+            try {
+                const file = new File([xml], safeFileName, { type: 'image/svg+xml' });
+                if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+                    await navigator.share({ title: title || 'xKey QR', text: data, files: [file] });
+                    hapticSuccess();
+                    return;
+                }
+            } catch (error) {
+                if (error?.name === 'AbortError') return;
+            }
+        }
+
         if (navigator.share) {
             try {
-                await navigator.share({ title: title || 'xKey', text: data });
+                await navigator.share({ title: title || 'xKey QR', text: data });
+                hapticSuccess();
                 return;
             } catch (error) {
                 if (error?.name === 'AbortError') return;
@@ -69,9 +164,9 @@ export default function QRCodeModal({ data, title, subtitle, isOpen, onClose }) 
                 </div>
                 <div className="shrink-0 p-4 bg-surface-900 border-t border-surface-700">
                     {isSensitive && (
-                        <div className="mb-3 flex items-start gap-2 rounded-lg border border-red-500/25 bg-red-500/10 p-2.5 text-left">
-                            <ShieldAlert size={16} className="mt-0.5 flex-shrink-0 text-red-400" />
-                            <p className="text-xs leading-relaxed text-red-200">{t('qr.sensitiveWarning')}</p>
+                        <div className="danger-note mb-3 flex items-start gap-2 rounded-lg border p-2.5 text-left">
+                            <ShieldAlert size={16} className="danger-note-icon mt-0.5 flex-shrink-0" />
+                            <p className="danger-note-body text-xs leading-relaxed">{t('qr.sensitiveWarning')}</p>
                         </div>
                     )}
                     <div className="text-xs text-surface-400 font-mono break-all mb-4 text-center px-2">{data}</div>
@@ -81,12 +176,12 @@ export default function QRCodeModal({ data, title, subtitle, isOpen, onClose }) 
                             {copied ? <Check size={18} /> : <Copy size={18} />}
                             <span className="hidden sm:inline">{copied ? t('common.copiedClipboard') : t('common.copyData')}</span>
                         </button>
-                        <button onClick={handleShare}
+                        <button type="button" onClick={handleShare}
                             className="py-3 bg-surface-800 hover:bg-surface-700 text-surface-200 border border-surface-700 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium">
                             <Share2 size={18} />
                             <span className="hidden sm:inline">{t('qr.share')}</span>
                         </button>
-                        <button onClick={downloadSvg}
+                        <button type="button" onClick={downloadSvg}
                             className="py-3 bg-surface-800 hover:bg-surface-700 text-surface-200 border border-surface-700 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium">
                             {saved ? <Check size={18} className="text-emerald-400" /> : <Download size={18} />}
                             <span className="hidden sm:inline">{saved ? t('qr.saved') : t('qr.saveImage')}</span>

@@ -23,7 +23,7 @@ const writeClipboard = async (text) => {
   }
 };
 
-const readClipboard = async () => {
+export const readClipboard = async () => {
   try {
     const { value } = await Clipboard.read();
     return value;

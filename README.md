@@ -1,108 +1,105 @@
 # xKey - Offline Web3 Wallet Vault
 
-**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, notes, tags, folders, backups, QR workflows, asset balances, and batch operations in a local encrypted app.
+**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, QR workflows, folders, tags, backups, CSV data, manual asset balances, and batch operations in a local encrypted app.
 
-The app is built with **React**, **Vite**, **Capacitor 8**, **AES encryption**, Android Device Credential support, Android packaging, and localization across 15 languages.
+The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-> Your keys are stored locally. xKey is designed as a private cold-vault style manager, not as a network-connected trading wallet.
-
-## Current Release: v5.7.0
+## Current Release: v5.8.0
 
 ### Release Focus
 
-v5.7.0 improves Android-ready security, dense mobile layouts, wallet balance management, QR workflows, notification behavior, and localization coverage. This release focuses on making xKey more comfortable on real phones while keeping sensitive data protected.
+v5.8.0 focuses on trust, safer settings changes, vanity-wallet workflows, source transparency, and cleaner mobile UX. It improves how users understand the app, how newly created wallets are organized, and how accidental display-scale changes are prevented.
 
-### Android Device Credential Unlock
+### Open Source and Offline Transparency
 
-- Added Android Device Credential unlock for native builds.
-- Users can unlock with fingerprint, face unlock, device PIN, password, or pattern through the Android system prompt.
-- Added an Android Keystore-backed device credential plugin for protected vault key access after system authentication.
-- Added clear setup guidance when the device has no screen lock configured.
-- Improved recovery behavior when Android security settings change while xKey is installed.
+- Added GitHub source link in Settings: <https://github.com/haivcon/xKey>.
+- Added clear in-app wording that xKey is open source and runs locally on the user's device.
+- Added localized explanation that vault data is not sent to any server and cannot be accessed or modified remotely by a third party.
+- Added app version display in Settings and a compact version badge in the Home header.
+- App version is now injected from `package.json` and can use native Android app info when available.
 
-### Asset Balance Management
+### Display Scale Safety
 
-- Added a full asset balance editor from the total-assets control.
-- Added per-wallet balance editing with formatted numeric input.
-- Added quick balance actions such as `+100`, `+1000`, `-100`, and reset to zero.
-- Added search, filters, CSV import, changed-state tracking, and a sticky save summary.
-- Added customizable asset unit labels such as `$`, `USDT`, `VND`, `CNY`, `KRW`, `JPY`, `EUR`, `RUB`, `INR`, and custom text.
+- Added a confirmation dialog before applying display-scale changes.
+- Preset buttons, manual percentage entry, and slider changes now require confirmation.
+- Slider changes are staged as a draft first, preventing accidental UI resizing while scrolling.
+- Canceling the confirmation restores the previous display scale.
+- Added full translations for the new display-scale confirmation flow.
 
-### Home Layout and Wallet Actions
+### Vanity Wallet Improvements
 
-- Added wallet density modes: comfortable, compact, and ultra compact.
-- Improved scale-aware icons, network badges, wallet row sizing, and virtualized list measurement.
-- Added direct QR and copy actions on wallet cards.
-- Copying a wallet address now reveals the full address briefly and shows a compact, scale-aware notification.
-- Improved full-address display so addresses fit better on narrow screens.
+- Added batch vanity-wallet generation.
+- Added automatic saving of generated vanity wallets into a selected folder.
+- Added a dedicated `Vanity Wallets` workflow and folder behavior.
+- Added time-limit controls and quantity selection for vanity generation.
+- Added clearer pattern validation and warnings for long or expensive vanity patterns.
+- Kept auto-lock awake while the vanity generator is actively running.
+- Improved generated-wallet highlighting with a NEW label and visual focus ring.
 
-### Notifications, History, and Privacy
+### Folder and Wallet Organization
 
-- Toast notifications now respect the user display scale.
-- Long copy notifications are limited to a clean two-line layout.
-- Added type-aware toast duration for success, warning, error, and copy actions.
-- Added safe activity history in General Settings for recent app actions and notifications.
-- Added a stronger privacy shield when the app becomes inactive.
+- Added folder creation from the Home screen.
+- New wallets now default to the currently selected folder when applicable.
+- Improved custom folder persistence and folder-aware wallet creation.
+- Improved newly created wallet visibility after save by switching to the target folder and scrolling to the top.
+- Adjusted NEW labels so they do not cover wallet action buttons.
 
-### QR, Donate, and Network Notes
+### Asset Balance Workflow
 
-- Added QR share and save actions.
-- Added warning text for sensitive QR codes such as private keys or seed phrases.
-- Improved QR sizing so generated QR codes fit the device viewport more reliably.
-- Improved the donate modal layout, project links, copy action, and network note.
-- Added the donate network note: `XLAYER, ETH, BSC, and other EVM networks`.
+- Improved the asset balance editor for users who manually compare wallet addresses with blockchain data.
+- Added direct address copy actions and copy-success notifications inside the balance editor.
+- Added paste and clear controls for search/address fields.
+- Added automatic draft saving while users edit balances, reducing the risk of losing long editing sessions.
+- Improved full-address display and balance-card alignment on mobile.
+- Added clearer CSV import hints and balance-entry guidance.
 
-### Settings and Feedback
+### QR and Notification Improvements
 
-- Added sound and vibration controls for app feedback.
-- Improved the display scale slider and manual percentage input.
-- Kept supported display scale from `5%` to `200%`.
-- Fixed Lite Mode flicker by disabling selected animations without breaking layout.
-- Added configurable auto-lock and clipboard cleanup settings with clearer current values.
+- Fixed QR share/download action behavior.
+- Improved sensitive QR warnings for better contrast in light theme.
+- Improved popup and toast behavior so long copy messages are more compact and scale-aware.
+- Added safer confirmation UI styling for important actions.
+
+### Settings and Localization
+
+- Expanded Settings with version, source, offline, feedback, display scale, wallet density, and activity history information.
+- Added full translations for new source transparency, display scale confirmation, folder, vanity, balance, QR, and notification strings across supported languages.
+- Improved language coverage so new UI does not show raw translation keys.
 
 ### Android and Build Updates
 
-- Updated app version to `5.7.0`.
-- Updated Android `versionCode` to `57`.
-- Synced the latest production web assets into the Android project.
-- Expanded `.gitignore` for local release drafts, temporary files, and signing secrets.
-- Confirmed the local `1/` workspace remains ignored and is not included in Git.
+- Updated app version to `5.8.0`.
+- Updated Android `versionCode` to `58`.
+- Synced latest production web assets into the Android project.
+- Kept local scratch folders, APK/AAB outputs, signing files, backups, and the `1/` workspace out of Git.
+- Added project documentation under `docs/` for review and future planning.
 
-### Localization
+## Quality Checks
 
-- Added full translations for new wallet density, activity history, QR, donate, privacy, security, asset balance, sound, vibration, and scale-related UI.
-- Checked locale coverage so new features do not render raw translation keys.
-
-### Quality Checks
-
-The following checks were run successfully before release:
+The following checks were run before this release:
 
 ```bash
 npm run lint
 npm run build
 npx cap sync android
-android/gradlew assembleDebug
 ```
 
-The Vite production build currently reports a large chunk warning. This is not a runtime error, but future releases may split more screens into dynamic chunks.
+The Vite production build may still report a large chunk warning. This is not a runtime failure, but future releases should continue splitting scanner, analytics, and advanced tooling into smaller lazy-loaded chunks.
 
 ## Core Features
 
 - Offline encrypted wallet vault
-- AES-protected local wallet storage
-- Android Device Credential and web fallback authentication
-- Web and Android support through Capacitor
-- Display scale customization
-- Wallet density modes
-- Wallet folders, filtering, sorting, and search
-- Wallet tags and tag filtering
-- Asset balance tracking with custom unit labels
-- Batch wallet selection and actions
+- Local AES-protected wallet storage
+- Android Device Credential unlock and web fallback authentication
+- Android support through Capacitor 8
+- Wallet folders, tags, filters, sorting, search, and batch actions
+- Vanity wallet generation
+- QR scanning, QR display, QR sharing, and QR transfer utilities
+- Manual asset balance tracking with custom units
 - CSV import/export
 - Encrypted portable `.xkey` backups
-- Duplicate detection
-- Analytics dashboard
-- QR scanning, QR display, QR sharing, and QR transfer utilities
+- Duplicate detection and analytics
+- Display scale and wallet density customization
 - Multi-language UI
 
 ## Supported Languages
@@ -111,18 +108,17 @@ The Vite production build currently reports a large chunk warning. This is not a
 
 ## Project Links
 
-- GitHub: <https://github.com/haivcon/xkey>
+- GitHub: <https://github.com/haivcon/xKey>
 - Website: <https://xlayer.my>
 - X: <https://x.com/haivcon>
 - Telegram: <https://t.me/haivcon>
 
 ## Previous Releases
 
+- `v5.7.0`: Android Device Credential unlock, asset balance editor, QR sizing, toast improvements, clipboard controls, and display scale refinements.
 - `v5.6.0`: Sound and vibration feedback, display scale controls, Lite Mode stability, QR transfer input fixes, and Android haptics sync.
 - `v5.5.0`: Wallet row copy/QR actions, native clipboard reliability, default `75%` display scale, and Android Shake to Lock fixes.
-- `v5.4.0`: Display scale system, QR viewport fixes, scale-aware icons, sticky layout corrections, and localization cleanup.
-- `v5.3.x`: Android startup stability, responsive tools, web authentication fallback, and release build fixes.
-- `v5.2.x` and earlier: Wallet grid improvements, advanced tools, `.xkey` backup flow, decoy vault, kill switch, auto backup, clipboard controls, Capacitor 8 migration, launcher icon, and splash assets.
+- `v5.4.0` and earlier: Responsive home layout, advanced tools, backup flow, decoy vault, kill switch, auto backup, Capacitor migration, launcher icon, and splash assets.
 
 ## Installation
 
@@ -164,26 +160,27 @@ npm run android
 
 ## Release Workflow
 
-The GitHub Actions workflow builds and signs release artifacts when a `v*` tag is pushed.
+GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 Example:
 
 ```bash
-git tag v5.7.0
-git push origin v5.7.0
+git tag v5.8.0
+git push origin v5.8.0
 ```
 
 Generated release files:
 
-- `xKey-Release-v5.7.0.apk`
-- `xKey-Release-v5.7.0.aab`
+- `xKey-Release-v5.8.0.apk`
+- `xKey-Release-v5.8.0.aab`
 
 ## Security Notice
 
 - Never share private keys, seed phrases, `.xkey` backup files, or backup passwords.
-- CSV export may expose private keys or seed phrases in plain text if those columns are selected.
+- CSV export may expose sensitive data in plain text if private key or seed phrase columns are selected.
 - Keep a secure device screen lock enabled.
 - Removing or changing the device screen lock can invalidate Android Keystore-backed authentication keys.
+- Clipboard auto-clear is best-effort and may be limited by the operating system.
 - xKey stores vault data locally and is designed for offline use.
 
 ## License
