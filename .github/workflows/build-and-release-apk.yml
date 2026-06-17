@@ -45,13 +45,13 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease bundleRelease
+          ./gradlew assembleGithubRelease bundlePlayRelease
 
-      - name: 🔑 Sign APK
+      - name: 🔑 Sign GitHub APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/apk/release
+          releaseDirectory: android/app/build/outputs/apk/github/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -59,11 +59,11 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
 
-      - name: 🔑 Sign AAB
+      - name: 🔑 Sign Google Play AAB
         id: sign_aab
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/bundle/release
+          releaseDirectory: android/app/build/outputs/bundle/playRelease
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -79,8 +79,8 @@ jobs:
 
       - name: 🏷️ Rename Files
         run: |
-          APK_NAME="xKey-Release-v${{ env.APP_VERSION }}.apk"
-          AAB_NAME="xKey-Release-v${{ env.APP_VERSION }}.aab"
+          APK_NAME="xKey-GitHub-v${{ env.APP_VERSION }}.apk"
+          AAB_NAME="xKey-GooglePlay-v${{ env.APP_VERSION }}.aab"
           mv ${{steps.sign_apk.outputs.signedReleaseFile}} "$APK_NAME"
           mv ${{steps.sign_aab.outputs.signedReleaseFile}} "$AAB_NAME"
           echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
@@ -90,7 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "🔑xKey v${{ env.APP_VERSION }}"
-          body: "Automatically optimized and securely signed releases.\n\n**Version:** v${{ env.APP_VERSION }}\n- **APK**: For manual installation.\n- **AAB**: For Google Play Console upload."
+          body: "Automatically optimized and securely signed releases.\n\n**Version:** v${{ env.APP_VERSION }}\n- **APK**: GitHub/manual-install build using package `com.haivcon.xkey.github`, so it can coexist with the Google Play app.\n- **AAB**: Google Play Console build using package `com.haivcon.xkey`."
           files: |
             ${{ env.APK_NAME }}
             ${{ env.AAB_NAME }}

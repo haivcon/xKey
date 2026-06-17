@@ -4,11 +4,11 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.8.0
+## Current Release: v5.8.1
 
 ### Release Focus
 
-v5.8.0 focuses on trust, safer settings changes, vanity-wallet workflows, source transparency, and cleaner mobile UX. It improves how users understand the app, how newly created wallets are organized, and how accidental display-scale changes are prevented.
+v5.8.1 focuses on trust, safer settings changes, vanity-wallet workflows, source transparency, and cleaner mobile UX. It improves how users understand the app, how newly created wallets are organized, and how accidental display-scale changes are prevented.
 
 ### Open Source and Offline Transparency
 
@@ -68,11 +68,14 @@ v5.8.0 focuses on trust, safer settings changes, vanity-wallet workflows, source
 
 ### Android and Build Updates
 
-- Updated app version to `5.8.0`.
-- Updated Android `versionCode` to `58`.
+- Updated app version to `5.8.1`.
+- Updated Android `versionCode` to `59`.
+- Split Android release outputs by distribution channel:
+  - GitHub APK uses package `com.haivcon.xkey.github` for manual installs and can coexist with the Google Play app.
+  - Google Play AAB keeps package `com.haivcon.xkey`.
 - Synced latest production web assets into the Android project.
 - Kept local scratch folders, APK/AAB outputs, signing files, backups, and the `1/` workspace out of Git.
-- Added project documentation under `docs/` for review and future planning.
+- Kept local review documents under `docs/` ignored so they are not uploaded to GitHub.
 
 ## Quality Checks
 
@@ -165,14 +168,14 @@ GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 Example:
 
 ```bash
-git tag v5.8.0
-git push origin v5.8.0
+git tag v5.8.1
+git push origin v5.8.1
 ```
 
 Generated release files:
 
-- `xKey-Release-v5.8.0.apk`
-- `xKey-Release-v5.8.0.aab`
+- `xKey-GitHub-v5.8.1.apk` using package `com.haivcon.xkey.github`
+- `xKey-GooglePlay-v5.8.1.aab` using package `com.haivcon.xkey`
 
 ## Security Notice
 
