@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "常规",
     "tabSecurity": "安全",
     "tabData": "数据",
+    "tabInfo": "信息",
     "pinLockTitle": "PIN锁",
     "pinLockDesc": "管理应用PIN码",
     "changePin": "更改PIN码",

@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "ทั่วไป",
     "tabSecurity": "ความปลอดภัย",
     "tabData": "ข้อมูล",
+    "tabInfo": "ข้อมูล",
     "pinLockTitle": "ล็อก PIN",
     "pinLockDesc": "จัดการรหัส PIN ของแอป",
     "changePin": "เปลี่ยนรหัส PIN",

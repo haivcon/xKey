@@ -293,30 +293,30 @@ export default function SecurityTab({ onWipe }) {
             </div>
           </div>
         </div>
-        <div className="grid gap-2 p-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
-            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.securityMode')}</p>
-            <p className="mt-1 text-sm font-bold text-white">
+        <div className="mx-4 mt-4 mb-2 rounded-xl border border-surface-700/60 bg-surface-900/40 divide-y divide-surface-700/30">
+          <div className="flex items-center justify-between p-3">
+            <span className="text-xs text-surface-400">{t('settings.securityMode')}</span>
+            <span className="text-xs font-semibold text-white">
               {securityStatus ? t(`settings.securityMode_${securityStatus.mode}`) : t('settings.securityChecking')}
-            </p>
+            </span>
           </div>
-          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
-            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.vaultKeyProtection')}</p>
-            <p className="mt-1 text-sm font-bold text-white">
+          <div className="flex items-center justify-between p-3">
+            <span className="text-xs text-surface-400">{t('settings.vaultKeyProtection')}</span>
+            <span className="text-xs font-semibold text-white">
               {securityStatus?.deviceProtected ? t('settings.keystoreProtected') : t('settings.fallbackProtected')}
-            </p>
+            </span>
           </div>
-          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
-            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.deviceCredential')}</p>
-            <p className={`mt-1 text-sm font-bold ${securityStatus?.deviceCredentialAvailable ? 'text-emerald-300' : 'text-amber-300'}`}>
+          <div className="flex items-center justify-between p-3">
+            <span className="text-xs text-surface-400">{t('settings.deviceCredential')}</span>
+            <span className={`text-xs font-bold ${securityStatus?.deviceCredentialAvailable ? 'text-emerald-400' : 'text-amber-400'}`}>
               {securityStatus?.deviceCredentialAvailable ? t('settings.available') : t('settings.unavailable')}
-            </p>
+            </span>
           </div>
-          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
-            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.compatibilityFallback')}</p>
-            <p className={`mt-1 text-sm font-bold ${securityStatus?.fallback ? 'text-amber-300' : 'text-emerald-300'}`}>
+          <div className="flex items-center justify-between p-3">
+            <span className="text-xs text-surface-400">{t('settings.compatibilityFallback')}</span>
+            <span className={`text-xs font-bold ${securityStatus?.fallback ? 'text-amber-400' : 'text-emerald-400'}`}>
               {securityStatus?.fallback ? t('settings.enabled') : t('settings.disabled')}
-            </p>
+            </span>
           </div>
         </div>
         {securityStatus?.fallback && (

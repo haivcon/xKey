@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "عام",
     "tabSecurity": "حماية",
     "tabData": "بيانات",
+    "tabInfo": "معلومات",
     "pinLockTitle": "قفل رقم التعريف الشخصي",
     "pinLockDesc": "إدارة رمز PIN للتطبيق",
     "changePin": "تغيير رقم التعريف الشخصي",

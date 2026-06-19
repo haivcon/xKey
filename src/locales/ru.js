@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "Общий",
     "tabSecurity": "Безопасность",
     "tabData": "Данные",
+    "tabInfo": "Инфо",
     "pinLockTitle": "Блокировка PIN",
     "pinLockDesc": "Управление PIN-кодом приложения",
     "changePin": "Сменить ПИН",

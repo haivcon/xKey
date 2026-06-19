@@ -7,17 +7,18 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.9.1
+## Current Release: v5.9.2
 
 ### Release Focus
 
-v5.9.1 is a maintenance release that unifies the Android package name and branding across all distributions. The app now uses a single, generic `com.haivcon.xkey` package name and features a clean, unified splash screen (animated "xKey" with a glowing key icon), dropping the GitHub and Google Play specific splash screens. 
+v5.9.2 brings a major redesign to the Settings interface, making it cleaner, more spacious, and easier to navigate with an accordion-style layout. It also includes fixes for translation strings.
 
 ### Key Upgrades & Features
 
-- **Unified Package Name**: All Android builds now use `com.haivcon.xkey`. The `.github` flavor and suffix have been removed to allow seamless updates across different installation sources.
-- **Unified Branding**: Removed channel-specific splash screens (Google Play/GitHub) in favor of a single, clean animated splash screen with a glowing key icon.
-- **Translation Updates**: Fixed and extracted several hardcoded strings (e.g. Tags) for full multi-language support.
+- **Settings UI Redesign**: The Settings screen now features an accordion-style expand/collapse layout for sections like Appearance, Display Scale, Wallet Density, and Feedback.
+- **Dedicated Info Tab**: Moved App Version, Open Source info, and OKX Wallet Guide into a new dedicated "Info" tab to declutter the main settings.
+- **Compact Security Status**: Redesigned the Security Status grid into a sleek, space-saving list view.
+- **Translation Fixes**: Fixed the missing `settings.tabInfo` translation string across all 15 supported languages.
 
 ## Quality Checks
 

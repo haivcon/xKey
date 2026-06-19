@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "Cài đặt chung",
     "tabSecurity": "Bảo mật",
     "tabData": "Dữ liệu",
+    "tabInfo": "Giới thiệu",
     "pinLockTitle": "Khóa PIN",
     "pinLockDesc": "Quản lý mã PIN của ứng dụng",
     "changePin": "Đổi mã PIN",

@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "सामान्य",
     "tabSecurity": "सुरक्षा",
     "tabData": "डेटा",
+    "tabInfo": "जानकारी",
     "pinLockTitle": "पिन लॉक",
     "pinLockDesc": "ऐप पिन कोड प्रबंधित करें",
     "changePin": "पिन बदलें",

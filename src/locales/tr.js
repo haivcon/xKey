@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "Genel",
     "tabSecurity": "Güvenlik",
     "tabData": "Veri",
+    "tabInfo": "Bilgi",
     "pinLockTitle": "PIN Kilidi",
     "pinLockDesc": "Uygulama PIN kodunu yönet",
     "changePin": "PIN'i Değiştir",

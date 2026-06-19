@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "Umum",
     "tabSecurity": "Keamanan",
     "tabData": "Data",
+    "tabInfo": "Info",
     "pinLockTitle": "Kunci PIN",
     "pinLockDesc": "Kelola kode PIN aplikasi",
     "changePin": "Ubah PIN",

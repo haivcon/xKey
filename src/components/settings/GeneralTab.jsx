@@ -10,7 +10,6 @@ import {
   setSoundEnabled,
   setVibrationEnabled,
 } from '../../utils/haptics';
-import DonateModal from '../DonateModal';
 import useLiteMode from '../../hooks/useLiteMode';
 import { clearActionHistory, getActionHistory } from '../../utils/actionHistory';
 import { useConfirm } from '../../contexts/ConfirmContext';
@@ -38,13 +37,18 @@ const clampDisplayScale = (value) => {
 
 export default function GeneralTab() {
   const [showLangPicker, setShowLangPicker] = useState(false);
-  const [showDonate, setShowDonate] = useState(false);
   const [draftScale, setDraftScale] = useState(null);
   const [scaleInput, setScaleInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
   const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
   const [actionHistory, setActionHistory] = useState([]);
+  const [expandedSection, setExpandedSection] = useState(null);
   const scaleConfirmingRef = useRef(false);
+
+  const toggleSection = (section) => {
+    hapticTap();
+    setExpandedSection(prev => prev === section ? null : section);
+  };
 
   const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity } = useTheme();
   const t = useT();
@@ -54,7 +58,6 @@ export default function GeneralTab() {
   const { isLiteMode, toggleLiteMode } = useLiteMode();
   const visibleScale = draftScale ?? displayScale;
   const scaleProgress = ((visibleScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
-  const okxJoinUrl = 'https://web3.okx.com/join/BANMAO';
 
   useEffect(() => {
     setDraftScale(displayScale);
@@ -189,258 +192,264 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Multi-chain Wallet Guide ═══ */}
-      <div className="glass-card p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="grid h-10 w-10 grid-cols-3 grid-rows-3 gap-0.5 rounded-xl bg-white p-1.5">
-            {[0, 1, 3, 4, 5, 7, 8].map(item => (
-              <span key={item} className="rounded-[2px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
-            ))}
-          </div>
-          <div>
-            <p className="text-white font-medium text-sm">{t('settings.okxGuideTitle')}</p>
-            <p className="text-xs text-surface-400">{t('settings.okxGuideDesc')}</p>
-          </div>
-        </div>
-        <div className="space-y-2 rounded-xl border border-surface-700/70 bg-surface-900/50 p-3">
-          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep1')}</p>
-          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep2')}</p>
-          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep3')}</p>
-          <a
-            href={okxJoinUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={hapticTap}
-            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm font-semibold text-surface-100 transition-colors hover:border-white/50 hover:bg-white hover:text-black"
-          >
-            <span className="grid h-5 w-5 grid-cols-3 grid-rows-3 gap-[1px] rounded bg-white p-[2px]">
-              {[0, 1, 3, 4, 5, 7, 8].map(item => (
-                <span key={item} className="rounded-[1px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
-              ))}
-            </span>
-            web3.okx.com/join/BANMAO
-            <ExternalLink size={14} />
-          </a>
-        </div>
-      </div>
+
 
       {/* ═══ Theme Selector ═══ */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-            <Moon size={20} className="text-indigo-400" />
+      <div className="glass-card overflow-hidden mt-4">
+        <button
+          onClick={() => toggleSection('theme')}
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+              <Moon size={20} className="text-indigo-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium text-sm">{t('settings.appearance')}</p>
+              <p className="text-xs text-surface-400">{t(`settings.${theme}Mode`)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-white font-medium text-sm">{t('settings.appearance')}</p>
-            <p className="text-xs text-surface-400">{t(`settings.${theme}Mode`)}</p>
+          <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'theme' ? 'rotate-180' : ''}`} />
+        </button>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'theme' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4 flex gap-2">
+            {THEME_OPTIONS.map(opt => {
+              const Icon = opt.icon;
+              const active = theme === opt.key;
+              return (
+                <button key={opt.key} onClick={() => { hapticTap(); setTheme(opt.key); }}
+                  className={`btn-glow flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all
+                    ${active ? 'bg-brand-500/15 border-2 border-brand-500/40 text-white' : 'bg-surface-800/60 border-2 border-transparent text-surface-400 hover:text-white'}`}>
+                  <Icon size={14} />
+                  {t(opt.label)}
+                </button>
+              );
+            })}
           </div>
-        </div>
-        <div className="flex gap-2">
-          {THEME_OPTIONS.map(opt => {
-            const Icon = opt.icon;
-            const active = theme === opt.key;
-            return (
-              <button key={opt.key} onClick={() => { hapticTap(); setTheme(opt.key); }}
-                className={`btn-glow flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all
-                  ${active ? 'bg-brand-500/15 border-2 border-brand-500/40 text-white' : 'bg-surface-800/60 border-2 border-transparent text-surface-400 hover:text-white'}`}>
-                <Icon size={14} />
-                {t(opt.label)}
-              </button>
-            );
-          })}
         </div>
       </div>
 
       {/* ═══ Display Scale ═══ */}
-      <div className="glass-card p-4">
-        <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="glass-card overflow-hidden mt-4">
+        <button
+          onClick={() => toggleSection('scale')}
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
               <Monitor size={20} className="text-cyan-400" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
-              <p className="text-xs text-surface-400 leading-relaxed">{t('settings.displayScaleDesc')}</p>
+              <p className="text-xs text-surface-400">{displayScale}%</p>
             </div>
           </div>
-          <div className="shrink-0 rounded-full bg-surface-800/70 border border-surface-700 px-3 py-1 text-xs font-semibold text-white">
-            {displayScale}%
-          </div>
-        </div>
+          <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
+        </button>
 
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
-          {DISPLAY_SCALE_PRESETS.map(scale => {
-            const active = displayScale === scale;
-            return (
-              <button
-                key={scale}
-                type="button"
-                onClick={() => { hapticTap(); requestScaleChange(scale); }}
-                className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
-                  active
-                    ? 'border-brand-500/50 bg-brand-500/15 text-white shadow-sm shadow-brand-500/10'
-                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
-                }`}
-              >
-                {scale}%
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <label className="text-xs font-medium text-surface-400">
-            {t('settings.displayScaleCustom')}
-          </label>
-          <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-brand-300">
-            {MIN_DISPLAY_SCALE}-{MAX_DISPLAY_SCALE}%
-          </span>
-        </div>
-
-        <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
-          <div className="grid grid-cols-[1fr_5.5rem] items-center gap-3">
-            <input
-              type="range"
-              min={MIN_DISPLAY_SCALE}
-              max={MAX_DISPLAY_SCALE}
-              step="5"
-              value={visibleScale}
-              onChange={(e) => {
-                const nextScale = clampDisplayScale(e.target.value);
-                setDraftScale(nextScale);
-                if (!isScaleInputFocused) setScaleInput(String(nextScale));
-              }}
-              onPointerUp={(e) => commitScaleDraft(e.currentTarget.value)}
-              onTouchEnd={(e) => commitScaleDraft(e.currentTarget.value)}
-              onBlur={(e) => commitScaleDraft(e.currentTarget.value)}
-              style={{ '--scale-progress': `${scaleProgress}%` }}
-              className="scale-range"
-            />
-            <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/15">
-              <input
-                type="number"
-                min={MIN_DISPLAY_SCALE}
-                max={MAX_DISPLAY_SCALE}
-                step="5"
-                inputMode="numeric"
-                value={scaleInput}
-                onChange={(e) => {
-                  setScaleInput(e.target.value);
-                }}
-                onFocus={() => {
-                  setIsScaleInputFocused(true);
-                  setScaleInput(String(visibleScale));
-                }}
-                onBlur={commitScaleInput}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                  if (e.key === 'Escape') {
-                    setScaleInput(String(displayScale));
-                    e.currentTarget.blur();
-                  }
-                }}
-                className="w-12 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
-              />
-              <span className="text-xs font-semibold text-surface-400">%</span>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
+            <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.displayScaleDesc')}</p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+              {DISPLAY_SCALE_PRESETS.map(scale => {
+                const active = displayScale === scale;
+                return (
+                  <button
+                    key={scale}
+                    type="button"
+                    onClick={() => { hapticTap(); requestScaleChange(scale); }}
+                    className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
+                      active
+                        ? 'border-brand-500/50 bg-brand-500/15 text-white shadow-sm shadow-brand-500/10'
+                        : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                    }`}
+                  >
+                    {scale}%
+                  </button>
+                );
+              })}
             </div>
-          </div>
 
-          <div className="mt-2 grid grid-cols-[1fr_5.5rem] gap-3">
-            <div className="flex justify-between text-[0.625rem] font-semibold text-surface-500">
-              <span>{MIN_DISPLAY_SCALE}%</span>
-              <span>100%</span>
-              <span>{MAX_DISPLAY_SCALE}%</span>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <label className="text-xs font-medium text-surface-400">
+                {t('settings.displayScaleCustom')}
+              </label>
+              <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-brand-300">
+                {MIN_DISPLAY_SCALE}-{MAX_DISPLAY_SCALE}%
+              </span>
             </div>
-            <div />
+
+            <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
+              <div className="grid grid-cols-[1fr_5.5rem] items-center gap-3">
+                <input
+                  type="range"
+                  min={MIN_DISPLAY_SCALE}
+                  max={MAX_DISPLAY_SCALE}
+                  step="5"
+                  value={visibleScale}
+                  onChange={(e) => {
+                    const nextScale = clampDisplayScale(e.target.value);
+                    setDraftScale(nextScale);
+                    if (!isScaleInputFocused) setScaleInput(String(nextScale));
+                  }}
+                  onPointerUp={(e) => commitScaleDraft(e.currentTarget.value)}
+                  onTouchEnd={(e) => commitScaleDraft(e.currentTarget.value)}
+                  onBlur={(e) => commitScaleDraft(e.currentTarget.value)}
+                  style={{ '--scale-progress': `${scaleProgress}%` }}
+                  className="scale-range"
+                />
+                <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-brand-500/60 focus-within:ring-2 focus-within:ring-brand-500/15">
+                  <input
+                    type="number"
+                    min={MIN_DISPLAY_SCALE}
+                    max={MAX_DISPLAY_SCALE}
+                    step="5"
+                    inputMode="numeric"
+                    value={scaleInput}
+                    onChange={(e) => {
+                      setScaleInput(e.target.value);
+                    }}
+                    onFocus={() => {
+                      setIsScaleInputFocused(true);
+                      setScaleInput(String(visibleScale));
+                    }}
+                    onBlur={commitScaleInput}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Escape') {
+                        setScaleInput(String(displayScale));
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    className="w-12 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
+                  />
+                  <span className="text-xs font-semibold text-surface-400">%</span>
+                </div>
+              </div>
+
+              <div className="mt-2 grid grid-cols-[1fr_5.5rem] gap-3">
+                <div className="flex justify-between text-[0.625rem] font-semibold text-surface-500">
+                  <span>{MIN_DISPLAY_SCALE}%</span>
+                  <span>100%</span>
+                  <span>{MAX_DISPLAY_SCALE}%</span>
+                </div>
+                <div />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ═══ Wallet Density ═══ */}
-      <div className="glass-card p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-            <Rows3 size={20} className="text-violet-400" />
+      <div className="glass-card overflow-hidden mt-4">
+        <button
+          onClick={() => toggleSection('density')}
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+              <Rows3 size={20} className="text-violet-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium text-sm">{t('settings.walletDensity')}</p>
+              <p className="text-xs text-surface-400">{t(`settings.walletDensity${walletDensity.charAt(0).toUpperCase() + walletDensity.slice(1)}`)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-white font-medium text-sm">{t('settings.walletDensity')}</p>
-            <p className="text-xs text-surface-400">{t('settings.walletDensityDesc')}</p>
+          <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'density' ? 'rotate-180' : ''}`} />
+        </button>
+
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'density' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
+            <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.walletDensityDesc')}</p>
+            <div className="grid grid-cols-3 gap-2">
+              {DENSITY_OPTIONS.map(option => {
+                const active = walletDensity === option.key;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => { hapticTap(); setWalletDensity(option.key); }}
+                    className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all ${
+                      active
+                        ? 'border-violet-500/50 bg-violet-500/15 text-white'
+                        : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                    }`}
+                  >
+                    {t(option.label)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {DENSITY_OPTIONS.map(option => {
-            const active = walletDensity === option.key;
-            return (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => { hapticTap(); setWalletDensity(option.key); }}
-                className={`rounded-xl border px-2 py-2.5 text-xs font-semibold transition-all ${
-                  active
-                    ? 'border-violet-500/50 bg-violet-500/15 text-white'
-                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
-                }`}
-              >
-                {t(option.label)}
-              </button>
-            );
-          })}
         </div>
       </div>
 
       {/* ═══ Feedback Options ═══ */}
-      <div className="glass-card p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
-            <Volume2 size={20} className="text-sky-400" />
+      <div className="glass-card overflow-hidden mt-4">
+        <button
+          onClick={() => toggleSection('feedback')}
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
+              <Volume2 size={20} className="text-sky-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium text-sm">{t('settings.feedback')}</p>
+              <p className="text-xs text-surface-400">
+                {(feedbackSettings.soundEnabled || feedbackSettings.vibrationEnabled) ? t('settings.enabled') || 'Bật' : t('settings.disabled') || 'Tắt'}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-white font-medium text-sm">{t('settings.feedback')}</p>
-            <p className="text-xs text-surface-400">{t('settings.feedbackDesc')}</p>
+          <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'feedback' ? 'rotate-180' : ''}`} />
+        </button>
+
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'feedback' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
+            <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.feedbackDesc')}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => toggleFeedback('sound')}
+                className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
+                  feedbackSettings.soundEnabled
+                    ? 'border-sky-500/40 bg-sky-500/10 text-white'
+                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
+                }`}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <Volume2 size={16} />
+                  {t('settings.soundFeedback')}
+                </span>
+                <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.soundEnabled ? 'bg-sky-500' : 'bg-surface-600'}`}>
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.soundEnabled ? 'translate-x-4' : ''}`} />
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => toggleFeedback('vibration')}
+                className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
+                  feedbackSettings.vibrationEnabled
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-white'
+                    : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
+                }`}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <Smartphone size={16} />
+                  {t('settings.vibrationFeedback')}
+                </span>
+                <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.vibrationEnabled ? 'bg-emerald-500' : 'bg-surface-600'}`}>
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.vibrationEnabled ? 'translate-x-4' : ''}`} />
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => toggleFeedback('sound')}
-            className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
-              feedbackSettings.soundEnabled
-                ? 'border-sky-500/40 bg-sky-500/10 text-white'
-                : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
-            }`}
-          >
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <Volume2 size={16} />
-              {t('settings.soundFeedback')}
-            </span>
-            <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.soundEnabled ? 'bg-sky-500' : 'bg-surface-600'}`}>
-              <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.soundEnabled ? 'translate-x-4' : ''}`} />
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => toggleFeedback('vibration')}
-            className={`flex items-center justify-between rounded-xl border p-3 text-left transition-colors ${
-              feedbackSettings.vibrationEnabled
-                ? 'border-emerald-500/40 bg-emerald-500/10 text-white'
-                : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600'
-            }`}
-          >
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <Smartphone size={16} />
-              {t('settings.vibrationFeedback')}
-            </span>
-            <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${feedbackSettings.vibrationEnabled ? 'bg-emerald-500' : 'bg-surface-600'}`}>
-              <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${feedbackSettings.vibrationEnabled ? 'translate-x-4' : ''}`} />
-            </span>
-          </button>
         </div>
       </div>
 
       {/* ═══ Action History ═══ */}
-      <div className="glass-card p-4">
+      <div className="glass-card p-4 mt-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
@@ -482,7 +491,7 @@ export default function GeneralTab() {
       </div>
 
       {/* ═══ Performance Options ═══ */}
-      <div className="glass-card p-4">
+      <div className="glass-card p-4 mt-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
@@ -502,29 +511,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Donate ═══ */}
-      <div className="bg-gradient-to-br from-brand-600/10 via-fuchsia-500/10 to-surface-800 border border-brand-500/20 rounded-2xl p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 blur-3xl rounded-full"></div>
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-              <Heart size={20} className="text-white fill-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">{t('donate.title')}</h2>
-              <p className="text-xs text-brand-400">{t('donate.subtitle')}</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => setShowDonate(true)}
-            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg shadow-brand-500/20 transition-all active:scale-95"
-          >
-            {t('donate.button')}
-          </button>
-        </div>
-      </div>
 
-      {showDonate && <DonateModal onClose={() => setShowDonate(false)} />}
     </>
   );
 }

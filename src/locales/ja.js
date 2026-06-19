@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "一般",
     "tabSecurity": "セキュリティ",
     "tabData": "データ",
+    "tabInfo": "情報",
     "pinLockTitle": "PINロック",
     "pinLockDesc": "アプリのPINコードを管理する",
     "changePin": "暗証番号を変更",

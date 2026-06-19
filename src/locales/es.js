@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "General",
     "tabSecurity": "Seguridad",
     "tabData": "Datos",
+    "tabInfo": "Info",
     "pinLockTitle": "Bloqueo de PIN",
     "pinLockDesc": "Gestionar el código PIN de la aplicación",
     "changePin": "Cambiar PIN",

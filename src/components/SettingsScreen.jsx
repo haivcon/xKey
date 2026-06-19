@@ -5,6 +5,7 @@ import { hapticTap } from '../utils/haptics';
 import GeneralTab from './settings/GeneralTab';
 import SecurityTab from './settings/SecurityTab';
 import DataTab from './settings/DataTab';
+import InfoTab from './settings/InfoTab';
 import useAppVersion from '../hooks/useAppVersion';
 
 export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
@@ -17,6 +18,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
         { key: 'general', label: t('settings.tabGeneral') || 'Chung', icon: Palette },
         { key: 'security', label: t('settings.tabSecurity') || 'Bảo mật', icon: ShieldCheck },
         { key: 'data', label: t('settings.tabData') || 'Dữ liệu', icon: Database },
+        { key: 'info', label: t('settings.tabInfo') || 'Giới thiệu', icon: BadgeInfo },
     ];
 
     useEffect(() => {
@@ -111,38 +113,10 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                 </aside>
 
                 <div className="min-w-0 space-y-6 lg:[&>.glass-card]:max-w-none">
-                    <div className="glass-card p-4 lg:hidden">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-300">
-                                <BadgeInfo size={20} />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold text-white">{t('settings.appVersion')}</p>
-                                <p className="mt-0.5 text-xs text-surface-400">{t('settings.appVersionDesc')}</p>
-                            </div>
-                            <div className="ml-auto rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-200">
-                                {appVersion.fullLabel}
-                            </div>
-                        </div>
-                        <div className="mt-4 rounded-xl border border-surface-700/70 bg-surface-950/30 p-3">
-                            <p className="text-sm font-bold text-white">{t('settings.openSourceTitle')}</p>
-                            <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.openSourceDesc')}</p>
-                            <a
-                                href={githubUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={hapticTap}
-                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-900 px-3 py-2.5 text-sm font-semibold text-surface-200 transition-colors hover:border-brand-400/60 hover:bg-brand-500/10 hover:text-brand-100"
-                            >
-                                <GitBranch size={16} />
-                                {t('settings.openGithub')}
-                                <ExternalLink size={13} />
-                            </a>
-                        </div>
-                    </div>
                     {activeTab === 'general' && <GeneralTab />}
                     {activeTab === 'security' && <SecurityTab onWipe={onWipe} />}
                     {activeTab === 'data' && <DataTab aesKey={aesKey} onImport={onImport} />}
+                    {activeTab === 'info' && <InfoTab />}
                 </div>
             </div>
         </div>

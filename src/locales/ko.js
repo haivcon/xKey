@@ -260,6 +260,7 @@ export default {
     "tabGeneral": "일반",
     "tabSecurity": "보안",
     "tabData": "데이터",
+    "tabInfo": "정보",
     "pinLockTitle": "PIN 잠금",
     "pinLockDesc": "앱 PIN 코드 관리",
     "changePin": "PIN 변경",
