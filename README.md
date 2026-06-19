@@ -8,11 +8,11 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.10.0
+## Current Release: v5.10.1
 
 ### Release Focus
 
-v5.10.0 is a security-hardening release. It upgrades display privacy, Android screen-capture controls, vault key protection, fragmented encrypted storage, and settings visibility for high-risk vault workflows.
+v5.10.1 is a security-hardening release. It upgrades display privacy, Android screen-capture controls, vault key protection, fragmented encrypted storage, settings visibility for high-risk vault workflows, and completes locale key synchronization for all supported languages.
 
 ### Security Upgrades
 
@@ -39,6 +39,7 @@ v5.10.0 is a security-hardening release. It upgrades display privacy, Android sc
 - **Hardware security labels**: The UI distinguishes device StrongBox availability from the actual protection state of the stored vault key.
 - **Android sync complete**: New native plugins and web assets are synced into the Android project.
 - **Localization refresh**: New security strings were added across the supported locale files.
+- **Locale sync patch**: All locale files now include the new security settings keys. Languages without complete native wording use English fallback text instead of showing raw translation keys.
 
 ## Quality Checks
 
@@ -153,14 +154,14 @@ GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 Example:
 
 ```bash
-git tag v5.10.0
-git push origin v5.10.0
+git tag v5.10.1
+git push origin v5.10.1
 ```
 
 Generated release files:
 
-- `xKey-GitHub-v5.10.0.apk` using package `com.haivcon.xkey.github`
-- `xKey-GooglePlay-v5.10.0.aab` using package `com.haivcon.xkey`
+- `xKey-GitHub-v5.10.1.apk` using package `com.haivcon.xkey.github`
+- `xKey-GooglePlay-v5.10.1.aab` using package `com.haivcon.xkey`
 
 ## Security Notice
 
