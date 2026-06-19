@@ -16,17 +16,7 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    flavorDimensions "distribution"
-    productFlavors {
-        github {
-            dimension "distribution"
-            applicationIdSuffix ".github"
-            versionNameSuffix "-github"
-        }
-        play {
-            dimension "distribution"
-        }
-    }
+
     buildTypes {
         release {
             minifyEnabled true

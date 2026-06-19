@@ -2,6 +2,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
+import { Key } from 'lucide-react';
+
 const LETTER_DELAY = 250;   // ms between each letter
 const HOLD_DURATION = 800;  // ms to hold after all visible
 const FADE_DURATION = 500;  // ms for fade-out
@@ -9,27 +11,8 @@ const FADE_DURATION = 500;  // ms for fade-out
 export default function AnimatedSplash({ onFinish }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [fading, setFading] = useState(false);
-  const [channel, setChannel] = useState('web');
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    let cancelled = false;
-    CapacitorApp.getInfo()
-      .then((info) => {
-        if (cancelled) return;
-        setChannel(info?.id?.endsWith('.github') ? 'github' : 'play');
-      })
-      .catch(() => {
-        if (!cancelled) setChannel('play');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const brandText = channel === 'github' ? 'xKey Github' : 'xKey';
+  const brandText = 'xKey';
   const letters = useMemo(() => Array.from(brandText), [brandText]);
 
   useEffect(() => {
@@ -103,21 +86,19 @@ export default function AnimatedSplash({ onFinish }) {
         <div className="splash-text">
           {letters.map((ch, i) => renderChar(ch, i))}
         </div>
-        {channel === 'github' ? (
-          <div className={`splash-channel-badge splash-channel-github${badgeVisible ? ' is-visible' : ''}`}>
-            <span className="splash-github-mark" aria-hidden="true">Git</span>
-            <span>GitHub build</span>
-          </div>
-        ) : channel === 'play' ? (
-          <div className={`splash-channel-badge splash-channel-play${badgeVisible ? ' is-visible' : ''}`}>
-            <span className="splash-play-mark" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-            <span>Google Play</span>
-          </div>
-        ) : null}
+        <div 
+          className="splash-key-icon"
+          style={{
+            opacity: badgeVisible ? 1 : 0,
+            transform: badgeVisible ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.5s ease-out',
+            marginTop: '1rem',
+            color: '#6366f1',
+            filter: 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.8))'
+          }}
+        >
+          <Key size={32} />
+        </div>
       </div>
     </div>
   );

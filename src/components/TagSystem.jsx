@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Tag, X } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
+import { useT } from '../contexts/LanguageContext';
 
 const TAG_COLORS = [
   { name: 'blue', bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/30' },
@@ -39,6 +40,7 @@ export function TagBadge({ tag, onRemove, small = false }) {
 
 /** Tag editor for wallet edit mode */
 export function TagEditor({ tags = [], onChange, allTags = [] }) {
+  const t = useT();
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef(null);
@@ -74,7 +76,7 @@ export function TagEditor({ tags = [], onChange, allTags = [] }) {
     <div>
       <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">
         <Tag size={10} className="inline mr-1" />
-        Tags
+        {t('createWallet.tags') || 'Tags'}
       </label>
       <div className="flex flex-wrap gap-1.5 mb-2">
         {tags.map(tag => (
@@ -89,7 +91,7 @@ export function TagEditor({ tags = [], onChange, allTags = [] }) {
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder="Add tag..."
+          placeholder={t('createWallet.tagPlaceholder') || 'Add tag...'}
           className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
         />
         {showSuggestions && suggestions.length > 0 && (
@@ -109,3 +111,4 @@ export function TagEditor({ tags = [], onChange, allTags = [] }) {
     </div>
   );
 }
+
