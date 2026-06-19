@@ -45,13 +45,13 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleGithubRelease bundlePlayRelease
+          ./gradlew assembleRelease bundleRelease
 
       - name: 🔑 Sign GitHub APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/apk/github/release
+          releaseDirectory: android/app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -63,7 +63,7 @@ jobs:
         id: sign_aab
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: android/app/build/outputs/bundle/playRelease
+          releaseDirectory: android/app/build/outputs/bundle/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -90,7 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "🔑xKey v${{ env.APP_VERSION }}"
-          body: "Automatically optimized and securely signed releases.\n\n**Version:** v${{ env.APP_VERSION }}\n- **APK**: GitHub/manual-install build using package `com.haivcon.xkey.github`, so it can coexist with the Google Play app.\n- **AAB**: Google Play Console build using package `com.haivcon.xkey`."
+          body: "Automatically optimized and securely signed releases.\n\n**Version:** v${{ env.APP_VERSION }}\n- **APK**: Unified release build using package `com.haivcon.xkey`.\n- **AAB**: Google Play Console bundle using package `com.haivcon.xkey`."
           files: |
             ${{ env.APK_NAME }}
             ${{ env.AAB_NAME }}
