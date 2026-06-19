@@ -31,7 +31,6 @@ xKey is designed to reduce risk from:
 - Accidental clipboard exposure through configurable clipboard auto-clear.
 - Accidental access after inactivity through auto-lock.
 - Loss of biometric availability by falling back to Android device credentials where supported.
-- Loss of biometric availability by falling back to Android device credentials where supported.
 
 ### Out of Scope
 
