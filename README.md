@@ -4,27 +4,17 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.9.0
+## Current Release: v5.9.1
 
 ### Release Focus
 
-v5.9.0 introduces **Offline Shamir's Secret Sharing (SSS) Backup (2-of-3)**, enabling users to split their encrypted vault backup into 3 QR sheets for high-security offline paper storage, alongside robust multi-page scanning, checksum validation, and scanner UX improvements.
+v5.9.1 is a maintenance release that unifies the Android package name and branding across all distributions. The app now uses a single, generic `com.haivcon.xkey` package name and features a clean, unified splash screen (animated "xKey" with a glowing key icon), dropping the GitHub and Google Play specific splash screens. 
 
 ### Key Upgrades & Features
 
-- **Offline Shamir's Secret Sharing (SSS) Backup (2-of-3)**:
-  - Added option for Offline Shamir Backup under Settings > Data.
-  - Splits the encrypted vault data (stored as `.xkey` format) into 3 parts (Part A, Part B, Part C) as QR code sheets.
-  - Restoring requires scanning at least 2 out of the 3 parts and entering the backup password.
-  - Removes the Single Point of Failure (SPOF) - losing 1 QR code sheet is safe, and thieves cannot access the vault with only 1 sheet.
-- **Robust Multi-QR Chunking**:
-  - Handles larger backup files by split-chunking each Part (A, B, C) into multiple QR pages.
-  - Adds individual page checksums and total Part checksums to detect and reject missing, incorrect, or corrupted QR pages during scanning.
-  - Prevents scanning a mix of parts from different backups.
-- **Scanner UI & Reliability Improvements**:
-  - Fixed a camera scanner restart issue during restore where scanning the first part caused the scanner component to refresh/lag.
-  - Added detailed validation feedback, clearly separating password errors from mismatched/corrupted QR data.
-  - Added automated test suite for the Shamir module (`npm run test:shamir`).
+- **Unified Package Name**: All Android builds now use `com.haivcon.xkey`. The `.github` flavor and suffix have been removed to allow seamless updates across different installation sources.
+- **Unified Branding**: Removed channel-specific splash screens (Google Play/GitHub) in favor of a single, clean animated splash screen with a glowing key icon.
+- **Translation Updates**: Fixed and extracted several hardcoded strings (e.g. Tags) for full multi-language support.
 
 ## Quality Checks
 
@@ -68,6 +58,14 @@ The Vite production build may still report a large chunk warning. This is not a 
 - Telegram: <https://t.me/haivcon>
 
 ## Previous Releases
+
+<details>
+<summary><b>v5.9.0: Offline Shamir's Secret Sharing Backup</b></summary>
+
+- **Offline Shamir's Secret Sharing (SSS) Backup (2-of-3)**: Splits the encrypted vault data into 3 parts (Part A, Part B, Part C) as QR code sheets. Restoring requires scanning at least 2 out of the 3 parts.
+- **Robust Multi-QR Chunking**: Handles larger backup files by split-chunking each Part (A, B, C) into multiple QR pages. Adds individual page checksums and total Part checksums.
+- **Scanner UI & Reliability Improvements**: Fixed camera scanner restart issue during restore. Added detailed validation feedback.
+</details>
 
 <details>
 <summary><b>v5.8.2: Android Builds, Vanity-Wallets & Organization</b></summary>
