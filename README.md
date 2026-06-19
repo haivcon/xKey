@@ -1,5 +1,8 @@
 # xKey - Offline Web3 Wallet Vault
 
+![GitHub Release](https://img.shields.io/github/v/release/haivcon/xKey?color=blue&label=Latest%20Release)
+![License](https://img.shields.io/github/license/haivcon/xKey?color=green)
+![Android Build Status](https://img.shields.io/github/actions/workflow/status/haivcon/xKey/build-and-release-apk.yml?label=Build%20Status)
 **xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, QR workflows, folders, tags, backups, CSV data, manual asset balances, and batch operations in a local encrypted app.
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
@@ -31,20 +34,28 @@ The Vite production build may still report a large chunk warning. This is not a 
 
 ## Core Features
 
-- Offline encrypted wallet vault
-- Local AES-protected wallet storage
+## Core Features
+
+**🔐 Security & Privacy**
+- Offline encrypted wallet vault with local AES-protected storage
 - Android Device Credential unlock and web fallback authentication
-- Android support through Capacitor 8
-- Wallet folders, tags, filters, sorting, search, and batch actions
-- Vanity wallet generation
-- QR scanning, QR display, QR sharing, and QR transfer utilities
-- Manual asset balance tracking with custom units
-- CSV import/export
+- Offline Shamir's Secret Sharing (2-of-3) backups (No single point of failure)
 - Encrypted portable `.xkey` backups
-- Offline Shamir's Secret Sharing 2-of-3 backups
+- Decoy vault and kill switch features
 - Duplicate detection and analytics
-- Display scale and wallet density customization
-- Multi-language UI
+
+**🗂️ Wallet Management**
+- Folder and tag organization
+- Advanced filtering, sorting, search, and batch actions
+- Vanity wallet generation with multi-threading
+- Manual asset balance tracking with custom units
+- Configurable display scale and wallet density
+
+**🛠️ Offline Utilities**
+- Native Android support (Capacitor 8)
+- QR scanning, display, sharing, and transfer workflows
+- CSV import/export
+- Multi-language UI (15 supported languages)
 
 ## Supported Languages
 

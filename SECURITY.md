@@ -31,7 +31,7 @@ xKey is designed to reduce risk from:
 - Accidental clipboard exposure through configurable clipboard auto-clear.
 - Accidental access after inactivity through auto-lock.
 - Loss of biometric availability by falling back to Android device credentials where supported.
-- Confusion between GitHub APK and Google Play builds by using separate package identities and branding.
+- Loss of biometric availability by falling back to Android device credentials where supported.
 
 ### Out of Scope
 
@@ -62,10 +62,9 @@ Current Android behavior:
 - The Android Keystore wrapping key uses AES/GCM/NoPadding.
 - The wrapping key requires recent user authentication.
 - On modern Android versions, authentication allows strong biometric or device credential fallback.
-- GitHub builds use package `com.haivcon.xkey.github`.
-- Google Play builds use package `com.haivcon.xkey`.
+- Google Play and GitHub builds use the unified package `com.haivcon.xkey`.
 
-This package split is intentional. Android does not allow one installed app to be updated by another app with a different signing key under the same package name. Keeping separate package names avoids update conflicts between Google Play and GitHub APK builds.
+To allow seamless updates from GitHub over a Google Play installation, the project recommends using Google Play App Signing with the same local upload keystore. This ensures the digital signature matches across all installation sources.
 
 ### Web
 
@@ -164,6 +163,11 @@ Backup rules:
 - Treat backup files as sensitive even when encrypted.
 - Delete unsafe copies from shared folders, chat apps, and public cloud locations.
 
+**Offline Shamir's Secret Sharing (2-of-3) Backup:**
+- For Shamir backups, ensure the 3 QR parts are stored in physically separate, secure locations (e.g., different safes or locations).
+- Never store 2 parts in the same location, as that defeats the purpose of the 2-of-3 threshold.
+- Do not take photos of the QR sheets and upload them to cloud services (Google Photos, iCloud), as this breaks the offline security model.
+
 If the Android Keystore key is lost, invalidated, or the device is wiped, a valid backup may be the only recovery path.
 
 ## Clipboard Security
@@ -212,12 +216,11 @@ Rules:
 
 ## Android Release Hardening
 
-xKey uses separate Android release channels:
+xKey uses a single, unified Android release channel:
 
-- Google Play: `com.haivcon.xkey`
-- GitHub APK: `com.haivcon.xkey.github`
+- Google Play and GitHub APK: `com.haivcon.xkey`
 
-This separation prevents signing conflicts and makes the installed build source visible to users.
+This unification allows users to seamlessly update the app using GitHub APKs even if they originally installed it from Google Play, provided the exact same App Signing Key is used.
 
 Recommended release checklist:
 
@@ -319,7 +322,7 @@ npx cap sync android
 For Android:
 
 ```bash
-android/gradlew -p android assembleGithubRelease bundlePlayRelease
+android/gradlew -p android assembleRelease bundleRelease
 ```
 
 ## Secure Development Rules
@@ -347,7 +350,7 @@ Preferred contact:
 When reporting, include:
 
 - A clear description of the issue.
-- Affected platform: Android GitHub APK, Android Google Play build, or web.
+- Affected platform: Android APK, Android Google Play build, or web.
 - xKey version.
 - Android version or browser version.
 - Reproduction steps.
@@ -388,7 +391,6 @@ Users should:
 - Avoid copying private keys and seed phrases.
 - Avoid showing sensitive QR codes in public.
 - Keep the app updated.
-- Install GitHub and Google Play builds intentionally, knowing they are separate Android packages.
 - Verify the app source and release channel before storing sensitive data.
 
 ## Current Security Limitations
