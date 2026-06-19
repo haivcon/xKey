@@ -9,6 +9,8 @@ import { ConfirmProvider } from './contexts/ConfirmContext';
 import { LanguageProvider, useT } from './contexts/LanguageContext';
 import { MasterPasswordProvider } from './contexts/MasterPasswordContext';
 import { ScrambledKeyboardProvider } from './contexts/ScrambledKeyboardContext';
+import { SecureDisplayProvider } from './contexts/SecureDisplayContext';
+import { ScreenSecurityProvider } from './contexts/ScreenSecurityContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const hideNativeSplash = () => {
@@ -78,11 +80,15 @@ createRoot(document.getElementById('root')).render(
             <ThemeProvider>
               <MasterPasswordProvider>
                 <ScrambledKeyboardProvider>
-                  <ToastProvider>
-                    <ConfirmProvider>
-                      <Boot />
-                    </ConfirmProvider>
-                  </ToastProvider>
+                  <SecureDisplayProvider>
+                    <ScreenSecurityProvider>
+                      <ToastProvider>
+                        <ConfirmProvider>
+                          <Boot />
+                        </ConfirmProvider>
+                      </ToastProvider>
+                    </ScreenSecurityProvider>
+                  </SecureDisplayProvider>
                 </ScrambledKeyboardProvider>
               </MasterPasswordProvider>
             </ThemeProvider>

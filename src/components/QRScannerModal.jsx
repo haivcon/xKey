@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Camera } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useT } from '../contexts/LanguageContext';
@@ -15,19 +16,31 @@ export default function QRScannerModal({ onResult, onClose }) {
   onResultRef.current = onResult;
   onCloseRef.current = onClose;
 
+  const stopScanner = () => {
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.getState && scannerRef.current.getState() !== 1) {
+          scannerRef.current.stop().catch(() => {});
+        } else {
+          scannerRef.current.stop().catch(() => {});
+        }
+      } catch {
+        // Ignore synchronous errors
+      }
+      try { scannerRef.current.clear(); } catch {
+        // Scanner may already be cleared by the native camera layer.
+      }
+      scannerRef.current = null;
+    }
+  };
+
   useEffect(() => {
     let scanner = null;
     let stopped = false;
 
     const cleanup = () => {
       stopped = true;
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        try { scannerRef.current.clear(); } catch {
-          // Scanner may already be cleared by the native camera layer.
-        }
-        scannerRef.current = null;
-      }
+      stopScanner();
     };
 
     const startScanner = async () => {
@@ -69,16 +82,12 @@ export default function QRScannerModal({ onResult, onClose }) {
   }, [cameraDeniedMessage]);
 
   const handleClose = () => {
-    if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
+    stopScanner();
     onClose();
   };
 
-  return (
-    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="app-scaled-icons fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-white font-bold flex items-center gap-2">
@@ -108,6 +117,7 @@ export default function QRScannerModal({ onResult, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

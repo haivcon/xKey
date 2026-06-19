@@ -8,8 +8,10 @@ import { useToast } from '../contexts/ToastContext';
 import { useMasterPassword } from '../contexts/MasterPasswordContext';
 import PasswordInput from './PasswordInput';
 import SecureTextarea from './SecureTextarea';
+import SecureGlyphText from './SecureGlyphText';
 import { TagBadge, TagEditor } from './TagSystem';
 import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
+import { useSecureDisplay } from '../contexts/SecureDisplayContext';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -44,6 +46,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const t = useT();
   const { showToast } = useToast();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
+  const secureDisplay = useSecureDisplay();
   const [showMPPrompt, setShowMPPrompt] = useState(null);
   const [mpInput, setMpInput] = useState('');
   const isCompact = density === 'compact';
@@ -398,9 +401,13 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {showPk && <span className="text-yellow-500/70 text-[10px] normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-all font-mono">
-                      {showPk ? wallet.privateKey : '•'.repeat(Math.min(wallet.privateKey.length, 64))}
-                    </code>
+                    {showPk && secureDisplay.enabled ? (
+                      <SecureGlyphText value={wallet.privateKey} className="flex-1 text-sm" />
+                    ) : (
+                      <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-all font-mono">
+                        {showPk ? wallet.privateKey : '•'.repeat(Math.min(wallet.privateKey.length, 64))}
+                      </code>
+                    )}
                     <button onClick={() => handleShowSensitive('pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">{showPk ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                     <button onClick={() => handleShowSensitive('qr_pk')} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded transition-colors"><QrCode size={18} /></button>
                     <button onClick={() => handleShowSensitive('copy_pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
@@ -418,9 +425,13 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {showSeed && <span className="text-yellow-500/70 text-[10px] normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-words leading-relaxed">
-                      {showSeed ? wallet.seedPhrase : '• '.repeat(wallet.seedPhrase.split(' ').length)}
-                    </code>
+                    {showSeed && secureDisplay.enabled ? (
+                      <SecureGlyphText value={wallet.seedPhrase} className="flex-1 text-sm" multiline />
+                    ) : (
+                      <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-words leading-relaxed">
+                        {showSeed ? wallet.seedPhrase : '• '.repeat(wallet.seedPhrase.split(' ').length)}
+                      </code>
+                    )}
                     <button onClick={() => handleShowSensitive('seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">{showSeed ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                     <button onClick={() => handleShowSensitive('copy_seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">
                       {copiedField === 'seed' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}

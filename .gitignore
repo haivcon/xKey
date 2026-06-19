@@ -47,9 +47,13 @@ Desktop.ini
 android/.gradle/
 android/build/
 android/app/build/
+android/app/.cxx/
+android/app/debug/
+android/app/outputs/
 android/capacitor-cordova-android-plugins/build/
 android/local.properties
 android/app/release/
+android/**/*.iml
 
 # Release artifacts
 *.apk

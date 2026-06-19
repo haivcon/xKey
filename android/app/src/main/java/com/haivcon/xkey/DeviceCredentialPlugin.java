@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
+import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
@@ -26,6 +28,7 @@ import java.security.KeyStore;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
@@ -48,6 +51,18 @@ public class DeviceCredentialPlugin extends Plugin {
     public void isAvailable(PluginCall call) {
         JSObject result = new JSObject();
         result.put("isAvailable", isDeviceSecure());
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void getHardwareSecurityInfo(PluginCall call) {
+        String alias = call.getString("alias", DEFAULT_ALIAS);
+        JSObject result = new JSObject();
+        result.put("deviceSecure", isDeviceSecure());
+        result.put("keystoreAvailable", isAndroidKeystoreAvailable());
+        result.put("strongBoxSupported", isStrongBoxSupported());
+        result.put("vaultKeyStored", hasWrappedKey(alias));
+        result.put("vaultKeyInsideSecureHardware", isKeyInsideSecureHardware(alias));
         call.resolve(result);
     }
 
@@ -203,6 +218,37 @@ public class DeviceCredentialPlugin extends Plugin {
         return keyguard.isKeyguardSecure();
     }
 
+    private boolean isAndroidKeystoreAvailable() {
+        try {
+            KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
+            ks.load(null);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isStrongBoxSupported() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false;
+        return getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE);
+    }
+
+    private boolean isKeyInsideSecureHardware(String alias) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
+        try {
+            KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
+            ks.load(null);
+            String keyAlias = KEY_PREFIX + alias;
+            if (!ks.containsAlias(keyAlias)) return false;
+            SecretKey key = (SecretKey) ks.getKey(keyAlias, null);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(key.getAlgorithm(), "AndroidKeyStore");
+            KeyInfo keyInfo = (KeyInfo) factory.getKeySpec(key, KeyInfo.class);
+            return keyInfo.isInsideSecureHardware();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private SharedPreferences getPrefs() {
         return getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
@@ -219,7 +265,26 @@ public class DeviceCredentialPlugin extends Plugin {
             return (SecretKey) ks.getKey(keyAlias, null);
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && isStrongBoxSupported()) {
+            try {
+                KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+                KeyGenParameterSpec.Builder builder = buildKeySpec(keyAlias);
+                builder.setIsStrongBoxBacked(true);
+                generator.init(builder.build());
+                return generator.generateKey();
+            } catch (Exception ignored) {
+                // Some devices advertise StrongBox but fail at key generation time.
+                // Fall back to the regular Android Keystore provider.
+            }
+        }
+
         KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+        KeyGenParameterSpec.Builder builder = buildKeySpec(keyAlias);
+        generator.init(builder.build());
+        return generator.generateKey();
+    }
+
+    private KeyGenParameterSpec.Builder buildKeySpec(String keyAlias) {
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
             keyAlias,
             KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT
@@ -241,8 +306,7 @@ public class DeviceCredentialPlugin extends Plugin {
             }
         }
 
-        generator.init(builder.build());
-        return generator.generateKey();
+        return builder;
     }
 
     private void wrapVaultKey(String alias, String plainKey) throws Exception {

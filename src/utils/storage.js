@@ -1,4 +1,5 @@
 import { Preferences } from '@capacitor/preferences';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import CryptoJS from 'crypto-js';
@@ -6,6 +7,7 @@ import { runMigrations } from './migration';
 import {
     deleteDeviceProtectedVaultKey,
     getDeviceProtectedVaultKey,
+    getHardwareSecurityInfo,
     hasDeviceProtectedVaultKey,
     isDeviceCredentialAvailable,
     setDeviceProtectedVaultKey,
@@ -37,11 +39,16 @@ const runCryptoWorker = (type, payload) => {
 const STORAGE_KEYS = {
     WALLETS: 'xkey_wallets',
     DECOY_WALLETS: 'xkey_decoy_wallets',
-    AES_KEY_FALLBACK: 'xkey_aes_fallback'
+    AES_KEY_FALLBACK: 'xkey_aes_fallback',
+    HARDWARE_BOUND_ONLY: 'xkey_hardware_bound_only'
 };
 
 const BIOMETRIC_SERVER = 'app.xkey.vault';
 const BIOMETRIC_USER = 'xkey_vault';
+const FRAGMENT_VERSION = 1;
+const FRAGMENT_DIR = 'xkey-vault-fragments';
+let commitSequence = 0;
+const walletSaveQueues = new Map();
 
 // Crypto functions migrated to crypto.worker.js
 
@@ -50,9 +57,325 @@ const getStoredFallbackKey = async () => {
     return value || '';
 };
 
+export const isHardwareBoundOnlyEnabled = async () => {
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.HARDWARE_BOUND_ONLY });
+    return value === 'true';
+};
+
+export const setHardwareBoundOnlyMode = async (enabled, key) => {
+    if (!Capacitor.isNativePlatform()) {
+        throw new Error('Hardware-bound mode is only available on native devices.');
+    }
+    if (!await isDeviceCredentialAvailable()) {
+        throw new Error('Set a device lock before enabling hardware-bound mode.');
+    }
+    if (!key) {
+        throw new Error('Unlock the vault before changing hardware-bound mode.');
+    }
+
+    await setDeviceProtectedVaultKey(key);
+    if (enabled) {
+        await removeFallbackEncryptionKey();
+        await Preferences.set({ key: STORAGE_KEYS.HARDWARE_BOUND_ONLY, value: 'true' });
+    } else {
+        await Preferences.set({ key: STORAGE_KEYS.HARDWARE_BOUND_ONLY, value: 'false' });
+        await persistFallbackEncryptionKey(key);
+    }
+    return true;
+};
+
+const fragmentManifestKey = (storageKey) => `${storageKey}_fragment_manifest_v${FRAGMENT_VERSION}`;
+const legacyOverrideKey = (storageKey) => `${storageKey}_legacy_override_v${FRAGMENT_VERSION}`;
+const fragmentPrefKey = (storageKey, writeId, index) => `${storageKey}_fragment_${writeId}_${index}_v${FRAGMENT_VERSION}`;
+const fragmentFilePath = (storageKey, writeId, index) => {
+    const safeStorageKey = storageKey.replace(/[^a-z0-9_-]/gi, '_');
+    return `${FRAGMENT_DIR}/${safeStorageKey}_${writeId}_${index}.xkf`;
+};
+
+const getCipherHash = (value) => CryptoJS.SHA256(value).toString();
+
+const createCommitMetadata = () => {
+    const createdAt = new Date().toISOString();
+    commitSequence += 1;
+    return {
+        createdAt,
+        commitStamp: `${Date.now().toString().padStart(13, '0')}_${commitSequence.toString().padStart(6, '0')}`,
+    };
+};
+
+const splitCipherText = (value) => {
+    const size = Math.ceil(value.length / 3);
+    return [
+        value.slice(0, size),
+        value.slice(size, size * 2),
+        value.slice(size * 2),
+    ];
+};
+
+const readManifest = async (storageKey) => {
+    const { value } = await Preferences.get({ key: fragmentManifestKey(storageKey) });
+    if (!value) return null;
+    try {
+        const manifest = JSON.parse(value);
+        if (manifest?.version !== FRAGMENT_VERSION || manifest.storageKey !== storageKey || !Array.isArray(manifest.fragments)) return null;
+        if (manifest.fragments.length !== 3) return null;
+        if (!Number.isFinite(manifest.totalLength) || typeof manifest.hash !== 'string') return null;
+        const indexes = manifest.fragments.map(fragment => fragment.index).sort((a, b) => a - b);
+        if (indexes.some((index, expected) => index !== expected)) return null;
+        if (manifest.fragments.some(fragment => (
+            !['preferences', 'file'].includes(fragment.type)
+            || !Number.isFinite(fragment.length)
+            || typeof fragment.hash !== 'string'
+            || (fragment.type === 'preferences' && !fragment.key)
+            || (fragment.type === 'file' && !fragment.path)
+        ))) return null;
+        return manifest;
+    } catch {
+        return null;
+    }
+};
+
+const hasFragmentManifest = async (storageKey) => {
+    const { value } = await Preferences.get({ key: fragmentManifestKey(storageKey) });
+    return !!value;
+};
+
+const readLegacyOverride = async (storageKey) => {
+    const { value } = await Preferences.get({ key: legacyOverrideKey(storageKey) });
+    if (!value) return null;
+    try {
+        const parsed = JSON.parse(value);
+        if (parsed?.version === FRAGMENT_VERSION && typeof parsed.hash === 'string') {
+            return {
+                hash: parsed.hash,
+                createdAt: parsed.createdAt || '',
+                commitStamp: parsed.commitStamp || '',
+            };
+        }
+    } catch {
+        // Backward compatible with the first legacy override format, which stored only the hash.
+    }
+    return { hash: value, createdAt: '', commitStamp: '' };
+};
+
+const isNewerCommit = (left, right) => {
+    if (left?.commitStamp && right?.commitStamp) return left.commitStamp > right.commitStamp;
+    if (left?.commitStamp && !right?.commitStamp) return true;
+    if (!left?.commitStamp && right?.commitStamp) return false;
+    if (!left?.createdAt) return false;
+    if (!right?.createdAt) return true;
+    const leftTime = Date.parse(left.createdAt);
+    const rightTime = Date.parse(right.createdAt);
+    if (!Number.isFinite(leftTime)) return false;
+    if (!Number.isFinite(rightTime)) return true;
+    return leftTime > rightTime;
+};
+
+const readFileFragment = async (path) => {
+    const result = await Filesystem.readFile({
+        directory: Directory.Data,
+        path,
+        encoding: Encoding.UTF8,
+    });
+    return typeof result.data === 'string' ? result.data : '';
+};
+
+const readFragmentedVaultCipher = async (storageKey) => {
+    const manifest = await readManifest(storageKey);
+    if (!manifest) return '';
+    const orderedFragments = [...manifest.fragments].sort((a, b) => a.index - b.index);
+
+    const parts = await Promise.all(orderedFragments.map(async (fragment) => {
+        const data = fragment.type === 'preferences'
+            ? (await Preferences.get({ key: fragment.key })).value || ''
+            : await readFileFragment(fragment.path);
+
+        if (data.length !== fragment.length || getCipherHash(data) !== fragment.hash) {
+            throw new Error('Vault fragment integrity check failed.');
+        }
+        return data;
+    }));
+
+    const value = parts.join('');
+    if (value.length !== manifest.totalLength || getCipherHash(value) !== manifest.hash) {
+        throw new Error('Vault manifest integrity check failed.');
+    }
+    return value;
+};
+
+const removeStoredFragments = async (manifest) => {
+    if (!manifest?.fragments) return;
+    await Promise.all(manifest.fragments.map((fragment) => {
+        if (fragment.type === 'preferences' && fragment.key) {
+            return Preferences.remove({ key: fragment.key }).catch(() => {});
+        }
+        if (fragment.type === 'file' && fragment.path) {
+            return Filesystem.deleteFile({
+                directory: Directory.Data,
+                path: fragment.path,
+            }).catch(() => {});
+        }
+        return Promise.resolve();
+    }));
+};
+
+const saveFragmentedVaultCipher = async (storageKey, value) => {
+    const previousManifest = await readManifest(storageKey);
+    const writeId = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const chunks = splitCipherText(value);
+    const commit = createCommitMetadata();
+    const manifest = {
+        version: FRAGMENT_VERSION,
+        createdAt: commit.createdAt,
+        commitStamp: commit.commitStamp,
+        storageKey,
+        totalLength: value.length,
+        hash: getCipherHash(value),
+        fragments: chunks.map((chunk, index) => ({
+            index,
+            type: index === 0 ? 'preferences' : 'file',
+            key: index === 0 ? fragmentPrefKey(storageKey, writeId, index) : undefined,
+            path: index === 0 ? undefined : fragmentFilePath(storageKey, writeId, index),
+            length: chunk.length,
+            hash: getCipherHash(chunk),
+        })),
+    };
+
+    await Filesystem.mkdir({
+        directory: Directory.Data,
+        path: FRAGMENT_DIR,
+        recursive: true,
+    }).catch(() => {});
+
+    await Promise.all(manifest.fragments.map((fragment) => {
+        const chunk = chunks[fragment.index];
+        if (fragment.type === 'preferences') {
+            return Preferences.set({ key: fragment.key, value: chunk });
+        }
+        return Filesystem.writeFile({
+            directory: Directory.Data,
+            path: fragment.path,
+            data: chunk,
+            encoding: Encoding.UTF8,
+        });
+    }));
+
+    await Preferences.set({ key: fragmentManifestKey(storageKey), value: JSON.stringify(manifest) });
+    await Preferences.remove({ key: storageKey });
+    await Preferences.remove({ key: legacyOverrideKey(storageKey) });
+    await removeStoredFragments(previousManifest);
+};
+
+const saveVaultCipher = async (storageKey, value) => {
+    if (!Capacitor.isNativePlatform()) {
+        await Preferences.set({ key: storageKey, value });
+        return;
+    }
+
+    try {
+        await saveFragmentedVaultCipher(storageKey, value);
+    } catch (err) {
+        console.warn('Fragmented vault storage failed; using legacy encrypted blob storage.', err);
+        const commit = createCommitMetadata();
+        const override = {
+            version: FRAGMENT_VERSION,
+            createdAt: commit.createdAt,
+            commitStamp: commit.commitStamp,
+            hash: getCipherHash(value),
+        };
+        await Preferences.set({ key: storageKey, value });
+        await Preferences.set({ key: legacyOverrideKey(storageKey), value: JSON.stringify(override) });
+        await Preferences.remove({ key: fragmentManifestKey(storageKey) });
+    }
+};
+
+const loadVaultCipher = async (storageKey) => {
+    if (Capacitor.isNativePlatform()) {
+        const [{ value: legacyValue }, legacyOverride, manifest] = await Promise.all([
+            Preferences.get({ key: storageKey }),
+            readLegacyOverride(storageKey),
+            readManifest(storageKey),
+        ]);
+        if (
+            legacyValue
+            && legacyOverride?.hash === getCipherHash(legacyValue)
+            && (!manifest || !legacyOverride.createdAt || isNewerCommit(legacyOverride, manifest))
+        ) {
+            return { value: legacyValue, source: 'legacy' };
+        }
+
+        const hasManifest = await hasFragmentManifest(storageKey);
+        try {
+            const fragmented = await readFragmentedVaultCipher(storageKey);
+            if (fragmented) return { value: fragmented, source: 'fragmented' };
+        } catch (err) {
+            console.warn('Unable to read fragmented vault storage.', err);
+            if (legacyValue) return { value: legacyValue, source: 'legacy' };
+            throw err;
+        }
+
+        if (hasManifest) {
+            if (legacyValue) return { value: legacyValue, source: 'legacy' };
+            throw new Error('Vault fragment manifest is present but invalid.');
+        }
+    }
+
+    const { value } = await Preferences.get({ key: storageKey });
+    return { value: value || '', source: value ? 'legacy' : 'none' };
+};
+
+const waitForPendingWalletSave = async (storageKey) => {
+    const pending = walletSaveQueues.get(storageKey);
+    if (pending) await pending.catch(() => {});
+};
+
 const getStoredVaultCipher = async () => {
-    const { value } = await Preferences.get({ key: STORAGE_KEYS.WALLETS });
+    await waitForPendingWalletSave(STORAGE_KEYS.WALLETS);
+    const { value } = await loadVaultCipher(STORAGE_KEYS.WALLETS);
     return value || '';
+};
+
+export const getVaultStorageStatus = async () => {
+    const native = Capacitor.isNativePlatform();
+    const [
+        mainManifest,
+        decoyManifest,
+        hasMainManifest,
+        hasDecoyManifest,
+        mainLegacyResult,
+        decoyLegacyResult,
+        mainLegacyOverride,
+        decoyLegacyOverride,
+    ] = await Promise.all([
+        readManifest(STORAGE_KEYS.WALLETS).catch(() => null),
+        readManifest(STORAGE_KEYS.DECOY_WALLETS).catch(() => null),
+        hasFragmentManifest(STORAGE_KEYS.WALLETS).catch(() => false),
+        hasFragmentManifest(STORAGE_KEYS.DECOY_WALLETS).catch(() => false),
+        Preferences.get({ key: STORAGE_KEYS.WALLETS }).catch(() => ({ value: '' })),
+        Preferences.get({ key: STORAGE_KEYS.DECOY_WALLETS }).catch(() => ({ value: '' })),
+        readLegacyOverride(STORAGE_KEYS.WALLETS).catch(() => null),
+        readLegacyOverride(STORAGE_KEYS.DECOY_WALLETS).catch(() => null),
+    ]);
+    const mainLegacy = mainLegacyResult.value || '';
+    const decoyLegacy = decoyLegacyResult.value || '';
+    const mainLegacyOverrideActive = !!mainLegacy
+        && mainLegacyOverride?.hash === getCipherHash(mainLegacy)
+        && (!mainManifest || !mainLegacyOverride.createdAt || isNewerCommit(mainLegacyOverride, mainManifest));
+    const decoyLegacyOverrideActive = !!decoyLegacy
+        && decoyLegacyOverride?.hash === getCipherHash(decoyLegacy)
+        && (!decoyManifest || !decoyLegacyOverride.createdAt || isNewerCommit(decoyLegacyOverride, decoyManifest));
+    const hasLegacyOverride = mainLegacyOverrideActive || decoyLegacyOverrideActive;
+
+    return {
+        native,
+        ramOnlyDecrypted: true,
+        plaintextDiskWrite: false,
+        fragmentedStorage: !hasLegacyOverride && !!(mainManifest || decoyManifest || hasMainManifest || hasDecoyManifest),
+        fragmentedStorageHealthy: !(hasMainManifest && !mainManifest) && !(hasDecoyManifest && !decoyManifest),
+        legacyStorage: hasLegacyOverride || !!(mainLegacy || decoyLegacy),
+        legacyOverride: hasLegacyOverride,
+        fragmentCount: mainManifest?.fragments?.length || decoyManifest?.fragments?.length || 0,
+    };
 };
 
 const recoverDeviceCredentialKey = async () => {
@@ -91,10 +414,27 @@ export const getVaultSecurityStatus = async () => {
     const deviceCredentialAvailable = native ? await isDeviceCredentialAvailable().catch(() => false) : false;
     const deviceProtected = deviceCredentialAvailable ? await hasDeviceProtectedVaultKey().catch(() => false) : false;
     const fallback = await hasFallbackEncryptionKey().catch(() => false);
-    const vaultExists = !!(await getStoredVaultCipher().catch(() => ''));
+    const hardwareBoundOnly = await isHardwareBoundOnlyEnabled().catch(() => false);
+    const hardwareInfo = native ? await getHardwareSecurityInfo().catch(() => null) : null;
+    let vaultExists = false;
+    let vaultStorageError = false;
+    try {
+        vaultExists = !!(await getStoredVaultCipher());
+    } catch {
+        vaultExists = true;
+        vaultStorageError = true;
+    }
+    const storage = await getVaultStorageStatus().catch(() => ({
+        ramOnlyDecrypted: true,
+        plaintextDiskWrite: false,
+        fragmentedStorage: false,
+        legacyStorage: false,
+        fragmentCount: 0,
+    }));
 
     let mode = 'web-fallback';
-    if (native && deviceCredentialAvailable && deviceProtected && !fallback) mode = 'android-secure';
+    if (native && deviceCredentialAvailable && deviceProtected && hardwareBoundOnly && !fallback) mode = 'hardware-bound';
+    else if (native && deviceCredentialAvailable && deviceProtected && !fallback) mode = 'android-secure';
     else if (native && deviceCredentialAvailable && deviceProtected && fallback) mode = 'compatibility';
     else if (native && deviceCredentialAvailable) mode = 'device-ready';
     else if (native) mode = 'native-fallback';
@@ -106,11 +446,16 @@ export const getVaultSecurityStatus = async () => {
         deviceCredentialAvailable,
         deviceProtected,
         fallback,
+        hardwareBoundOnly,
+        hardwareInfo,
+        storage,
+        vaultStorageError,
     };
 };
 
 export const persistFallbackEncryptionKey = async (key) => {
     if (!key) return false;
+    if (await isHardwareBoundOnlyEnabled().catch(() => false)) return false;
     await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: key });
     return true;
 };
@@ -147,7 +492,9 @@ export const getEncryptionKeyBiometric = async () => {
             try {
                 const key = await getDeviceProtectedVaultKey();
                 if (key) {
-                    await persistFallbackEncryptionKey(key);
+                    if (!await isHardwareBoundOnlyEnabled().catch(() => false)) {
+                        await persistFallbackEncryptionKey(key);
+                    }
                     return key;
                 }
             } catch (err) {
@@ -159,7 +506,8 @@ export const getEncryptionKeyBiometric = async () => {
             }
         }
 
-        const fallbackKey = await getStoredFallbackKey();
+        const hardwareBoundOnly = await isHardwareBoundOnlyEnabled().catch(() => false);
+        const fallbackKey = hardwareBoundOnly ? '' : await getStoredFallbackKey();
         if (fallbackKey) {
             await setDeviceProtectedVaultKey(fallbackKey);
             return fallbackKey;
@@ -184,7 +532,9 @@ export const getEncryptionKeyBiometric = async () => {
 
         const newKey = await runCryptoWorker('GENERATE_KEY', {});
         await setDeviceProtectedVaultKey(newKey);
-        await persistFallbackEncryptionKey(newKey);
+        if (!hardwareBoundOnly) {
+            await persistFallbackEncryptionKey(newKey);
+        }
         return newKey;
     }
 
@@ -226,6 +576,10 @@ export const getEncryptionKeyFallback = async ({ createIfMissing = true } = {}) 
         return getEncryptionKeyBiometric();
     }
 
+    if (Capacitor.isNativePlatform() && await isHardwareBoundOnlyEnabled()) {
+        throw new Error('Hardware-bound mode requires this device lock to unlock the vault.');
+    }
+
     const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
     if (value) return value;
     if (!createIfMissing) {
@@ -242,11 +596,27 @@ export const getEncryptionKeyFallback = async ({ createIfMissing = true } = {}) 
  * before the entire array is encrypted.
  */
 export const saveWallets = async (wallets, key, isDecoy = false) => {
-    try {
+    const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
+    const previous = walletSaveQueues.get(storageKey) || Promise.resolve();
+
+    const saveTask = previous.catch(() => {}).then(async () => {
         const encrypted = await runCryptoWorker('ENCRYPT_WALLETS', { wallets, key });
-        const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
-        await Preferences.set({ key: storageKey, value: encrypted });
+        await saveVaultCipher(storageKey, encrypted);
         return true;
+    }).catch((e) => {
+        console.error('Failed to save wallets', e);
+        return false;
+    });
+
+    const queuedTask = saveTask.finally(() => {
+        if (walletSaveQueues.get(storageKey) === queuedTask) {
+            walletSaveQueues.delete(storageKey);
+        }
+    });
+    walletSaveQueues.set(storageKey, queuedTask);
+
+    try {
+        return await saveTask;
     } catch (e) {
         console.error('Failed to save wallets', e);
         return false;
@@ -258,7 +628,8 @@ export const saveWallets = async (wallets, key, isDecoy = false) => {
  */
 export const loadWallets = async (key, isDecoy = false) => {
     const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
-    const { value } = await Preferences.get({ key: storageKey });
+    await waitForPendingWalletSave(storageKey);
+    const { value, source } = await loadVaultCipher(storageKey);
     if (!value) return [];
     
     let wallets = await runCryptoWorker('DECRYPT_WALLETS', { cipherText: value, key });
@@ -270,6 +641,8 @@ export const loadWallets = async (key, isDecoy = false) => {
     // If migration happened, re-save with new schema + field encryption
     if (didMigrate) {
         await saveWallets(wallets, key, isDecoy);
+    } else if (source === 'legacy' && Capacitor.isNativePlatform()) {
+        await saveVaultCipher(storageKey, value);
     }
     
     return wallets;
@@ -303,6 +676,11 @@ export const decryptSetting = (cipher, key) => {
  */
 export const wipeAllData = async () => {
     await Preferences.clear();
+    await Filesystem.rmdir({
+        directory: Directory.Data,
+        path: FRAGMENT_DIR,
+        recursive: true,
+    }).catch(() => {});
     await deleteDeviceProtectedVaultKey().catch(() => {});
     if (!Capacitor.isNativePlatform()) return;
 

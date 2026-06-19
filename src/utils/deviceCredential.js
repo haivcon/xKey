@@ -15,6 +15,29 @@ export const isDeviceCredentialAvailable = async () => {
   }
 };
 
+export const getHardwareSecurityInfo = async () => {
+  if (!Capacitor.isNativePlatform()) {
+    return {
+      deviceSecure: false,
+      keystoreAvailable: false,
+      strongBoxSupported: false,
+      vaultKeyStored: false,
+      vaultKeyInsideSecureHardware: false,
+    };
+  }
+  try {
+    return await DeviceCredential.getHardwareSecurityInfo();
+  } catch {
+    return {
+      deviceSecure: false,
+      keystoreAvailable: false,
+      strongBoxSupported: false,
+      vaultKeyStored: false,
+      vaultKeyInsideSecureHardware: false,
+    };
+  }
+};
+
 export const authenticateDeviceCredential = async (options = {}) => {
   if (!Capacitor.isNativePlatform()) return false;
   await DeviceCredential.authenticate({
