@@ -6,11 +6,18 @@ dist/
 dist-ssr/
 build/
 coverage/
+playwright-report/
+test-results/
+blob-report/
+.nyc_output/
+.eslintcache
+*.tsbuildinfo
 # Vite / local environment
 *.local
 .env
 .env.*
 !.env.example
+.vite/
 docs/
 # Logs
 logs/

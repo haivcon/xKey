@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone, Rows3, Clock3, Trash2 } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Heart, Volume2, Smartphone, Rows3, Clock3, Trash2, ExternalLink } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -54,6 +54,7 @@ export default function GeneralTab() {
   const { isLiteMode, toggleLiteMode } = useLiteMode();
   const visibleScale = draftScale ?? displayScale;
   const scaleProgress = ((visibleScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
+  const okxJoinUrl = 'https://web3.okx.com/join/BANMAO';
 
   useEffect(() => {
     setDraftScale(displayScale);
@@ -188,6 +189,41 @@ export default function GeneralTab() {
         </div>
       </div>
 
+      {/* ═══ Multi-chain Wallet Guide ═══ */}
+      <div className="glass-card p-4">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="grid h-10 w-10 grid-cols-3 grid-rows-3 gap-0.5 rounded-xl bg-white p-1.5">
+            {[0, 1, 3, 4, 5, 7, 8].map(item => (
+              <span key={item} className="rounded-[2px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
+            ))}
+          </div>
+          <div>
+            <p className="text-white font-medium text-sm">{t('settings.okxGuideTitle')}</p>
+            <p className="text-xs text-surface-400">{t('settings.okxGuideDesc')}</p>
+          </div>
+        </div>
+        <div className="space-y-2 rounded-xl border border-surface-700/70 bg-surface-900/50 p-3">
+          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep1')}</p>
+          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep2')}</p>
+          <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep3')}</p>
+          <a
+            href={okxJoinUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={hapticTap}
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm font-semibold text-surface-100 transition-colors hover:border-white/50 hover:bg-white hover:text-black"
+          >
+            <span className="grid h-5 w-5 grid-cols-3 grid-rows-3 gap-[1px] rounded bg-white p-[2px]">
+              {[0, 1, 3, 4, 5, 7, 8].map(item => (
+                <span key={item} className="rounded-[1px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
+              ))}
+            </span>
+            web3.okx.com/join/BANMAO
+            <ExternalLink size={14} />
+          </a>
+        </div>
+      </div>
+
       {/* ═══ Theme Selector ═══ */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-3 mb-3">
@@ -256,7 +292,7 @@ export default function GeneralTab() {
           <label className="text-xs font-medium text-surface-400">
             {t('settings.displayScaleCustom')}
           </label>
-          <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-[11px] font-semibold text-brand-300">
+          <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-brand-300">
             {MIN_DISPLAY_SCALE}-{MAX_DISPLAY_SCALE}%
           </span>
         </div>
@@ -310,7 +346,7 @@ export default function GeneralTab() {
           </div>
 
           <div className="mt-2 grid grid-cols-[1fr_5.5rem] gap-3">
-            <div className="flex justify-between text-[10px] font-semibold text-surface-500">
+            <div className="flex justify-between text-[0.625rem] font-semibold text-surface-500">
               <span>{MIN_DISPLAY_SCALE}%</span>
               <span>100%</span>
               <span>{MAX_DISPLAY_SCALE}%</span>
@@ -438,7 +474,7 @@ export default function GeneralTab() {
             actionHistory.slice(0, 6).map(item => (
               <div key={item.id} className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-2">
                 <p className="line-clamp-2 text-xs font-medium text-surface-200">{item.message}</p>
-                <p className="mt-1 text-[10px] text-surface-500">{new Date(item.ts).toLocaleString()}</p>
+                <p className="mt-1 text-[0.625rem] text-surface-500">{new Date(item.ts).toLocaleString()}</p>
               </div>
             ))
           )}

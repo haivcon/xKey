@@ -7,8 +7,8 @@ android {
         applicationId "com.haivcon.xkey"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 60
-        versionName "5.8.2"
+        versionCode 61
+        versionName "5.9.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -18,18 +18,19 @@ android {
     }
     flavorDimensions "distribution"
     productFlavors {
-        play {
-            dimension "distribution"
-            applicationId "com.haivcon.xkey"
-        }
         github {
             dimension "distribution"
-            applicationId "com.haivcon.xkey.github"
+            applicationIdSuffix ".github"
+            versionNameSuffix "-github"
+        }
+        play {
+            dimension "distribution"
         }
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

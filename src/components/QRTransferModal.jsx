@@ -109,7 +109,6 @@ export default function QRTransferModal({ wallets, onClose }) {
                 onKeyDown={e => e.key === 'Enter' && handleStart()}
                 placeholder={t('qrTransfer.passwordPlaceholder')}
                 wrapperClassName="flex-1"
-                autoFocus
                 className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
             </div>

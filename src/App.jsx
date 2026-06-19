@@ -73,6 +73,7 @@ export default function App() {
   // Modals
   const [qrModalData, setQrModalData] = useState({ isOpen: false, data: '', title: '', subtitle: '' });
   const [showExportCSV, setShowExportCSV] = useState(false);
+  const [exportWalletsOverride, setExportWalletsOverride] = useState(null);
   const [showBackupExport, setShowBackupExport] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [backupPassword, setBackupPassword] = useState('');
@@ -121,10 +122,12 @@ export default function App() {
     activeFilter, setActiveFilter,
     folders, filteredWallets, totalBalance, duplicateCount, allTags,
     handleDeleteWallet, handleDeleteWalletDirect,
-    handleDeleteFolder, handleRenameFolder,
+    handleDeleteFolder, handleRemoveFolderOnly, handleRenameFolder,
     handleRenameWallet, handleEditWallet,
     handleBulkNetworkChange, handleCreateFolder, handleSaveWallet,
+    handleToggleFolderPin, handleSetDefaultFolder, handleReorderFolder,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
+    pinnedFolders, defaultFolder,
   } = useWallets(aesKey, isDecoyMode);
   const totalBalanceText = formatAssetValue(totalBalance, assetUnit);
 
@@ -165,7 +168,12 @@ export default function App() {
       setSearchQuery('');
       setActiveFilter('all');
       setSortOrder('none');
-      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        requestAnimationFrame(() => {
+          document.querySelector('.wallet-new-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
     }
     return savedWallets;
   }, [handleSaveWallet, setActiveFolder, setSearchQuery, setActiveFilter, setSortOrder]);
@@ -404,14 +412,23 @@ export default function App() {
     }
   };
 
-  const openExportCSV = async () => {
+  const openExportCSV = async (walletsOverride = null) => {
     const { value } = await Preferences.get({ key: SENSITIVE_EXPORT_LOCK_KEY });
     if (value === 'true') {
       const ok = await showConfirm(t('advancedTools.csvLockConfirm'), { danger: true });
       if (!ok) return;
     }
     hapticTap();
+    setExportWalletsOverride(walletsOverride);
     setShowExportCSV(true);
+  };
+
+  const openExportFolder = (folderName) => {
+    const folderWallets = wallets.filter(w => (w.groupId || 'Imported') === folderName);
+    setActiveFolder(folderName);
+    setSearchQuery('');
+    setActiveFilter('all');
+    openExportCSV(folderWallets);
   };
 
   // ─── View Router ───
@@ -497,24 +514,38 @@ export default function App() {
 
           {wallets.length === 0 ? (
             <div className="space-y-4 mt-10 max-w-2xl mx-auto">
-              <div className="glass-card p-3">
-                {creatingFolder ? (
-                  <input
-                    autoFocus
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    onBlur={() => finishCreateFolder(newFolderName)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') finishCreateFolder(newFolderName);
-                      if (e.key === 'Escape') {
-                        setCreatingFolder(false);
-                        setNewFolderName('');
-                      }
-                    }}
-                    placeholder={t('moveWallet.newFolderName')}
-                    className="w-full rounded-xl border border-brand-500 bg-surface-800 px-4 py-3 text-sm font-medium text-white outline-none placeholder:text-surface-500"
+              {(folders.length > 1 || creatingFolder) && (
+                <div className="glass-card p-3">
+                  <FolderTabs
+                    folders={folders}
+                    activeFolder={activeFolder}
+                    wallets={wallets}
+                    editingFolder={editingFolder}
+                    editFolderName={editFolderName}
+                    pinnedFolders={pinnedFolders}
+                    defaultFolder={defaultFolder}
+                    creatingFolder={creatingFolder}
+                    newFolderName={newFolderName}
+                    onSelectFolder={(f) => { setActiveFolder(f); }}
+                    onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                    onEditChange={setEditFolderName}
+                    onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                    onDeleteFolder={handleDeleteFolder}
+                    onRemoveFolderOnly={handleRemoveFolderOnly}
+                    onTogglePinFolder={handleToggleFolderPin}
+                    onSetDefaultFolder={handleSetDefaultFolder}
+                    onExportFolder={openExportFolder}
+                    onReorderFolder={handleReorderFolder}
+                    onStartCreate={() => { hapticTap(); startCreateFolder(); }}
+                    onCreateChange={setNewFolderName}
+                    onFinishCreate={finishCreateFolder}
+                    createFolderLabel={t('home.createFolder')}
+                    t={t}
                   />
-                ) : (
+                </div>
+              )}
+              {folders.length <= 1 && !creatingFolder && (
+                <div className="glass-card p-3">
                   <button
                     type="button"
                     onClick={() => { hapticTap(); startCreateFolder(); }}
@@ -523,10 +554,10 @@ export default function App() {
                     <FolderPlus size={18} />
                     {t('home.createFolder')}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
               <div
-                onClick={() => { hapticTap(); handleFileUpload(); }}
+                onClick={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
                 className="btn-glow glass-card border-dashed border-2 border-surface-200/20 hover:border-brand-500/50 cursor-pointer p-8 flex flex-col items-center justify-center transition-all group"
               >
                 <div className="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -571,16 +602,24 @@ export default function App() {
                       variant="sidebar"
                       folders={folders} activeFolder={activeFolder} wallets={wallets}
                       editingFolder={editingFolder} editFolderName={editFolderName}
+                      pinnedFolders={pinnedFolders}
+                      defaultFolder={defaultFolder}
                       creatingFolder={creatingFolder} newFolderName={newFolderName}
                       onSelectFolder={(f) => { setActiveFolder(f); }}
                       onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
                       onEditChange={setEditFolderName}
                       onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
                       onDeleteFolder={handleDeleteFolder}
+                      onRemoveFolderOnly={handleRemoveFolderOnly}
+                      onTogglePinFolder={handleToggleFolderPin}
+                      onSetDefaultFolder={handleSetDefaultFolder}
+                      onExportFolder={openExportFolder}
+                      onReorderFolder={handleReorderFolder}
                       onStartCreate={startCreateFolder}
                       onCreateChange={setNewFolderName}
                       onFinishCreate={finishCreateFolder}
                       createFolderLabel={t('home.createFolder')}
+                      t={t}
                     />
                   </div>
                 </div>
@@ -593,16 +632,24 @@ export default function App() {
                       <FolderTabs
                         folders={folders} activeFolder={activeFolder} wallets={wallets}
                         editingFolder={editingFolder} editFolderName={editFolderName}
+                        pinnedFolders={pinnedFolders}
+                        defaultFolder={defaultFolder}
                         creatingFolder={creatingFolder} newFolderName={newFolderName}
                         onSelectFolder={(f) => { setActiveFolder(f); }}
                         onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
                         onEditChange={setEditFolderName}
                         onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
                         onDeleteFolder={handleDeleteFolder}
+                        onRemoveFolderOnly={handleRemoveFolderOnly}
+                        onTogglePinFolder={handleToggleFolderPin}
+                        onSetDefaultFolder={handleSetDefaultFolder}
+                        onExportFolder={openExportFolder}
+                        onReorderFolder={handleReorderFolder}
                         onStartCreate={startCreateFolder}
                         onCreateChange={setNewFolderName}
                         onFinishCreate={finishCreateFolder}
                         createFolderLabel={t('home.createFolder')}
+                        t={t}
                       />
                     </div>
                     <button
@@ -620,7 +667,7 @@ export default function App() {
                     activeFilter={activeFilter} onFilterChange={setActiveFilter}
                     onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
                     onBulkNetwork={() => { hapticTap(); setShowBulkNetworkModal(true); }}
-                    onUpload={() => { hapticTap(); handleFileUpload(); }}
+                    onUpload={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
                     loading={loading}
                     allTags={allTags}
                     selectionMode={selectionMode}
@@ -650,6 +697,10 @@ export default function App() {
                   sortOrder={sortOrder}
                   onReorder={handleReorderWallet}
                   assetUnit={assetUnit}
+                  activeFolder={activeFolder}
+                  searchQuery={searchQuery}
+                  onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
+                  onImport={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
                 />
               </section>
             </div>
@@ -667,8 +718,11 @@ export default function App() {
           />
           {showExportCSV && (
             <ExportCSVModal
-              onClose={() => setShowExportCSV(false)}
-              wallets={filteredWallets}
+              onClose={() => {
+                setShowExportCSV(false);
+                setExportWalletsOverride(null);
+              }}
+              wallets={exportWalletsOverride || filteredWallets}
               aesKey={aesKey}
             />
           )}
@@ -746,7 +800,6 @@ export default function App() {
               <h3 className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
               <p className="text-surface-400 text-sm text-center mb-5">{t('restore.desc')}</p>
               <PasswordInput
-                autoFocus
                 value={importPassword}
                 onChange={(e) => setImportPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleImportWithPassword()}
@@ -773,7 +826,6 @@ export default function App() {
               <p className="text-surface-400 text-sm text-center mb-5">{t('settings.backupSubtitle')}</p>
               <div className="space-y-3">
                 <PasswordInput
-                  autoFocus
                   value={backupPassword}
                   onChange={(e) => setBackupPassword(e.target.value)}
                   placeholder={t('settings.backupPassword')}

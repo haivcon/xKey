@@ -1,0 +1,20 @@
+{
+  "appId": "com.haivcon.xkey",
+  "appName": "xKey",
+  "webDir": "dist",
+  "plugins": {
+    "Keyboard": {
+      "resize": "body"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#000000",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "FIT_CENTER",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  }
+}

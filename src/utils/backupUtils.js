@@ -2,32 +2,38 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 import CryptoJS from 'crypto-js';
+import { decryptEnvelope, encryptEnvelope, isCryptoEnvelope } from './cryptoEnvelope';
 
-const encryptBackup = (data, key) => {
-    return CryptoJS.AES.encrypt(JSON.stringify(data), key).toString();
+const encryptBackup = async (data, key) => {
+    return encryptEnvelope(data, key);
 };
 
-const decryptBackup = (cipherText, key) => {
+const decryptBackup = async (cipherText, key) => {
+    if (isCryptoEnvelope(cipherText)) {
+        return decryptEnvelope(cipherText, key);
+    }
     const bytes = CryptoJS.AES.decrypt(cipherText, key);
     const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
     if (!decryptedStr) throw new Error("Invalid Key");
     return JSON.parse(decryptedStr);
 };
 
+export const createPortableBackupText = async (wallets, config, userPassword) => {
+    const backupPayload = {
+        version: 2,
+        portable: true,
+        timestamp: new Date().toISOString(),
+        wallets,
+        config
+    };
 
+    return encryptBackup(backupPayload, userPassword);
+};
 
 // #14: Portable backup (uses user-chosen password)
 export const exportPortableBackup = async (wallets, config, userPassword) => {
     try {
-        const backupPayload = {
-            version: 2,
-            portable: true,
-            timestamp: new Date().toISOString(),
-            wallets,
-            config
-        };
-
-        const encryptedData = encryptBackup(backupPayload, userPassword);
+        const encryptedData = await createPortableBackupText(wallets, config, userPassword);
         const fileName = `xkey_portable_${new Date().getTime()}.xkey`;
 
         if (!Capacitor.isNativePlatform()) {
@@ -66,6 +72,36 @@ export const exportPortableBackup = async (wallets, config, userPassword) => {
     }
 };
 
+export const parseEncryptedBackupText = async (encryptedText, aesKey, userPassword = null) => {
+    let decrypted = null;
+
+    if (userPassword) {
+        try {
+            decrypted = await decryptBackup(encryptedText, userPassword);
+        } catch {
+            // Password failed
+        }
+    }
+
+    if (!decrypted) {
+        try {
+            decrypted = await decryptBackup(encryptedText, aesKey);
+        } catch {
+            // Device key also failed
+        }
+    }
+
+    if (!decrypted) {
+        throw new Error("Wrong password or corrupted backup file.");
+    }
+
+    if (!decrypted.wallets || !Array.isArray(decrypted.wallets)) {
+        throw new Error("Invalid backup format");
+    }
+
+    return decrypted;
+};
+
 // Parse backup file — auto-detect format
 export const parseVaultBackupFile = async (base64Data, aesKey, userPassword = null) => {
     try {
@@ -83,35 +119,7 @@ export const parseVaultBackupFile = async (base64Data, aesKey, userPassword = nu
             encryptedText = base64Data;
         }
 
-        let decrypted = null;
-
-        // Try user password first (portable backups)
-        if (userPassword) {
-            try {
-                decrypted = decryptBackup(encryptedText, userPassword);
-            } catch {
-                // Password failed
-            }
-        }
-
-        // Fallback: try device key (legacy backups)
-        if (!decrypted) {
-            try {
-                decrypted = decryptBackup(encryptedText, aesKey);
-            } catch {
-                // Device key also failed
-            }
-        }
-
-        if (!decrypted) {
-            throw new Error("Wrong password or corrupted backup file.");
-        }
-
-        if (!decrypted.wallets || !Array.isArray(decrypted.wallets)) {
-            throw new Error("Invalid backup format");
-        }
-
-        return decrypted;
+        return parseEncryptedBackupText(encryptedText, aesKey, userPassword);
     } catch (e) {
         console.error("Backup import failed", e);
         throw new Error(e.message || "Failed to decrypt backup. Check your password and try again.");

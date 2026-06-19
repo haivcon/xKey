@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmProvider } from './contexts/ConfirmContext';
 import { LanguageProvider, useT } from './contexts/LanguageContext';
 import { MasterPasswordProvider } from './contexts/MasterPasswordContext';
+import { ScrambledKeyboardProvider } from './contexts/ScrambledKeyboardContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const hideNativeSplash = () => {
@@ -76,11 +77,13 @@ createRoot(document.getElementById('root')).render(
           <LocalizedErrorBoundary>
             <ThemeProvider>
               <MasterPasswordProvider>
-                <ToastProvider>
-                  <ConfirmProvider>
-                    <Boot />
-                  </ConfirmProvider>
-                </ToastProvider>
+                <ScrambledKeyboardProvider>
+                  <ToastProvider>
+                    <ConfirmProvider>
+                      <Boot />
+                    </ConfirmProvider>
+                  </ToastProvider>
+                </ScrambledKeyboardProvider>
               </MasterPasswordProvider>
             </ThemeProvider>
           </LocalizedErrorBoundary>

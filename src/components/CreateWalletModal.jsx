@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Plus, Copy, Check, Wallet, RefreshCw, Keyboard, AlertTriangle, Info, Camera, ChevronDown, Gauge, Timer, ShieldCheck, Sparkles, Folder, Tag } from 'lucide-react';
+import { X, Plus, Copy, Check, Wallet, RefreshCw, Keyboard, AlertTriangle, Info, Camera, ChevronDown, Gauge, Timer, ShieldCheck, Sparkles, Folder, Tag, Trees } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import QRScannerModal from './QRScannerModal';
 import PasswordInput from './PasswordInput';
+import SecureTextarea from './SecureTextarea';
+import HDWalletTreeVisualizer from './HDWalletTreeVisualizer';
 import { formatAmountInput, normalizeAmountInput } from '../utils/amountFormat';
 import { APP_ACTIVITY_EVENT } from '../hooks/useAutoLock';
 
@@ -102,6 +104,7 @@ function InlineSelect({ value, options, onChange, disabled = false, placeholder 
 export default function CreateWalletModal({ onClose, onSave, existingWallets = [], folders = [], activeFolder = 'All', allTags = [] }) {
   const [tab, setTab] = useState('manual');
   const [generateCount, setGenerateCount] = useState(1);
+  const [seedWordCount, setSeedWordCount] = useState(12);
   const [generatedWallets, setGeneratedWallets] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [generateProgress, setGenerateProgress] = useState(0);
@@ -333,6 +336,27 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
      await finishVanityRun({ reason: t('createWallet.vanityStopped') });
   };
 
+  const createRandomWalletRecord = (name) => {
+    let w;
+    if (Number(seedWordCount) === 24) {
+      const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(32));
+      w = ethers.HDNodeWallet.fromMnemonic(mnemonic, manualDerivationPath || "m/44'/60'/0'/0/0");
+    } else {
+      w = ethers.Wallet.createRandom();
+    }
+
+    const phrase = w.mnemonic?.phrase || '';
+    return {
+      name,
+      address: w.address,
+      privateKey: w.privateKey,
+      mnemonic: phrase,
+      seedPhrase: phrase,
+      balance: '0.00',
+      network: 'XLAYER'
+    };
+  };
+
   const generateWallet = async () => {
     const count = parseInt(generateCount) || 1;
     if (count < 1) return;
@@ -344,18 +368,10 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       
       const processSingle = async (i, newWallets) => {
         if (i < count) {
-          const w = ethers.Wallet.createRandom();
-          newWallets.push({
-            name: count === 1 ? `Wallet ${Date.now().toString(36).slice(-4).toUpperCase()}` : `Wallet ${i + 1}`,
-            address: w.address,
-            privateKey: w.privateKey,
-            mnemonic: w.mnemonic?.phrase || '',
-            seedPhrase: w.mnemonic?.phrase || '',
-            balance: '0.00',
-            network: 'XLAYER'
-          });
+          const record = createRandomWalletRecord(count === 1 ? `Wallet ${Date.now().toString(36).slice(-4).toUpperCase()}` : `Wallet ${i + 1}`);
+          newWallets.push(record);
           setGenerateProgress(i + 1);
-          setFloatingEffects(prev => [...prev.slice(-4), { count: i + 1, address: w.address, key: Math.random() }]);
+          setFloatingEffects(prev => [...prev.slice(-4), { count: i + 1, address: record.address, key: Math.random() }]);
           setTimeout(() => processSingle(i + 1, newWallets), 150);
         } else {
           setTimeout(() => {
@@ -378,15 +394,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       const processChunk = async (i) => {
         const limit = Math.min(i + chunkSize, count);
         for (let j = i; j < limit; j++) {
-          const w = ethers.Wallet.createRandom();
-          newWallets.push({
-            name: `Wallet ${j + 1}`,
-            address: w.address,
-            privateKey: w.privateKey,
-            seedPhrase: w.mnemonic?.phrase || '',
-            balance: '0.00',
-            network: 'XLAYER'
-          });
+          newWallets.push(createRandomWalletRecord(`Wallet ${j + 1}`));
         }
         setGenerateProgress(limit);
         const lastW = newWallets[newWallets.length - 1];
@@ -432,7 +440,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       name: (generatedWallets.length === 1 ? walletName : w.name) || 'New Wallet',
       address: w.address,
       privateKey: w.privateKey,
-      seedPhrase: w.mnemonic,
+      seedPhrase: w.mnemonic || w.seedPhrase,
       balance: '0.00',
       network: w.network || 'XLAYER',
       groupId: w.groupId,
@@ -457,6 +465,28 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     onClose();
   };
 
+  const handleSaveHDWallet = async (wallet) => {
+    const path = wallet.derivationPath || wallet.path;
+    const saved = await onSave({
+      name: wallet.name || t('createWallet.hdTreeWalletName'),
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+      balance: wallet.balance || '0.00',
+      notes: wallet.notes || t('createWallet.hdTreeDerivedNote', { path }),
+      network: wallet.network || 'XLAYER',
+      derivationPath: path,
+      hdAccount: wallet.hdAccount,
+      hdIndex: wallet.hdIndex,
+      hdCoinType: wallet.hdCoinType,
+      hdNetwork: wallet.hdNetwork || wallet.network || 'XLAYER',
+      hdRootType: wallet.hdRootType,
+      createdAt: Date.now(),
+    });
+    const savedWallet = Array.isArray(saved) ? saved[0] : saved;
+    showToast(t('createWallet.walletAdded', { folder: savedWallet?.groupId || 'Created', label: t('walletCard.new') }), 'success');
+    onClose();
+  };
+
   return (
     <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
       <div className="create-wallet-modal-panel bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh]">
@@ -469,12 +499,15 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-surface-800">
+        <div className="grid grid-cols-4 border-b border-surface-800">
           <button onClick={() => setTab('manual')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'manual' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
             <Keyboard size={16} /> {t('createWallet.tabManual')}
           </button>
           <button onClick={() => setTab('generate')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'generate' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
             <RefreshCw size={16} /> {t('createWallet.tabGenerate')}
+          </button>
+          <button onClick={() => setTab('hdTree')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'hdTree' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
+            <Trees size={16} /> {t('createWallet.tabHdTree')}
           </button>
           <button onClick={() => setTab('vanity')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'vanity' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
             <Wallet size={16} /> {t('createWallet.tabVanity') || 'Vanity'}
@@ -543,7 +576,8 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
               <div className="lg:col-span-2">
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.seedPhrase')} <span className="text-surface-600">{t('createWallet.optional')}</span></label>
-                <textarea value={manualSeed} onChange={(e) => setManualSeed(e.target.value)} placeholder="word1 word2 word3 ..." rows={2}
+                <SecureTextarea value={manualSeed} onChange={(e) => setManualSeed(e.target.value)} placeholder="word1 word2 word3 ..." rows={2}
+                  secureLabel={t('createWallet.seedPhrase')}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none" />
                 <p className="text-[11px] text-surface-500 mt-1 flex items-start gap-1"><Info size={10} className="mt-0.5 flex-shrink-0" />{t('createWallet.seedExplain')}</p>
               </div>
@@ -660,6 +694,27 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     </div>
                   </div>
 
+                  <div className="mb-6 text-left">
+                    <label className="block text-xs font-medium text-surface-400 mb-2">{t('createWallet.seedLength')}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[12, 24].map(words => (
+                        <button
+                          key={words}
+                          type="button"
+                          onClick={() => setSeedWordCount(words)}
+                          className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all ${
+                            seedWordCount === words
+                              ? 'border-brand-500/50 bg-brand-500/15 text-white'
+                              : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                          }`}
+                        >
+                          {t(words === 24 ? 'createWallet.mnemonic24' : 'createWallet.mnemonic12')}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-surface-500">{t('createWallet.seedLengthHint')}</p>
+                  </div>
+
                   <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-6 text-left">
                     <p className="text-[11px] text-surface-300 leading-relaxed flex items-start gap-1.5 mb-3">
                       <Info size={12} className="text-brand-400 mt-0.5 flex-shrink-0" />
@@ -735,7 +790,9 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
                       {w.mnemonic && (
                         <div>
-                          <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.mnemonic12')}</label>
+                          <label className="block text-xs font-medium text-surface-400 mb-1">
+                            {w.mnemonic.split(' ').length >= 24 ? t('createWallet.mnemonic24') : t('createWallet.mnemonic12')}
+                          </label>
                           <div className="bg-surface-800 p-3 rounded-lg">
                             <div className="grid grid-cols-3 gap-2 mb-2">
                               {w.mnemonic.split(' ').map((word, i) => (
@@ -763,6 +820,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── HD Wallet Explorer Tab ── */}
+          {tab === 'hdTree' && (
+            <HDWalletTreeVisualizer onSaveWallet={handleSaveHDWallet} existingWallets={existingWallets} />
           )}
 
           {/* ── Vanity Tab ── */}

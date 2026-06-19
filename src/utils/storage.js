@@ -86,6 +86,29 @@ export const hasFallbackEncryptionKey = async () => {
     return !!(await getStoredFallbackKey());
 };
 
+export const getVaultSecurityStatus = async () => {
+    const native = Capacitor.isNativePlatform();
+    const deviceCredentialAvailable = native ? await isDeviceCredentialAvailable().catch(() => false) : false;
+    const deviceProtected = deviceCredentialAvailable ? await hasDeviceProtectedVaultKey().catch(() => false) : false;
+    const fallback = await hasFallbackEncryptionKey().catch(() => false);
+    const vaultExists = !!(await getStoredVaultCipher().catch(() => ''));
+
+    let mode = 'web-fallback';
+    if (native && deviceCredentialAvailable && deviceProtected && !fallback) mode = 'android-secure';
+    else if (native && deviceCredentialAvailable && deviceProtected && fallback) mode = 'compatibility';
+    else if (native && deviceCredentialAvailable) mode = 'device-ready';
+    else if (native) mode = 'native-fallback';
+
+    return {
+        mode,
+        native,
+        vaultExists,
+        deviceCredentialAvailable,
+        deviceProtected,
+        fallback,
+    };
+};
+
 export const persistFallbackEncryptionKey = async (key) => {
     if (!key) return false;
     await Preferences.set({ key: STORAGE_KEYS.AES_KEY_FALLBACK, value: key });

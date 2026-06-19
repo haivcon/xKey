@@ -9,6 +9,11 @@ import { parseAmount } from '../utils/amountFormat';
 
 const CUSTOM_FOLDERS_KEY = 'xkey_custom_folders';
 const DECOY_CUSTOM_FOLDERS_KEY = 'xkey_decoy_custom_folders';
+const PINNED_FOLDERS_KEY = 'xkey_pinned_folders';
+const DECOY_PINNED_FOLDERS_KEY = 'xkey_decoy_pinned_folders';
+const DEFAULT_FOLDER_KEY = 'xkey_default_folder';
+const DECOY_DEFAULT_FOLDER_KEY = 'xkey_decoy_default_folder';
+const NEW_WALLET_BADGE_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Hook encapsulating all wallet CRUD operations.
@@ -21,6 +26,9 @@ export default function useWallets(aesKey, isDecoyMode) {
   const [sortOrder, setSortOrder] = useState('none');
   const [activeFilter, setActiveFilter] = useState('all');
   const [customFolders, setCustomFolders] = useState([]);
+  const [pinnedFolders, setPinnedFolders] = useState([]);
+  const [defaultFolder, setDefaultFolder] = useState('');
+  const [nowTick, setNowTick] = useState(Date.now());
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
@@ -28,24 +36,50 @@ export default function useWallets(aesKey, isDecoyMode) {
 
   useEffect(() => {
     const storageKey = isDecoyMode ? DECOY_CUSTOM_FOLDERS_KEY : CUSTOM_FOLDERS_KEY;
+    const pinnedKey = isDecoyMode ? DECOY_PINNED_FOLDERS_KEY : PINNED_FOLDERS_KEY;
+    const defaultKey = isDecoyMode ? DECOY_DEFAULT_FOLDER_KEY : DEFAULT_FOLDER_KEY;
     if (!aesKey) return;
     setCustomFolders([]);
-    Preferences.get({ key: storageKey })
-      .then(({ value }) => {
+    setPinnedFolders([]);
+    setDefaultFolder('');
+
+    Promise.all([
+      Preferences.get({ key: storageKey }),
+      Preferences.get({ key: pinnedKey }),
+      Preferences.get({ key: defaultKey }),
+    ])
+      .then(([{ value }, { value: pinnedValue }, { value: defaultValue }]) => {
         if (!value) {
           setCustomFolders([]);
-          return;
+        } else {
+          const decoded = decryptSetting(value, aesKey);
+          const parsed = JSON.parse(decoded);
+          if (Array.isArray(parsed)) {
+            setCustomFolders(parsed.filter(Boolean));
+          }
         }
-        const decoded = decryptSetting(value, aesKey);
-        const parsed = JSON.parse(decoded);
-        if (Array.isArray(parsed)) {
-          setCustomFolders(parsed.filter(Boolean));
+
+        if (pinnedValue) {
+          const decodedPinned = decryptSetting(pinnedValue, aesKey);
+          const parsedPinned = JSON.parse(decodedPinned);
+          if (Array.isArray(parsedPinned)) {
+            setPinnedFolders(parsedPinned.filter(Boolean));
+          }
         }
+
+        setDefaultFolder(decryptSetting(defaultValue, aesKey) || '');
       })
       .catch(() => {
         setCustomFolders([]);
+        setPinnedFolders([]);
+        setDefaultFolder('');
       });
   }, [aesKey, isDecoyMode]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowTick(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const persistCustomFolders = useCallback(async (nextFolders) => {
     const normalized = [...new Set(nextFolders.map(f => String(f || '').trim()).filter(Boolean))];
@@ -55,11 +89,33 @@ export default function useWallets(aesKey, isDecoyMode) {
     return normalized;
   }, [aesKey, isDecoyMode]);
 
+  const persistPinnedFolders = useCallback(async (nextFolders) => {
+    const normalized = [...new Set(nextFolders.map(f => String(f || '').trim()).filter(f => f && f !== 'All'))];
+    setPinnedFolders(normalized);
+    const storageKey = isDecoyMode ? DECOY_PINNED_FOLDERS_KEY : PINNED_FOLDERS_KEY;
+    await Preferences.set({ key: storageKey, value: encryptSetting(JSON.stringify(normalized), aesKey) });
+    return normalized;
+  }, [aesKey, isDecoyMode]);
+
+  const persistDefaultFolder = useCallback(async (folderName) => {
+    const next = String(folderName || '').trim();
+    setDefaultFolder(next);
+    const storageKey = isDecoyMode ? DECOY_DEFAULT_FOLDER_KEY : DEFAULT_FOLDER_KEY;
+    if (!next) {
+      await Preferences.remove({ key: storageKey });
+      return '';
+    }
+    await Preferences.set({ key: storageKey, value: encryptSetting(next, aesKey) });
+    return next;
+  }, [aesKey, isDecoyMode]);
+
   // Derived: folder list
-  const folders = useMemo(
-    () => ['All', ...new Set([...customFolders, ...wallets.map(w => w.groupId || 'Imported')])],
-    [wallets, customFolders]
-  );
+  const folders = useMemo(() => {
+    const names = [...new Set([...customFolders, ...wallets.map(w => w.groupId || 'Imported')])];
+    const pinned = pinnedFolders.filter(f => names.includes(f));
+    const rest = names.filter(f => !pinned.includes(f));
+    return ['All', ...pinned, ...rest];
+  }, [wallets, customFolders, pinnedFolders]);
 
   // Derived: filtered & sorted wallets
   const filteredWallets = useMemo(() => wallets.filter(w => {
@@ -74,6 +130,7 @@ export default function useWallets(aesKey, isDecoyMode) {
     if (activeFilter === 'hasBalance') return parseAmount(w.balance) > 0;
     if (activeFilter === 'empty') return parseAmount(w.balance) === 0;
     if (activeFilter === 'pinned') return !!w.pinned;
+    if (activeFilter === 'new') return !!w.newUntil && w.newUntil > nowTick;
     if (activeFilter.startsWith('net:')) return (w.network || 'ETH') === activeFilter.slice(4);
     if (activeFilter.startsWith('tag:')) return (w.tags || []).includes(activeFilter.slice(4));
     return true;
@@ -91,7 +148,7 @@ export default function useWallets(aesKey, isDecoyMode) {
       case 'custom': return 0; // preserve array order for manual drag
       default: return 0;
     }
-  }), [wallets, activeFolder, searchQuery, activeFilter, sortOrder]);
+  }), [wallets, activeFolder, searchQuery, activeFilter, sortOrder, nowTick]);
 
   // Derived: total balance of filtered wallets
   const totalBalance = useMemo(() => filteredWallets.reduce((acc, w) => {
@@ -127,37 +184,67 @@ export default function useWallets(aesKey, isDecoyMode) {
     await saveWallets(updated, aesKey, isDecoyMode);
   }, [aesKey, isDecoyMode]);
 
+  const showUndoToast = useCallback((message, previousWallets, type = 'info') => {
+    showToast(message, type, 8000, {
+      label: t('common.undo'),
+      onClick: async () => {
+        await persist(previousWallets);
+        showToast(t('home.undoRestored'), 'success');
+      }
+    });
+  }, [persist, showToast, t]);
+
   const handleDeleteWallet = useCallback(async (walletToDelete) => {
     const ok = await showConfirm(t('home.deleteWalletConfirm', { name: walletToDelete.name || walletToDelete.address?.substring(0, 10) }));
     if (!ok) return;
+    const previousWallets = wallets;
     const updated = wallets.filter(w => {
       if (walletToDelete._id && w._id) return w._id !== walletToDelete._id;
       return !(w.address === walletToDelete.address && w.name === walletToDelete.name && w.groupId === walletToDelete.groupId);
     });
     await persist(updated);
-    showToast(t('home.walletDeleted'), 'info');
-  }, [wallets, persist, showConfirm, showToast, t]);
+    showUndoToast(t('home.walletDeleted'), previousWallets);
+  }, [wallets, persist, showConfirm, showUndoToast, t]);
 
   const handleDeleteWalletDirect = useCallback(async (walletToDelete) => {
+    const previousWallets = wallets;
     const updated = wallets.filter(w => {
       if (walletToDelete._id && w._id) return w._id !== walletToDelete._id;
       return !(w.address === walletToDelete.address && w.name === walletToDelete.name && w.groupId === walletToDelete.groupId);
     });
     await persist(updated);
-    showToast(t('home.walletDeleted'), 'info');
-  }, [wallets, persist, showToast, t]);
+    showUndoToast(t('home.walletDeleted'), previousWallets);
+  }, [wallets, persist, showUndoToast, t]);
 
   const handleDeleteFolder = useCallback(async (folderName) => {
-    const ok = await showConfirm(t('home.deleteFolderConfirm', { name: folderName }), { danger: true });
+    const count = wallets.filter(w => (w.groupId || 'Imported') === folderName).length;
+    const ok = await showConfirm(t('home.deleteFolderConfirm', { name: folderName, count }), { danger: true });
     if (!ok) return;
     const updated = wallets.filter(w => (w.groupId || 'Imported') !== folderName);
     await Promise.all([
       persist(updated),
-      persistCustomFolders(customFolders.filter(f => f !== folderName))
+      persistCustomFolders(customFolders.filter(f => f !== folderName)),
+      persistPinnedFolders(pinnedFolders.filter(f => f !== folderName)),
+      defaultFolder === folderName ? persistDefaultFolder('') : Promise.resolve()
     ]);
     setActiveFolder('All');
     showToast(t('home.folderDeleted', { name: folderName }), 'info');
-  }, [wallets, persist, persistCustomFolders, customFolders, showConfirm, showToast, t]);
+  }, [wallets, persist, persistCustomFolders, persistPinnedFolders, persistDefaultFolder, customFolders, pinnedFolders, defaultFolder, showConfirm, showToast, t]);
+
+  const handleRemoveFolderOnly = useCallback(async (folderName) => {
+    const count = wallets.filter(w => (w.groupId || 'Imported') === folderName).length;
+    const ok = await showConfirm(t('home.removeFolderOnlyConfirm', { name: folderName, count }));
+    if (!ok) return;
+    const updated = wallets.map(w => (w.groupId || 'Imported') === folderName ? { ...w, groupId: 'Created' } : w);
+    await Promise.all([
+      persist(updated),
+      persistCustomFolders(customFolders.filter(f => f !== folderName)),
+      persistPinnedFolders(pinnedFolders.filter(f => f !== folderName)),
+      defaultFolder === folderName ? persistDefaultFolder('') : Promise.resolve()
+    ]);
+    setActiveFolder('Created');
+    showToast(t('home.folderRemovedOnly', { name: folderName }), 'success');
+  }, [wallets, persist, persistCustomFolders, persistPinnedFolders, persistDefaultFolder, customFolders, pinnedFolders, defaultFolder, showConfirm, showToast, t]);
 
   const handleRenameFolder = useCallback(async (oldName, newName) => {
     const trimmed = String(newName || '').trim();
@@ -175,8 +262,10 @@ export default function useWallets(aesKey, isDecoyMode) {
       persist(updated),
       persistCustomFolders(renamedCustomFolders)
     ]);
+    await persistPinnedFolders(pinnedFolders.map(f => f === oldName ? trimmed : f));
+    if (defaultFolder === oldName) await persistDefaultFolder(trimmed);
     if (activeFolder === oldName) setActiveFolder(trimmed);
-  }, [wallets, persist, persistCustomFolders, customFolders, activeFolder, folders, showToast, t]);
+  }, [wallets, persist, persistCustomFolders, persistPinnedFolders, persistDefaultFolder, customFolders, pinnedFolders, defaultFolder, activeFolder, folders, showToast, t]);
 
   const handleCreateFolder = useCallback(async (folderName) => {
     const trimmed = String(folderName || '').trim();
@@ -194,33 +283,67 @@ export default function useWallets(aesKey, isDecoyMode) {
     return true;
   }, [folders, customFolders, persistCustomFolders, showToast, t]);
 
+  const handleToggleFolderPin = useCallback(async (folderName) => {
+    if (!folderName || folderName === 'All') return;
+    const next = pinnedFolders.includes(folderName)
+      ? pinnedFolders.filter(f => f !== folderName)
+      : [...pinnedFolders, folderName];
+    await persistPinnedFolders(next);
+  }, [pinnedFolders, persistPinnedFolders]);
+
+  const handleSetDefaultFolder = useCallback(async (folderName) => {
+    if (!folderName || folderName === 'All') {
+      await persistDefaultFolder('');
+      showToast(t('home.defaultFolderCleared'), 'info');
+      return;
+    }
+    await persistDefaultFolder(folderName);
+    showToast(t('home.defaultFolderSet', { name: folderName }), 'success');
+  }, [persistDefaultFolder, showToast, t]);
+
+  const handleReorderFolder = useCallback(async (fromFolder, toFolder) => {
+    if (!fromFolder || !toFolder || fromFolder === toFolder || fromFolder === 'All' || toFolder === 'All') return;
+    const ordered = folders.filter(f => f !== 'All');
+    const fromIndex = ordered.indexOf(fromFolder);
+    const toIndex = ordered.indexOf(toFolder);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const next = [...ordered];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    await persistCustomFolders(next);
+  }, [folders, persistCustomFolders]);
+
   const handleRenameWallet = useCallback(async (wallet, newName) => {
+    const previousWallets = wallets;
     const updated = wallets.map(w => {
       if (wallet._id && w._id) return w._id === wallet._id ? { ...w, name: newName } : w;
       return (w.address === wallet.address && w.groupId === wallet.groupId) ? { ...w, name: newName } : w;
     });
     await persist(updated);
-  }, [wallets, persist]);
+    showUndoToast(t('walletCard.saved'), previousWallets, 'success');
+  }, [wallets, persist, showUndoToast, t]);
 
   const handleEditWallet = useCallback(async (wallet, updatedFields) => {
+    const previousWallets = wallets;
     const updated = wallets.map(w => {
       if (wallet._id && w._id) return w._id === wallet._id ? { ...w, ...updatedFields } : w;
       return (w === wallet) ? { ...w, ...updatedFields } : w;
     });
     await persist(updated);
-    showToast(t('walletCard.saved'), 'success');
-  }, [wallets, persist, showToast, t]);
+    showUndoToast(t('walletCard.saved'), previousWallets, 'success');
+  }, [wallets, persist, showUndoToast, t]);
 
   const handleBulkNetworkChange = useCallback(async (newNetwork) => {
+    const previousWallets = wallets;
     const filterSet = new Set(filteredWallets);
     const updated = wallets.map(w => filterSet.has(w) ? { ...w, network: newNetwork } : w);
     await persist(updated);
-    showToast(t('common.updatedNetwork', { count: filteredWallets.length }) || `Updated network for ${filteredWallets.length} wallets`, 'success');
-  }, [wallets, filteredWallets, persist, showToast, t]);
+    showUndoToast(t('common.updatedNetwork', { count: filteredWallets.length }) || `Updated network for ${filteredWallets.length} wallets`, previousWallets, 'success');
+  }, [wallets, filteredWallets, persist, showUndoToast, t]);
 
   const handleSaveWallet = useCallback(async (newWalletData) => {
     const newWalletsArr = Array.isArray(newWalletData) ? newWalletData : [newWalletData];
-    const folder = activeFolder !== 'All' ? activeFolder : 'Created';
+    const folder = activeFolder !== 'All' ? activeFolder : (defaultFolder || 'Created');
     const now = Date.now();
     const processed = newWalletsArr.map(w => ({
       ...w,
@@ -229,25 +352,28 @@ export default function useWallets(aesKey, isDecoyMode) {
       pinned: false,
       createdAt: w.createdAt || now,
       isNew: true,
-      newUntil: now + 24 * 60 * 60 * 1000
+      newUntil: now + NEW_WALLET_BADGE_MS
     }));
     const updated = [...processed, ...wallets];
     await persist(updated);
     return processed;
-  }, [wallets, persist, activeFolder]);
+  }, [wallets, persist, activeFolder, defaultFolder]);
 
   const handleTogglePin = useCallback(async (wallet) => {
+    const previousWallets = wallets;
     const updated = wallets.map(w => {
       if (wallet._id && w._id) return w._id === wallet._id ? { ...w, pinned: !w.pinned } : w;
       return (w === wallet) ? { ...w, pinned: !w.pinned } : w;
     });
     await persist(updated);
+    showUndoToast(t('walletCard.saved'), previousWallets, 'success');
     hapticTap();
-  }, [wallets, persist]);
+  }, [wallets, persist, showUndoToast, t]);
 
   const handleMoveWallet = useCallback(async (wallet, newFolder) => {
     const targetFolder = String(newFolder || '').trim();
     if (!targetFolder) return;
+    const previousWallets = wallets;
     const updated = wallets.map(w => {
       if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: targetFolder } : w;
       return (w === wallet) ? { ...w, groupId: targetFolder } : w;
@@ -257,8 +383,8 @@ export default function useWallets(aesKey, isDecoyMode) {
       persist(updated),
       shouldRememberFolder ? persistCustomFolders([...customFolders, targetFolder]) : Promise.resolve()
     ]);
-    showToast(t('home.movedToFolder', { folder: targetFolder }), 'success');
-  }, [wallets, persist, folders, customFolders, persistCustomFolders, showToast, t]);
+    showUndoToast(t('home.movedToFolder', { folder: targetFolder }), previousWallets, 'success');
+  }, [wallets, persist, folders, customFolders, persistCustomFolders, showUndoToast, t]);
 
   const handleReorderWallet = useCallback(async (oldIndex, newIndex) => {
     // Reorder within the full wallets array based on filteredWallets positions
@@ -283,11 +409,12 @@ export default function useWallets(aesKey, isDecoyMode) {
     searchQuery, setSearchQuery,
     sortOrder, setSortOrder,
     activeFilter, setActiveFilter,
-    folders, filteredWallets, totalBalance, duplicateCount, allTags,
+    folders, pinnedFolders, defaultFolder, filteredWallets, totalBalance, duplicateCount, allTags,
     handleDeleteWallet, handleDeleteWalletDirect,
-    handleDeleteFolder, handleRenameFolder,
+    handleDeleteFolder, handleRemoveFolderOnly, handleRenameFolder,
     handleRenameWallet, handleEditWallet,
     handleBulkNetworkChange, handleCreateFolder, handleSaveWallet,
+    handleToggleFolderPin, handleSetDefaultFolder, handleReorderFolder,
     handleTogglePin, handleMoveWallet, handleReorderWallet,
   };
 }

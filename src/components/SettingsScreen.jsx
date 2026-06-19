@@ -41,7 +41,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                     <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1">
                         {t('settings.title')}
                     </h1>
-                    <p className="mt-0.5 text-[11px] font-semibold text-brand-300">xKey {appVersion.label}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-brand-300">xKey {appVersion.label}</p>
                 </div>
                 <div className="w-10"></div>
             </header>
@@ -60,7 +60,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                 <aside className="hidden lg:block">
                     <div className="sticky top-[calc(4.5rem+1rem)] space-y-3">
                     <div className="glass-card p-3">
-                        <div className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                        <div className="px-2 pb-2 text-[0.625rem] font-semibold uppercase tracking-wider text-surface-500">
                             {t('settings.title')}
                         </div>
                         <div className="space-y-1">
@@ -92,7 +92,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                           </div>
                           <div className="mt-3 rounded-lg border border-surface-700/70 bg-surface-950/35 p-3">
                             <p className="text-xs font-bold text-white">{t('settings.openSourceTitle')}</p>
-                            <p className="mt-1 text-[11px] leading-relaxed text-surface-400">{t('settings.openSourceDesc')}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.openSourceDesc')}</p>
                             <a
                               href={githubUrl}
                               target="_blank"

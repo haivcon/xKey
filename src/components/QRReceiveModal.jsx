@@ -189,7 +189,6 @@ export default function QRReceiveModal({ onClose, onImport }) {
               <PasswordInput
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                autoFocus
                 placeholder={t('settings.backupPassword') || 'Password'}
                 className="w-full bg-surface-950 border border-surface-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500"
                 onKeyDown={e => e.key === 'Enter' && handleDecrypt()}

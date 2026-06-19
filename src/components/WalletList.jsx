@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Plus, UploadCloud } from 'lucide-react';
 import WalletCard from './WalletCard';
 import SortableWalletCard from './SortableWalletCard';
 import SkeletonCard from './SkeletonCard';
@@ -24,7 +25,8 @@ export default function WalletList({
   setQrModalData, handleDeleteWallet, handleRenameWallet,
   handleEditWallet, handleTogglePin, setMovingWallet, t,
   selectionMode, isSelected, toggleSelect,
-  sortOrder, onReorder, assetUnit
+  sortOrder, onReorder, assetUnit,
+  activeFolder = 'All', searchQuery = '', onAddWallet, onImport
 }) {
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
   const { displayScale, walletDensity } = useTheme();
@@ -116,9 +118,40 @@ export default function WalletList({
   }
 
   if (filteredWallets.length === 0) {
+    const isEmptyFolder = activeFolder !== 'All' && !searchQuery;
     return (
-      <div className="text-center py-10 text-surface-500">
-        {t('home.noWallets')}
+      <div className="pt-3">
+        <div className="rounded-2xl border border-dashed border-surface-700 bg-surface-900/50 px-4 py-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-300">
+            <Plus size={22} />
+          </div>
+          <h3 className="text-sm font-bold text-white">
+            {isEmptyFolder ? t('home.emptyFolderTitle', { name: activeFolder }) : t('home.noWallets')}
+          </h3>
+          {isEmptyFolder && (
+            <>
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-surface-400">
+                {t('home.emptyFolderDesc')}
+              </p>
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={onAddWallet}
+                  className="btn-glow flex items-center justify-center gap-2 rounded-xl border border-brand-400 bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-500"
+                >
+                  <Plus size={16} /> {t('home.addToFolder')}
+                </button>
+                <button
+                  type="button"
+                  onClick={onImport}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-800 px-4 py-3 text-sm font-semibold text-surface-200 hover:bg-surface-700"
+                >
+                  <UploadCloud size={16} /> {t('home.importToFolder')}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -166,7 +199,7 @@ export default function WalletList({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 pt-3">
       {isDndEnabled ? (
         <DndContext
           sensors={sensors}

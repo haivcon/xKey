@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, ShieldOff, Timer, Clipboard, KeyRound, Lock, ChevronDown, RefreshCw, Monitor, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldOff, Timer, Clipboard, KeyRound, Lock, ChevronDown, RefreshCw, Monitor, Trash2, Keyboard } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import CryptoJS from 'crypto-js';
 import { useToast } from '../../contexts/ToastContext';
@@ -16,8 +16,9 @@ import {
 import { CLIPBOARD_TIMEOUT_KEY, CLIPBOARD_OPTIONS } from '../../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../PinLockScreen';
-import { isBiometricAvailable } from '../../utils/storage';
+import { getVaultSecurityStatus, isBiometricAvailable } from '../../utils/storage';
 import PasswordInput from '../PasswordInput';
+import { useScrambledKeyboard } from '../../contexts/ScrambledKeyboardContext';
 
 const AUTOLOCK_OPTIONS = [
   { label: '1 min', value: 60000 },
@@ -41,7 +42,9 @@ export default function SecurityTab({ onWipe }) {
   const [showMPSetup, setShowMPSetup] = useState(false);
   const [mpInput, setMpInput] = useState('');
   const [mpConfirm, setMpConfirm] = useState('');
-  const [showMPIcon, setShowMPIcon] = useState(false);
+  const [showMPRemove, setShowMPRemove] = useState(false);
+  const [mpRemoveInput, setMpRemoveInput] = useState('');
+  const [mpBusy, setMpBusy] = useState(false);
 
   // Change PIN
   const [showChangePin, setShowChangePin] = useState(false);
@@ -63,11 +66,13 @@ export default function SecurityTab({ onWipe }) {
 
   // Biometric
   const [hasBiometric, setHasBiometric] = useState(true);
+  const [securityStatus, setSecurityStatus] = useState(null);
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
   const t = useT();
   const mp = useMasterPassword();
+  const scrambledKeyboard = useScrambledKeyboard();
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -75,6 +80,7 @@ export default function SecurityTab({ onWipe }) {
       setKillSwitchEnabled(ks === 'true');
       const bio = await isBiometricAvailable();
       setHasBiometric(bio);
+      setSecurityStatus(await getVaultSecurityStatus());
       const { value: decoyHash } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
       setHasDecoyPin(!!decoyHash);
       const { value: shakeVal } = await Preferences.get({ key: SHAKE_TO_LOCK_KEY });
@@ -152,17 +158,38 @@ export default function SecurityTab({ onWipe }) {
   const handleSetMP = async () => {
     if (!mpInput || mpInput.length < 6) { showToast(t('settings.passwordMinError'), 'warning'); return; }
     if (mpInput !== mpConfirm) { showToast(t('settings.passwordMismatch'), 'error'); return; }
-    await mp.setMasterPassword(mpInput);
-    hapticSuccess();
-    showToast(t('settings.masterPasswordSet'), 'success');
-    setShowMPSetup(false); setMpInput(''); setMpConfirm('');
+    setMpBusy(true);
+    try {
+      await mp.setMasterPassword(mpInput);
+      hapticSuccess();
+      showToast(t('settings.masterPasswordSet'), 'success');
+      setShowMPSetup(false); setMpInput(''); setMpConfirm('');
+    } finally {
+      setMpBusy(false);
+    }
   };
 
   const handleRemoveMP = async () => {
-    const ok = await showConfirm(t('settings.removeMPConfirm'), { danger: false });
-    if (!ok) return;
-    await mp.removeMasterPassword();
-    showToast(t('settings.masterPasswordRemoved'), 'success');
+    if (!mpRemoveInput) {
+      showToast(t('settings.masterPasswordRemoveRequired'), 'warning');
+      return;
+    }
+    setMpBusy(true);
+    try {
+      const verified = await mp.verifyMasterPassword(mpRemoveInput);
+      if (!verified) {
+        showToast(t('settings.masterPasswordWrong'), 'error');
+        return;
+      }
+      const ok = await showConfirm(t('settings.removeMPConfirm'), { danger: false });
+      if (!ok) return;
+      await mp.removeMasterPassword();
+      setShowMPRemove(false);
+      setMpRemoveInput('');
+      showToast(t('settings.masterPasswordRemoved'), 'success');
+    } finally {
+      setMpBusy(false);
+    }
   };
 
   const handleChangePin = async () => {
@@ -257,6 +284,51 @@ export default function SecurityTab({ onWipe }) {
       <div className="glass-card overflow-hidden">
         <div className="p-4 border-b border-surface-700/50">
           <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <ShieldCheck size={20} className="text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium text-sm">{t('settings.securityStatusTitle')}</p>
+              <p className="text-xs text-surface-400">{t('settings.securityStatusDesc')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-2 p-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
+            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.securityMode')}</p>
+            <p className="mt-1 text-sm font-bold text-white">
+              {securityStatus ? t(`settings.securityMode_${securityStatus.mode}`) : t('settings.securityChecking')}
+            </p>
+          </div>
+          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
+            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.vaultKeyProtection')}</p>
+            <p className="mt-1 text-sm font-bold text-white">
+              {securityStatus?.deviceProtected ? t('settings.keystoreProtected') : t('settings.fallbackProtected')}
+            </p>
+          </div>
+          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
+            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.deviceCredential')}</p>
+            <p className={`mt-1 text-sm font-bold ${securityStatus?.deviceCredentialAvailable ? 'text-emerald-300' : 'text-amber-300'}`}>
+              {securityStatus?.deviceCredentialAvailable ? t('settings.available') : t('settings.unavailable')}
+            </p>
+          </div>
+          <div className="rounded-xl border border-surface-700 bg-surface-900/60 p-3">
+            <p className="text-xs font-semibold uppercase text-surface-500">{t('settings.compatibilityFallback')}</p>
+            <p className={`mt-1 text-sm font-bold ${securityStatus?.fallback ? 'text-amber-300' : 'text-emerald-300'}`}>
+              {securityStatus?.fallback ? t('settings.enabled') : t('settings.disabled')}
+            </p>
+          </div>
+        </div>
+        {securityStatus?.fallback && (
+          <div className="mx-4 mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
+            {t('settings.compatibilityFallbackWarning')}
+          </div>
+        )}
+      </div>
+
+      <div className="glass-card overflow-hidden">
+        <div className="p-4 border-b border-surface-700/50">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
               <ShieldCheck size={20} className="text-cyan-400" />
             </div>
@@ -337,6 +409,55 @@ export default function SecurityTab({ onWipe }) {
           </div>
         )}
 
+        {/* Scrambled In-App Keyboard */}
+        <div className="border-b border-surface-700/30 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 gap-3">
+              <Keyboard size={16} className="mt-1 flex-shrink-0 text-cyan-400" />
+              <div>
+                <p className="text-sm font-semibold text-white">{t('settings.scrambledKeyboardTitle')}</p>
+                <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.scrambledKeyboardDesc')}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                hapticTap();
+                scrambledKeyboard.setEnabled(!scrambledKeyboard.enabled);
+                showToast(!scrambledKeyboard.enabled ? t('settings.scrambledKeyboardEnabled') : t('settings.scrambledKeyboardDisabled'), 'success');
+              }}
+              className={`flex h-7 w-12 flex-shrink-0 items-center rounded-full px-1 transition-colors ${scrambledKeyboard.enabled ? 'bg-cyan-500' : 'bg-surface-700'}`}
+              aria-label={t('settings.scrambledKeyboardTitle')}
+            >
+              <span className={`h-5 w-5 rounded-full bg-white transition-transform ${scrambledKeyboard.enabled ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+          <div className="mt-3 rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-3 text-xs leading-relaxed text-cyan-100/85">
+            {t('settings.scrambledKeyboardGuide')}
+          </div>
+          {scrambledKeyboard.enabled && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {['sensitive', 'all'].map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => {
+                    hapticTap();
+                    scrambledKeyboard.setMode(mode);
+                  }}
+                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                    scrambledKeyboard.mode === mode
+                      ? 'border-cyan-400 bg-cyan-500/15 text-cyan-200'
+                      : 'border-surface-700 bg-surface-800 text-surface-300'
+                  }`}
+                >
+                  {t(`settings.scrambledKeyboardMode_${mode}`)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Master Password */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
@@ -348,11 +469,28 @@ export default function SecurityTab({ onWipe }) {
               {mp.hasMasterPassword ? t('settings.mpEnabled') : t('settings.mpDisabled')}
             </span>
           </div>
-          <p className="text-[11px] text-surface-500 mb-3">{t('settings.masterPasswordDesc')}</p>
+          <p className="text-xs text-surface-500 mb-3">{t('settings.masterPasswordDesc')}</p>
           {mp.hasMasterPassword ? (
-            <button onClick={handleRemoveMP} className="btn-glow btn-glow-danger text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-lg">
-              {t('settings.removeMasterPassword')}
-            </button>
+            !showMPRemove ? (
+              <button onClick={() => { hapticTap(); setShowMPRemove(true); }} className="btn-glow btn-glow-danger text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-lg">
+                {t('settings.removeMasterPassword')}
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <PasswordInput value={mpRemoveInput} onChange={e => setMpRemoveInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleRemoveMP()}
+                  placeholder={t('settings.currentHiddenPassword')}
+                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                <div className="flex gap-2">
+                  <button onClick={() => { setShowMPRemove(false); setMpRemoveInput(''); }}
+                    disabled={mpBusy}
+                    className="btn-glow flex-1 bg-surface-700 text-surface-300 py-2 rounded-lg text-xs disabled:opacity-50">{t('common.cancel')}</button>
+                  <button onClick={handleRemoveMP}
+                    disabled={mpBusy}
+                    className="btn-glow btn-glow-danger flex-1 bg-red-500/10 text-red-300 border border-red-500/20 py-2 rounded-lg text-xs font-medium disabled:opacity-50">{t('settings.removeMasterPassword')}</button>
+                </div>
+              </div>
+            )
           ) : (
             !showMPSetup ? (
               <button onClick={() => { hapticTap(); setShowMPSetup(true); }}
@@ -362,26 +500,21 @@ export default function SecurityTab({ onWipe }) {
             ) : (
               <div className="space-y-2">
                 <div className="relative">
-                  <input type={showMPIcon ? "text" : "password"} value={mpInput} onChange={e => setMpInput(e.target.value)} autoFocus
+                  <PasswordInput value={mpInput} onChange={e => setMpInput(e.target.value)}
                     placeholder={t('settings.passwordMin')}
                     className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
-                  <button onClick={() => setShowMPIcon(!showMPIcon)} className="absolute right-3 top-2.5 text-surface-500 hover:text-white transition-colors">
-                    {showMPIcon ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
                 </div>
                 <div className="relative">
-                  <input type={showMPIcon ? "text" : "password"} value={mpConfirm} onChange={e => setMpConfirm(e.target.value)}
+                  <PasswordInput value={mpConfirm} onChange={e => setMpConfirm(e.target.value)}
                     placeholder={t('settings.reenterPassword')}
                     className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
-                  <button onClick={() => setShowMPIcon(!showMPIcon)} className="absolute right-3 top-2.5 text-surface-500 hover:text-white transition-colors">
-                    {showMPIcon ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { setShowMPSetup(false); setMpInput(''); setMpConfirm(''); }}
                     className="btn-glow flex-1 bg-surface-700 text-surface-300 py-2 rounded-lg text-xs">{t('common.cancel')}</button>
                   <button onClick={handleSetMP}
-                    className="btn-glow btn-glow-success flex-1 bg-brand-600 text-white py-2 rounded-lg text-xs font-medium">{t('common.save')}</button>
+                    disabled={mpBusy}
+                    className="btn-glow btn-glow-success flex-1 bg-brand-600 text-white py-2 rounded-lg text-xs font-medium disabled:opacity-50">{t('common.save')}</button>
                 </div>
               </div>
             )
@@ -417,17 +550,17 @@ export default function SecurityTab({ onWipe }) {
             <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
               {pinStep === 'current' && (
                 <PasswordInput value={pinCurrent} onChange={e => setPinCurrent(e.target.value)}
-                  placeholder={t('settings.currentPin')} maxLength={6} autoFocus
+                  placeholder={t('settings.currentPin')} maxLength={6}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
               )}
               {pinStep === 'new' && (
                 <PasswordInput value={pinNew} onChange={e => setPinNew(e.target.value)}
-                  placeholder={t('settings.newPin')} maxLength={6} autoFocus
+                  placeholder={t('settings.newPin')} maxLength={6}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
               )}
               {pinStep === 'confirm' && (
                 <PasswordInput value={pinConfirmVal} onChange={e => setPinConfirmVal(e.target.value)}
-                  placeholder={t('settings.confirmNewPin')} maxLength={6} autoFocus
+                  placeholder={t('settings.confirmNewPin')} maxLength={6}
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
               )}
               {pinError && <p className="text-red-400 text-xs">{pinError}</p>}
@@ -510,7 +643,7 @@ export default function SecurityTab({ onWipe }) {
                   value={shakeSensitivity} onChange={handleChangeShakeSensitivity}
                   className="w-full h-1 bg-surface-700 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-surface-500 mt-1">
+                <div className="flex justify-between text-[0.625rem] text-surface-500 mt-1">
                   <span>{t('settings.high') || 'High'}</span>
                   <span>{t('settings.low') || 'Low'}</span>
                 </div>

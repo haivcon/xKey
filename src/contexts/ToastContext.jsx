@@ -105,6 +105,11 @@ function ToastItem({ toast, onDismiss }) {
     setTimeout(() => onDismiss(toast.id), 250);
   };
 
+  const handleAction = () => {
+    toast.action?.onClick?.();
+    handleDismiss();
+  };
+
   const style = TOAST_STYLES[toast.type] || TOAST_STYLES.info;
   const Icon = TOAST_ICONS[toast.type] || Info;
   const formatted = formatToastMessage(toast.message);
@@ -138,12 +143,21 @@ function ToastItem({ toast, onDismiss }) {
             {toast.message}
           </p>
         )}
-        <button
-          onClick={handleDismiss}
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-        >
-          <X size={14} className="text-white/40" />
-        </button>
+        {toast.action ? (
+          <button
+            onClick={handleAction}
+            className="flex-shrink-0 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-[0.72em] font-bold text-white transition-colors hover:bg-white/15"
+          >
+            {toast.action.label}
+          </button>
+        ) : (
+          <button
+            onClick={handleDismiss}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+          >
+            <X size={14} className="text-white/40" />
+          </button>
+        )}
       </div>
       {/* Progress bar */}
       <div className="h-[2px] w-full bg-white/5">
@@ -159,14 +173,14 @@ function ToastItem({ toast, onDismiss }) {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback((message, type = 'info', duration) => {
+  const showToast = useCallback((message, type = 'info', duration, action) => {
     const id = ++toastId;
     const resolvedDuration = getToastDuration(type, duration, message);
     logActionHistory(message, type).catch(() => {});
     setToasts(prev => {
       // Keep max 3 toasts visible
       const limited = prev.length >= 3 ? prev.slice(1) : prev;
-      return [...limited, { id, message, type, duration: resolvedDuration }];
+      return [...limited, { id, message, type, duration: resolvedDuration, action }];
     });
   }, []);
 

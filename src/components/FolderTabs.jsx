@@ -1,57 +1,158 @@
-import { Folder, FolderPlus, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Check, Download, Folder, FolderMinus, FolderPlus, MoreHorizontal, Pencil, Search, Star, Trash2, X } from 'lucide-react';
 
 export default function FolderTabs({
   folders, activeFolder, wallets,
   editingFolder, editFolderName,
   onSelectFolder, onStartEdit, onEditChange, onFinishEdit, onDeleteFolder,
+  onRemoveFolderOnly, onTogglePinFolder, onSetDefaultFolder, onExportFolder, onReorderFolder,
+  pinnedFolders = [], defaultFolder = '',
   creatingFolder, newFolderName, onStartCreate, onCreateChange, onFinishCreate,
   createFolderLabel = 'Create folder',
+  t = (key) => key,
   variant = 'tabs'
 }) {
+  const [openMenu, setOpenMenu] = useState(null);
+  const [folderQuery, setFolderQuery] = useState('');
+  const [dragFolder, setDragFolder] = useState(null);
   const isSidebar = variant === 'sidebar';
   const finishCreate = () => {
     if (!creatingFolder) return;
     onFinishCreate(newFolderName);
   };
+  const cancelCreate = () => onFinishCreate('');
+  const canCreate = String(newFolderName || '').trim().length > 0;
+  const inputClass = isSidebar
+    ? 'min-w-0 flex-1 bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-lg outline-none'
+    : 'min-w-0 flex-1 bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-full outline-none';
+  const showFolderSearch = folders.length > 6;
+  const visibleFolders = useMemo(() => {
+    const q = folderQuery.trim().toLowerCase();
+    if (!q) return folders;
+    return folders.filter(folder => folder === 'All' || folder.toLowerCase().includes(q));
+  }, [folders, folderQuery]);
+  const folderAccent = (name) => {
+    const accents = [
+      'text-cyan-300 bg-cyan-500/10',
+      'text-emerald-300 bg-emerald-500/10',
+      'text-fuchsia-300 bg-fuchsia-500/10',
+      'text-amber-300 bg-amber-500/10',
+      'text-sky-300 bg-sky-500/10',
+      'text-violet-300 bg-violet-500/10',
+    ];
+    const sum = Array.from(name || '').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return accents[sum % accents.length];
+  };
+  const countWallets = (folder) => folder === 'All' ? wallets.length : wallets.filter(w => (w.groupId || 'Imported') === folder).length;
+  const closeMenu = () => setOpenMenu(null);
 
   return (
-    <div className={isSidebar ? 'space-y-1' : 'flex overflow-x-auto gap-2 pb-2 mb-4 scrollbar-hide items-center'}>
-      {creatingFolder && (
-        <input
-          autoFocus
-          className={isSidebar
-            ? 'w-full bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-lg outline-none'
-            : 'bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-full outline-none min-w-[150px] flex-shrink-0'}
-          value={newFolderName}
-          onChange={(e) => onCreateChange(e.target.value)}
-          onBlur={finishCreate}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') finishCreate();
-            if (e.key === 'Escape') onFinishCreate('');
-          }}
-        />
+    <div className={isSidebar ? 'space-y-2' : 'space-y-2'}>
+      {showFolderSearch && (
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500" />
+          <input
+            value={folderQuery}
+            onChange={(e) => setFolderQuery(e.target.value)}
+            placeholder={t('home.searchFolders')}
+            className="h-9 w-full rounded-lg border border-surface-800 bg-surface-900 pl-9 pr-3 text-xs text-white outline-none placeholder:text-surface-600 focus:border-brand-500"
+          />
+        </div>
       )}
-      {folders.map(f => {
-        const count = f === 'All' ? wallets.length : wallets.filter(w => (w.groupId || 'Imported') === f).length;
+      <div className={isSidebar ? 'space-y-1' : 'flex overflow-x-auto gap-2 pb-2 mb-4 scrollbar-hide items-center'}>
+      {creatingFolder && (
+        <div className={isSidebar ? 'flex items-center gap-1' : 'flex min-w-[230px] flex-shrink-0 items-center gap-1'}>
+          <input
+            className={inputClass}
+            value={newFolderName}
+            onChange={(e) => onCreateChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') finishCreate();
+              if (e.key === 'Escape') cancelCreate();
+            }}
+            placeholder={createFolderLabel}
+          />
+          <button
+            type="button"
+            disabled={!canCreate}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={finishCreate}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label={t('common.save')}
+            title={t('common.save')}
+          >
+            <Check size={16} />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={cancelCreate}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-surface-700 bg-surface-800 text-surface-400 transition-colors hover:bg-surface-700 hover:text-white"
+            aria-label={t('common.cancel')}
+            title={t('common.cancel')}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+      {visibleFolders.map(f => {
+        const count = countWallets(f);
+        const isPinned = pinnedFolders.includes(f);
+        const isDefault = defaultFolder === f;
 
         if (editingFolder === f) {
           return (
-            <input
-              key={f}
-              autoFocus
-              className={isSidebar
-                ? 'w-full bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-lg outline-none'
-                : 'bg-surface-800 border border-brand-500 text-white text-sm px-3 py-2 rounded-full outline-none min-w-[80px]'}
-              value={editFolderName}
-              onChange={(e) => onEditChange(e.target.value)}
-              onBlur={() => onFinishEdit(f, editFolderName)}
-              onKeyDown={(e) => e.key === 'Enter' && onFinishEdit(f, editFolderName)}
-            />
+            <div key={f} className={isSidebar ? 'flex items-center gap-1' : 'flex min-w-[230px] flex-shrink-0 items-center gap-1'}>
+              <input
+                className={inputClass}
+                value={editFolderName}
+                onChange={(e) => onEditChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onFinishEdit(f, editFolderName);
+                  if (e.key === 'Escape') onFinishEdit(f, f);
+                }}
+              />
+              <button
+                type="button"
+                disabled={!String(editFolderName || '').trim()}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onFinishEdit(f, editFolderName)}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label={t('common.save')}
+                title={t('common.save')}
+              >
+                <Check size={16} />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onFinishEdit(f, f)}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-surface-700 bg-surface-800 text-surface-400 transition-colors hover:bg-surface-700 hover:text-white"
+                aria-label={t('common.cancel')}
+                title={t('common.cancel')}
+              >
+                <X size={15} />
+              </button>
+            </div>
           );
         }
 
         return (
-          <div key={f} className={isSidebar ? 'flex items-center gap-1' : 'flex items-center gap-1 flex-shrink-0'}>
+          <div
+            key={f}
+            draggable={f !== 'All'}
+            onDragStart={() => setDragFolder(f)}
+            onDragOver={(e) => {
+              if (dragFolder && f !== 'All') e.preventDefault();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragFolder && f !== 'All') onReorderFolder?.(dragFolder, f);
+              setDragFolder(null);
+            }}
+            onDragEnd={() => setDragFolder(null)}
+            className={isSidebar ? 'relative flex items-center gap-1' : 'relative flex items-center gap-1 flex-shrink-0'}
+          >
             <button
               onClick={() => onSelectFolder(f)}
               onDoubleClick={() => f !== 'All' && onStartEdit(f)}
@@ -62,19 +163,71 @@ export default function FolderTabs({
               {isSidebar ? (
                 <>
                   <span className="min-w-0 flex items-center gap-2 truncate">
-                    <Folder size={14} className="flex-shrink-0 opacity-70" />
+                    <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg ${activeFolder === f ? 'bg-white/15 text-white' : folderAccent(f)}`}>
+                      <Folder size={14} />
+                    </span>
                     <span className="truncate">{f}</span>
+                    {isPinned && <Star size={11} className="flex-shrink-0 fill-amber-300 text-amber-300" />}
+                    {isDefault && <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
                   </span>
                   <span className="opacity-60 flex-shrink-0">{count}</span>
                 </>
               ) : (
-                <>{f} <span className="opacity-60 ml-1">({count})</span></>
+                <>
+                  {isPinned && <Star size={11} className="mr-1 inline fill-amber-300 text-amber-300" />}
+                  {f} <span className="opacity-60 ml-1">({count})</span>
+                  {isDefault && <span className="ml-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
+                </>
               )}
             </button>
             {f !== 'All' && activeFolder === f && (
-              <button onClick={() => onDeleteFolder(f)} className={isSidebar ? 'p-2 text-red-400/50 hover:text-red-400 transition-colors' : 'p-1 text-red-400/50 hover:text-red-400 transition-colors'}>
-                <Trash2 size={14} />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => onStartEdit(f)}
+                  className={isSidebar ? 'p-2 text-surface-400/70 hover:text-brand-300 transition-colors' : 'p-1 text-surface-400/70 hover:text-brand-300 transition-colors'}
+                  aria-label={t('home.renameFolder')}
+                  title={t('home.renameFolder')}
+                >
+                  <Pencil size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenMenu(openMenu === f ? null : f)}
+                  className={isSidebar ? 'p-2 text-surface-400/70 hover:text-white transition-colors' : 'p-1 text-surface-400/70 hover:text-white transition-colors'}
+                  aria-label={t('home.folderActions')}
+                  title={t('home.folderActions')}
+                >
+                  <MoreHorizontal size={15} />
+                </button>
+              </>
+            )}
+            {openMenu === f && (
+              <>
+                <button className="fixed inset-0 z-40 cursor-default" onClick={closeMenu} aria-label={t('common.close')} />
+                <div className={`absolute z-50 min-w-56 rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-2xl ${isSidebar ? 'left-6 top-full mt-1' : 'right-0 top-full mt-2'}`}>
+                  <button onClick={() => { closeMenu(); onStartEdit(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-surface-200 hover:bg-surface-800">
+                    <Pencil size={14} /> {t('home.renameFolder')}
+                  </button>
+                  <button onClick={() => { closeMenu(); onTogglePinFolder?.(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-surface-200 hover:bg-surface-800">
+                    <Star size={14} className={isPinned ? 'fill-amber-300 text-amber-300' : ''} /> {isPinned ? t('home.unpinFolder') : t('home.pinFolder')}
+                  </button>
+                  <button onClick={() => { closeMenu(); onSetDefaultFolder?.(isDefault ? '' : f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-surface-200 hover:bg-surface-800">
+                    <Check size={14} /> {isDefault ? t('home.clearDefaultFolder') : t('home.setDefaultFolder')}
+                  </button>
+                  <button onClick={() => { closeMenu(); onExportFolder?.(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-surface-200 hover:bg-surface-800">
+                    <Download size={14} /> {t('home.exportFolder')}
+                  </button>
+                  {count > 0 && (
+                    <button onClick={() => { closeMenu(); onRemoveFolderOnly?.(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-amber-300 hover:bg-amber-500/10">
+                      <FolderMinus size={14} /> {t('home.removeFolderOnly')}
+                    </button>
+                  )}
+                  <button onClick={() => { closeMenu(); onDeleteFolder(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-red-300 hover:bg-red-500/10">
+                    <Trash2 size={14} /> {t('home.deleteFolder')}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         );
@@ -93,6 +246,7 @@ export default function FolderTabs({
           {isSidebar && <span>{createFolderLabel}</span>}
         </button>
       )}
+      </div>
     </div>
   );
 }

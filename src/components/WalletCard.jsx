@@ -7,6 +7,7 @@ import { secureCopy } from '../utils/clipboard';
 import { useToast } from '../contexts/ToastContext';
 import { useMasterPassword } from '../contexts/MasterPasswordContext';
 import PasswordInput from './PasswordInput';
+import SecureTextarea from './SecureTextarea';
 import { TagBadge, TagEditor } from './TagSystem';
 import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
 
@@ -38,6 +39,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [editMode, setEditMode] = useState(false);
   const [editFields, setEditFields] = useState({});
   const [showFullAddress, setShowFullAddress] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
   const fullAddressTimerRef = useRef(null);
   const t = useT();
   const { showToast } = useToast();
@@ -54,10 +56,15 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const addressClass = isUltraCompact ? 'text-[0.72rem]' : isCompact ? 'text-[0.8rem]' : 'text-sm';
   const actionButtonClass = isUltraCompact ? 'p-1.5' : 'p-2';
   const actionIconSize = isUltraCompact ? 16 : 18;
-  const isNewWallet = wallet.newUntil ? wallet.newUntil > Date.now() : !!wallet.isNew;
+  const isNewWallet = !!wallet.newUntil && wallet.newUntil > nowTick;
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
+  useEffect(() => {
+    if (!wallet.newUntil || wallet.newUntil <= Date.now()) return undefined;
+    const timeout = window.setTimeout(() => setNowTick(Date.now()), Math.min(wallet.newUntil - Date.now() + 1000, 24 * 60 * 60 * 1000));
+    return () => window.clearTimeout(timeout);
+  }, [wallet.newUntil]);
   useEffect(() => () => clearTimeout(fullAddressTimerRef.current), []);
 
   const revealFullAddress = () => {
@@ -145,6 +152,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     setEditMode(false);
   };
 
+  const cancelEdit = () => {
+    hapticTap();
+    setEditFields({});
+    setEditMode(false);
+  };
+
   const displayAddress = wallet.address
     ? showFullAddress
       ? wallet.address
@@ -155,8 +168,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     <div>
       <label className="block text-xs text-surface-400 uppercase tracking-wider mb-1">{label}</label>
       {multiline ? (
-        <textarea rows={4} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
+        <SecureTextarea rows={4} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
           placeholder={key === 'notes' ? '**bold**, *italic*, `code`, - lists' : ''}
+          secureLabel={label}
           className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none font-mono" />
       ) : (
         <input type={type} value={editFields[key] || ''} onChange={(e) => setEditFields(p => ({ ...p, [key]: e.target.value }))}
@@ -182,7 +196,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   );
 
   return (
-    <div className={`glass-card overflow-hidden border transition-all relative ${
+    <div className={`glass-card overflow-hidden border transition-all relative ${isNewWallet ? 'wallet-new-card' : ''} ${
       isSelected
         ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5'
         : isNewWallet
@@ -207,7 +221,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
           </div>
           <div className="min-w-0">
             {renaming ? (
-              <input autoFocus className="bg-transparent border-b border-brand-500 text-white text-sm outline-none w-full" value={editName}
+              <input className="bg-transparent border-b border-brand-500 text-white text-sm outline-none w-full" value={editName}
                 onClick={(e) => e.stopPropagation()} onChange={(e) => setEditName(e.target.value)}
                 onBlur={() => { onRename(editName); setRenaming(false); }} onKeyDown={(e) => { if (e.key === 'Enter') { onRename(editName); setRenaming(false); } }} />
             ) : (
@@ -300,7 +314,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               </div>
               {editInput('name', t('createWallet.walletName'))}
               {editInput('address', t('walletCard.address'))}
-              {editInput('privateKey', t('walletCard.privateKey'), 'password')}
+              {editInput('privateKey', t('walletCard.privateKey'))}
               {editInput('seedPhrase', t('walletCard.seedPhrase'), 'text', true)}
               {editBalanceInput()}
               {editInput('notes', t('walletCard.notes'), 'text', true)}
@@ -318,7 +332,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     return (
                       <button key={net} type="button"
                         onClick={() => setEditFields(p => ({ ...p, network: net }))}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border
+                        className={`min-h-[1.75rem] rounded-full px-2.5 py-1 text-[0.625rem] font-semibold leading-none transition-all border
                           ${active ? `${nc.bg} ${nc.text} border-current scale-105` : 'bg-surface-800 text-surface-500 border-surface-700 hover:border-surface-500'}`}
                       >
                         {nc.label}
@@ -335,6 +349,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     <span className="text-xs font-medium">{t('walletCard.moveBtn')}</span>
                     </button>
                 )}
+                <button onClick={cancelEdit}
+                  className="btn-glow flex-1 flex items-center justify-center gap-1.5 border border-surface-700 bg-surface-800 hover:bg-surface-700 text-surface-100 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                  <X size={14} /> {t('walletCard.cancelEdit')}
+                </button>
                 <button onClick={saveEdit}
                   className="btn-glow btn-glow-success flex-1 flex items-center justify-center gap-1.5 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg text-sm font-medium transition-colors">
                   <Save size={14} /> {t('walletCard.saveChanges')}
@@ -426,12 +444,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
       {showMPPrompt && (
         <div className="absolute inset-0 z-10 bg-surface-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-xl">
-          <p className="text-sm font-medium text-white mb-3">{t('walletCard.masterPasswordRequired') || 'Master Password Required'}</p>
+          <p className="text-sm font-medium text-white mb-3">{t('walletCard.masterPasswordRequired')}</p>
           <div className="flex gap-2 w-full max-w-[280px]">
-            <PasswordInput autoFocus value={mpInput} onChange={e=>setMpInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitMP()} 
-              placeholder="Password" wrapperClassName="flex-1"
+            <PasswordInput value={mpInput} onChange={e=>setMpInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitMP()} 
+              placeholder={t('settings.currentHiddenPassword')} wrapperClassName="flex-1"
               className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" />
-            <button onClick={submitMP} className="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg text-sm transition-colors">OK</button>
+            <button onClick={submitMP} className="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg text-sm transition-colors">{t('common.confirm')}</button>
             <button onClick={()=>{setShowMPPrompt(null); setMpInput('');}} className="bg-surface-700 hover:bg-surface-600 text-white px-3 py-2 rounded-lg text-sm transition-colors"><X size={16}/></button>
           </div>
         </div>

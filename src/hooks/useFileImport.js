@@ -37,7 +37,7 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
     showToast(msg, 'success');
   }, [wallets, setWallets, aesKey, isDecoyMode, showToast, t]);
 
-  const handleFileUpload = useCallback(async () => {
+  const handleFileUpload = useCallback(async (targetFolderName = '') => {
     try {
       const result = await FilePicker.pickFiles({
         types: ['text/csv', 'text/comma-separated-values', 'application/csv', '.csv', 'application/octet-stream', '.xkey', '*/*'],
@@ -73,7 +73,8 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
         }
 
         const fileName = file.name || 'Imported';
-        const folderName = fileName.replace(/\.(csv|json|txt)$/i, '');
+        const preferredFolder = String(targetFolderName || '').trim();
+        const folderName = preferredFolder || fileName.replace(/\.(csv|json|txt)$/i, '');
 
         // --- Detect format ---
         const trimmed = rawString.trim();

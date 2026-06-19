@@ -81,7 +81,6 @@ export default function BatchActionBar({
         {showTagInput && (
           <div className="mt-2 flex gap-2">
             <input
-              autoFocus
               value={tagInput}
               onChange={e => setTagInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && tagInput.trim()) { onTag(tagInput.trim().toLowerCase()); setTagInput(''); setShowTagInput(false); } }}

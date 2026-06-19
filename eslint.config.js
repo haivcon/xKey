@@ -7,6 +7,8 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores([
     'dist',
+    'playwright-report',
+    'test-results',
     'android/app/build',
     'android/app/src/main/assets',
     'node_modules',
