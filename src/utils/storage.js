@@ -416,7 +416,7 @@ export const getVaultSecurityStatus = async () => {
     const fallback = await hasFallbackEncryptionKey().catch(() => false);
     const hardwareBoundOnly = await isHardwareBoundOnlyEnabled().catch(() => false);
     const hardwareInfo = native ? await getHardwareSecurityInfo().catch(() => null) : null;
-    let vaultExists = false;
+    let vaultExists;
     let vaultStorageError = false;
     try {
         vaultExists = !!(await getStoredVaultCipher());

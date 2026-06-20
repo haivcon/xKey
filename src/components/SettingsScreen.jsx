@@ -114,8 +114,8 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
 
                 <div className="min-w-0 space-y-6 lg:[&>.glass-card]:max-w-none">
                     {activeTab === 'general' && <GeneralTab />}
-                    {activeTab === 'security' && <SecurityTab aesKey={aesKey} onWipe={onWipe} />}
-                    {activeTab === 'data' && <DataTab aesKey={aesKey} onImport={onImport} />}
+                    {activeTab === 'security' && <SecurityTab aesKey={aesKey} />}
+                    {activeTab === 'data' && <DataTab aesKey={aesKey} onImport={onImport} onWipe={onWipe} />}
                     {activeTab === 'info' && <InfoTab />}
                 </div>
             </div>

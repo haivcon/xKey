@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, Check, Loader2, Lock, ShieldCheck, Wallet, X } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import PasswordInput from './PasswordInput';
+import Notice from './Notice';
 import { assembleShamirShareFromPages, combineShamirShares, parseShamirQr, verifyShamirPage } from '../utils/shamir';
 import { parseEncryptedBackupText } from '../utils/backupUtils';
 import { useT } from '../contexts/LanguageContext';
@@ -230,6 +231,7 @@ export default function ShamirRestoreModal({ aesKey, onClose, onRestore }) {
             </div>
           ) : ready && (
             <div className="space-y-3 rounded-xl border border-surface-700 bg-surface-950/60 p-3">
+              <Notice variant="warning">{t('settings.hardwareBoundRestoreNote')}</Notice>
               <label className="flex items-center gap-2 text-xs font-semibold text-surface-400">
                 <Lock size={13} /> {t('settings.backupPassword')}
               </label>

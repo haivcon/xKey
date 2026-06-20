@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, ShieldOff, Timer, Clipboard, KeyRound, Lock, ChevronDown, RefreshCw, Monitor, Trash2, Keyboard, Eye, Camera, Cpu } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldOff, Timer, Clipboard, KeyRound, Lock, ChevronDown, RefreshCw, Monitor, Keyboard, Eye, Camera, Cpu } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import CryptoJS from 'crypto-js';
 import { useToast } from '../../contexts/ToastContext';
@@ -21,6 +21,7 @@ import PasswordInput from '../PasswordInput';
 import { useScrambledKeyboard } from '../../contexts/ScrambledKeyboardContext';
 import { useSecureDisplay } from '../../contexts/SecureDisplayContext';
 import { useScreenSecurity } from '../../contexts/ScreenSecurityContext';
+import Notice from '../Notice';
 
 const AUTOLOCK_OPTIONS = [
   { label: '1 min', value: 60000 },
@@ -31,8 +32,9 @@ const AUTOLOCK_OPTIONS = [
 
 const hashPin = (p) => CryptoJS.SHA256(p + 'xkey_pin_salt_v1').toString();
 
-export default function SecurityTab({ aesKey, onWipe }) {
+export default function SecurityTab({ aesKey }) {
   // Auto-lock & clipboard
+  const [showSecurityStatus, setShowSecurityStatus] = useState(false);
   const [showAutoLock, setShowAutoLock] = useState(false);
   const [showClipboard, setShowClipboard] = useState(false);
   const [showSecureDisplay, setShowSecureDisplay] = useState(false);
@@ -199,7 +201,11 @@ export default function SecurityTab({ aesKey, onWipe }) {
       return;
     }
     if (next) {
-      const confirmed = await showConfirm(t('settings.hardwareBoundBackupConfirm'), { danger: true });
+      const confirmed = await showConfirm(t('settings.hardwareBoundBackupConfirm'), {
+        danger: true,
+        title: t('settings.hardwareBoundConfirmTitle'),
+        confirmText: t('common.confirm'),
+      });
       if (!confirmed) return;
     }
     setHardwareBoundBusy(true);
@@ -360,19 +366,15 @@ export default function SecurityTab({ aesKey, onWipe }) {
     window.dispatchEvent(new Event(SHAKE_SETTINGS_CHANGED_EVENT));
   };
 
-  const handleWipe = async () => {
-    const ok = await showConfirm(t('settings.wipeConfirm'), { danger: true });
-    if (!ok) return;
-    const { wipeAllData } = await import('../../utils/storage');
-    await wipeAllData();
-    onWipe();
-  };
-
   return (
     <>
       {/* ═══ Security Section ═══ */}
       <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-surface-700/50">
+        <button
+          type="button"
+          onClick={() => { hapticTap(); setShowSecurityStatus(!showSecurityStatus); }}
+          className="flex w-full items-center justify-between gap-3 border-b border-surface-700/50 p-4 text-left transition-colors hover:bg-surface-800/30"
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
               <ShieldCheck size={20} className="text-emerald-400" />
@@ -382,66 +384,69 @@ export default function SecurityTab({ aesKey, onWipe }) {
               <p className="text-xs text-surface-400">{t('settings.securityStatusDesc')}</p>
             </div>
           </div>
-        </div>
-        <div className="mx-4 mt-4 mb-2 rounded-xl border border-surface-700/60 bg-surface-900/40 divide-y divide-surface-700/30">
-          <div className="flex items-center justify-between p-3">
-            <span className="text-xs text-surface-400">{t('settings.securityMode')}</span>
-            <span className="text-xs font-semibold text-white">
-              {securityStatus ? t(`settings.securityMode_${securityStatus.mode}`) : t('settings.securityChecking')}
-            </span>
+          <ChevronDown size={18} className={`flex-shrink-0 text-surface-500 transition-transform ${showSecurityStatus ? 'rotate-180' : ''}`} />
+        </button>
+        {showSecurityStatus && (
+          <div className="mx-4 mt-4 mb-2 rounded-xl border border-surface-700/60 bg-surface-900/40 divide-y divide-surface-700/30">
+            <div className="flex items-center justify-between p-3">
+              <span className="text-xs text-surface-400">{t('settings.securityMode')}</span>
+              <span className="text-xs font-semibold text-white">
+                {securityStatus ? t(`settings.securityMode_${securityStatus.mode}`) : t('settings.securityChecking')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3">
+              <span className="text-xs text-surface-400">{t('settings.vaultKeyProtection')}</span>
+              <span className="text-xs font-semibold text-white">
+                {securityStatus?.deviceProtected ? t('settings.keystoreProtected') : t('settings.fallbackProtected')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3">
+              <span className="text-xs text-surface-400">{t('settings.deviceCredential')}</span>
+              <span className={`text-xs font-bold ${securityStatus?.deviceCredentialAvailable ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {securityStatus?.deviceCredentialAvailable ? t('settings.available') : t('settings.unavailable')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3">
+              <span className="text-xs text-surface-400">{t('settings.hardwareSecurity')}</span>
+              <span className={`text-right text-xs font-bold ${securityStatus?.hardwareInfo?.strongBoxSupported || securityStatus?.hardwareInfo?.keystoreAvailable ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {securityStatus ? hardwareSecurityLabel() : t('settings.securityChecking')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-3">
+              <span className="text-xs text-surface-400">{t('settings.compatibilityFallback')}</span>
+              <span className={`text-xs font-bold ${securityStatus?.fallback ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {securityStatus?.fallback ? t('settings.enabled') : t('settings.disabled')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3">
+              <span className="text-xs text-surface-400">{t('settings.ramOnlyDecryptedVault')}</span>
+              <span className="text-right text-xs font-bold text-emerald-400">
+                {securityStatus?.storage?.ramOnlyDecrypted ? t('settings.ramOnlyDecryptedStatus') : t('settings.securityChecking')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3 p-3">
+              <span className="text-xs text-surface-400">{t('settings.vaultStorageLayout')}</span>
+              <span className={`text-right text-xs font-bold ${
+                !securityStatus?.vaultExists
+                  ? 'text-surface-400'
+                  : securityStatus?.vaultStorageError || securityStatus?.storage?.fragmentedStorageHealthy === false ? 'text-red-400'
+                  : securityStatus?.storage?.fragmentedStorage ? 'text-emerald-400' : 'text-amber-400'
+              }`}>
+                {!securityStatus?.vaultExists
+                  ? t('settings.noVaultStorageYet')
+                  : securityStatus?.vaultStorageError || securityStatus?.storage?.fragmentedStorageHealthy === false
+                  ? t('settings.vaultStorageError')
+                  : securityStatus?.storage?.fragmentedStorage
+                  ? t('settings.fragmentedVaultStorage', { count: securityStatus.storage.fragmentCount || 3 })
+                  : t('settings.legacyVaultStorage')}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between p-3">
-            <span className="text-xs text-surface-400">{t('settings.vaultKeyProtection')}</span>
-            <span className="text-xs font-semibold text-white">
-              {securityStatus?.deviceProtected ? t('settings.keystoreProtected') : t('settings.fallbackProtected')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3">
-            <span className="text-xs text-surface-400">{t('settings.deviceCredential')}</span>
-            <span className={`text-xs font-bold ${securityStatus?.deviceCredentialAvailable ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {securityStatus?.deviceCredentialAvailable ? t('settings.available') : t('settings.unavailable')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 p-3">
-            <span className="text-xs text-surface-400">{t('settings.hardwareSecurity')}</span>
-            <span className={`text-right text-xs font-bold ${securityStatus?.hardwareInfo?.strongBoxSupported || securityStatus?.hardwareInfo?.keystoreAvailable ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {securityStatus ? hardwareSecurityLabel() : t('settings.securityChecking')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3">
-            <span className="text-xs text-surface-400">{t('settings.compatibilityFallback')}</span>
-            <span className={`text-xs font-bold ${securityStatus?.fallback ? 'text-amber-400' : 'text-emerald-400'}`}>
-              {securityStatus?.fallback ? t('settings.enabled') : t('settings.disabled')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 p-3">
-            <span className="text-xs text-surface-400">{t('settings.ramOnlyDecryptedVault')}</span>
-            <span className="text-right text-xs font-bold text-emerald-400">
-              {securityStatus?.storage?.ramOnlyDecrypted ? t('settings.ramOnlyDecryptedStatus') : t('settings.securityChecking')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 p-3">
-            <span className="text-xs text-surface-400">{t('settings.vaultStorageLayout')}</span>
-            <span className={`text-right text-xs font-bold ${
-              !securityStatus?.vaultExists
-                ? 'text-surface-400'
-                : securityStatus?.vaultStorageError || securityStatus?.storage?.fragmentedStorageHealthy === false ? 'text-red-400'
-                : securityStatus?.storage?.fragmentedStorage ? 'text-emerald-400' : 'text-amber-400'
-            }`}>
-              {!securityStatus?.vaultExists
-                ? t('settings.noVaultStorageYet')
-                : securityStatus?.vaultStorageError || securityStatus?.storage?.fragmentedStorageHealthy === false
-                ? t('settings.vaultStorageError')
-                : securityStatus?.storage?.fragmentedStorage
-                ? t('settings.fragmentedVaultStorage', { count: securityStatus.storage.fragmentCount || 3 })
-                : t('settings.legacyVaultStorage')}
-            </span>
-          </div>
-        </div>
+        )}
         {securityStatus?.fallback && (
-          <div className="mx-4 mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
+          <Notice variant="warning" className="mx-4 my-4">
             {t('settings.compatibilityFallbackWarning')}
-          </div>
+          </Notice>
         )}
       </div>
 
@@ -639,12 +644,15 @@ export default function SecurityTab({ aesKey, onWipe }) {
                 </div>
               </div>
               <p className="text-xs leading-relaxed text-surface-400">{t('settings.hardwareBoundDesc')}</p>
-              <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-100/85">
+              <Notice variant="warning">
                 {t('settings.hardwareBoundBackupWarning')}
-              </div>
-              <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3 text-xs leading-relaxed text-emerald-100/85">
+              </Notice>
+              <Notice variant="warning" strong>
+                {t('settings.hardwareBoundBackupDeviceNote')}
+              </Notice>
+              <Notice variant="success">
                 {t('settings.hardwareBoundGuide')}
-              </div>
+              </Notice>
             </div>
           )}
         </div>
@@ -749,9 +757,9 @@ export default function SecurityTab({ aesKey, onWipe }) {
           {showScreenCapture && (
             <div className="mx-4 mb-4 space-y-3">
               <p className="text-xs leading-relaxed text-surface-400">{t('settings.screenCaptureDesc')}</p>
-              <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-100/85">
+              <Notice variant="warning">
                 {t('settings.screenCaptureGuide')}
-              </div>
+              </Notice>
               {screenCaptureTarget !== null && (
                 <p className="text-xs leading-relaxed text-amber-200/90">{t('settings.screenCaptureConfirmInPasswordBox')}</p>
               )}
@@ -990,27 +998,6 @@ export default function SecurityTab({ aesKey, onWipe }) {
           </div>
         </div>
       )}
-
-      {/* ═══ Danger Zone ═══ */}
-      <div className="border border-red-500/20 bg-red-500/5 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-            <ShieldAlert size={20} className="text-red-400" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-red-400">{t('settings.dangerZone')}</h2>
-            <p className="text-xs text-red-400/70">{t('settings.dangerSubtitle')}</p>
-          </div>
-        </div>
-        <button
-          onClick={handleWipe}
-          className="btn-glow btn-glow-danger w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
-        >
-          <Trash2 size={18} />
-          {t('settings.wipeAll')}
-        </button>
-        <p className="text-xs text-surface-500 mt-3 text-center">{t('settings.wipeDesc')}</p>
-      </div>
     </>
   );
 }

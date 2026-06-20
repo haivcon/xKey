@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FolderTabs Fixture</title>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import FolderTabs from '/src/components/FolderTabs.jsx';
+      import '/src/index.css';
+
+      const labels = {
+        'common.close': 'Close',
+        'common.cancel': 'Cancel',
+        'common.save': 'Save',
+        'home.renameFolder': 'Rename folder',
+        'home.folderActions': 'Folder actions',
+        'home.pinFolder': 'Pin folder',
+        'home.unpinFolder': 'Unpin folder',
+        'home.setDefaultFolder': 'Set as default',
+        'home.clearDefaultFolder': 'Clear default',
+        'home.exportFolder': 'Export folder',
+        'home.removeFolderOnly': 'Remove folder only',
+        'home.deleteFolder': 'Delete folder',
+        'home.defaultFolderBadge': 'Default',
+        'home.searchFolders': 'Search folders',
+      };
+
+      window.folderActions = [];
+      const record = (name) => window.folderActions.push(name);
+      const wallets = Array.from({ length: 4 }, (_, index) => ({
+        address: `0x${String(index).padStart(40, '0')}`,
+        groupId: 'Created',
+      }));
+
+      createRoot(document.getElementById('root')).render(
+        React.createElement('div', { className: 'theme-light min-h-screen bg-surface-900 p-4 text-surface-100' },
+          React.createElement('div', {
+            id: 'clipper',
+            className: 'w-[320px] overflow-hidden rounded-xl border border-surface-700 bg-surface-950 p-2',
+          },
+            React.createElement(FolderTabs, {
+              folders: ['All', 'Created', 'Imported', 'Long Folder Name'],
+              activeFolder: 'Created',
+              wallets,
+              editingFolder: null,
+              editFolderName: '',
+              onSelectFolder: (folder) => record(`select:${folder}`),
+              onStartEdit: (folder) => record(`rename:${folder}`),
+              onEditChange: () => {},
+              onFinishEdit: () => {},
+              onDeleteFolder: (folder) => record(`delete:${folder}`),
+              onRemoveFolderOnly: (folder) => record(`remove:${folder}`),
+              onTogglePinFolder: (folder) => record(`pin:${folder}`),
+              onSetDefaultFolder: (folder) => record(`default:${folder || 'clear'}`),
+              onExportFolder: (folder) => record(`export:${folder}`),
+              onReorderFolder: () => {},
+              pinnedFolders: [],
+              defaultFolder: '',
+              creatingFolder: false,
+              newFolderName: '',
+              onStartCreate: () => record('create'),
+              onCreateChange: () => {},
+              onFinishCreate: () => {},
+              createFolderLabel: 'Create folder',
+              t: (key) => labels[key] || key,
+            })
+          )
+        )
+      );
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

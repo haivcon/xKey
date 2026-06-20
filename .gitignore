@@ -60,6 +60,11 @@ android/**/*.iml
 *.aab
 *.apks
 *.idsig
+*.sha1
+*.sha256
+*.sha512
+*.asc
+release-notes*.md
 
 # Signing keys and secrets
 *.keystore
@@ -70,6 +75,7 @@ android/**/*.iml
 *.properties.local
 keystore_base64.txt
 google-services.json
+android/app/google-services.json
 
 # xKey sensitive backup files
 *.xkey

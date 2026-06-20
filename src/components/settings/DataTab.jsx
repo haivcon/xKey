@@ -4,6 +4,7 @@ import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets, encryptSetting } from '../../utils/storage';
 import { exportPortableBackup } from '../../utils/backupUtils';
 import { useToast } from '../../contexts/ToastContext';
+import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import PasswordInput from '../PasswordInput';
@@ -11,8 +12,10 @@ import QRTransferModal from '../QRTransferModal';
 import QRReceiveModal from '../QRReceiveModal';
 import ShamirBackupModal from '../ShamirBackupModal';
 import ShamirRestoreModal from '../ShamirRestoreModal';
+import DangerZone from './DangerZone';
+import Notice from '../Notice';
 
-export default function DataTab({ aesKey, onImport }) {
+export default function DataTab({ aesKey, onImport, onWipe }) {
   // Auto-Backup
   const [autoBackupInterval, setAutoBackupInterval] = useState('off');
   const [showAutoBackup, setShowAutoBackup] = useState(false);
@@ -33,6 +36,7 @@ export default function DataTab({ aesKey, onImport }) {
   const [shamirWallets, setShamirWallets] = useState([]);
 
   const { showToast } = useToast();
+  const showConfirm = useConfirm();
   const t = useT();
 
   // Load saved auto-backup settings
@@ -87,6 +91,14 @@ export default function DataTab({ aesKey, onImport }) {
     setExporting(false);
   };
 
+  const handleWipe = async () => {
+    const ok = await showConfirm(t('settings.wipeConfirm'), { danger: true });
+    if (!ok) return;
+    const { wipeAllData } = await import('../../utils/storage');
+    await wipeAllData();
+    onWipe?.();
+  };
+
   return (
     <>
       {/* ═══ Auto-Backup ═══ */}
@@ -139,10 +151,13 @@ export default function DataTab({ aesKey, onImport }) {
           </div>
         </div>
 
-        <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-3.5 mb-5 flex gap-2.5">
+        <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-3.5 mb-3 flex gap-2.5">
           <ShieldCheck size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-surface-300 leading-relaxed">{t('settings.backupInfo')}</p>
         </div>
+        <Notice variant="warning" className="mb-5">
+          {t('settings.hardwareBoundPortableBackupNote')}
+        </Notice>
 
         {!showPasswordInput ? (
           <button
@@ -246,6 +261,15 @@ export default function DataTab({ aesKey, onImport }) {
           </button>
         </div>
       </div>
+
+      {/* ═══ Danger Zone ═══ */}
+      <DangerZone
+        title={t('settings.dangerZone')}
+        subtitle={t('settings.dangerSubtitle')}
+        description={t('settings.wipeDesc')}
+        actionLabel={t('settings.wipeAll')}
+        onAction={handleWipe}
+      />
 
       {/* Modals */}
       {showQRTransfer && transferWallets.length > 0 && (

@@ -9,6 +9,7 @@ import { exportPortableBackup, parseVaultBackupFile } from '../utils/backupUtils
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import PasswordInput from './PasswordInput';
+import Notice from './Notice';
 
 export const SENSITIVE_EXPORT_LOCK_KEY = 'xkey_sensitive_export_lock';
 const HISTORY_KEY = 'xkey_tool_history';
@@ -345,6 +346,7 @@ export default function AdvancedToolsModal({
             ]} compact />
           </div>
           <ActionPanel icon={ShieldCheck} title={t('advancedTools.verify')} text={t('advancedTools.verifyDesc')} action={verifyBackup} actionText={t('advancedTools.pickBackup')}>
+            <Notice variant="warning">{t('settings.hardwareBoundVerifyNote')}</Notice>
             <PasswordInput value={verifyPassword} onChange={e => setVerifyPassword(e.target.value)} placeholder={t('settings.backupPassword')} className="w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-sm text-white outline-none focus:border-brand-500" />
             {verifyResult && <p className="rounded-lg border border-surface-700 bg-surface-800 p-3 text-sm text-surface-200">{verifyResult}</p>}
           </ActionPanel>
@@ -367,6 +369,7 @@ export default function AdvancedToolsModal({
       return (
         <div className="space-y-3">
           <ActionPanel icon={Download} title={t('advancedTools.export')} text={t('advancedTools.exportDesc')} action={exportScopedBackup} actionText={t('advancedTools.exportScoped')} success>
+            <Notice variant="warning">{t('settings.hardwareBoundPortableBackupNote')}</Notice>
             <div className="grid grid-cols-2 gap-2">
               {['filtered', 'all'].map(scope => (
                 <button key={scope} onClick={() => setExportScope(scope)} className={`rounded-lg border px-3 py-2 text-sm ${exportScope === scope ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300' : 'border-surface-700 bg-surface-800 text-surface-300'}`}>

@@ -1,7 +1,4 @@
 import { useMemo, useState, useEffect } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
-
 import { Key } from 'lucide-react';
 
 const LETTER_DELAY = 250;   // ms between each letter

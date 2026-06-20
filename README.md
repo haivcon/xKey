@@ -8,48 +8,53 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.10.1
+## Current Release: v5.10.2
 
 ### Release Focus
 
-v5.10.1 is a security-hardening release. It upgrades display privacy, Android screen-capture controls, vault key protection, fragmented encrypted storage, settings visibility for high-risk vault workflows, and completes locale key synchronization for all supported languages.
+v5.10.2 is a security UX, backup guidance, localization, and release-quality update. It clarifies hardware-bound backup behavior, makes sensitive Settings flows easier to understand, moves destructive data actions into the correct Data tab, fixes folder action menu handling, and adds regression coverage for these workflows.
 
-### Security Upgrades
+### Security and Backup Guidance
 
-- **Hardware-bound vault key mode**: Added a Settings toggle that can remove the compatibility fallback key and bind vault unlock to the current Android device credential flow.
-- **StrongBox / Android Keystore detection**: Added native hardware security status checks, including whether a wrapped vault key is stored and whether the active key is confirmed inside secure hardware.
-- **Safer StrongBox fallback**: If a device advertises StrongBox but fails during key generation, xKey falls back to regular Android Keystore instead of failing the setup.
-- **Backup confirmation before hardware-only mode**: Enabling hardware-only mode requires an unlocked vault, a device screen lock, and explicit confirmation that a restorable `.xkey` backup exists.
-- **Screen capture and screen recording control**: Added an in-app setting to block screenshots and screen recordings on Android through a native screen-security plugin.
-- **Shared sensitive-action password UI**: The password used for revealing hidden characters is grouped with screen capture protection to avoid separate confusing password setup flows.
-- **Glyph-cypher secure display**: Private keys and seed phrases can be rendered through randomized glyph/canvas display paths to reduce text extraction from ordinary DOM scraping.
-- **Anti-overlay keyboard option**: Added a scrambled in-app keyboard mode for sensitive entry fields to reduce predictable tap coordinate capture.
-- **Expanded security explanations**: Auto-lock, clipboard cleanup, secure display, screen capture blocking, scrambled keyboard, and hardware-bound mode now include collapsible detail panels.
+- **Clear hardware-bound backup warning**: The hardware-bound vault key panel now includes a bold note explaining that a `.xkey` backup exported from a hardware-bound device is intended for that same device and may not work on another device.
+- **Stronger enable confirmation**: The hardware-bound mode confirmation dialog now includes the device-bound backup warning directly in the confirmation text, not only in the expanded details panel.
+- **Restore and verify guidance**: Backup export, backup verification, advanced scoped export, and Shamir restore flows now show guidance about hardware-bound backups before users move, verify, or restore `.xkey` data.
+- **Portable backup clarification**: Data backup screens now explain that portable `.xkey` backups are password-protected and should be clearly labeled when hardware-bound mode is active.
 
-### Storage Upgrades
+### Settings UI Improvements
 
-- **In-memory decrypted vault workflow**: Decrypted vault data remains in runtime memory for display and editing workflows; plaintext vault data is not intentionally written back to disk.
-- **Fragmented encrypted vault storage**: Encrypted vault blobs are split into multiple fragments with manifest metadata and SHA-256 integrity checks instead of relying on a single legacy storage blob.
-- **Fail-closed fragment recovery**: Corrupt or mismatched fragment manifests no longer silently fall back to stale legacy storage when that would hide a storage integrity issue.
-- **Serialized vault saves**: Wallet save operations are queued per vault storage key to reduce race conditions during rapid edits.
+- **Collapsible security status**: The Security Status card now has an explicit expand arrow so users can open details only when needed.
+- **Light theme contrast fix**: Warning notes in light theme now use shared note styling so text remains readable.
+- **Danger Zone relocation**: The destructive "Wipe all vault data" action was moved from the Security tab to the Data tab because it is a data-management action.
+- **Shared note component**: Warning, danger, success, and info notes now use a common `Notice` component to keep color contrast consistent across dark, light, and AMOLED themes.
+- **Shared Danger Zone component**: The destructive wipe UI is now isolated in a reusable `DangerZone` component, reducing duplicated high-risk UI code.
 
-### UI & Localization
+### Folder Workflow Fixes
 
-- **Security settings redesign**: Security settings now show current selected values in the collapsed row and reveal full explanations only when expanded.
-- **Hardware security labels**: The UI distinguishes device StrongBox availability from the actual protection state of the stored vault key.
-- **Android sync complete**: New native plugins and web assets are synced into the Android project.
-- **Localization refresh**: New security strings were added across the supported locale files.
-- **Locale sync patch**: All locale files now include the new security settings keys. Languages without complete native wording use English fallback text instead of showing raw translation keys.
+- **Folder action menu repair**: The `...` menu beside active folders now opens with one tap/click, uses a larger hit target, stops pointer/click propagation correctly, and renders through a fixed portal so it is not clipped by the horizontal folder scroller.
+- **Regression coverage**: New smoke tests verify the Danger Zone tab placement, collapsible security status, folder menu event handling, and hardware-bound locale coverage.
+
+### Localization
+
+- Hardware-bound backup guidance was translated across all supported languages:
+  `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`.
+- New localized strings cover enable confirmation, same-device backup notes, portable backup notes, restore guidance, and verify guidance.
+
+### Release Metadata
+
+- Web/package version: `5.10.2`
+- Android `versionName`: `5.10.2`
+- Android `versionCode`: `66`
+- Git tag for release build: `v5.10.2`
 
 ## Quality Checks
 
 The following checks were run before this release:
 
 ```bash
+npm run lint
 npm run build
-npm run test:smoke -- --project=chromium
-npm run sync
-android\gradlew.bat assembleDebug
+npm run test:smoke
 ```
 
 The Vite production build may still report a large chunk warning. This is not a runtime failure, but future releases should continue splitting scanner, analytics, and advanced tooling into smaller lazy-loaded chunks.
@@ -95,18 +100,11 @@ The Vite production build may still report a large chunk warning. This is not a 
 ## Previous Releases
 
 <details>
-<summary><b>v5.9.x: Settings redesign and backup UX</b></summary>
+<summary><b>v5.10.1 and earlier summary</b></summary>
 
-- Redesigned Settings with accordion-style sections and a dedicated Info tab.
-- Improved compact security status display.
-- Added/fixed translation strings across supported languages.
-- Added offline Shamir's Secret Sharing backup and improved QR restore reliability.
-</details>
-
-<details>
-<summary><b>v5.8.x and earlier</b></summary>
-
-- Added channel-specific Android builds, display-scale safety, vanity wallet improvements, folder workflows, asset balance editing, Android Device Credential unlock, native clipboard/haptics support, QR utilities, backup flows, decoy vault, kill switch, Capacitor migration, launcher icon, and splash assets.
+- v5.10.1 introduced hardware-bound vault mode, Android screen-capture controls, secure glyph display, scrambled keyboard options, fragmented encrypted vault storage, and expanded Security settings explanations.
+- v5.9.x improved Settings navigation, backup UX, Shamir backup/restore, and locale coverage.
+- v5.8.x and earlier added Android/Capacitor support, wallet folders and tags, vanity wallet tools, QR workflows, CSV import/export, manual asset balances, decoy vault, kill switch, and native clipboard/haptics.
 </details>
 
 ## Installation
@@ -154,14 +152,14 @@ GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 Example:
 
 ```bash
-git tag v5.10.1
-git push origin v5.10.1
+git tag v5.10.2
+git push origin v5.10.2
 ```
 
 Generated release files:
 
-- `xKey-GitHub-v5.10.1.apk` using package `com.haivcon.xkey.github`
-- `xKey-GooglePlay-v5.10.1.aab` using package `com.haivcon.xkey`
+- `xKey-GitHub-v5.10.2.apk` using package `com.haivcon.xkey.github`
+- `xKey-GooglePlay-v5.10.2.aab` using package `com.haivcon.xkey`
 
 ## Security Notice
 

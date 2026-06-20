@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, Download, Folder, FolderMinus, FolderPlus, MoreHorizontal, Pencil, Search, Star, Trash2, X } from 'lucide-react';
 
 export default function FolderTabs({
@@ -44,7 +45,48 @@ export default function FolderTabs({
     return accents[sum % accents.length];
   };
   const countWallets = (folder) => folder === 'All' ? wallets.length : wallets.filter(w => (w.groupId || 'Imported') === folder).length;
-  const closeMenu = () => setOpenMenu(null);
+  const closeMenu = useCallback(() => setOpenMenu(null), []);
+  const calculateMenuPosition = useCallback((anchor) => {
+    const rect = anchor.getBoundingClientRect();
+    const menuWidth = 224;
+    const menuHeight = 260;
+    const gap = 8;
+    const padding = 8;
+    const left = Math.min(window.innerWidth - menuWidth - padding, Math.max(padding, rect.right - menuWidth));
+    const preferredTop = rect.bottom + gap;
+    const top = preferredTop + menuHeight > window.innerHeight
+      ? Math.max(padding, rect.top - menuHeight - gap)
+      : preferredTop;
+    return { left, top };
+  }, []);
+  const openFolderMenu = (event, folder) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const anchor = event.currentTarget;
+    const position = calculateMenuPosition(anchor);
+    setOpenMenu(prev => prev?.folder === folder ? null : { folder, anchor, ...position });
+  };
+
+  useEffect(() => {
+    if (!openMenu) return undefined;
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') closeMenu();
+    };
+    const updateMenuPosition = () => {
+      setOpenMenu(current => {
+        if (!current?.anchor?.isConnected) return null;
+        return { ...current, ...calculateMenuPosition(current.anchor) };
+      });
+    };
+    window.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [openMenu, closeMenu, calculateMenuPosition]);
 
   return (
     <div className={isSidebar ? 'space-y-2' : 'space-y-2'}>
@@ -99,6 +141,7 @@ export default function FolderTabs({
         const count = countWallets(f);
         const isPinned = pinnedFolders.includes(f);
         const isDefault = defaultFolder === f;
+        const isMenuOpen = openMenu?.folder === f;
 
         if (editingFolder === f) {
           return (
@@ -184,8 +227,11 @@ export default function FolderTabs({
               <>
                 <button
                   type="button"
-                  onClick={() => onStartEdit(f)}
-                  className={isSidebar ? 'p-2 text-surface-400/70 hover:text-brand-300 transition-colors' : 'p-1 text-surface-400/70 hover:text-brand-300 transition-colors'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStartEdit(f);
+                  }}
+                  className={isSidebar ? 'p-2 text-surface-400/70 hover:text-brand-300 transition-colors' : 'flex h-9 w-9 items-center justify-center rounded-full border border-surface-700/70 bg-surface-900 text-surface-400 transition-colors hover:border-brand-400/50 hover:bg-brand-500/10 hover:text-brand-300'}
                   aria-label={t('home.renameFolder')}
                   title={t('home.renameFolder')}
                 >
@@ -193,19 +239,30 @@ export default function FolderTabs({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setOpenMenu(openMenu === f ? null : f)}
-                  className={isSidebar ? 'p-2 text-surface-400/70 hover:text-white transition-colors' : 'p-1 text-surface-400/70 hover:text-white transition-colors'}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => openFolderMenu(e, f)}
+                  className={isSidebar
+                    ? `flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${isMenuOpen ? 'border-brand-400/60 bg-brand-500/15 text-brand-200' : 'border-surface-700/70 bg-surface-900 text-surface-300 hover:border-brand-400/50 hover:bg-brand-500/10 hover:text-white'}`
+                    : `flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${isMenuOpen ? 'border-brand-400/60 bg-brand-500/15 text-brand-200' : 'border-surface-700/70 bg-surface-900 text-surface-300 hover:border-brand-400/50 hover:bg-brand-500/10 hover:text-white'}`}
                   aria-label={t('home.folderActions')}
                   title={t('home.folderActions')}
                 >
-                  <MoreHorizontal size={15} />
+                  <MoreHorizontal size={18} />
                 </button>
               </>
             )}
-            {openMenu === f && (
-              <>
-                <button className="fixed inset-0 z-40 cursor-default" onClick={closeMenu} aria-label={t('common.close')} />
-                <div className={`absolute z-50 min-w-56 rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-2xl ${isSidebar ? 'left-6 top-full mt-1' : 'right-0 top-full mt-2'}`}>
+            {isMenuOpen && typeof document !== 'undefined' && createPortal(
+              <div className="app-scaled-icons fixed inset-0 z-[9000]">
+                <button className="absolute inset-0 cursor-default bg-transparent" onClick={closeMenu} aria-label={t('common.close')} />
+                <div
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute min-w-56 rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-2xl shadow-black/40"
+                  style={{ left: `${openMenu.left}px`, top: `${openMenu.top}px` }}
+                >
                   <button onClick={() => { closeMenu(); onStartEdit(f); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-surface-200 hover:bg-surface-800">
                     <Pencil size={14} /> {t('home.renameFolder')}
                   </button>
@@ -227,7 +284,8 @@ export default function FolderTabs({
                     <Trash2 size={14} /> {t('home.deleteFolder')}
                   </button>
                 </div>
-              </>
+              </div>,
+              document.body
             )}
           </div>
         );
