@@ -1,13 +1,15 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "5.10.4",
+  "version": "5.11.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test:shamir": "node tests/shamir.test.mjs",
+    "type-check": "tsc --noEmit",
+    "test:shamir": "tsx tests/shamir.test.mjs",
+    "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:adb-open": "node tests/adb-open-xkey.mjs",
     "test:smoke": "playwright test",
     "preview": "vite preview",
@@ -50,6 +52,9 @@
     "@capacitor/cli": "^8.4.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.0",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^26.0.0",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -57,7 +62,9 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
     "vite": "^8.0.16"
   }
 }

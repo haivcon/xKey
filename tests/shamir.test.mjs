@@ -3,7 +3,7 @@ import {
   assembleShamirShareFromPages,
   combineShamirShares,
   createShamirSharePages,
-} from '../src/utils/shamir.js';
+} from '../src/utils/shamir.ts';
 
 const secret = `xkey-backup:${'abcdef0123456789'.repeat(500)}`;
 const pages = await createShamirSharePages(secret);

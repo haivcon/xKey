@@ -21,6 +21,7 @@ blob-report/
 !.env.example
 .vite/
 docs/
+
 # Logs
 logs/
 *.log
@@ -100,5 +101,3 @@ release-drafts/
 *.tmp
 *.bak
 preview/
-
-1/

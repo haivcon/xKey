@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from '../src/utils/reedSolomon.js';
+import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from '../src/utils/reedSolomon.ts';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

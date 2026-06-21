@@ -1,8 +1,7 @@
 <div align="center">
-  <!-- TODO: Add Logo here: <img src="docs/logo.png" alt="xKey Logo" width="120" /> -->
   <h1>xKey - Offline Web3 Wallet Vault</h1>
 
-  <p><strong>A private, offline-first cold vault for managing your Web3 assets securely.</strong></p>
+  <p><strong>A private, offline-first cold vault for managing Web3 wallets, secrets, backups, and local audit history.</strong></p>
 
   ![GitHub Release](https://img.shields.io/github/v/release/haivcon/xKey?color=blue&label=Latest%20Release)
   ![License](https://img.shields.io/github/license/haivcon/xKey?color=green)
@@ -11,125 +10,114 @@
 
 <br />
 
-**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, QR workflows, folders, tags, backups, CSV data, manual asset balances, and batch operations in a local encrypted app.
+**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, QR workflows, folders, tags, CSV files, manual balances, and encrypted backups in a local app.
 
-The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
-
----
-
-## 📖 Table of Contents
-- [✨ Core Features](#-core-features)
-- [🛠 Tech Stack](#-tech-stack)
-- [🚀 Installation & Setup](#-installation--setup)
-- [📦 Release Workflow](#-release-workflow)
-- [🔒 Security Notice](#-security-notice)
-- [🤝 Contributing](#-contributing)
-- [🔗 Links](#-links)
+The app is designed as a private cold-vault style manager, not a network-connected trading wallet. Source code: `github.com/haivcon/xKey`.
 
 ---
 
-## ✨ Core Features
+## Current Release: v5.11.0
 
-### 🔒 Security & Privacy
-- **Local Vault:** Offline encrypted wallet vault with local AES-protected storage.
-- **Authentication:** Android Device Credential unlock, Android Keystore integration, and web fallback authentication. Hardware-bound vault key mode for Android.
-- **Integrity Checks:** Signed runtime integrity manifest, offline crypto KAT startup checks, and optional Root/Data Tamper Guard.
-- **Resilience:** Self-healing Reed-Solomon vault/backup recovery and tamper-evident `.xkey` backup previews.
-- **Audit & History:** Encrypted immutable audit log with a protected viewer.
-- **Privacy Controls:** Secure display rendering, screen capture blocking, clipboard auto-clear, auto-lock controls, decoy vault, and kill switch.
-- **Advanced Backups:** Offline Shamir's Secret Sharing (2-of-3) backups and encrypted portable `.xkey` files.
+v5.11.0 completes the full TypeScript migration and enables strict TypeScript checking across the app. It also keeps the recent vault-hardening work focused on backup integrity, self-healing storage, Android file-open handling, and local auditability.
 
-### 💼 Wallet Management
-- **Organization:** Folder and tag organization with advanced filtering, sorting, search, and batch actions.
-- **Vanity Addresses:** Vanity wallet generation with multi-threading.
-- **Tracking:** Manual asset balance tracking with custom units.
-- **Customization:** Configurable display scale and wallet density.
+### Main Upgrades
+- **Strict TypeScript migration:** all application source files now use `.ts` or `.tsx`; JavaScript source checking is disabled with `allowJs: false`, and `strict: true` is enabled.
+- **Typed security-critical flows:** backup parsing, `.xkey` container inspection, Reed-Solomon recovery, vault fragment storage, biometric/fallback key retrieval, wallet save/load, and settings encryption now have stronger static typing.
+- **Typed build tooling:** `vite.config.ts` is included in TypeScript checks and the runtime-integrity manifest build plugin is typed.
+- **Type-check workflow:** `npm run type-check` runs `tsc --noEmit`; Shamir and Reed-Solomon tests run through `tsx` against TypeScript source.
+- **Backup integrity hardening:** `.xkey` backups use a container with metadata, encrypted payload, recovery footer, `backupId`, `containerHash`, integrity verification, and verify-only preview support.
+- **Self-healing recovery:** vault and backup recovery use Reed-Solomon 10 data shards plus 5 parity shards to recover multiple damaged shards when enough healthy shards remain.
+- **Audit and device guard features:** encrypted audit history, external backup warnings, pending external backup indication, and optional Root/Data Tamper Guard remain part of the current security surface.
 
-### 🧰 Offline Utilities
-- **Native Support:** Native Android support through Capacitor 8.
-- **Data Transfer:** QR scanning, display, sharing, and transfer workflows. CSV import/export functionality.
-- **Localization:** Multi-language UI supporting `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`.
+Older release details are intentionally summarized in [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
-## 🛠 Tech Stack
-- **Frontend Framework:** React, Vite
-- **Cross-Platform:** Capacitor 8
-- **Platform Targets:** Web, Android (Java 21+)
-- **Runtime Environment:** Node.js 22+
+## Core Features
+
+### Security and Privacy
+- Offline encrypted local vault.
+- Android Device Credential unlock, Android Keystore integration, web fallback unlock, and optional hardware-bound vault key mode.
+- Signed runtime integrity manifest, offline crypto KAT startup checks, optional Root/Data Tamper Guard, and secure display rendering.
+- Screen capture blocking, clipboard auto-clear, auto-lock, decoy vault, kill switch, and protected audit log.
+- Shamir Secret Sharing backups and encrypted portable `.xkey` backup files.
+
+### Wallet and Data Management
+- Folder and tag organization, search, filters, sorting, and batch actions.
+- QR scan/display/share workflows and CSV import/export.
+- Vanity wallet generation, manual asset balance tracking, and configurable wallet density.
+- Multi-language UI: `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`.
 
 ---
 
-## 🚀 Installation & Setup
-
-### Prerequisites
+## Tech Stack
+- React 19
+- Vite 8
+- TypeScript strict mode
+- Capacitor 8 for Android
 - Node.js 22+
 - Java 21+
-- Android Studio for Android builds
 
-### Install Dependencies
+---
+
+## Development
+
 ```bash
 npm install
-```
-
-### Run Web Development Server
-```bash
-npm run dev
-```
-
-### Build Web App
-Production builds require runtime-integrity signing keys. For local builds, keep them in `.env.local`. For GitHub Actions, configure them as repository secrets.
-```bash
+npm run type-check
+npm run lint
+npm run test:smoke
 npm run build
 ```
 
-### Sync Android Project & Build
+For Android:
+
 ```bash
 npm run sync
-npm run android
+android\gradlew.bat -p android assembleDebug
 ```
+
+Production builds require runtime-integrity signing keys. Use `.env.local` locally and GitHub Actions repository secrets in CI:
+
+- `KEYSTORE_BASE64`
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+- `XKEY_INTEGRITY_PUBLIC_KEY_PEM`
+- `XKEY_INTEGRITY_PRIVATE_KEY_PEM`
 
 ---
 
-## 📦 Release Workflow
+## Release Workflow
 
-We document all version changes in our **[CHANGELOG.md](./CHANGELOG.md)**. 
+GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
-GitHub Actions builds and signs release artifacts when a `v*` tag is pushed. Required repository secrets:
-- `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`
-- `XKEY_INTEGRITY_PUBLIC_KEY_PEM`, `XKEY_INTEGRITY_PRIVATE_KEY_PEM`
-
-Example:
 ```bash
-git tag v5.10.4
-git push origin v5.10.4
+git tag v5.11.0
+git push origin v5.11.0
 ```
-*Generated files: `xKey-GitHub-v[VERSION].apk` and `xKey-GooglePlay-v[VERSION].aab` (package `com.haivcon.xkey`).*
+
+Generated artifacts:
+- `xKey-GitHub-v5.11.0.apk`
+- `xKey-GooglePlay-v5.11.0.aab`
+
+Android package: `com.haivcon.xkey`.
 
 ---
 
-## 🔒 Security Notice
-Please read our comprehensive **[Security Policy](./SECURITY.md)** before using the app.
+## Security Notice
 
 > [!WARNING]
 > Never share private keys, seed phrases, `.xkey` backup files, backup passwords, Shamir shares, Android signing keys, or `XKEY_INTEGRITY_PRIVATE_KEY_PEM`.
 
-xKey stores vault data locally and is designed for offline use. While we employ startup integrity checks, secure displays, and tamper guards, no software can fully protect against a completely compromised OS, rooted device with malicious intent, or physical camera recording.
+xKey stores vault data locally and is designed for offline use. Startup integrity checks, secure displays, tamper guards, and recovery metadata improve safety, but no app can fully protect against a completely compromised OS, malicious root access, device-owner abuse, or physical camera recording.
 
 ---
 
-## 🤝 Contributing
-
-We welcome community contributions! Whether it's reporting bugs, suggesting features, or submitting pull requests.
-
-Please read our **[Contributing Guidelines](./CONTRIBUTING.md)** to get started.
-
----
-
-## 🔗 Links
-- **Website:** [xlayer.my](https://xlayer.my)
-- **X (Twitter):** [@haivcon](https://x.com/haivcon)
-- **Telegram:** [@haivcon](https://t.me/haivcon)
+## Links
+- Website: [xlayer.my](https://xlayer.my)
+- X: [@haivcon](https://x.com/haivcon)
+- Telegram: [@haivcon](https://t.me/haivcon)
 
 ## License
 MIT License

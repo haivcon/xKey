@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem. (Ensure no sensitiv
 ## Environment:
  - OS: [e.g. Android 14, Windows 11]
  - Installation source: [e.g. Google Play, GitHub APK, Web]
- - xKey Version: [e.g. 5.10.4]
+ - xKey Version: [e.g. 5.11.0]
 
 ## Additional context
 Add any other context about the problem here.

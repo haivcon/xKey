@@ -8,9 +8,9 @@ const repoRoot = process.cwd();
 const readSource = (relativePath) => readFile(path.join(repoRoot, relativePath), 'utf8');
 
 test('settings danger zone belongs to data tab', async () => {
-  const securityTab = await readSource('src/components/settings/SecurityTab.jsx');
-  const dataTab = await readSource('src/components/settings/DataTab.jsx');
-  const settingsScreen = await readSource('src/components/SettingsScreen.jsx');
+  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
+  const dataTab = await readSource('src/components/settings/DataTab.tsx');
+  const settingsScreen = await readSource('src/components/SettingsScreen.tsx');
 
   expect(securityTab).not.toContain("t('settings.wipeAll')");
   expect(securityTab).not.toContain('handleWipe');
@@ -20,9 +20,9 @@ test('settings danger zone belongs to data tab', async () => {
 });
 
 test('runtime integrity checks include crypto KATs and build manifest verification', async () => {
-  const runtimeIntegrity = await readSource('src/utils/runtimeIntegrity.js');
-  const viteConfig = await readSource('vite.config.js');
-  const app = await readSource('src/App.jsx');
+  const runtimeIntegrity = await readSource('src/utils/runtimeIntegrity.ts');
+  const viteConfig = await readSource('vite.config.ts');
+  const app = await readSource('src/App.tsx');
 
   expect(runtimeIntegrity).toContain('runCryptoKnownAnswerTests');
   expect(runtimeIntegrity).toContain('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
@@ -41,13 +41,13 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
 });
 
 test('root and data tamper guard is wired to Android risk checks and settings', async () => {
-  const deviceIntegrity = await readSource('src/utils/deviceIntegrity.js');
+  const deviceIntegrity = await readSource('src/utils/deviceIntegrity.ts');
   const deviceIntegrityPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/DeviceIntegrityPlugin.java');
   const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
-  const securityTab = await readSource('src/components/settings/SecurityTab.jsx');
-  const app = await readSource('src/App.jsx');
+  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
+  const app = await readSource('src/App.tsx');
 
-  expect(deviceIntegrity).toContain("registerPlugin('DeviceIntegrity')");
+  expect(deviceIntegrity).toContain("registerPlugin<DeviceIntegrityPlugin>('DeviceIntegrity')");
   expect(deviceIntegrity).toContain('DEVICE_INTEGRITY_GUARD_KEY');
   expect(deviceIntegrity).toContain('getDeviceIntegrityRisk');
   expect(deviceIntegrity).toContain('isDeviceIntegrityGuardEnabled');
@@ -68,7 +68,7 @@ test('root and data tamper guard is wired to Android risk checks and settings', 
 });
 
 test('security status is collapsible and hardware warning uses Notice', async () => {
-  const securityTab = await readSource('src/components/settings/SecurityTab.jsx');
+  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
 
   expect(securityTab).toContain('showSecurityStatus');
   expect(securityTab).toContain('setShowSecurityStatus(!showSecurityStatus)');
@@ -78,23 +78,23 @@ test('security status is collapsible and hardware warning uses Notice', async ()
 });
 
 test('folder actions menu uses fixed portal rendering', async () => {
-  const folderTabs = await readSource('src/components/FolderTabs.jsx');
+  const folderTabs = await readSource('src/components/FolderTabs.tsx');
 
   expect(folderTabs).toContain('createPortal');
   expect(folderTabs).toContain('document.body');
   expect(folderTabs).toContain('getBoundingClientRect');
   expect(folderTabs).toContain('fixed inset-0 z-[9000]');
   expect(folderTabs).toContain('calculateMenuPosition');
-  expect(folderTabs).toContain('onPointerDown={(e) => e.stopPropagation()}');
-  expect(folderTabs).toContain('onClick={(e) => e.stopPropagation()}');
+  expect(folderTabs).toContain('onPointerDown={(e: PointerEvent<HTMLDivElement>) => e.stopPropagation()}');
+  expect(folderTabs).toContain('onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}');
 });
 
 test('audit log tab and tamper-evident backup preview are wired into settings and import flow', async () => {
-  const settingsScreen = await readSource('src/components/SettingsScreen.jsx');
-  const auditTab = await readSource('src/components/settings/AuditLogTab.jsx');
-  const fileImport = await readSource('src/hooks/useFileImport.js');
-  const app = await readSource('src/App.jsx');
-  const auditLog = await readSource('src/utils/auditLog.js');
+  const settingsScreen = await readSource('src/components/SettingsScreen.tsx');
+  const auditTab = await readSource('src/components/settings/AuditLogTab.tsx');
+  const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const app = await readSource('src/App.tsx');
+  const auditLog = await readSource('src/utils/auditLog.ts');
 
   expect(settingsScreen).toContain("key: 'audit'");
   expect(settingsScreen).toContain('<AuditLogTab />');
@@ -109,9 +109,9 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
 });
 
 test('vault and backup self-healing Reed-Solomon checks are present', async () => {
-  const reedSolomon = await readSource('src/utils/reedSolomon.js');
-  const storage = await readSource('src/utils/storage.js');
-  const backupUtils = await readSource('src/utils/backupUtils.js');
+  const reedSolomon = await readSource('src/utils/reedSolomon.ts');
+  const storage = await readSource('src/utils/storage.ts');
+  const backupUtils = await readSource('src/utils/backupUtils.ts');
 
   expect(reedSolomon).toContain('encodeReedSolomon');
   expect(reedSolomon).toContain('decodeReedSolomon');
@@ -137,9 +137,9 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   const manifest = await readSource('android/app/src/main/AndroidManifest.xml');
   const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
   const fileOpenPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/XKeyFileOpenPlugin.java');
-  const nativeFileOpen = await readSource('src/utils/nativeFileOpen.js');
-  const app = await readSource('src/App.jsx');
-  const fileImport = await readSource('src/hooks/useFileImport.js');
+  const nativeFileOpen = await readSource('src/utils/nativeFileOpen.ts');
+  const app = await readSource('src/App.tsx');
+  const fileImport = await readSource('src/hooks/useFileImport.ts');
 
   expect(manifest).toContain('android.intent.action.VIEW');
   expect(manifest).toContain('.*\\\\.xkey');
@@ -150,7 +150,7 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   expect(fileOpenPlugin).toContain('getPendingFile');
   expect(fileOpenPlugin).toContain('ContentResolver');
   expect(fileOpenPlugin).toContain('MAX_IMPORT_BYTES');
-  expect(nativeFileOpen).toContain("registerPlugin('XKeyFileOpen')");
+  expect(nativeFileOpen).toContain("registerPlugin<XKeyFileOpenPlugin>('XKeyFileOpen')");
   expect(app).toContain('getPendingXKeyFile');
   expect(app).toContain('addXKeyFileOpenListener');
   expect(app).toContain("t('restore.openedExternal')");
