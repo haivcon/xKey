@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "正在验证加密运行环境...",
+    "appChecking": "正在检查应用完整性...",
+    "ready": "完整性检查已通过",
+    "failureTitle": "运行时完整性检查失败",
+    "failureBody": "由于无法验证加密运行环境或应用包，xKey 已停止运行。"
+  },
   "deviceUnlock": {
     "title": "保险库已锁定",
     "subtitle": "使用设备锁解锁 xKey。",

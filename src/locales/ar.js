@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "جارٍ التحقق من بيئة التشفير...",
+    "appChecking": "جارٍ فحص سلامة التطبيق...",
+    "ready": "اكتملت فحوصات السلامة",
+    "failureTitle": "فشل فحص سلامة التشغيل",
+    "failureBody": "أوقف xKey العمل لأن بيئة التشفير أو حزمة التطبيق تعذر التحقق منها."
+  },
   "deviceUnlock": {
     "title": "الخزنة مقفلة",
     "subtitle": "استخدم قفل الجهاز لفتح xKey.",

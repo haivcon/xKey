@@ -5,7 +5,7 @@ const LETTER_DELAY = 250;   // ms between each letter
 const HOLD_DURATION = 800;  // ms to hold after all visible
 const FADE_DURATION = 500;  // ms for fade-out
 
-export default function AnimatedSplash({ onFinish }) {
+export default function AnimatedSplash({ onFinish, status }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [fading, setFading] = useState(false);
 
@@ -96,6 +96,11 @@ export default function AnimatedSplash({ onFinish }) {
         >
           <Key size={32} />
         </div>
+        {status && (
+          <div className="splash-status">
+            {status}
+          </div>
+        )}
       </div>
     </div>
   );

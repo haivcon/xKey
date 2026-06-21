@@ -27,6 +27,9 @@ jobs:
         run: npm install
 
       - name: 🏗️ Build Web App (Vite)
+        env:
+          XKEY_INTEGRITY_PUBLIC_KEY_PEM: ${{ secrets.XKEY_INTEGRITY_PUBLIC_KEY_PEM }}
+          XKEY_INTEGRITY_PRIVATE_KEY_PEM: ${{ secrets.XKEY_INTEGRITY_PRIVATE_KEY_PEM }}
         run: npm run build
 
       - name: 🔄 Sync Capacitor

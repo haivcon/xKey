@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Đang kiểm tra môi trường mã hóa...",
+    "appChecking": "Đang kiểm tra tính toàn vẹn ứng dụng...",
+    "ready": "Kiểm tra toàn vẹn đã đạt",
+    "failureTitle": "Kiểm tra toàn vẹn runtime thất bại",
+    "failureBody": "xKey đã dừng vì môi trường mã hóa hoặc gói ứng dụng không xác minh được."
+  },
   "deviceUnlock": {
     "title": "Kho bị khóa",
     "subtitle": "Dùng khóa thiết bị để mở xKey.",

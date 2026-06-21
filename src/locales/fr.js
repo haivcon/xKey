@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Vérification de l'environnement cryptographique...",
+    "appChecking": "Vérification de l'intégrité de l'app...",
+    "ready": "Contrôles d'intégrité réussis",
+    "failureTitle": "Échec du contrôle d'intégrité",
+    "failureBody": "xKey s'est arrêté car l'environnement cryptographique ou le paquet de l'app n'a pas pu être vérifié."
+  },
   "deviceUnlock": {
     "title": "Coffre verrouillé",
     "subtitle": "Utilisez le verrouillage de l’appareil pour déverrouiller xKey.",

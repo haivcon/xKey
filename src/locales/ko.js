@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "암호화 런타임 확인 중...",
+    "appChecking": "앱 무결성 확인 중...",
+    "ready": "무결성 검사를 통과했습니다",
+    "failureTitle": "런타임 무결성 검사 실패",
+    "failureBody": "암호화 런타임 또는 앱 패키지를 확인할 수 없어 xKey가 중지되었습니다."
+  },
   "deviceUnlock": {
     "title": "금고가 잠겼습니다",
     "subtitle": "기기 잠금으로 xKey를 잠금 해제하세요.",

@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Memverifikasi runtime kripto...",
+    "appChecking": "Memeriksa integritas aplikasi...",
+    "ready": "Pemeriksaan integritas lulus",
+    "failureTitle": "Pemeriksaan integritas runtime gagal",
+    "failureBody": "xKey dihentikan karena runtime kripto atau paket aplikasi tidak dapat diverifikasi."
+  },
   "deviceUnlock": {
     "title": "Brankas terkunci",
     "subtitle": "Gunakan kunci perangkat untuk membuka xKey.",

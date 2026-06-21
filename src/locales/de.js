@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Krypto-Laufzeit wird geprüft...",
+    "appChecking": "App-Integrität wird geprüft...",
+    "ready": "Integritätsprüfungen bestanden",
+    "failureTitle": "Laufzeit-Integritätsprüfung fehlgeschlagen",
+    "failureBody": "xKey wurde angehalten, weil die Krypto-Laufzeit oder das App-Paket nicht verifiziert werden konnte."
+  },
   "deviceUnlock": {
     "title": "Tresor gesperrt",
     "subtitle": "Verwende die Gerätesperre, um xKey zu entsperren.",

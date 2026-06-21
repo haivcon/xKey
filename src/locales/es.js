@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Verificando entorno criptográfico...",
+    "appChecking": "Comprobando integridad de la app...",
+    "ready": "Comprobaciones de integridad superadas",
+    "failureTitle": "Falló la comprobación de integridad",
+    "failureBody": "xKey se detuvo porque no se pudo verificar el entorno criptográfico o el paquete de la app."
+  },
   "deviceUnlock": {
     "title": "Bóveda bloqueada",
     "subtitle": "Usa el bloqueo del dispositivo para desbloquear xKey.",

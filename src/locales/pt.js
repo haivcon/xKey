@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Verificando runtime criptográfico...",
+    "appChecking": "Verificando integridade do app...",
+    "ready": "Verificações de integridade aprovadas",
+    "failureTitle": "Falha na verificação de integridade",
+    "failureBody": "O xKey foi interrompido porque o runtime criptográfico ou o pacote do app não pôde ser verificado."
+  },
   "deviceUnlock": {
     "title": "Cofre bloqueado",
     "subtitle": "Use o bloqueio do dispositivo para desbloquear o xKey.",

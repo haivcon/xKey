@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Kripto çalışma ortamı doğrulanıyor...",
+    "appChecking": "Uygulama bütünlüğü denetleniyor...",
+    "ready": "Bütünlük kontrolleri geçti",
+    "failureTitle": "Çalışma zamanı bütünlük kontrolü başarısız",
+    "failureBody": "Kripto çalışma ortamı veya uygulama paketi doğrulanamadığı için xKey durduruldu."
+  },
   "deviceUnlock": {
     "title": "Kasa kilitli",
     "subtitle": "xKey’i açmak için cihaz kilidini kullanın.",

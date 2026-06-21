@@ -13,6 +13,8 @@ blob-report/
 .eslintcache
 *.tsbuildinfo
 # Vite / local environment
+# Keep runtime-integrity signing keys local. GitHub Actions receives them
+# through repository secrets, not committed files.
 *.local
 .env
 .env.*

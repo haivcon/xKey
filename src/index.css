@@ -649,6 +649,17 @@ html {
   box-shadow: 0 0 30px rgba(56, 189, 248, 0.38), 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
+.splash-status {
+  min-height: 1rem;
+  max-width: min(80vw, 22rem);
+  color: rgba(209, 213, 219, 0.78);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
 .splash-channel-badge {
   display: inline-flex;
   align-items: center;

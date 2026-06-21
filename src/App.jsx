@@ -57,6 +57,7 @@ import useAppVersion from './hooks/useAppVersion';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
+import { runRuntimeIntegrityChecks } from './utils/runtimeIntegrity';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
 
@@ -100,6 +101,11 @@ export default function App() {
   const [vaultLoading, setVaultLoading] = useState(true);
   const [needsPinAuth, setNeedsPinAuth] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [splashAnimationDone, setSplashAnimationDone] = useState(false);
+  const [integrityReady, setIntegrityReady] = useState(false);
+  const [integrityStatus, setIntegrityStatus] = useState('');
+  const [integrityFailed, setIntegrityFailed] = useState(false);
+  const integrityStartedRef = useRef(false);
   const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
   // Folder editing
@@ -112,6 +118,42 @@ export default function App() {
   const { showToast } = useToast() || {};
   const showConfirm = useConfirm();
   const appVersion = useAppVersion();
+
+  useEffect(() => {
+    if (integrityStartedRef.current) return undefined;
+    integrityStartedRef.current = true;
+
+    let cancelled = false;
+    const statusByStep = {
+      crypto: t('integrity.cryptoChecking'),
+      app: t('integrity.appChecking'),
+      done: t('integrity.ready'),
+    };
+
+    runRuntimeIntegrityChecks((step) => {
+      if (!cancelled) setIntegrityStatus(statusByStep[step] || '');
+    })
+      .then(() => {
+        if (!cancelled) setIntegrityReady(true);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setIntegrityStatus('');
+        setIntegrityFailed(true);
+        setAuthError(error?.message || t('integrity.failureBody'));
+        setVaultLoading(false);
+        setShowSplash(false);
+        setIntegrityReady(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  useEffect(() => {
+    if (splashAnimationDone && integrityReady) setShowSplash(false);
+  }, [splashAnimationDone, integrityReady]);
 
   // ─── Custom Hooks ───
   const {
@@ -440,8 +482,14 @@ export default function App() {
     return (
       <AuthErrorScreen
         error={authError}
+        title={integrityFailed ? t('integrity.failureTitle') : undefined}
         onRetry={() => {
+          if (integrityFailed) {
+            window.location.reload();
+            return;
+          }
           setAuthError('');
+          setIntegrityFailed(false);
           setAesKey(null);
           setVaultLoading(false);
           setNeedsPinAuth(true);
@@ -875,7 +923,7 @@ export default function App() {
 
   return (
     <>
-      {showSplash && <AnimatedSplash onFinish={() => setShowSplash(false)} />}
+      {showSplash && <AnimatedSplash onFinish={() => setSplashAnimationDone(true)} status={integrityStatus} />}
       <div style={{ display: (needsPinAuth && !vaultLoading) ? 'none' : 'block' }}>
         {mainContent}
       </div>

@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "Verifying crypto runtime...",
+    "appChecking": "Checking app integrity...",
+    "ready": "Integrity checks passed",
+    "failureTitle": "Runtime integrity check failed",
+    "failureBody": "xKey stopped because the crypto runtime or app package could not be verified."
+  },
   "deviceUnlock": {
     "title": "Vault locked",
     "subtitle": "Use your device lock to unlock xKey.",

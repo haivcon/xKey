@@ -1,4 +1,11 @@
 export default {
+  "integrity": {
+    "cryptoChecking": "暗号ランタイムを検証中...",
+    "appChecking": "アプリの整合性を確認中...",
+    "ready": "整合性チェックに合格しました",
+    "failureTitle": "ランタイム整合性チェックに失敗しました",
+    "failureBody": "暗号ランタイムまたはアプリパッケージを検証できなかったため、xKey は停止しました。"
+  },
   "deviceUnlock": {
     "title": "保管庫がロックされています",
     "subtitle": "端末のロックでxKeyを解除してください。",
