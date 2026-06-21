@@ -12,6 +12,8 @@ import {
     isDeviceCredentialAvailable,
     setDeviceProtectedVaultKey,
 } from './deviceCredential';
+import { appendAuditLog } from './auditLog';
+import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from './reedSolomon';
 import CryptoWorker from '../workers/crypto.worker.js?worker';
 
 const cryptoWorker = new CryptoWorker();
@@ -93,6 +95,21 @@ const fragmentFilePath = (storageKey, writeId, index) => {
 };
 
 const getCipherHash = (value) => CryptoJS.SHA256(value).toString();
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+const bytesToBase64 = (bytes) => {
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return btoa(binary);
+};
+
+const base64ToBytes = (base64) => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+};
 
 const createCommitMetadata = () => {
     const createdAt = new Date().toISOString();
@@ -103,13 +120,37 @@ const createCommitMetadata = () => {
     };
 };
 
-const splitCipherText = (value) => {
-    const size = Math.ceil(value.length / 3);
-    return [
-        value.slice(0, size),
-        value.slice(size, size * 2),
-        value.slice(size * 2),
-    ];
+const createVaultShards = (value) => {
+    const encoded = encodeReedSolomon(textEncoder.encode(value), reedSolomonDefaults);
+    const chunks = encoded.data.map(bytesToBase64);
+    return {
+        chunks,
+        recovery: {
+            algorithm: encoded.algorithm,
+            dataShards: encoded.dataShards,
+            parityShards: encoded.parityShards,
+            overheadPercent: encoded.overheadPercent,
+            shardSize: encoded.shardSize,
+            originalLength: encoded.originalLength,
+            parity: encoded.parity.map((shard, index) => ({
+                index: encoded.dataShards + index,
+                data: bytesToBase64(shard),
+                hash: getCipherHash(bytesToBase64(shard)),
+            })),
+        },
+    };
+};
+
+const recoverFragmentFromParity = (manifest, validParts, missingIndex) => {
+    if (manifest?.recovery?.algorithm !== 'xor-parity-v1' || !manifest.recovery.parity) return '';
+    const recovered = base64ToBytes(manifest.recovery.parity);
+    for (const [index, value] of validParts.entries()) {
+        if (index === missingIndex || typeof value !== 'string') continue;
+        const bytes = textEncoder.encode(value);
+        for (let i = 0; i < recovered.length; i += 1) recovered[i] ^= bytes[i] || 0;
+    }
+    const expectedLength = manifest.fragments.find(fragment => fragment.index === missingIndex)?.length || recovered.length;
+    return textDecoder.decode(recovered.slice(0, expectedLength));
 };
 
 const readManifest = async (storageKey) => {
@@ -118,7 +159,7 @@ const readManifest = async (storageKey) => {
     try {
         const manifest = JSON.parse(value);
         if (manifest?.version !== FRAGMENT_VERSION || manifest.storageKey !== storageKey || !Array.isArray(manifest.fragments)) return null;
-        if (manifest.fragments.length !== 3) return null;
+        if (manifest.fragments.length < 3) return null;
         if (!Number.isFinite(manifest.totalLength) || typeof manifest.hash !== 'string') return null;
         const indexes = manifest.fragments.map(fragment => fragment.index).sort((a, b) => a - b);
         if (indexes.some((index, expected) => index !== expected)) return null;
@@ -185,16 +226,120 @@ const readFragmentedVaultCipher = async (storageKey) => {
     if (!manifest) return '';
     const orderedFragments = [...manifest.fragments].sort((a, b) => a.index - b.index);
 
-    const parts = await Promise.all(orderedFragments.map(async (fragment) => {
-        const data = fragment.type === 'preferences'
-            ? (await Preferences.get({ key: fragment.key })).value || ''
-            : await readFileFragment(fragment.path);
+    if (manifest.recovery?.algorithm === 'reed-solomon-gf256-v1') {
+        const parts = [];
+        const present = Array(manifest.recovery.dataShards + manifest.recovery.parityShards).fill(false);
+        const invalidIndexes = [];
 
-        if (data.length !== fragment.length || getCipherHash(data) !== fragment.hash) {
-            throw new Error('Vault fragment integrity check failed.');
+        await Promise.all(orderedFragments.map(async (fragment) => {
+            try {
+                const data = fragment.type === 'preferences'
+                    ? (await Preferences.get({ key: fragment.key })).value || ''
+                    : await readFileFragment(fragment.path);
+                if (data.length !== fragment.length || getCipherHash(data) !== fragment.hash) {
+                    throw new Error('Vault fragment integrity check failed.');
+                }
+                parts[fragment.index] = base64ToBytes(data);
+                present[fragment.index] = true;
+            } catch {
+                invalidIndexes.push(fragment.index);
+                parts[fragment.index] = new Uint8Array(manifest.recovery.shardSize);
+            }
+        }));
+
+        for (const parity of manifest.recovery.parity || []) {
+            if (getCipherHash(parity.data) === parity.hash) {
+                parts[parity.index] = base64ToBytes(parity.data);
+                present[parity.index] = true;
+            }
         }
-        return data;
+
+        const recoveredBytes = decodeReedSolomon({
+            shards: parts,
+            present,
+            dataShards: manifest.recovery.dataShards,
+            parityShards: manifest.recovery.parityShards,
+            originalLength: manifest.recovery.originalLength,
+        });
+        const value = textDecoder.decode(recoveredBytes);
+        if (value.length !== manifest.totalLength || getCipherHash(value) !== manifest.hash) {
+            throw new Error('Vault manifest integrity check failed.');
+        }
+
+        if (invalidIndexes.length > 0) {
+            const encoded = encodeReedSolomon(textEncoder.encode(value), {
+                dataShards: manifest.recovery.dataShards,
+                parityShards: manifest.recovery.parityShards,
+            });
+            await Promise.all(invalidIndexes.map(async (index) => {
+                const fragment = orderedFragments.find(item => item.index === index);
+                if (!fragment) return;
+                const repaired = bytesToBase64(encoded.data[index]);
+                if (fragment.type === 'preferences') {
+                    await Preferences.set({ key: fragment.key, value: repaired }).catch(() => {});
+                } else {
+                    await Filesystem.writeFile({
+                        directory: Directory.Data,
+                        path: fragment.path,
+                        data: repaired,
+                        encoding: Encoding.UTF8,
+                    }).catch(() => {});
+                }
+            }));
+            await appendAuditLog('vault.self_healed', {
+                fragments: invalidIndexes,
+                recoveredBytes: invalidIndexes.length * manifest.recovery.shardSize,
+                storageKey,
+                algorithm: manifest.recovery.algorithm,
+            });
+        }
+
+        return value;
+    }
+
+    const parts = [];
+    const invalidIndexes = [];
+    await Promise.all(orderedFragments.map(async (fragment) => {
+        try {
+            const data = fragment.type === 'preferences'
+                ? (await Preferences.get({ key: fragment.key })).value || ''
+                : await readFileFragment(fragment.path);
+
+            if (data.length !== fragment.length || getCipherHash(data) !== fragment.hash) {
+                throw new Error('Vault fragment integrity check failed.');
+            }
+            parts[fragment.index] = data;
+        } catch {
+            invalidIndexes.push(fragment.index);
+        }
     }));
+
+    if (invalidIndexes.length === 1) {
+        const recovered = recoverFragmentFromParity(manifest, parts, invalidIndexes[0]);
+        const fragment = orderedFragments.find(item => item.index === invalidIndexes[0]);
+        if (fragment && recovered.length === fragment.length && getCipherHash(recovered) === fragment.hash) {
+            parts[invalidIndexes[0]] = recovered;
+            await appendAuditLog('vault.self_healed', {
+                fragment: invalidIndexes[0],
+                recoveredBytes: textEncoder.encode(recovered).length,
+                storageKey,
+            });
+            if (fragment.type === 'preferences') {
+                await Preferences.set({ key: fragment.key, value: recovered }).catch(() => {});
+            } else {
+                await Filesystem.writeFile({
+                    directory: Directory.Data,
+                    path: fragment.path,
+                    data: recovered,
+                    encoding: Encoding.UTF8,
+                }).catch(() => {});
+            }
+        }
+    }
+
+    if (orderedFragments.some(fragment => typeof parts[fragment.index] !== 'string')) {
+        throw new Error('Vault fragment integrity check failed.');
+    }
 
     const value = parts.join('');
     if (value.length !== manifest.totalLength || getCipherHash(value) !== manifest.hash) {
@@ -222,7 +367,7 @@ const removeStoredFragments = async (manifest) => {
 const saveFragmentedVaultCipher = async (storageKey, value) => {
     const previousManifest = await readManifest(storageKey);
     const writeId = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const chunks = splitCipherText(value);
+    const { chunks, recovery } = createVaultShards(value);
     const commit = createCommitMetadata();
     const manifest = {
         version: FRAGMENT_VERSION,
@@ -231,6 +376,7 @@ const saveFragmentedVaultCipher = async (storageKey, value) => {
         storageKey,
         totalLength: value.length,
         hash: getCipherHash(value),
+        encoding: 'base64-reed-solomon-shards-v1',
         fragments: chunks.map((chunk, index) => ({
             index,
             type: index === 0 ? 'preferences' : 'file',
@@ -239,6 +385,7 @@ const saveFragmentedVaultCipher = async (storageKey, value) => {
             length: chunk.length,
             hash: getCipherHash(chunk),
         })),
+        recovery,
     };
 
     await Filesystem.mkdir({

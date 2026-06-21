@@ -4,6 +4,7 @@ import CryptoJS from 'crypto-js';
 import { Delete, Lock, ShieldCheck, TimerReset } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
+import { appendAuditLog } from '../utils/auditLog';
 
 const PIN_HASH_KEY = 'xkey_pin_hash';
 const PIN_ATTEMPTS_KEY = 'xkey_pin_attempts';
@@ -105,6 +106,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }) {
           if (newPin === confirmPin) {
             await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(newPin) });
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
+            await appendAuditLog('pin.created');
             onSuccess(false, { createdPin: true });
           } else {
             triggerShake();
@@ -120,10 +122,12 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }) {
             // Reset attempts on success
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
+            await appendAuditLog('pin.unlock_success', { decoy: false });
             onSuccess(false);
           } else if (decoyStored && hashPin(newPin) === decoyStored) {
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
+            await appendAuditLog('pin.unlock_success', { decoy: true });
             onSuccess(true);
           } else {
             const newAttempts = failedAttempts + 1;
@@ -134,6 +138,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }) {
             if (newAttempts >= KILL_SWITCH_THRESHOLD) {
               const { value: killEnabled } = await Preferences.get({ key: KILL_SWITCH_KEY });
               if (killEnabled === 'true' && onSelfDestruct) {
+                await appendAuditLog('pin.kill_switch_triggered', { attempts: newAttempts });
                 onSelfDestruct();
                 return;
               }
@@ -141,6 +146,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }) {
 
             // Apply lockout if threshold reached
             await applyLockout(newAttempts);
+            await appendAuditLog('pin.unlock_failed', { attempts: newAttempts });
 
             triggerShake();
             const attemptsLeft = KILL_SWITCH_THRESHOLD - newAttempts;

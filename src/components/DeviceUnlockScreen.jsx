@@ -3,6 +3,7 @@ import { Lock, Settings, ShieldCheck } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
 import { isDeviceCredentialAvailable, openDeviceSecuritySettings } from '../utils/deviceCredential';
+import { appendAuditLog } from '../utils/auditLog';
 
 export default function DeviceUnlockScreen({ onUnlock }) {
   const t = useT();
@@ -23,6 +24,7 @@ export default function DeviceUnlockScreen({ onUnlock }) {
     setHint('');
     try {
       await onUnlock();
+      await appendAuditLog('device.unlock_success');
     } catch (err) {
       const code = err?.code || '';
       const message = String(err?.message || '').toLowerCase();
@@ -36,6 +38,7 @@ export default function DeviceUnlockScreen({ onUnlock }) {
         setError(t('deviceUnlock.unlockFailed'));
         setHint(t('deviceUnlock.tryAgainHint'));
       }
+      await appendAuditLog('device.unlock_failed', { code: err?.code || '', message: err?.message || '' });
     } finally {
       unlockingRef.current = false;
       setUnlocking(false);

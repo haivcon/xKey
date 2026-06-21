@@ -67,6 +67,11 @@ android/**/*.iml
 *.sha512
 *.asc
 release-notes*.md
+CHANGELOG.local.md
+github-release-notes*.txt
+play-store-notes*.txt
+release/
+releases/
 
 # Signing keys and secrets
 *.keystore
@@ -76,6 +81,8 @@ release-notes*.md
 *.key
 *.properties.local
 keystore_base64.txt
+keystore.properties
+signing.properties
 google-services.json
 android/app/google-services.json
 

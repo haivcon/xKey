@@ -17,6 +17,7 @@ import { CLIPBOARD_TIMEOUT_KEY, CLIPBOARD_OPTIONS } from '../../utils/clipboard'
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../PinLockScreen';
 import { getVaultSecurityStatus, isBiometricAvailable, setHardwareBoundOnlyMode } from '../../utils/storage';
+import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled, setDeviceIntegrityGuardEnabled } from '../../utils/deviceIntegrity';
 import PasswordInput from '../PasswordInput';
 import { useScrambledKeyboard } from '../../contexts/ScrambledKeyboardContext';
 import { useSecureDisplay } from '../../contexts/SecureDisplayContext';
@@ -38,6 +39,7 @@ export default function SecurityTab({ aesKey }) {
   const [showAutoLock, setShowAutoLock] = useState(false);
   const [showClipboard, setShowClipboard] = useState(false);
   const [showSecureDisplay, setShowSecureDisplay] = useState(false);
+  const [showDeviceIntegrityGuard, setShowDeviceIntegrityGuard] = useState(false);
   const [showHardwareBound, setShowHardwareBound] = useState(false);
   const [showScrambledKeyboard, setShowScrambledKeyboard] = useState(false);
   const [showMasterPasswordDetails, setShowMasterPasswordDetails] = useState(false);
@@ -79,6 +81,9 @@ export default function SecurityTab({ aesKey }) {
   const [hasBiometric, setHasBiometric] = useState(true);
   const [securityStatus, setSecurityStatus] = useState(null);
   const [hardwareBoundBusy, setHardwareBoundBusy] = useState(false);
+  const [deviceIntegrityGuard, setDeviceIntegrityGuard] = useState(false);
+  const [deviceIntegrityBusy, setDeviceIntegrityBusy] = useState(false);
+  const [deviceRiskInfo, setDeviceRiskInfo] = useState(null);
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
@@ -94,7 +99,14 @@ export default function SecurityTab({ aesKey }) {
       setKillSwitchEnabled(ks === 'true');
       const bio = await isBiometricAvailable();
       setHasBiometric(bio);
-      setSecurityStatus(await getVaultSecurityStatus());
+      const [vaultStatus, guardEnabled, riskInfo] = await Promise.all([
+        getVaultSecurityStatus(),
+        isDeviceIntegrityGuardEnabled(),
+        getDeviceIntegrityRisk(),
+      ]);
+      setSecurityStatus(vaultStatus);
+      setDeviceIntegrityGuard(guardEnabled);
+      setDeviceRiskInfo(riskInfo);
       const { value: decoyHash } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
       setHasDecoyPin(!!decoyHash);
       const { value: shakeVal } = await Preferences.get({ key: SHAKE_TO_LOCK_KEY });
@@ -217,6 +229,41 @@ export default function SecurityTab({ aesKey }) {
       showToast(err.message || t('settings.hardwareBoundError'), 'error');
     } finally {
       setHardwareBoundBusy(false);
+    }
+  };
+
+  const formatDeviceRiskReasons = (risk = deviceRiskInfo) => {
+    const reasons = Array.isArray(risk?.reasons) ? risk.reasons : [];
+    if (!reasons.length) return t('settings.deviceIntegrityNoRisk');
+    return reasons.map(reason => t(`settings.deviceIntegrityReason_${reason}`)).join(', ');
+  };
+
+  const handleToggleDeviceIntegrityGuard = async () => {
+    const next = !deviceIntegrityGuard;
+    hapticTap();
+    setDeviceIntegrityBusy(true);
+    try {
+      const riskInfo = await getDeviceIntegrityRisk();
+      setDeviceRiskInfo(riskInfo);
+      if (next && riskInfo?.risky) {
+        showToast(t('settings.deviceIntegrityCannotEnable', { reasons: formatDeviceRiskReasons(riskInfo) }), 'error');
+        return;
+      }
+      if (next) {
+        const confirmed = await showConfirm(t('settings.deviceIntegrityConfirm'), {
+          danger: true,
+          title: t('settings.deviceIntegrityConfirmTitle'),
+          confirmText: t('common.confirm'),
+        });
+        if (!confirmed) return;
+      }
+      await setDeviceIntegrityGuardEnabled(next);
+      setDeviceIntegrityGuard(next);
+      showToast(next ? t('settings.deviceIntegrityEnabled') : t('settings.deviceIntegrityDisabled'), next ? 'success' : 'info');
+    } catch (err) {
+      showToast(err.message || t('settings.deviceIntegrityError'), 'error');
+    } finally {
+      setDeviceIntegrityBusy(false);
     }
   };
 
@@ -461,6 +508,57 @@ export default function SecurityTab({ aesKey }) {
               <p className="text-xs text-surface-400">{t('settings.securityDesc')}</p>
             </div>
           </div>
+        </div>
+
+        {/* Root/Data Tamper Guard */}
+        <div className="border-b border-surface-700/30">
+          <div className="flex items-start justify-between gap-3 p-4">
+            <button
+              type="button"
+              onClick={() => { hapticTap(); setShowDeviceIntegrityGuard(!showDeviceIntegrityGuard); }}
+              className="flex min-w-0 flex-1 gap-3 text-left"
+            >
+              <ShieldAlert size={16} className={`mt-1 flex-shrink-0 ${deviceIntegrityGuard ? 'text-red-400' : 'text-surface-400'}`} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">{t('settings.deviceIntegrityTitle')}</p>
+                <p className="mt-1 truncate text-xs text-surface-500">
+                  {deviceIntegrityGuard ? t('settings.deviceIntegritySummaryOn') : t('settings.deviceIntegritySummaryOff')}
+                </p>
+              </div>
+            </button>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              {settingStatus(deviceIntegrityGuard ? t('settings.enabled') : t('settings.disabled'), deviceIntegrityGuard)}
+              <button type="button" onClick={() => { hapticTap(); setShowDeviceIntegrityGuard(!showDeviceIntegrityGuard); }} className="p-1 text-surface-500" aria-label={t('settings.expandDetails')}>
+                <ChevronDown size={16} className={`transition-transform ${showDeviceIntegrityGuard ? 'rotate-180' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={handleToggleDeviceIntegrityGuard}
+                disabled={deviceIntegrityBusy}
+                className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors disabled:opacity-50 ${deviceIntegrityGuard ? 'bg-red-500' : 'bg-surface-700'}`}
+                aria-label={t('settings.deviceIntegrityTitle')}
+              >
+                <span className={`h-5 w-5 rounded-full bg-white transition-transform ${deviceIntegrityGuard ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+          </div>
+          {showDeviceIntegrityGuard && (
+            <div className="mx-4 mb-4 space-y-3">
+              <p className="text-xs leading-relaxed text-surface-400">{t('settings.deviceIntegrityDesc')}</p>
+              <div className={`rounded-xl border p-3 text-xs leading-relaxed ${
+                deviceRiskInfo?.risky
+                  ? 'border-red-500/25 bg-red-500/10 text-red-100'
+                  : 'border-emerald-500/15 bg-emerald-500/5 text-emerald-100/85'
+              }`}>
+                {deviceRiskInfo?.risky
+                  ? t('settings.deviceIntegrityRiskDetected', { reasons: formatDeviceRiskReasons() })
+                  : t('settings.deviceIntegrityNoRisk')}
+              </div>
+              <Notice variant="warning">
+                {t('settings.deviceIntegrityLimit')}
+              </Notice>
+            </div>
+          )}
         </div>
 
         {/* Auto-Lock Timeout */}

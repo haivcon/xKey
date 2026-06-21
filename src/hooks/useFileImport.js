@@ -2,9 +2,10 @@ import { useState, useCallback } from 'react';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import Papa from 'papaparse';
 import { saveWallets } from '../utils/storage';
-import { parseVaultBackupFile } from '../utils/backupUtils';
+import { inspectBackupFile, parseVaultBackupFile } from '../utils/backupUtils';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
+import { appendAuditLog } from '../utils/auditLog';
 
 /**
  * Hook encapsulating file import logic (CSV and .xkey backup files).
@@ -13,6 +14,7 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
   const [loading, setLoading] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [pendingBackupData, setPendingBackupData] = useState(null);
+  const [backupPreview, setBackupPreview] = useState(null);
   const [importPassword, setImportPassword] = useState('');
 
   const { showToast } = useToast();
@@ -51,9 +53,16 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
 
         // Handle .xkey Backup File — always prompt for password
         if (file.name && file.name.toLowerCase().endsWith('.xkey')) {
+          const preview = await inspectBackupFile(file.data);
           setPendingBackupData(file.data);
+          setBackupPreview({ ...preview, fileName: file.name });
           setShowPasswordPrompt(true);
           setLoading(false);
+          await appendAuditLog('backup.previewed', {
+            fileName: file.name,
+            integrity: preview.integrity,
+            walletCount: preview.metadata?.walletCount,
+          });
           return;
         }
 
@@ -154,6 +163,44 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
     }
   }, [importWallets, showToast, t]);
 
+  const handleExternalBackupFile = useCallback(async (file) => {
+    if (!file?.data) return false;
+    const fileName = file.name || 'opened.xkey';
+    if (!fileName.toLowerCase().endsWith('.xkey')) {
+      showToast(t('common.errorReadingFile') || 'Error reading file data.', 'error');
+      await appendAuditLog('backup.external_file_ignored', {
+        fileName,
+        mimeType: file.mimeType || '',
+      });
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const preview = await inspectBackupFile(file.data);
+      setPendingBackupData(file.data);
+      setBackupPreview({ ...preview, fileName, openedFromExternal: true });
+      setShowPasswordPrompt(true);
+      await appendAuditLog('backup.opened_from_android', {
+        fileName,
+        mimeType: file.mimeType || '',
+        size: file.size || 0,
+        integrity: preview.integrity,
+        walletCount: preview.metadata?.walletCount,
+      });
+      return true;
+    } catch (err) {
+      showToast(err.message || t('common.errorReadingFile') || 'Error reading file data.', 'error');
+      await appendAuditLog('backup.external_open_failed', {
+        fileName,
+        reason: err.message || 'unknown',
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast, t]);
+
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
     try {
@@ -175,25 +222,37 @@ export default function useFileImport(wallets, setWallets, aesKey, isDecoyMode) 
       let msg = t('home.backupImported', { count: uniqueBackup.length });
       if (skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
       showToast(msg, 'success');
+      await appendAuditLog('backup.imported', {
+        walletCount: uniqueBackup.length,
+        skipped,
+        integrity: backupPreview?.integrity || 'unknown',
+      });
     } catch (err) {
       showToast(err.message || t('restore.wrongPassword'), 'error');
+      await appendAuditLog('backup.import_failed', {
+        reason: err.message || 'unknown',
+        integrity: backupPreview?.integrity || 'unknown',
+      });
     }
     setShowPasswordPrompt(false);
     setPendingBackupData(null);
+    setBackupPreview(null);
     setImportPassword('');
-  }, [pendingBackupData, wallets, setWallets, aesKey, isDecoyMode, importPassword, showToast, t]);
+  }, [pendingBackupData, wallets, setWallets, aesKey, isDecoyMode, importPassword, showToast, t, backupPreview]);
 
   const dismissPasswordPrompt = useCallback(() => {
     setShowPasswordPrompt(false);
     setPendingBackupData(null);
+    setBackupPreview(null);
     setImportPassword('');
   }, []);
 
   return {
     loading,
-    showPasswordPrompt,
+    showPasswordPrompt, backupPreview,
     importPassword, setImportPassword,
     handleFileUpload,
+    handleExternalBackupFile,
     handleImportWithPassword,
     dismissPasswordPrompt,
   };

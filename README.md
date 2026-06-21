@@ -8,40 +8,54 @@
 
 The project is open source, runs locally, and is designed as a private cold-vault style manager rather than a network-connected trading wallet.
 
-## Current Release: v5.10.3
+## Current Release: v5.10.4
 
 ### Release Focus
 
-v5.10.3 hardens xKey's startup path with signed runtime integrity checks, offline cryptographic known-answer tests, and a safer GitHub Actions release pipeline for APK/AAB builds. This release keeps the existing app structure intact while adding stronger tamper detection, clearer failure diagnostics, and complete localization for the new startup integrity messages.
+v5.10.4 expands xKey's local vault hardening with self-healing backup/vault storage, tamper-evident backup previews, encrypted immutable audit logs, Android `.xkey` file-open handling, and an optional Root/Data Tamper Guard. The release focuses on detecting risky device states and corrupted or modified backup files before sensitive vault data is opened or imported.
 
-### Runtime Integrity and Anti-Tamper Checks
+### Backup Integrity and Self-Healing
 
-- **Offline Crypto KATs**: xKey now runs startup known-answer tests for SHA-256, PBKDF2-HMAC-SHA256, AES-GCM, and random-source sanity before opening the vault.
-- **Signed asset manifest**: production builds generate `xkey-integrity-manifest.json` and sign it with `RSA-PSS-SHA256`.
-- **Manifest source binding**: the manifest declares the official source as `github.com/haivcon/xKey`, and runtime errors include that source for safer user guidance.
-- **Focused asset verification**: startup hashing is limited to critical web assets such as `index.html`, the main bundle, App chunk, storage/wallet chunks, CSS, and `crypto.worker`.
-- **Clear failure codes**: integrity failures now surface stable codes such as `KAT_SHA256_FAILED`, `APP_SIGNATURE_INVALID`, `MANIFEST_MISSING`, and `ASSET_HASH_MISMATCH`.
-- **Startup timeout protection**: manifest and asset fetches use a 10-second timeout so the splash screen does not hang indefinitely.
+- **Reed-Solomon vault recovery**: encrypted vault data now uses 10 data shards plus 5 parity shards, allowing recovery from multiple damaged shards before decrypting.
+- **Self-healing backup payloads**: portable `.xkey` backups include parity metadata so xKey can repair recoverable corruption and report recovered bytes or shards.
+- **Container-based `.xkey` format**: backups now use the `xkey-backup-v4` container with a readable header, encrypted payload, and recovery footer. The footer lets xKey still preview metadata when the main header is damaged.
+- **Tamper-evident backup verification**: imports inspect backup metadata, payload hashes, container hashes, password seals, and recovery status before accepting the file.
+- **Verify-only flow**: users can inspect a backup's created time, source device, wallet count, folder count, network count, backup ID, file hash, integrity state, and recovered shard count without importing it.
+- **Verification report copy**: the backup preview can copy a concise verification report for offline review or support.
 
-### Release Pipeline Updates
+### Audit Log and External File Handling
 
-- **GitHub Actions secrets support**: the Android release workflow now passes `XKEY_INTEGRITY_PUBLIC_KEY_PEM` and `XKEY_INTEGRITY_PRIVATE_KEY_PEM` into the Vite build step.
-- **Signed APK and AAB outputs**: the workflow continues producing a GitHub APK and Google Play AAB, both using the existing Android release keystore secrets.
-- **Safe local key handling**: `.env.local` remains ignored by Git, while `.env.example` documents the required runtime-integrity key variables.
-- **AAB compatibility**: the new integrity manifest is packaged into the app assets before the Android build and is compatible with Google Play Console upload flows.
+- **Immutable local audit log**: xKey records security-sensitive events in an encrypted hash-chain log, including app open, unlock, backup import/export, verify-only checks, self-healing events, and tamper detections.
+- **Protected audit viewer**: `Settings > Audit Log` requires device authentication before showing local security history.
+- **Android `.xkey` open intent**: tapping a `.xkey` file from another app can open xKey directly and show the backup preview.
+- **External-source warning**: backups opened from another Android app are clearly marked as external before import.
+- **Pending external backup indicator**: after unlock, xKey shows when one external backup file is waiting for review.
+- **ADB intent test script**: `npm run test:adb-open` can verify Android file-open behavior on a connected device.
 
-### Localization
+### Device and Runtime Guard
 
-The new startup integrity messages were added across all supported languages:
+- **Root/Data Tamper Guard**: a new Security setting can block vault access when Android root traces, `su`, test-keys, a debuggable app build, or enabled ADB are detected.
+- **Startup enforcement**: when the guard is enabled and the device looks risky, xKey stops before opening the vault and writes `device_integrity.blocked` to the audit log.
+- **Non-blocking default**: the guard is off by default so existing users are not unexpectedly locked out.
+- **Clear limitation notice**: the UI explains that Android apps cannot fully prevent root users, device owners, or system settings from deleting app data; the guard detects risky runtime conditions and blocks vault access when enabled.
+- **Native timeout hardening**: root command detection uses a short timeout so unusual ROM behavior cannot freeze startup.
+
+### Localization and Settings UX
+
+- Vietnamese and English strings were added for the new Root/Data Tamper Guard, device-risk reasons, external backup warnings, verify-only backup actions, recovery footer notices, and copied verification reports.
+- Security settings now include a dedicated Root/Data Tamper Guard toggle with expandable details and current risk status.
+- Backup preview now displays `backupId` and `containerHash` to help users distinguish real backups from lookalike files.
+
+Supported UI languages remain:
 
 `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`
 
 ### Release Metadata
 
-- Web/package version: `5.10.3`
-- Android `versionName`: `5.10.3`
-- Android `versionCode`: `67`
-- Git tag for release build: `v5.10.3`
+- Web/package version: `5.10.4`
+- Android `versionName`: `5.10.4`
+- Android `versionCode`: `68`
+- Git tag for release build: `v5.10.4`
 
 ## Quality Checks
 
@@ -49,18 +63,19 @@ The following checks were run before this release:
 
 ```bash
 npm run lint
-npm run build
 npm run test:smoke
+node tests/reed-solomon.test.mjs
+npm run build
 npx cap sync android
 android/gradlew -p android assembleDebug
 ```
 
 Additional verification performed for this release:
 
-- Signed integrity manifest verified with the configured public key.
-- Production preview served `/` and `/xkey-integrity-manifest.json` successfully.
-- Production page loaded without triggering the runtime integrity failure screen.
-- Android synced assets include a signed manifest with 7 critical asset entries.
+- Root/Data Tamper Guard wiring verified in smoke tests across native plugin registration, React settings UI, and startup enforcement.
+- Reed-Solomon recovery verified for 10 data shards plus 5 parity shards.
+- Android `.xkey` file-open ADB script is available and skips cleanly when no device is connected.
+- Android debug APK compilation verified with the new native Device Integrity plugin.
 
 The Vite production build may still report a large chunk warning. This is not a runtime failure, but future releases should continue splitting scanner and advanced tooling into smaller lazy-loaded chunks.
 
@@ -71,7 +86,10 @@ The Vite production build may still report a large chunk warning. This is not a 
 - Offline encrypted wallet vault with local AES-protected storage
 - Android Device Credential unlock, Android Keystore integration, and web fallback authentication
 - Optional hardware-bound vault key mode for Android
-- Signed runtime integrity manifest and offline crypto KAT startup checks
+- Signed runtime integrity manifest, offline crypto KAT startup checks, and optional Root/Data Tamper Guard
+- Tamper-evident `.xkey` backup preview with verify-only reporting
+- Self-healing Reed-Solomon vault and backup recovery
+- Encrypted immutable audit log with protected viewer
 - Secure display rendering, screen capture blocking, clipboard auto-clear, and auto-lock controls
 - Offline Shamir's Secret Sharing (2-of-3) backups
 - Encrypted portable `.xkey` backups
@@ -106,12 +124,12 @@ The Vite production build may still report a large chunk warning. This is not a 
 ## Previous Releases
 
 <details>
-<summary><b>v5.10.2 and earlier summary</b></summary>
+<summary><b>v5.10.3 and earlier summary</b></summary>
 
+- v5.10.3 added signed runtime integrity checks, offline crypto KATs, manifest source binding to `github.com/haivcon/xKey`, and release workflow support for integrity signing keys.
 - v5.10.2 improved security settings UX, hardware-bound backup guidance, light-theme warning contrast, Data-tab Danger Zone placement, folder action menus, and locale coverage.
 - v5.10.1 introduced hardware-bound vault mode, Android screen-capture controls, secure glyph display, scrambled keyboard options, fragmented encrypted vault storage, and expanded Security settings explanations.
-- v5.9.x improved Settings navigation, backup UX, Shamir backup/restore, and locale coverage.
-- v5.8.x and earlier added Android/Capacitor support, wallet folders and tags, vanity wallet tools, QR workflows, CSV import/export, manual asset balances, decoy vault, kill switch, and native clipboard/haptics.
+- v5.9.x and earlier added Settings navigation, backup UX, Shamir backup/restore, Android/Capacitor support, folders, tags, vanity tools, QR workflows, CSV import/export, manual balances, decoy vault, kill switch, and native clipboard/haptics.
 </details>
 
 ## Installation
@@ -170,14 +188,14 @@ Required repository secrets:
 Example:
 
 ```bash
-git tag v5.10.3
-git push origin v5.10.3
+git tag v5.10.4
+git push origin v5.10.4
 ```
 
 Generated release files:
 
-- `xKey-GitHub-v5.10.3.apk` using package `com.haivcon.xkey`
-- `xKey-GooglePlay-v5.10.3.aab` using package `com.haivcon.xkey`
+- `xKey-GitHub-v5.10.4.apk` using package `com.haivcon.xkey`
+- `xKey-GooglePlay-v5.10.4.aab` using package `com.haivcon.xkey`
 
 ## Security Notice
 
@@ -187,7 +205,7 @@ Generated release files:
 - Removing or changing the device screen lock can invalidate Android Keystore-backed authentication keys.
 - CSV export may expose sensitive data in plain text if private key or seed phrase columns are selected.
 - Clipboard auto-clear and screen capture blocking are best-effort and may be limited by the operating system.
-- Secure display and startup integrity checks reduce exposure but cannot protect against a fully compromised device, camera recording, OCR, malicious accessibility services, or a malicious OS that can perfectly emulate correct cryptographic test outputs.
+- Secure display, startup integrity checks, self-healing storage, tamper-evident backups, and Root/Data Tamper Guard reduce exposure but cannot protect against a fully compromised device, camera recording, OCR, malicious accessibility services, root users with full device control, or a malicious OS that can perfectly emulate correct cryptographic test outputs.
 - xKey stores vault data locally and is designed for offline use.
 
 ## License

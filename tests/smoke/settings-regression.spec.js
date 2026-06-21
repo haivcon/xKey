@@ -40,6 +40,33 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   expect(app).toContain('runRuntimeIntegrityChecks');
 });
 
+test('root and data tamper guard is wired to Android risk checks and settings', async () => {
+  const deviceIntegrity = await readSource('src/utils/deviceIntegrity.js');
+  const deviceIntegrityPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/DeviceIntegrityPlugin.java');
+  const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
+  const securityTab = await readSource('src/components/settings/SecurityTab.jsx');
+  const app = await readSource('src/App.jsx');
+
+  expect(deviceIntegrity).toContain("registerPlugin('DeviceIntegrity')");
+  expect(deviceIntegrity).toContain('DEVICE_INTEGRITY_GUARD_KEY');
+  expect(deviceIntegrity).toContain('getDeviceIntegrityRisk');
+  expect(deviceIntegrity).toContain('isDeviceIntegrityGuardEnabled');
+  expect(deviceIntegrityPlugin).toContain('@CapacitorPlugin(name = "DeviceIntegrity")');
+  expect(deviceIntegrityPlugin).toContain('ROOT_PATHS');
+  expect(deviceIntegrityPlugin).toContain('Settings.Global.ADB_ENABLED');
+  expect(deviceIntegrityPlugin).toContain('test_keys');
+  expect(deviceIntegrityPlugin).toContain('root_files');
+  expect(deviceIntegrityPlugin).toContain('su_command');
+  expect(deviceIntegrityPlugin).toContain('debuggable_app');
+  expect(mainActivity).toContain('registerPlugin(DeviceIntegrityPlugin.class)');
+  expect(securityTab).toContain('handleToggleDeviceIntegrityGuard');
+  expect(securityTab).toContain("t('settings.deviceIntegrityTitle')");
+  expect(securityTab).toContain("t('settings.deviceIntegrityLimit')");
+  expect(app).toContain('isDeviceIntegrityGuardEnabled');
+  expect(app).toContain("appendAuditLog('device_integrity.blocked'");
+  expect(app).toContain("t('integrity.deviceRiskBlocked')");
+});
+
 test('security status is collapsible and hardware warning uses Notice', async () => {
   const securityTab = await readSource('src/components/settings/SecurityTab.jsx');
 
@@ -60,6 +87,86 @@ test('folder actions menu uses fixed portal rendering', async () => {
   expect(folderTabs).toContain('calculateMenuPosition');
   expect(folderTabs).toContain('onPointerDown={(e) => e.stopPropagation()}');
   expect(folderTabs).toContain('onClick={(e) => e.stopPropagation()}');
+});
+
+test('audit log tab and tamper-evident backup preview are wired into settings and import flow', async () => {
+  const settingsScreen = await readSource('src/components/SettingsScreen.jsx');
+  const auditTab = await readSource('src/components/settings/AuditLogTab.jsx');
+  const fileImport = await readSource('src/hooks/useFileImport.js');
+  const app = await readSource('src/App.jsx');
+  const auditLog = await readSource('src/utils/auditLog.js');
+
+  expect(settingsScreen).toContain("key: 'audit'");
+  expect(settingsScreen).toContain('<AuditLogTab />');
+  expect(auditTab).toContain('authenticateDeviceCredential');
+  expect(auditTab).toContain('readAuditLog');
+  expect(auditLog).toContain('previousHash');
+  expect(auditLog).toContain('entryHash');
+  expect(fileImport).toContain('inspectBackupFile');
+  expect(fileImport).toContain('backupPreview');
+  expect(app).toContain("backupPreview?.status === 'tampered'");
+  expect(app).toContain("appendAuditLog('app.opened'");
+});
+
+test('vault and backup self-healing Reed-Solomon checks are present', async () => {
+  const reedSolomon = await readSource('src/utils/reedSolomon.js');
+  const storage = await readSource('src/utils/storage.js');
+  const backupUtils = await readSource('src/utils/backupUtils.js');
+
+  expect(reedSolomon).toContain('encodeReedSolomon');
+  expect(reedSolomon).toContain('decodeReedSolomon');
+  expect(reedSolomon).toContain('PARITY_SHARDS = 5');
+  expect(reedSolomon).toContain('reed-solomon-gf256-v1');
+  expect(storage).toContain('encodeReedSolomon');
+  expect(storage).toContain('decodeReedSolomon');
+  expect(storage).toContain('base64-reed-solomon-shards-v1');
+  expect(storage).toContain('recoverFragmentFromParity');
+  expect(storage).toContain("appendAuditLog('vault.self_healed'");
+  expect(backupUtils).toContain('xkey-backup-v4');
+  expect(backupUtils).toContain('BEGIN XKEY RECOVERY FOOTER');
+  expect(backupUtils).toContain('containerHash');
+  expect(backupUtils).toContain('createBackupRecovery');
+  expect(backupUtils).toContain('recoverBackupPayload');
+  expect(backupUtils).toContain('dataHashes');
+  expect(backupUtils).toContain("appendAuditLog('backup.self_healed'");
+  expect(backupUtils).toContain('passwordSeal');
+  expect(backupUtils).toContain("appendAuditLog('backup.tamper_detected'");
+});
+
+test('android xkey file open intent is wired to backup preview flow', async () => {
+  const manifest = await readSource('android/app/src/main/AndroidManifest.xml');
+  const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
+  const fileOpenPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/XKeyFileOpenPlugin.java');
+  const nativeFileOpen = await readSource('src/utils/nativeFileOpen.js');
+  const app = await readSource('src/App.jsx');
+  const fileImport = await readSource('src/hooks/useFileImport.js');
+
+  expect(manifest).toContain('android.intent.action.VIEW');
+  expect(manifest).toContain('.*\\\\.xkey');
+  expect(manifest).toContain('application/x-xkey');
+  expect(manifest).toContain('application/octet-stream');
+  expect(mainActivity).toContain('registerPlugin(XKeyFileOpenPlugin.class)');
+  expect(fileOpenPlugin).toContain('@CapacitorPlugin(name = "XKeyFileOpen")');
+  expect(fileOpenPlugin).toContain('getPendingFile');
+  expect(fileOpenPlugin).toContain('ContentResolver');
+  expect(fileOpenPlugin).toContain('MAX_IMPORT_BYTES');
+  expect(nativeFileOpen).toContain("registerPlugin('XKeyFileOpen')");
+  expect(app).toContain('getPendingXKeyFile');
+  expect(app).toContain('addXKeyFileOpenListener');
+  expect(app).toContain("t('restore.openedExternal')");
+  expect(app).toContain("t('restore.externalWaiting')");
+  expect(app).toContain('handleCopyVerificationReport');
+  expect(app).toContain('containerHash');
+  expect(app).toContain('handleVerifyBackupOnly');
+  expect(fileImport).toContain('handleExternalBackupFile');
+  expect(fileImport).toContain('openedFromExternal: true');
+  expect(fileImport).toContain('backup.opened_from_android');
+  const packageJson = await readSource('package.json');
+  const adbTest = await readSource('tests/adb-open-xkey.mjs');
+  expect(packageJson).toContain('test:adb-open');
+  expect(adbTest).toContain('android.intent.action.VIEW');
+  expect(adbTest).toContain('/sdcard/Download/xkey_adb_intent_test.xkey');
+  expect(adbTest).toContain('file://${remotePath}');
 });
 
 test('folder actions menu opens with one click and is not clipped by the folder scroller', async ({ page }) => {

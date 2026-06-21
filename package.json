@@ -1,13 +1,14 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "5.10.3",
+  "version": "5.10.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "test:shamir": "node tests/shamir.test.mjs",
+    "test:adb-open": "node tests/adb-open-xkey.mjs",
     "test:smoke": "playwright test",
     "preview": "vite preview",
     "sync": "npm run build && npx cap sync android",

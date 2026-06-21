@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, BadgeInfo, Database, ExternalLink, GitBranch, Palette, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, BadgeInfo, Database, ExternalLink, FileText, GitBranch, Palette, ShieldCheck } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap } from '../utils/haptics';
 import GeneralTab from './settings/GeneralTab';
 import SecurityTab from './settings/SecurityTab';
 import DataTab from './settings/DataTab';
 import InfoTab from './settings/InfoTab';
+import AuditLogTab from './settings/AuditLogTab';
 import useAppVersion from '../hooks/useAppVersion';
 
 export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
@@ -18,6 +19,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
         { key: 'general', label: t('settings.tabGeneral') || 'Chung', icon: Palette },
         { key: 'security', label: t('settings.tabSecurity') || 'Bảo mật', icon: ShieldCheck },
         { key: 'data', label: t('settings.tabData') || 'Dữ liệu', icon: Database },
+        { key: 'audit', label: t('settings.tabAudit') || 'Audit Log', icon: FileText },
         { key: 'info', label: t('settings.tabInfo') || 'Giới thiệu', icon: BadgeInfo },
     ];
 
@@ -116,6 +118,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }) {
                     {activeTab === 'general' && <GeneralTab />}
                     {activeTab === 'security' && <SecurityTab aesKey={aesKey} />}
                     {activeTab === 'data' && <DataTab aesKey={aesKey} onImport={onImport} onWipe={onWipe} />}
+                    {activeTab === 'audit' && <AuditLogTab />}
                     {activeTab === 'info' && <InfoTab />}
                 </div>
             </div>

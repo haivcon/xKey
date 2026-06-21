@@ -12,6 +12,7 @@ import SecureGlyphText from './SecureGlyphText';
 import { TagBadge, TagEditor } from './TagSystem';
 import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
 import { useSecureDisplay } from '../contexts/SecureDisplayContext';
+import { appendAuditLog } from '../utils/auditLog';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -96,19 +97,32 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
     const walletName = wallet.name || t('walletCard.unnamed');
     if (options.revealAddress) {
+      appendAuditLog('wallet.address_copied', { wallet: walletName }).catch(() => {});
       revealFullAddress();
       showToast(t('walletCard.addressCopiedFull', { wallet: walletName, address: text }), 'success');
       return;
     }
 
+    if (field === 'pk' || field === 'seed') {
+      appendAuditLog('wallet.secret_copied', { wallet: walletName, field }).catch(() => {});
+    }
     showToast(t('walletCard.fieldCopied', { field: label, wallet: walletName }), 'success');
   };
   const formatDate = (ts) => { if (!ts) return null; const d = new Date(ts); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
 
   const executeSensitiveAction = (actionType) => {
-    if (actionType === 'pk') setShowPk(!showPk);
-    else if (actionType === 'seed') setShowSeed(!showSeed);
-    else if (actionType === 'qr_pk') onShowQR(wallet.privateKey, t('walletCard.privateKey'), 'WARNING');
+    if (actionType === 'pk') {
+      appendAuditLog('wallet.secret_revealed', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
+      setShowPk(!showPk);
+    }
+    else if (actionType === 'seed') {
+      appendAuditLog('wallet.secret_revealed', { wallet: wallet.name || t('walletCard.unnamed'), field: 'seedPhrase' }).catch(() => {});
+      setShowSeed(!showSeed);
+    }
+    else if (actionType === 'qr_pk') {
+      appendAuditLog('wallet.secret_qr_opened', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
+      onShowQR(wallet.privateKey, t('walletCard.privateKey'), 'WARNING');
+    }
     else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk', t('walletCard.privateKey'));
     else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
   };

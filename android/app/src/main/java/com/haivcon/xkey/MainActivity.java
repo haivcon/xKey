@@ -8,6 +8,8 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceCredentialPlugin.class);
         registerPlugin(ScreenSecurityPlugin.class);
+        registerPlugin(XKeyFileOpenPlugin.class);
+        registerPlugin(DeviceIntegrityPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

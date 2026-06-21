@@ -58,6 +58,10 @@ import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
 import { runRuntimeIntegrityChecks } from './utils/runtimeIntegrity';
+import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled } from './utils/deviceIntegrity';
+import { appendAuditLog } from './utils/auditLog';
+import { addXKeyFileOpenListener, getPendingXKeyFile } from './utils/nativeFileOpen';
+import { secureCopy } from './utils/clipboard';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
 
@@ -105,6 +109,7 @@ export default function App() {
   const [integrityReady, setIntegrityReady] = useState(false);
   const [integrityStatus, setIntegrityStatus] = useState('');
   const [integrityFailed, setIntegrityFailed] = useState(false);
+  const [externalBackupWaiting, setExternalBackupWaiting] = useState(false);
   const integrityStartedRef = useRef(false);
   const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
@@ -261,9 +266,41 @@ export default function App() {
 
   const {
     loading,
-    showPasswordPrompt, importPassword, setImportPassword,
-    handleFileUpload, handleImportWithPassword, dismissPasswordPrompt,
+    showPasswordPrompt, backupPreview, importPassword, setImportPassword,
+    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
+
+  useEffect(() => {
+    if (!aesKey || !Capacitor.isNativePlatform()) return undefined;
+    let cancelled = false;
+    let listener;
+
+    const consumePendingFile = async () => {
+      try {
+        const file = await getPendingXKeyFile();
+        if (!cancelled && file?.available) {
+          setExternalBackupWaiting(true);
+          await handleExternalBackupFile(file);
+        }
+      } catch (err) {
+        console.warn('Unable to consume pending .xkey file intent.', err);
+      } finally {
+        if (!cancelled) setExternalBackupWaiting(false);
+      }
+    };
+
+    consumePendingFile();
+    addXKeyFileOpenListener(() => {
+      consumePendingFile();
+    }).then((handle) => {
+      listener = handle;
+    }).catch(() => {});
+
+    return () => {
+      cancelled = true;
+      listener?.remove?.();
+    };
+  }, [aesKey, handleExternalBackupFile]);
 
   const {
     selectionMode, toggleSelectionMode,
@@ -296,6 +333,10 @@ export default function App() {
 
   // Auto-backup on app open
   useAutoBackup(aesKey);
+
+  useEffect(() => {
+    appendAuditLog('app.opened', { version: appVersion.label }).catch(() => {});
+  }, [appVersion.label]);
 
   // Global Keyboard & Focus Handler
   useEffect(() => {
@@ -333,6 +374,16 @@ export default function App() {
 
     const authenticate = async () => {
       try {
+        if (useDeviceCredentialUnlock && await isDeviceIntegrityGuardEnabled()) {
+          const riskInfo = await getDeviceIntegrityRisk();
+          if (riskInfo?.risky) {
+            await appendAuditLog('device_integrity.blocked', { reasons: riskInfo.reasons || [] }).catch(() => {});
+            setAuthError(t('integrity.deviceRiskBlocked'));
+            setVaultLoading(false);
+            return;
+          }
+        }
+
         const { value: onboarded } = await Preferences.get({ key: ONBOARDED_KEY });
         if (!onboarded) { setShowOnboarding(true); }
 
@@ -369,7 +420,7 @@ export default function App() {
       setVaultLoading(false);
     };
     authenticate();
-  }, [showSplash, setWallets, useDeviceCredentialUnlock]);
+  }, [showSplash, setWallets, t, useDeviceCredentialUnlock]);
 
   // Called after PIN verification succeeds
   const handlePinSuccess = async (isDecoy = false, options = {}) => {
@@ -425,6 +476,52 @@ export default function App() {
     setBackupPassword('');
     setBackupPasswordConfirm('');
   };
+
+  const createVerificationReport = useCallback(() => {
+    if (!backupPreview) return '';
+    const metadata = backupPreview.metadata || {};
+    return [
+      'xKey backup verification report',
+      `File: ${backupPreview.fileName || ''}`,
+      `Opened from external app: ${backupPreview.openedFromExternal ? 'yes' : 'no'}`,
+      `Format: ${backupPreview.format || 'unknown'}`,
+      `Backup ID: ${backupPreview.backupId || metadata.backupId || ''}`,
+      `File hash: ${backupPreview.containerHash || metadata.containerHash || ''}`,
+      `Integrity: ${backupPreview.integrity || 'unknown'}`,
+      `Status: ${backupPreview.status || 'unknown'}`,
+      `Created: ${metadata.createdAt || ''}`,
+      `Platform: ${metadata.platform || ''}`,
+      `Wallets: ${metadata.walletCount ?? ''}`,
+      `Folders: ${metadata.folderCount ?? ''}`,
+      `Networks: ${metadata.networkCount ?? ''}`,
+      `Source: ${metadata.source || ''}`,
+      `Recovered: ${backupPreview.recovered ? 'yes' : 'no'}`,
+      `Recovered bytes: ${backupPreview.recoveredBytes || 0}`,
+      `Recovered shards: ${(backupPreview.recoveredShards || []).join(', ')}`,
+      `Footer recovered: ${backupPreview.footerRecovered ? 'yes' : 'no'}`,
+    ].join('\n');
+  }, [backupPreview]);
+
+  const handleCopyVerificationReport = useCallback(async () => {
+    const copied = await secureCopy(createVerificationReport(), 120000);
+    showToast?.(copied ? t('restore.reportCopied') : t('common.error'), copied ? 'success' : 'error');
+    appendAuditLog('backup.verification_report_copied', {
+      fileName: backupPreview?.fileName || '',
+      integrity: backupPreview?.integrity || 'unknown',
+      backupId: backupPreview?.backupId || backupPreview?.metadata?.backupId || '',
+    }).catch(() => {});
+  }, [backupPreview, createVerificationReport, showToast, t]);
+
+  const handleVerifyBackupOnly = useCallback(() => {
+    appendAuditLog('backup.verify_only', {
+      fileName: backupPreview?.fileName || '',
+      openedFromExternal: !!backupPreview?.openedFromExternal,
+      integrity: backupPreview?.integrity || 'unknown',
+      backupId: backupPreview?.backupId || backupPreview?.metadata?.backupId || '',
+      walletCount: backupPreview?.metadata?.walletCount,
+    }).catch(() => {});
+    dismissPasswordPrompt();
+  }, [backupPreview, dismissPasswordPrompt]);
 
   const handleExportBackup = async () => {
     if (!backupPassword || backupPassword.length < 6) {
@@ -559,7 +656,11 @@ export default function App() {
         </header>
 
         <main className="p-4 max-w-7xl mx-auto pb-20">
-
+          {externalBackupWaiting && (
+            <div className="mb-3 rounded-lg border border-sky-400/25 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-100">
+              {t('restore.externalWaiting')}
+            </div>
+          )}
           {wallets.length === 0 ? (
             <div className="space-y-4 mt-10 max-w-2xl mx-auto">
               {(folders.length > 1 || creatingFolder) && (
@@ -841,24 +942,81 @@ export default function App() {
         {/* Password prompt for backup import */}
         {showPasswordPrompt && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl p-6">
-              <div className="w-12 h-12 rounded-full bg-brand-500/10 flex items-center justify-center mx-auto mb-4">
-                <ShieldAlert size={22} className="text-brand-400" />
+            <div className="bg-surface-900 border border-surface-700 w-full max-w-md rounded-2xl shadow-2xl p-6">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                backupPreview?.status === 'tampered' ? 'bg-red-500/10' : backupPreview?.integrity === 'repaired' ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+              }`}>
+                <ShieldAlert size={22} className={
+                  backupPreview?.status === 'tampered' ? 'text-red-400' : backupPreview?.integrity === 'repaired' ? 'text-amber-400' : 'text-emerald-400'
+                } />
               </div>
               <h3 className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
-              <p className="text-surface-400 text-sm text-center mb-5">{t('restore.desc')}</p>
+              <p className="text-surface-400 text-sm text-center mb-4">{t('restore.desc')}</p>
+              {backupPreview && (
+                <div className={`mb-4 rounded-xl border p-3 text-xs ${
+                  backupPreview.status === 'tampered'
+                    ? 'border-red-500/30 bg-red-500/10 text-red-200'
+                    : backupPreview.integrity === 'repaired'
+                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+                      : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-100'
+                }`}>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <span className="font-semibold">{backupPreview.fileName || t('restore.backupFile')}</span>
+                    <span className="rounded-full bg-black/20 px-2 py-0.5 font-semibold uppercase">{backupPreview.integrity}</span>
+                  </div>
+                  {backupPreview.openedFromExternal && (
+                    <div className="mb-2 rounded-lg border border-sky-400/25 bg-sky-400/10 px-2.5 py-2 text-sky-100">
+                      <div className="text-[11px] font-bold uppercase">{t('restore.openedExternal')}</div>
+                      <div className="mt-0.5 leading-relaxed">{t('restore.openedExternalWarning')}</div>
+                    </div>
+                  )}
+                  {backupPreview.metadata ? (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-surface-200">
+                      <span>{t('restore.createdAt')}</span><span className="text-right">{new Date(backupPreview.metadata.createdAt).toLocaleString()}</span>
+                      <span>{t('restore.createdOn')}</span><span className="text-right">{backupPreview.metadata.platform}</span>
+                      <span>{t('restore.walletCount')}</span><span className="text-right">{backupPreview.metadata.walletCount}</span>
+                      <span>{t('restore.folderCount')}</span><span className="text-right">{backupPreview.metadata.folderCount}</span>
+                      <span>{t('restore.networkCount')}</span><span className="text-right">{backupPreview.metadata.networkCount}</span>
+                      <span>{t('restore.source')}</span><span className="text-right truncate">{backupPreview.metadata.source}</span>
+                      <span>{t('restore.backupId')}</span><span className="text-right font-mono">{(backupPreview.backupId || backupPreview.metadata.backupId || '').slice(0, 20)}</span>
+                      <span>{t('restore.containerHash')}</span><span className="text-right font-mono">{(backupPreview.containerHash || backupPreview.metadata.containerHash || '').slice(0, 16)}...</span>
+                    </div>
+                  ) : (
+                    <p className="leading-relaxed">{backupPreview.message}</p>
+                  )}
+                  {backupPreview.footerRecovered && (
+                    <p className="mt-2 font-semibold">{t('restore.footerRecovered')}</p>
+                  )}
+                  {backupPreview.recovered && (
+                    <p className="mt-2 font-semibold">{t('restore.recoveredBytes', { count: backupPreview.recoveredBytes })}</p>
+                  )}
+                  {backupPreview.status === 'tampered' && (
+                    <p className="mt-2 font-semibold">{t('restore.modifiedWarning')}</p>
+                  )}
+                </div>
+              )}
               <PasswordInput
                 value={importPassword}
                 onChange={(e) => setImportPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleImportWithPassword()}
                 placeholder={t('restore.placeholder')}
+                disabled={backupPreview?.status === 'tampered'}
                 className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white mb-4 focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
               <div className="flex gap-3">
                 <button onClick={() => { hapticTap(); dismissPasswordPrompt(); }}
                   className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg font-medium transition-colors">{t('common.cancel')}</button>
+                {backupPreview?.openedFromExternal && (
+                  <button onClick={() => { hapticTap(); handleVerifyBackupOnly(); }}
+                    className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-sky-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.verifyOnly')}</button>
+                )}
+                {backupPreview?.openedFromExternal && (
+                  <button onClick={() => { hapticTap(); handleCopyVerificationReport(); }}
+                    className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.copyVerificationReport')}</button>
+                )}
                 <button onClick={() => { hapticSuccess(); handleImportWithPassword(); }}
-                  className="btn-glow btn-glow-success flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg font-medium transition-colors">{t('restore.button')}</button>
+                  disabled={backupPreview?.status === 'tampered'}
+                  className="btn-glow btn-glow-success flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">{t('restore.button')}</button>
               </div>
             </div>
           </div>
