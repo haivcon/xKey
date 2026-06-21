@@ -1,0 +1,4 @@
+Contact: mailto:security@xlayer.my
+Contact: https://github.com/haivcon/xKey
+Preferred-Languages: en, vi
+Policy: https://github.com/haivcon/xKey/blob/main/SECURITY.md
