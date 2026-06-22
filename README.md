@@ -18,22 +18,20 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.12.1
+## Current Release: v5.12.2
 
-v5.12.1 focuses on xKey's product identity, slogan placement, Android UI polish, Shamir QR printed backup branding, and full localization for the new brand reminders.
+v5.12.2 focuses on reliable startup, safer long-running vanity-wallet generation, responsive backup restore controls, and Android lifecycle hardening.
 
 ### Main Upgrades
 
-- **Slogan-first brand identity:** xKey now consistently uses **NOT YOUR KEY, NOT YOUR CRYPTO** as the primary security message.
-- **Animated home header slogan:** the slogan appears in the unused space below the version badge and above the folder bar, using a subtle letter-by-letter glow without increasing header height or shrinking the wallet list.
-- **Reusable brand component:** added a shared BrandSlogan UI component and a centralized slogan constant so the phrase stays consistent across screens.
-- **Contextual brand reminders:** sensitive screens such as lock, backup, restore, CSV export, empty vault, and wallet secret-copy warnings can show the slogan when reminders are enabled.
-- **User-controlled reminders:** Settings now includes a localized toggle for security slogan reminders; Splash, About, README, and printed materials keep the core brand line.
-- **About screen upgrade:** the About tab presents the slogan as a larger centered brand statement with a clearer product description.
-- **Backup and CSV polish:** slogan blocks in backup and CSV flows are centered with cleaner spacing and translated explanatory text.
-- **Shamir QR watermarking:** Shamir QR UI, print sheets, and saved HTML now include xKey branding, slogan, backup ID, creation time, and safety context.
-- **Store listing copy:** README now includes short and long Google Play listing copy that uses the slogan.
-- **Full locale coverage:** all new brand-reminder text is translated across `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, and `zh`.
+- **Startup deadlock recovery:** React Strict Mode no longer leaves the app stuck on the animated splash screen after a cancelled first integrity-effect subscription.
+- **Bounded startup integrity checks:** each asset request has a short timeout, the complete check has a hard timeout, outstanding asset requests are aborted on timeout, and verification is limited to two concurrent assets to reduce startup CPU and memory spikes.
+- **Responsive backup restore dialog:** restore metadata uses more of the available device width, scrolls safely within the viewport, ignores backdrop taps, and wraps long localized actions instead of clipping them.
+- **Safer Android back handling:** Android Back now invokes the same safe close flow as the modal close button while vanity generation is active.
+- **Professional vanity workspace:** active vanity generation collapses the setup form into a progress workspace with cumulative scan metrics, a bounded live terminal, highlighted matches, copy controls, selectable results, and explicit pause/resume/stop controls.
+- **Reliable pause and resume:** vanity workers preserve cumulative scan count and elapsed time across pause/resume, so time limits and progress remain accurate.
+- **No lost selected results:** matching wallets remain available until the user starts over; selected wallets can be saved after a stop without duplicate writes.
+- **Validated remembered settings:** the app restores only valid vanity time limits and available folders, while remembering the last non-sensitive network, folder, quantity, and time-limit choices.
 
 ### Verification for This Release
 
@@ -77,10 +75,9 @@ Long description opener:
 
 ## Previous Release Highlights
 
-- **v5.12.0:** added native Android save flow, verified `.xkey` backup metadata, verify-only restore previews, copyable backup IDs/file hashes, Reed-Solomon 10+5 backup recovery, Shamir QR zoom/save improvements, audit-log redesign, keyboard ergonomics, light-theme contrast fixes, and full localization for those flows.
-- **v5.11.0:** completed the strict TypeScript migration and typed security-critical backup, storage, key, and build paths.
-- **v5.10.x:** introduced self-healing storage, tamper-evident backup previews, encrypted audit logs, Android `.xkey` open handling, runtime integrity checks, and Root/Data Tamper Guard.
-- **Older releases:** added hardware-bound vault mode, secure glyph display, scrambled keyboard, Shamir backup/restore, folders, tags, vanity tools, QR workflows, CSV import/export, manual balances, decoy vault, kill switch, native clipboard, and haptics.
+- **v5.12.1:** established slogan-first product identity, branded backup and Shamir QR surfaces, and localized reminder controls.
+- **v5.12.0:** delivered verified native backup export, detailed restore preview, Reed-Solomon recovery, audit-log polish, and Android file workflows.
+- **v5.11.0 and earlier:** completed strict TypeScript migration and introduced the offline vault, backup, audit, Shamir, QR, vanity, security, and Android native foundations.
 
 Detailed older notes are kept in [CHANGELOG.md](./CHANGELOG.md).
 
@@ -129,14 +126,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.12.1
-git push origin v5.12.1
+git tag v5.12.2
+git push origin v5.12.2
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.12.1.apk`
-- `xKey-GooglePlay-v5.12.1.aab`
+- `xKey-GitHub-v5.12.2.apk`
+- `xKey-GooglePlay-v5.12.2.aab`
 
 Android package: `com.haivcon.xkey`.
 

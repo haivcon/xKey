@@ -30,7 +30,11 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   expect(runtimeIntegrity).toContain('58e2fccefa7e3061367f1d57a4e7455a');
   expect(runtimeIntegrity).toContain('xkey-integrity-manifest.json');
   expect(runtimeIntegrity).toContain('github.com/haivcon/xKey');
-  expect(runtimeIntegrity).toContain('INTEGRITY_TIMEOUT_MS');
+  expect(runtimeIntegrity).toContain('INTEGRITY_REQUEST_TIMEOUT_MS');
+  expect(runtimeIntegrity).toContain('INTEGRITY_TOTAL_TIMEOUT_MS');
+  expect(runtimeIntegrity).toContain('withIntegrityTimeout');
+  expect(runtimeIntegrity).toContain('ASSET_VERIFICATION_CONCURRENCY');
+  expect(runtimeIntegrity).toContain('Promise.all(workers)');
   expect(runtimeIntegrity).toContain('verifyManifestSignature');
   expect(runtimeIntegrity).toContain('APP_SIGNATURE_INVALID');
   expect(runtimeIntegrity).toContain('ASSET_HASH_MISMATCH');
@@ -38,6 +42,7 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   expect(viteConfig).toContain('shouldIncludeIntegrityAsset');
   expect(viteConfig).toContain('xkey-integrity-manifest');
   expect(app).toContain('runRuntimeIntegrityChecks');
+  expect(app).toContain('integrityCheckRef');
 });
 
 test('root and data tamper guard is wired to Android risk checks and settings', async () => {

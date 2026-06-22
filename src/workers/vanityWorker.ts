@@ -9,6 +9,8 @@ type VanityWorkerRequest = {
   suffix?: string;
   batchSize?: number;
   targetCount?: number;
+  initialScanned?: number;
+  elapsedOffset?: number;
 };
 
 type VanityWallet = Wallet & {
@@ -36,7 +38,7 @@ const postVanityMessage = (message: VanityWorkerResponse): void => {
 };
 
 self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
-  const { type, prefix = '', suffix = '', batchSize = 120, targetCount = 1 } = event.data || {};
+  const { type, prefix = '', suffix = '', batchSize = 120, targetCount = 1, initialScanned = 0, elapsedOffset = 0 } = event.data || {};
 
   if (type === 'stop') {
     running = false;
@@ -46,8 +48,8 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   if (type !== 'start') return;
 
   running = true;
-  const startTime = Date.now();
-  let scanned = 0;
+  const startTime = Date.now() - Math.max(0, Number(elapsedOffset) || 0) * 1000;
+  let scanned = Math.max(0, Number(initialScanned) || 0);
   let found = 0;
   let lastReport = Date.now();
   let lastCandidate = '';

@@ -15,6 +15,7 @@ type BackButtonModalStates = {
   setShowDuplicates: Setter<boolean>;
   showCreateWallet: boolean;
   setShowCreateWallet: Setter<boolean>;
+  closeCreateWallet?: () => void | Promise<void>;
   showExportCSV: boolean;
   setShowExportCSV: Setter<boolean>;
   showBackupExport: boolean;
@@ -37,7 +38,7 @@ export default function useBackButton(modalStates: BackButtonModalStates): void 
   const {
     showPasswordPrompt, setShowPasswordPrompt,
     showDuplicates, setShowDuplicates,
-    showCreateWallet, setShowCreateWallet,
+    showCreateWallet, setShowCreateWallet, closeCreateWallet,
     showExportCSV, setShowExportCSV,
     showBackupExport, setShowBackupExport,
     showAdvancedTools, setShowAdvancedTools,
@@ -55,7 +56,11 @@ export default function useBackButton(modalStates: BackButtonModalStates): void 
     const backButtonListener = CapacitorApp.addListener('backButton', () => {
       if (showPasswordPrompt) { setShowPasswordPrompt(false); return; }
       if (showDuplicates) { setShowDuplicates(false); return; }
-      if (showCreateWallet) { setShowCreateWallet(false); return; }
+      if (showCreateWallet) {
+        if (closeCreateWallet) void closeCreateWallet();
+        else setShowCreateWallet(false);
+        return;
+      }
       if (showExportCSV) { setShowExportCSV(false); return; }
       if (showBackupExport) { setShowBackupExport(false); return; }
       if (showAdvancedTools) { setShowAdvancedTools(false); return; }
@@ -75,7 +80,7 @@ export default function useBackButton(modalStates: BackButtonModalStates): void 
     showPasswordPrompt, showDuplicates, showCreateWallet, showExportCSV, showBackupExport,
     showAdvancedTools, showBulkNetworkModal, showAssetBalance, movingWallet, showDonate,
     qrModalOpen, location.pathname, setShowPasswordPrompt, setShowDuplicates,
-    setShowCreateWallet, setShowExportCSV, setShowBackupExport, setShowAdvancedTools,
+    setShowCreateWallet, closeCreateWallet, setShowExportCSV, setShowBackupExport, setShowAdvancedTools,
     setShowBulkNetworkModal, setShowAssetBalance, setMovingWallet, setShowDonate,
     closeQrModal, navigate,
   ]);

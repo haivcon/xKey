@@ -1,6 +1,8 @@
 const textEncoder = new TextEncoder();
 const INTEGRITY_SOURCE = 'github.com/haivcon/xKey';
-const INTEGRITY_TIMEOUT_MS = 10000;
+const INTEGRITY_REQUEST_TIMEOUT_MS = 4000;
+const INTEGRITY_TOTAL_TIMEOUT_MS = 12000;
+const ASSET_VERIFICATION_CONCURRENCY = 2;
 const INTEGRITY_PUBLIC_KEY_PEM = __XKEY_INTEGRITY_PUBLIC_KEY__;
 
 type IntegrityErrorCode =
@@ -18,7 +20,8 @@ type IntegrityErrorCode =
   | 'MANIFEST_ENTRY_INVALID'
   | 'ASSET_FETCH_FAILED'
   | 'ASSET_MISSING'
-  | 'ASSET_HASH_MISMATCH';
+  | 'ASSET_HASH_MISMATCH'
+  | 'INTEGRITY_TIMEOUT';
 
 type IntegrityManifestAsset = {
   path: string;
@@ -93,18 +96,38 @@ const assertEqual = (name: string, actual: string, expected: string, code: Integ
   }
 };
 
-const fetchWithTimeout = async (url: string | URL, code: IntegrityErrorCode): Promise<Response> => {
+const fetchWithTimeout = async (url: string | URL, code: IntegrityErrorCode, parentSignal?: AbortSignal): Promise<Response> => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), INTEGRITY_TIMEOUT_MS);
+  const abortFromParent = () => controller.abort();
+  parentSignal?.addEventListener('abort', abortFromParent, { once: true });
+  const timer = setTimeout(() => controller.abort(), INTEGRITY_REQUEST_TIMEOUT_MS);
   try {
     return await fetch(url, { cache: 'no-store', signal: controller.signal });
   } catch (error: unknown) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw createIntegrityError(code, `Integrity request timed out after ${INTEGRITY_TIMEOUT_MS / 1000} seconds.`);
+      throw createIntegrityError(code, `Integrity request timed out after ${INTEGRITY_REQUEST_TIMEOUT_MS / 1000} seconds.`);
     }
     throw createIntegrityError(code, 'Integrity request failed.');
   } finally {
     clearTimeout(timer);
+    parentSignal?.removeEventListener('abort', abortFromParent);
+  }
+};
+
+const withIntegrityTimeout = async <T>(operation: (signal: AbortSignal) => Promise<T>): Promise<T> => {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(createIntegrityError('INTEGRITY_TIMEOUT', `Integrity checks timed out after ${INTEGRITY_TOTAL_TIMEOUT_MS / 1000} seconds.`));
+    }, INTEGRITY_TOTAL_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([operation(controller.signal), timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 };
 
@@ -187,10 +210,10 @@ export const verifyManifestSignature = async (manifest: IntegrityManifest): Prom
   }
 };
 
-export const verifyAppAssetIntegrity = async (): Promise<{ skipped: true } | { checked: number }> => {
+export const verifyAppAssetIntegrity = async (signal?: AbortSignal): Promise<{ skipped: true } | { checked: number }> => {
   if (!shouldVerifyAssetManifest()) return { skipped: true };
   const manifestUrl = new URL(/* @vite-ignore */ '../xkey-integrity-manifest.json', import.meta.url);
-  const response = await fetchWithTimeout(manifestUrl, 'MANIFEST_FETCH_FAILED');
+  const response = await fetchWithTimeout(manifestUrl, 'MANIFEST_FETCH_FAILED', signal);
   if (!response.ok) throw createIntegrityError('MANIFEST_MISSING', 'App integrity manifest is missing.');
 
   const manifest = await response.json() as IntegrityManifest;
@@ -200,23 +223,37 @@ export const verifyAppAssetIntegrity = async (): Promise<{ skipped: true } | { c
   await verifyManifestSignature(manifest);
 
   const crypto = getCrypto();
-  for (const asset of manifest.assets) {
+  const verifyAsset = async (asset: IntegrityManifestAsset): Promise<void> => {
     if (!asset?.path || !asset?.sha256) throw createIntegrityError('MANIFEST_ENTRY_INVALID', 'App integrity manifest entry is invalid.');
     const assetUrl = new URL(/* @vite-ignore */ `../${asset.path}`, import.meta.url);
-    const assetResponse = await fetchWithTimeout(assetUrl, 'ASSET_FETCH_FAILED');
+    const assetResponse = await fetchWithTimeout(assetUrl, 'ASSET_FETCH_FAILED', signal);
     if (!assetResponse.ok) throw createIntegrityError('ASSET_MISSING', `App asset missing: ${asset.path}`);
     const digest = await crypto.subtle.digest('SHA-256', await assetResponse.arrayBuffer());
     const actual = toHex(new Uint8Array(digest));
     if (actual !== asset.sha256) throw createIntegrityError('ASSET_HASH_MISMATCH', `App asset integrity check failed: ${asset.path}`);
-  }
+  };
+
+  const pendingAssets = [...manifest.assets];
+  const workers = Array.from(
+    { length: Math.min(ASSET_VERIFICATION_CONCURRENCY, pendingAssets.length) },
+    async () => {
+      while (pendingAssets.length > 0) {
+        const asset = pendingAssets.shift();
+        if (asset) await verifyAsset(asset);
+      }
+    }
+  );
+  await Promise.all(workers);
 
   return { checked: manifest.assets.length };
 };
 
 export const runRuntimeIntegrityChecks = async (onStep: (step: RuntimeIntegrityStep) => void = () => {}): Promise<void> => {
-  onStep('crypto');
-  await runCryptoKnownAnswerTests();
-  onStep('app');
-  await verifyAppAssetIntegrity();
-  onStep('done');
+  await withIntegrityTimeout(async (signal) => {
+    onStep('crypto');
+    await runCryptoKnownAnswerTests();
+    onStep('app');
+    await verifyAppAssetIntegrity(signal);
+    onStep('done');
+  });
 };

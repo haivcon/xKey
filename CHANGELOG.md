@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.12.2]
+
+### Release Focus
+v5.12.2 hardens xKey startup behavior, backup restore ergonomics, long-running vanity-wallet generation, and Android Back handling.
+
+### Startup and Runtime Integrity
+- Fixed a React Strict Mode startup race that could leave the animated splash screen visible indefinitely after the initial integrity effect was replayed.
+- Added a total integrity-check deadline and per-request deadlines so a failed asset read reaches a safe error state instead of blocking startup.
+- Abort outstanding manifest and asset requests after the total integrity timeout.
+- Verify signed app assets with a bounded concurrency of two requests to reduce CPU and memory pressure on lower-end devices.
+
+### Vanity Wallet Generation
+- Rebuilt the active vanity-generator view as a focused workspace with progress, cumulative scan metrics, selected match list, bounded live terminal, copy controls, and pause/resume/stop actions.
+- Preserve scanned count and elapsed time across pause/resume so estimated progress and configured time limits remain accurate.
+- Keep generated match data available after stopping, allow users to adjust selections, and prevent the same result from being saved twice.
+- Route Android Back and the close control through the safe generator shutdown path so selected matches are saved before the modal closes.
+- Persist only non-sensitive vanity preferences: target count, time limit, network, and folder. Invalid stored time limits and deleted folders are safely normalized.
+
+### Backup and Header UX
+- Moved the slogan into the home header and placed the compact version label next to the xKey wordmark.
+- Made the restore dialog use available mobile width, scroll within the viewport, ignore backdrop taps, and wrap translated actions without horizontal overflow.
+
+### Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run test:smoke -- --grep "runtime integrity"`
+- `npm run build`
+- `npx cap sync android`
+
 ## [5.12.1]
 
 ### Release Focus

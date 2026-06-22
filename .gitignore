@@ -54,6 +54,10 @@ android/.gradle/
 android/build/
 android/app/build/
 android/app/.cxx/
+android/.cxx/
+android/.kotlin/
+android/app/.externalNativeBuild/
+android/captures/
 android/app/debug/
 android/app/outputs/
 android/capacitor-cordova-android-plugins/build/

@@ -126,6 +126,7 @@ export default function App() {
   const [showAssetBalance, setShowAssetBalance] = useState(false);
   const [assetUnit, setAssetUnit] = useState('$');
   const homeHeaderRef = useRef<HTMLElement | null>(null);
+  const createWalletCloseHandlerRef = useRef<(() => void | Promise<void>) | null>(null);
 
   // Performance hooks
   useLiteMode();
@@ -144,7 +145,10 @@ export default function App() {
   const [integrityStatus, setIntegrityStatus] = useState('');
   const [integrityFailed, setIntegrityFailed] = useState(false);
   const [externalBackupWaiting, setExternalBackupWaiting] = useState(false);
-  const integrityStartedRef = useRef(false);
+  // A shared promise survives React Strict Mode's development-only effect replay.
+  // Without it, the first replayed effect is cancelled while the second one is
+  // prevented from subscribing, leaving the splash screen visible forever.
+  const integrityCheckRef = useRef<Promise<void> | null>(null);
   const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
   // Folder editing
@@ -165,9 +169,6 @@ export default function App() {
   }, [t]);
 
   useEffect(() => {
-    if (integrityStartedRef.current) return undefined;
-    integrityStartedRef.current = true;
-
     let cancelled = false;
     const statusByStep = {
       crypto: t('integrity.cryptoChecking'),
@@ -175,9 +176,13 @@ export default function App() {
       done: t('integrity.ready'),
     };
 
-    runRuntimeIntegrityChecks((step) => {
-      if (!cancelled) setIntegrityStatus(statusByStep[step] || '');
-    })
+    if (!integrityCheckRef.current) {
+      integrityCheckRef.current = runRuntimeIntegrityChecks((step) => {
+        setIntegrityStatus(statusByStep[step] || '');
+      });
+    }
+
+    integrityCheckRef.current
       .then(() => {
         if (!cancelled) setIntegrityReady(true);
       })
@@ -352,10 +357,20 @@ export default function App() {
     setQrModalData(prev => ({ ...prev, isOpen: false }));
   }, []);
 
+  const registerCreateWalletCloseHandler = useCallback((handler: (() => void | Promise<void>) | null) => {
+    createWalletCloseHandlerRef.current = handler;
+  }, []);
+
+  const closeCreateWalletFromBack = useCallback(() => {
+    const handler = createWalletCloseHandlerRef.current;
+    if (handler) return handler();
+    setShowCreateWallet(false);
+  }, []);
+
   useBackButton({
     showPasswordPrompt, setShowPasswordPrompt: dismissPasswordPrompt,
     showDuplicates, setShowDuplicates,
-    showCreateWallet, setShowCreateWallet,
+    showCreateWallet, setShowCreateWallet, closeCreateWallet: closeCreateWalletFromBack,
     showExportCSV, setShowExportCSV,
     showBackupExport, setShowBackupExport,
     showAdvancedTools, setShowAdvancedTools,
@@ -685,31 +700,21 @@ export default function App() {
         {/* Header */}
         <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
           <div className="max-w-7xl mx-auto">
-          <div className="relative flex justify-between items-center">
-            <div className="flex items-center gap-2">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
-              <div>
+              <div className="flex min-w-0 items-baseline gap-1.5">
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1 leading-tight">
                   {t('home.title')}
                 </h1>
+                <span className="shrink-0 rounded border border-brand-500/20 bg-brand-500/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-brand-200">
+                  {appVersion.version}
+                </span>
               </div>
             </div>
-            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="whitespace-nowrap rounded-full border border-brand-500/25 bg-brand-500/10 px-[0.625rem] py-[0.25rem] text-[0.625rem] font-semibold leading-none text-brand-200 shadow-sm shadow-brand-500/10 sm:px-[0.75rem] sm:text-[0.6875rem]">
-                {appVersion.version}
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title={t('donate.button')} aria-label={t('donate.button')}>
-                <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
-              </button>
-              <button onClick={() => { hapticTap(); navigate('/settings'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title={t('settings.title')} aria-label={t('settings.title')}>
-                <Settings size={20} />
-              </button>
-            </div>
-            {brandReminders && (
-              <div className="pointer-events-none absolute left-1/2 top-full z-10 flex w-[min(92vw,28rem)] -translate-x-1/2 translate-y-[0.58rem] justify-center">
-                <div className="home-header-slogan rounded-full border border-brand-400/20 bg-surface-950/55 px-3 py-1 text-center shadow-[0_0_18px_rgba(56,189,248,0.16)] backdrop-blur-md">
+            <div className="pointer-events-none min-w-0 justify-self-stretch overflow-hidden text-center" aria-label={XKEY_SLOGAN}>
+              {brandReminders && (
+                <div className="home-header-slogan whitespace-nowrap rounded-full border border-brand-400/20 bg-surface-950/55 px-2 py-1 text-center shadow-[0_0_18px_rgba(56,189,248,0.16)] backdrop-blur-md">
                   {HEADER_SLOGAN_LETTERS.map((letter, index) => (
                     <span
                       key={`${letter}-${index}`}
@@ -720,8 +725,16 @@ export default function App() {
                     </span>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            <div className="flex items-center justify-self-end gap-1">
+              <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title={t('donate.button')} aria-label={t('donate.button')}>
+                <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
+              </button>
+              <button onClick={() => { hapticTap(); navigate('/settings'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title={t('settings.title')} aria-label={t('settings.title')}>
+                <Settings size={20} />
+              </button>
+            </div>
           </div>
           </div>
         </header>
@@ -949,6 +962,7 @@ export default function App() {
         {showCreateWallet && (
           <CreateWalletModal
             onClose={() => setShowCreateWallet(false)}
+            registerCloseHandler={registerCreateWalletCloseHandler}
             onSave={handleCreateWalletSave}
             existingWallets={wallets}
             folders={folders}
@@ -1012,7 +1026,13 @@ export default function App() {
         {/* Password prompt for backup import */}
         {showPasswordPrompt && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-surface-900 border border-surface-700 w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="restore-backup-title"
+              onClick={(event) => event.stopPropagation()}
+              className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-full sm:p-6"
+            >
               <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
                 backupPreview?.status === 'tampered' ? 'bg-red-500/10' : backupPreview?.integrity === 'repaired' ? 'bg-amber-500/10' : 'bg-emerald-500/10'
               }`}>
@@ -1020,7 +1040,7 @@ export default function App() {
                   backupPreview?.status === 'tampered' ? 'text-red-400' : backupPreview?.integrity === 'repaired' ? 'text-amber-400' : 'text-emerald-400'
                 } />
               </div>
-              <h3 className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
+              <h3 id="restore-backup-title" className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
               <p className="text-surface-400 text-sm text-center mb-4">{t('restore.desc')}</p>
               {brandReminders && <BrandSlogan note={t('brand.restoreNote')} tone="brand" className="mb-4 text-center" />}
               {backupPreview && (
@@ -1108,21 +1128,21 @@ export default function App() {
                 className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
               {backupAnalysis && <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200"><p>{t('restore.previewSummary', backupAnalysis)}</p><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => setBackupImportMode('merge')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'merge' ? 'border-brand-400 bg-brand-500/15 text-brand-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.merge')}</button><button onClick={() => setBackupImportMode('replace')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'replace' ? 'border-amber-400 bg-amber-500/15 text-amber-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.replace')}</button></div></div>}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <button onClick={() => { hapticTap(); dismissPasswordPrompt(); }}
-                  className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg font-medium transition-colors">{t('common.cancel')}</button>
+                  className="shrink-0 px-2 py-2.5 font-semibold text-red-300 transition-colors hover:text-red-200 focus:outline-none focus-visible:underline">{t('common.cancel')}</button>
                 {backupPreview?.openedFromExternal && (
                   <button onClick={() => { hapticTap(); handleVerifyBackupOnly(); }}
-                    className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-sky-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.verifyOnly')}</button>
+                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-sky-200 transition-colors hover:bg-surface-700">{t('restore.verifyOnly')}</button>
                 )}
-                <button onClick={() => { hapticTap(); previewBackupWithPassword(); }} disabled={backupPreview?.status === 'tampered'} className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-brand-300 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">{t('restore.previewOnly')}</button>
+                <button onClick={() => { hapticTap(); previewBackupWithPassword(); }} disabled={backupPreview?.status === 'tampered'} className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-brand-300 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.previewOnly')}</button>
                 {backupPreview?.openedFromExternal && (
                   <button onClick={() => { hapticTap(); handleCopyVerificationReport(); }}
-                    className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.copyVerificationReport')}</button>
+                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-surface-200 transition-colors hover:bg-surface-700">{t('restore.copyVerificationReport')}</button>
                 )}
                 <button onClick={async () => { if (backupImportMode === 'replace' && !await showConfirm(t('restore.replaceConfirm'), { danger: true })) return; hapticSuccess(); handleImportWithPassword(); }}
                   disabled={backupPreview?.status === 'tampered'}
-                  className="btn-glow btn-glow-success flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">{t('restore.button')}</button>
+                  className="btn-glow btn-glow-success min-w-28 flex-1 whitespace-normal rounded-lg bg-brand-600 py-2.5 font-medium text-white transition-colors hover:bg-brand-500 disabled:opacity-50">{t('restore.button')}</button>
               </div>
             </div>
           </div>
