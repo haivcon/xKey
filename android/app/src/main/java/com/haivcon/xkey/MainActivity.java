@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ScreenSecurityPlugin.class);
         registerPlugin(XKeyFileOpenPlugin.class);
         registerPlugin(DeviceIntegrityPlugin.class);
+        registerPlugin(XKeyFileSaverPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { QRCodeSVG } from 'qrcode.react';
-import { Check, ChevronLeft, ChevronRight, Copy, Lock, Printer, QrCode, Search, ShieldCheck, Wallet, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Copy, Download, Lock, Maximize2, Printer, QrCode, Search, ShieldCheck, Wallet, X } from 'lucide-react';
 import PasswordInput from './PasswordInput';
 import { createPortableBackupText } from '../utils/backupUtils';
+import { saveTextFile } from '../utils/fileSaver';
 import { createShamirSharePages } from '../utils/shamir';
 import { hapticSuccess, hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
@@ -22,6 +23,13 @@ const getErrorMessage = (error: unknown): string => (
   error instanceof Error ? error.message : ''
 );
 
+const escapeHtml = (value: unknown) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModalProps) {
   const [selectedIndex, setSelectedIndex] = useState('');
   const [query, setQuery] = useState('');
@@ -32,6 +40,9 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [copied, setCopied] = useState('');
   const [creating, setCreating] = useState(false);
+  const [saveFileName, setSaveFileName] = useState('');
+  const [savingFile, setSavingFile] = useState(false);
+  const [zoomQr, setZoomQr] = useState(false);
   const printSheetRef = useRef<HTMLDivElement | null>(null);
   const t = useT();
   const { showToast } = useToast();
@@ -99,6 +110,16 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
     setTimeout(() => setCopied(''), 1800);
   };
 
+  const createSafeFileName = (value: string, fallback: string) => {
+    const cleaned = value
+      .trim()
+      .replace(/\.[a-z0-9]+$/i, '')
+      .replace(/[\\/:*?"<>|]+/g, '_')
+      .replace(/\s+/g, '_')
+      .slice(0, 80);
+    return `${cleaned || fallback}.html`;
+  };
+
   const createPrintableHtml = (cardsMarkup: string, title = 'xKey Single-Wallet Shamir Backup 2-of-3') => `<!doctype html>
 <html>
   <head>
@@ -114,9 +135,9 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
     </style>
   </head>
   <body>
-    <h1 style="font-size:20px;margin:0 0 6px">${title}</h1>
-    <p style="font-size:12px;margin:0 0 6px">${selectedWallet?.name || t('walletCard.unnamed')} - ${shortAddress(selectedWallet?.address)}</p>
-    <p style="font-size:12px;margin:0 0 12px">${t('shamir.printWarning')}</p>
+    <h1 style="font-size:20px;margin:0 0 6px">${escapeHtml(title)}</h1>
+    <p style="font-size:12px;margin:0 0 6px">${escapeHtml(selectedWallet?.name || t('walletCard.unnamed'))} - ${escapeHtml(shortAddress(selectedWallet?.address))}</p>
+    <p style="font-size:12px;margin:0 0 12px">${escapeHtml(t('shamir.printWarning'))}</p>
     <div class="shamir-print-grid">${cardsMarkup}</div>
   </body>
 </html>`;
@@ -143,6 +164,26 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
       url: fileResult.uri,
       dialogTitle: t('shamir.printShareTitle'),
     });
+  };
+
+  const handleSaveAll = async () => {
+    if (!pages.length) return;
+    setSavingFile(true);
+    try {
+      const cardsMarkup = Array.from(printSheetRef.current?.querySelectorAll<HTMLElement>('.shamir-print-card') || [])
+        .map(card => card.outerHTML)
+        .join('');
+      const defaultName = `xkey_shamir_${selectedWallet?.name || 'wallet'}_${Date.now()}`;
+      const fileName = createSafeFileName(saveFileName, defaultName);
+      await saveTextFile(fileName, 'text/html', createPrintableHtml(cardsMarkup, 'xKey Shamir QR Backup'));
+      hapticSuccess();
+      showToast({ key: 'shamir.saveSuccess', vars: { fileName }, category: 'backup' }, 'success');
+    } catch (error) {
+      console.error('Shamir save failed', error);
+      showToast({ key: 'shamir.saveFailed', category: 'backup' }, 'error');
+    } finally {
+      setSavingFile(false);
+    }
   };
 
   const handlePrintAll = async () => {
@@ -326,9 +367,19 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
                     count: totalQrCount
                   })}
                 </p>
-                <div className="mx-auto flex aspect-square max-w-[320px] items-center justify-center rounded-xl bg-white p-3">
+                <button
+                  type="button"
+                  onClick={() => { hapticTap(); setZoomQr(true); }}
+                  className="mx-auto flex aspect-square max-w-[320px] items-center justify-center rounded-xl bg-white p-3 transition-transform active:scale-[0.98]"
+                  aria-label={t('shamir.zoomQr')}
+                  title={t('shamir.zoomQr')}
+                >
                   <QRCodeSVG value={activeQrValue} size={1000} bgColor="#ffffff" fgColor="#000000" className="h-full w-full" />
-                </div>
+                  <span className="pointer-events-none absolute sr-only">{t('shamir.zoomQr')}</span>
+                </button>
+                <p className="mt-2 flex items-center justify-center gap-1 text-[0.6875rem] font-medium text-surface-500">
+                  <Maximize2 size={12} /> {t('shamir.zoomQr')}
+                </p>
                 <div className="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-2">
                   <button
                     type="button"
@@ -375,6 +426,22 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
                 </button>
               </div>
               <div className="grid grid-cols-1 gap-2">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={saveFileName}
+                    onChange={e => setSaveFileName(e.target.value)}
+                    placeholder={t('shamir.fileNamePlaceholder')}
+                    className="min-w-0 rounded-xl border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm text-white outline-none focus:border-emerald-500 placeholder:text-surface-500"
+                  />
+                  <button
+                    onClick={handleSaveAll}
+                    disabled={savingFile}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
+                  >
+                    <Download size={15} />
+                    {savingFile ? t('settings.backupVerifying') : t('shamir.saveHtml')}
+                  </button>
+                </div>
                 <button
                   onClick={handlePrintAll}
                   className="flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-800 py-2.5 text-sm font-semibold text-surface-100"
@@ -414,6 +481,16 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
           )}
         </div>
       </div>
+      {zoomQr && activeQrValue && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/90 p-4" onClick={() => setZoomQr(false)}>
+          <button className="absolute right-4 top-4 rounded-full bg-surface-800 p-3 text-white" onClick={() => setZoomQr(false)} aria-label={t('common.close')}>
+            <X size={20} />
+          </button>
+          <div className="w-full max-w-[min(92vw,720px)] rounded-2xl bg-white p-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <QRCodeSVG value={activeQrValue} size={1400} bgColor="#ffffff" fgColor="#000000" className="h-auto w-full" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

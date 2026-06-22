@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Download, Lock, ShieldCheck, ShieldAlert, Save, ChevronDown, QrCode, Camera, SplitSquareVertical } from 'lucide-react';
+import { Download, Lock, ShieldCheck, ShieldAlert, Save, ChevronDown, QrCode, Camera, SplitSquareVertical, CheckCircle2, MapPin, RefreshCw } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets, encryptSetting } from '../../utils/storage';
-import { exportPortableBackup } from '../../utils/backupUtils';
+import { exportPortableBackup, getBackupHistory, type BackupHistoryEntry } from '../../utils/backupUtils';
+import { verifySavedTextFile } from '../../utils/fileSaver';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
@@ -37,6 +39,10 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   const [backupPassword, setBackupPassword] = useState('');
   const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [backupHistory, setBackupHistory] = useState<BackupHistoryEntry[]>([]);
+  const [vaultChangedAt, setVaultChangedAt] = useState('');
+  const [verifyingBackupId, setVerifyingBackupId] = useState('');
+  const [visibleBackupQr, setVisibleBackupQr] = useState('');
 
   // QR Transfer
   const [showQRTransfer, setShowQRTransfer] = useState(false);
@@ -58,6 +64,9 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
         setAutoBackupInterval(abInterval as AutoBackupInterval);
       }
       // Don't load encrypted password into state - user re-enters it
+      setBackupHistory(await getBackupHistory());
+      const { value: changedAt } = await Preferences.get({ key: 'xkey_vault_last_changed_at' });
+      setVaultChangedAt(changedAt || '');
     })();
   }, []);
 
@@ -69,7 +78,7 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
 
   const saveAutoBackupPassword = async () => {
     if (autoBackupPassword.length < 6) {
-      showToast(t('settings.passwordMinError'), 'warning');
+      showToast({ key: 'settings.passwordMinError', category: 'warning' }, 'warning');
       return;
     }
     await Preferences.set({ key: 'xkey_autobackup_password', value: encryptSetting(autoBackupPassword, aesKey) });
@@ -83,23 +92,24 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
       return;
     }
     if (backupPassword !== backupPasswordConfirm) {
-      showToast(t('settings.passwordMismatch'), 'error');
+      showToast({ key: 'settings.passwordMismatch', category: 'warning' }, 'error');
       return;
     }
     setExporting(true);
     try {
       const wallets = await loadWallets(aesKey);
       const success = await exportPortableBackup(wallets, null, backupPassword);
-      if (!success) showToast(t('settings.exportFailed'), 'error');
+      if (!success) showToast({ key: 'settings.exportFailed', category: 'backup' }, 'error');
       else {
         hapticSuccess();
-        showToast(t('settings.exportSuccess'), 'success');
+        showToast({ key: 'settings.exportSuccess', category: 'backup' }, 'success');
         setShowPasswordInput(false);
         setBackupPassword('');
         setBackupPasswordConfirm('');
+        setBackupHistory(await getBackupHistory());
       }
     } catch {
-      showToast(t('settings.exportError'), 'error');
+      showToast({ key: 'settings.exportError', category: 'backup' }, 'error');
     }
     setExporting(false);
   };
@@ -110,6 +120,28 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
     const { wipeAllData } = await import('../../utils/storage');
     await wipeAllData();
     onWipe?.();
+  };
+
+  const verifiedBackupCount = backupHistory.filter(entry => entry.verified).length;
+
+  const handleVerifySavedBackup = async (entry: BackupHistoryEntry) => {
+    if (!entry.savedUri || !entry.fileHash) {
+      showToast({ key: 'settings.backupVerifyUnavailable', category: 'backup' }, 'warning');
+      return;
+    }
+    setVerifyingBackupId(entry.backupId);
+    try {
+      const result = await verifySavedTextFile(entry.savedUri, entry.fileHash);
+      if (!result.verified || result.size === 0) {
+        showToast({ key: 'settings.backupVerifyFailed', category: 'backup' }, 'error');
+        return;
+      }
+      showToast({ key: 'settings.backupVerifySuccess', category: 'backup' }, 'success');
+    } catch {
+      showToast({ key: 'settings.backupVerifyFailed', category: 'backup' }, 'error');
+    } finally {
+      setVerifyingBackupId('');
+    }
   };
 
   return (
@@ -234,6 +266,57 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
             {t('settings.qrReceiveBtn') || 'Receive QR'}
           </button>
         </div>
+      </div>
+
+      <div className="glass-card p-6">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/10"><Download size={20} className="text-brand-400" /></div>
+          <div><h2 className="text-lg font-semibold text-white">{t('settings.backupHistoryTitle')}</h2><p className="text-xs text-surface-400">{t('settings.backupHistoryDesc')}</p></div>
+        </div>
+        {backupHistory.length > 0 && vaultChangedAt && new Date(vaultChangedAt).getTime() > new Date(backupHistory[0].createdAt).getTime() && (
+          <Notice variant="warning" className="mb-4">{t('settings.backupOutdated')}</Notice>
+        )}
+        {verifiedBackupCount < 2 && (
+          <Notice variant="warning" className="mb-4">{t('settings.backupRetentionNotice')}</Notice>
+        )}
+        {backupHistory.length === 0 ? <p className="text-sm text-surface-500">{t('settings.backupHistoryEmpty')}</p> : (
+          <div className="space-y-2">
+            {backupHistory.map((entry, index) => <div key={`${entry.backupId}-${index}`} className="rounded-lg border border-surface-700 bg-surface-800/50 p-3 text-xs">
+              <div className="flex items-center justify-between gap-3"><span className="min-w-0 truncate font-semibold text-surface-200">{entry.fileName}</span><span className="shrink-0 text-surface-500">{new Date(entry.createdAt).toLocaleString()}</span></div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-surface-400"><span>{t('settings.backupHistoryWallets', { count: entry.walletCount })}</span><code>{entry.backupId}</code>{entry.verified && <span className="inline-flex items-center gap-1 text-emerald-300"><CheckCircle2 size={12} />{t('settings.backupVerified')}</span>}</div>
+              {entry.savedUri && <div className="mt-1 flex items-center gap-1 truncate text-surface-500"><MapPin size={11} /><span className="truncate">{entry.savedUri}</span></div>}
+              {entry.savedUri && entry.fileHash && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleVerifySavedBackup(entry)}
+                    disabled={verifyingBackupId === entry.backupId}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-brand-500/20 bg-brand-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/20 disabled:opacity-60"
+                  >
+                    <RefreshCw size={12} className={verifyingBackupId === entry.backupId ? 'animate-spin' : ''} />
+                    {verifyingBackupId === entry.backupId ? t('settings.backupVerifying') : t('settings.backupVerifySaved')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleBackupQr(current => current === entry.backupId ? '' : entry.backupId)}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                  >
+                    <QrCode size={12} />
+                    {t('settings.backupIdQr')}
+                  </button>
+                </div>
+              )}
+              {visibleBackupQr === entry.backupId && (
+                <div className="mt-3 flex items-center gap-3 rounded-lg border border-surface-700 bg-surface-900/70 p-3">
+                  <div className="rounded bg-white p-2">
+                    <QRCodeSVG value={JSON.stringify({ type: 'xkey-backup-id', backupId: entry.backupId, hash: (entry.fileHash || '').slice(0, 16), createdAt: entry.createdAt })} size={88} bgColor="#ffffff" fgColor="#000000" level="Q" />
+                  </div>
+                  <p className="text-xs leading-relaxed text-surface-400">{t('settings.backupIdQrDesc')}</p>
+                </div>
+              )}
+            </div>)}
+          </div>
+        )}
       </div>
 
       {/* ═══ Single Wallet Shamir Backup ═══ */}

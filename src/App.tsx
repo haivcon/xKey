@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
 import {
-  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart, FolderPlus
+  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart, FolderPlus, Copy
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -112,6 +112,7 @@ export default function App() {
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [backupPassword, setBackupPassword] = useState('');
   const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
+  const [backupFileName, setBackupFileName] = useState('');
   const [backupExporting, setBackupExporting] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
@@ -149,9 +150,14 @@ export default function App() {
   const [newFolderName, setNewFolderName] = useState('');
 
   const t = useT();
+  const tRef = useRef(t);
   const { showToast } = useToast() || {};
   const showConfirm = useConfirm();
   const appVersion = useAppVersion();
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   useEffect(() => {
     if (integrityStartedRef.current) return undefined;
@@ -295,8 +301,8 @@ export default function App() {
 
   const {
     loading,
-    showPasswordPrompt, backupPreview, importPassword, setImportPassword,
-    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, dismissPasswordPrompt,
+    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode, importPassword, setImportPassword,
+    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
 
   useEffect(() => {
@@ -407,7 +413,7 @@ export default function App() {
           const riskInfo = await getDeviceIntegrityRisk();
           if (riskInfo?.risky) {
             await appendAuditLog('device_integrity.blocked', { reasons: riskInfo.reasons || [] }).catch(() => {});
-            setAuthError(t('integrity.deviceRiskBlocked'));
+            setAuthError(tRef.current('integrity.deviceRiskBlocked'));
             setVaultLoading(false);
             return;
           }
@@ -444,12 +450,12 @@ export default function App() {
           setNeedsPinAuth(true);
         }
       } catch (err) {
-        setAuthError(err instanceof Error ? err.message : "Failed to authenticate.");
+        setAuthError(err instanceof Error ? err.message : tRef.current('deviceUnlock.unlockFailed'));
       }
       setVaultLoading(false);
     };
     authenticate();
-  }, [showSplash, setWallets, t, useDeviceCredentialUnlock]);
+  }, [showSplash, setWallets, useDeviceCredentialUnlock]);
 
   // Called after PIN verification succeeds
   const handlePinSuccess = async (isDecoy = false, options: PinSuccessOptions = {}) => {
@@ -471,7 +477,7 @@ export default function App() {
       }
       setNeedsPinAuth(false);
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : "Failed to load vault.");
+      setAuthError(err instanceof Error ? err.message : tRef.current('deviceUnlock.unlockFailed'));
     }
   };
 
@@ -504,42 +510,56 @@ export default function App() {
     setShowBackupExport(false);
     setBackupPassword('');
     setBackupPasswordConfirm('');
+    setBackupFileName('');
   };
 
   const createVerificationReport = useCallback(() => {
     if (!backupPreview) return '';
     const metadata = backupPreview.metadata || {};
+    const yesNo = (value: boolean) => value ? t('common.yes') : t('common.no');
+    const statusLabel = backupPreview.status ? t(`restore.status_${backupPreview.status}`) : t('restore.integrity_unknown');
     return [
-      'xKey backup verification report',
-      `File: ${backupPreview.fileName || ''}`,
-      `Opened from external app: ${backupPreview.openedFromExternal ? 'yes' : 'no'}`,
-      `Format: ${backupPreview.format || 'unknown'}`,
-      `Backup ID: ${backupPreview.backupId || asText(metadata.backupId) || ''}`,
-      `File hash: ${backupPreview.containerHash || asText(metadata.containerHash) || ''}`,
-      `Integrity: ${backupPreview.integrity || 'unknown'}`,
-      `Status: ${backupPreview.status || 'unknown'}`,
-      `Created: ${asText(metadata.createdAt)}`,
-      `Platform: ${asText(metadata.platform)}`,
-      `Wallets: ${asText(metadata.walletCount)}`,
-      `Folders: ${asText(metadata.folderCount)}`,
-      `Networks: ${asText(metadata.networkCount)}`,
-      `Source: ${asText(metadata.source)}`,
-      `Recovered: ${backupPreview.recovered ? 'yes' : 'no'}`,
-      `Recovered bytes: ${backupPreview.recoveredBytes || 0}`,
-      `Recovered shards: ${asStringArray(backupPreview.recoveredShards).join(', ')}`,
-      `Footer recovered: ${backupPreview.footerRecovered ? 'yes' : 'no'}`,
+      t('restore.reportTitle'),
+      `${t('restore.backupFile')}: ${backupPreview.fileName || ''}`,
+      `${t('restore.openedExternal')}: ${yesNo(!!backupPreview.openedFromExternal)}`,
+      `${t('restore.reportFormat')}: ${backupPreview.format || t('restore.integrity_unknown')}`,
+      `${t('restore.backupId')}: ${backupPreview.backupId || asText(metadata.backupId) || ''}`,
+      `${t('restore.containerHash')}: ${backupPreview.containerHash || asText(metadata.containerHash) || ''}`,
+      `${t('audit.integrity')}: ${t(`restore.integrity_${backupPreview.integrity || 'unknown'}`)}`,
+      `${t('restore.reportStatus')}: ${statusLabel}`,
+      `${t('restore.createdAt')}: ${asText(metadata.createdAt)}`,
+      `${t('restore.createdOn')}: ${asText(metadata.platform)}`,
+      `${t('restore.walletCount')}: ${asText(metadata.walletCount)}`,
+      `${t('restore.folderCount')}: ${asText(metadata.folderCount)}`,
+      `${t('restore.networkCount')}: ${asText(metadata.networkCount)}`,
+      `${t('restore.source')}: ${asText(metadata.source)}`,
+      `${t('restore.reportRecovered')}: ${yesNo(!!backupPreview.recovered)}`,
+      t('restore.recoveredBytes', { count: asNumber(backupPreview.recoveredBytes) }),
+      `${t('restore.reportRecoveredShards')}: ${asStringArray(backupPreview.recoveredShards).join(', ')}`,
+      `${t('restore.footerRecovered')}: ${yesNo(!!backupPreview.footerRecovered)}`,
     ].join('\n');
-  }, [backupPreview]);
+  }, [backupPreview, t]);
 
   const handleCopyVerificationReport = useCallback(async () => {
     const copied = await secureCopy(createVerificationReport(), 120000);
-    showToast?.(copied ? t('restore.reportCopied') : t('common.error'), copied ? 'success' : 'error');
+    showToast?.({ key: copied ? 'restore.reportCopied' : 'common.error', category: copied ? 'copy' : 'warning' }, copied ? 'success' : 'error');
     appendAuditLog('backup.verification_report_copied', {
       fileName: backupPreview?.fileName || '',
       integrity: backupPreview?.integrity || 'unknown',
       backupId: backupPreview?.backupId || backupPreview?.metadata?.backupId || '',
     }).catch(() => {});
-  }, [backupPreview, createVerificationReport, showToast, t]);
+  }, [backupPreview, createVerificationReport, showToast]);
+
+  const handleCopyBackupPreviewValue = useCallback(async (label: string, value: string) => {
+    if (!value) return;
+    const copied = await secureCopy(value, 120000);
+    showToast?.({ key: copied ? 'common.copied' : 'common.error', category: copied ? 'copy' : 'warning' }, copied ? 'success' : 'error');
+    appendAuditLog('backup.metadata_copied', {
+      fileName: backupPreview?.fileName || '',
+      field: label,
+      integrity: backupPreview?.integrity || 'unknown',
+    }).catch(() => {});
+  }, [backupPreview, showToast]);
 
   const handleVerifyBackupOnly = useCallback(() => {
     appendAuditLog('backup.verify_only', {
@@ -565,7 +585,7 @@ export default function App() {
     setBackupExporting(true);
     try {
       const currentWallets = await loadWallets(aesKey, isDecoyMode);
-      const success = await exportPortableBackup(currentWallets || [], null, backupPassword);
+      const success = await exportPortableBackup(currentWallets || [], null, backupPassword, backupFileName);
       if (success) {
         hapticSuccess();
         showToast?.(t('settings.exportSuccess'), 'success');
@@ -673,10 +693,10 @@ export default function App() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title="Donate">
+              <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title={t('donate.button')} aria-label={t('donate.button')}>
                 <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
               </button>
-              <button onClick={() => { hapticTap(); navigate('/settings'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title="Settings">
+              <button onClick={() => { hapticTap(); navigate('/settings'); }} className="btn-icon-glow p-2 text-surface-400 hover:text-white bg-surface-800 hover:bg-surface-700 rounded-full transition-colors" title={t('settings.title')} aria-label={t('settings.title')}>
                 <Settings size={20} />
               </button>
             </div>
@@ -990,7 +1010,7 @@ export default function App() {
                 }`}>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <span className="font-semibold">{backupPreview.fileName || t('restore.backupFile')}</span>
-                    <span className="rounded-full bg-black/20 px-2 py-0.5 font-semibold uppercase">{backupPreview.integrity}</span>
+                    <span className="rounded-full bg-black/20 px-2 py-0.5 font-semibold uppercase">{t(`restore.integrity_${asText(backupPreview.integrity)}`)}</span>
                   </div>
                   {backupPreview.openedFromExternal && (
                     <div className="mb-2 rounded-lg border border-sky-400/25 bg-sky-400/10 px-2.5 py-2 text-sky-100">
@@ -999,18 +1019,50 @@ export default function App() {
                     </div>
                   )}
                   {backupPreview.metadata ? (
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-surface-200">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-surface-200">
                       <span>{t('restore.createdAt')}</span><span className="text-right">{asText(backupPreview.metadata.createdAt) ? new Date(asText(backupPreview.metadata.createdAt)).toLocaleString() : ''}</span>
                       <span>{t('restore.createdOn')}</span><span className="text-right">{asText(backupPreview.metadata.platform)}</span>
                       <span>{t('restore.walletCount')}</span><span className="text-right">{asText(backupPreview.metadata.walletCount)}</span>
                       <span>{t('restore.folderCount')}</span><span className="text-right">{asText(backupPreview.metadata.folderCount)}</span>
                       <span>{t('restore.networkCount')}</span><span className="text-right">{asText(backupPreview.metadata.networkCount)}</span>
                       <span>{t('restore.source')}</span><span className="text-right truncate">{asText(backupPreview.metadata.source)}</span>
-                      <span>{t('restore.backupId')}</span><span className="text-right font-mono">{(asText(backupPreview.backupId) || asText(backupPreview.metadata.backupId)).slice(0, 20)}</span>
-                      <span>{t('restore.containerHash')}</span><span className="text-right font-mono">{(asText(backupPreview.containerHash) || asText(backupPreview.metadata.containerHash)).slice(0, 16)}...</span>
+                      {(() => {
+                        const backupId = asText(backupPreview.backupId) || asText(backupPreview.metadata.backupId);
+                        const fileHash = asText(backupPreview.containerHash) || asText(backupPreview.metadata.containerHash);
+                        return (
+                          <>
+                            <div className="col-span-2 mt-1 rounded-lg border border-emerald-500/15 bg-black/10 p-2">
+                              <div className="mb-1 flex items-center justify-between gap-2">
+                                <span className="font-semibold">{t('restore.backupId')}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyBackupPreviewValue('backupId', backupId)}
+                                  className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold hover:bg-black/30"
+                                >
+                                  <Copy size={12} />{t('common.copy')}
+                                </button>
+                              </div>
+                              <code className="block break-all font-mono text-[11px] leading-relaxed text-emerald-50">{backupId || '-'}</code>
+                            </div>
+                            <div className="col-span-2 rounded-lg border border-emerald-500/15 bg-black/10 p-2">
+                              <div className="mb-1 flex items-center justify-between gap-2">
+                                <span className="font-semibold">{t('restore.containerHash')}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyBackupPreviewValue('containerHash', fileHash)}
+                                  className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold hover:bg-black/30"
+                                >
+                                  <Copy size={12} />{t('common.copy')}
+                                </button>
+                              </div>
+                              <code className="block break-all font-mono text-[11px] leading-relaxed text-emerald-50">{fileHash || '-'}</code>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   ) : (
-                    <p className="leading-relaxed">{asText(backupPreview.message)}</p>
+                    <p className="leading-relaxed">{backupPreview.messageKey ? t(asText(backupPreview.messageKey)) : asText(backupPreview.message)}</p>
                   )}
                   {Boolean(backupPreview.footerRecovered) && (
                     <p className="mt-2 font-semibold">{t('restore.footerRecovered')}</p>
@@ -1029,8 +1081,10 @@ export default function App() {
                 onKeyDown={(e) => e.key === 'Enter' && handleImportWithPassword()}
                 placeholder={t('restore.placeholder')}
                 disabled={backupPreview?.status === 'tampered'}
-                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white mb-4 focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
+                wrapperClassName="mb-4 w-full"
+                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
+              {backupAnalysis && <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200"><p>{t('restore.previewSummary', backupAnalysis)}</p><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => setBackupImportMode('merge')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'merge' ? 'border-brand-400 bg-brand-500/15 text-brand-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.merge')}</button><button onClick={() => setBackupImportMode('replace')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'replace' ? 'border-amber-400 bg-amber-500/15 text-amber-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.replace')}</button></div></div>}
               <div className="flex gap-3">
                 <button onClick={() => { hapticTap(); dismissPasswordPrompt(); }}
                   className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-300 py-2.5 rounded-lg font-medium transition-colors">{t('common.cancel')}</button>
@@ -1038,11 +1092,12 @@ export default function App() {
                   <button onClick={() => { hapticTap(); handleVerifyBackupOnly(); }}
                     className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-sky-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.verifyOnly')}</button>
                 )}
+                <button onClick={() => { hapticTap(); previewBackupWithPassword(); }} disabled={backupPreview?.status === 'tampered'} className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-brand-300 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">{t('restore.previewOnly')}</button>
                 {backupPreview?.openedFromExternal && (
                   <button onClick={() => { hapticTap(); handleCopyVerificationReport(); }}
                     className="btn-glow flex-1 bg-surface-800 hover:bg-surface-700 text-surface-200 py-2.5 rounded-lg font-medium transition-colors">{t('restore.copyVerificationReport')}</button>
                 )}
-                <button onClick={() => { hapticSuccess(); handleImportWithPassword(); }}
+                <button onClick={async () => { if (backupImportMode === 'replace' && !await showConfirm(t('restore.replaceConfirm'), { danger: true })) return; hapticSuccess(); handleImportWithPassword(); }}
                   disabled={backupPreview?.status === 'tampered'}
                   className="btn-glow btn-glow-success flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50">{t('restore.button')}</button>
               </div>
@@ -1059,6 +1114,12 @@ export default function App() {
               <h3 className="text-white font-bold text-center mb-1">{t('actionBar.exportBackup')}</h3>
               <p className="text-surface-400 text-sm text-center mb-5">{t('settings.backupSubtitle')}</p>
               <div className="space-y-3">
+                <input
+                  value={backupFileName}
+                  onChange={(e) => setBackupFileName(e.target.value)}
+                  placeholder={t('settings.backupFileName')}
+                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder:text-surface-600"
+                />
                 <PasswordInput
                   value={backupPassword}
                   onChange={(e) => setBackupPassword(e.target.value)}

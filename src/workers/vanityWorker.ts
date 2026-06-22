@@ -28,6 +28,7 @@ type VanityWorkerResponse =
       scanned: number;
       found: number;
       elapsed: number;
+      candidate?: string;
     };
 
 const postVanityMessage = (message: VanityWorkerResponse): void => {
@@ -49,6 +50,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   let scanned = 0;
   let found = 0;
   let lastReport = Date.now();
+  let lastCandidate = '';
   const safeTargetCount = Math.max(1, Math.min(100, Number(targetCount) || 1));
 
   const safeBatchSize = Math.max(1, Math.min(5000, Number(batchSize) || 120));
@@ -59,6 +61,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     for (let i = 0; i < safeBatchSize; i += 1) {
       const wallet = ethers.Wallet.createRandom();
       const address = wallet.address.toLowerCase();
+      lastCandidate = address;
       scanned += 1;
 
       if ((!prefix || address.startsWith(`0x${prefix}`)) && (!suffix || address.endsWith(suffix))) {
@@ -99,7 +102,8 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
         type: 'progress',
         scanned,
         found,
-        elapsed: (now - startTime) / 1000
+        elapsed: (now - startTime) / 1000,
+        candidate: lastCandidate
       });
     }
 

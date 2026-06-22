@@ -228,6 +228,33 @@ body.keyboard-open .overflow-auto {
   color: #334155 !important;
 }
 
+/* Keep status content readable on light backgrounds. */
+.theme-light .text-emerald-100,
+.theme-light .text-emerald-200,
+.theme-light .text-emerald-300,
+.theme-light .text-emerald-400,
+.theme-light .text-emerald-500 {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
+.theme-light .text-sky-100,
+.theme-light .text-sky-200,
+.theme-light .text-sky-300,
+.theme-light .text-sky-400,
+.theme-light .text-sky-500 {
+  color: #075985 !important;
+  -webkit-text-fill-color: #075985 !important;
+}
+
+/* Tailwind opacity utilities use class names such as text-yellow-300/80.
+   Prefix matching keeps those status messages readable too. */
+.theme-light [class*="text-emerald-"],
+.theme-light [class*="text-sky-"] {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
 .danger-note {
   border-color: rgba(239, 68, 68, 0.34);
   background-color: rgba(239, 68, 68, 0.12);
@@ -270,6 +297,8 @@ body.keyboard-open .overflow-auto {
 
 .theme-light .warning-note-icon,
 .theme-light .warning-note-body,
+.theme-light [class*="text-yellow-"],
+.theme-light [class*="text-amber-"],
 .theme-light .text-yellow-300,
 .theme-light .text-yellow-400,
 .theme-light .text-yellow-500,

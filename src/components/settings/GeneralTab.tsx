@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, Clock3, Trash2 } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -11,8 +11,6 @@ import {
   setVibrationEnabled,
 } from '../../utils/haptics';
 import useLiteMode from '../../hooks/useLiteMode';
-import { clearActionHistory, getActionHistory } from '../../utils/actionHistory';
-import type { ActionHistoryItem } from '../../utils/actionHistory';
 import { useConfirm } from '../../contexts/ConfirmContext';
 
 const THEME_OPTIONS = [
@@ -46,7 +44,6 @@ export default function GeneralTab() {
   const [scaleInput, setScaleInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
   const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
-  const [actionHistory, setActionHistory] = useState<ActionHistoryItem[]>([]);
   const [expandedSection, setExpandedSection] = useState<SettingsSection | null>(null);
   const scaleConfirmingRef = useRef(false);
 
@@ -72,20 +69,6 @@ export default function GeneralTab() {
   useEffect(() => {
     if (!isScaleInputFocused) setScaleInput(String(visibleScale));
   }, [visibleScale, isScaleInputFocused]);
-
-  useEffect(() => {
-    let mounted = true;
-    getActionHistory().then(items => { if (mounted) setActionHistory(items); });
-    const handleUpdate = (event: Event) => {
-      const detail = event instanceof CustomEvent ? event.detail : [];
-      setActionHistory(Array.isArray(detail) ? detail : []);
-    };
-    window.addEventListener('xkey-action-history-updated', handleUpdate as EventListener);
-    return () => {
-      mounted = false;
-      window.removeEventListener('xkey-action-history-updated', handleUpdate as EventListener);
-    };
-  }, []);
 
   const requestScaleChange = async (value: number | string) => {
     const nextScale = clampDisplayScale(value);
@@ -453,48 +436,6 @@ export default function GeneralTab() {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ═══ Action History ═══ */}
-      <div className="glass-card p-4 mt-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-              <Clock3 size={20} className="text-amber-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium text-sm">{t('settings.activityHistory')}</p>
-              <p className="text-xs text-surface-400">{t('settings.activityHistoryDesc')}</p>
-            </div>
-          </div>
-          {actionHistory.length > 0 && (
-            <button
-              type="button"
-              onClick={async () => {
-                hapticTap();
-                await clearActionHistory();
-              }}
-              className="flex items-center gap-1 rounded-lg border border-surface-700 bg-surface-800/60 px-2.5 py-2 text-xs font-semibold text-surface-300 hover:text-red-300"
-            >
-              <Trash2 size={13} />
-              {t('settings.clearHistory')}
-            </button>
-          )}
-        </div>
-        <div className="space-y-2">
-          {actionHistory.length === 0 ? (
-            <p className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-3 text-center text-xs text-surface-400">
-              {t('settings.noActivityHistory')}
-            </p>
-          ) : (
-            actionHistory.slice(0, 6).map(item => (
-              <div key={item.id} className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-2">
-                <p className="line-clamp-2 text-xs font-medium text-surface-200">{item.message}</p>
-                <p className="mt-1 text-[0.625rem] text-surface-500">{new Date(item.ts).toLocaleString()}</p>
-              </div>
-            ))
-          )}
         </div>
       </div>
 

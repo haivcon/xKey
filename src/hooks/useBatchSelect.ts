@@ -96,14 +96,14 @@ export default function useBatchSelect(
 
   const bulkDelete = useCallback(async () => {
     const ok = await showConfirm(
-      t('batch.deleteConfirm', { count: selectedCount }) || `Delete ${selectedCount} selected wallets?`,
+      t('batch.deleteConfirm', { count: selectedCount }),
       { danger: true }
     );
     if (!ok) return;
     hapticWarning();
     const updated = wallets.filter(w => !isSelected(w));
     await persist(updated);
-    showToast(t('batch.deleted', { count: selectedCount }) || `${selectedCount} wallets deleted`, 'info');
+    showToast({ key: 'batch.deleted', vars: { count: selectedCount }, category: 'data' }, 'info');
     setSelectedIds(new Set());
     setSelectionMode(false);
   }, [wallets, selectedCount, isSelected, persist, showConfirm, showToast, t]);
@@ -112,10 +112,10 @@ export default function useBatchSelect(
     const updated = wallets.map(w => isSelected(w) ? { ...w, groupId: targetFolder } : w);
     await persist(updated);
     hapticSuccess();
-    showToast(t('batch.moved', { count: selectedCount, folder: targetFolder }) || `${selectedCount} wallets moved to ${targetFolder}`, 'success');
+    showToast({ key: 'batch.moved', vars: { count: selectedCount, folder: targetFolder }, category: 'data' }, 'success');
     setSelectedIds(new Set());
     setSelectionMode(false);
-  }, [wallets, selectedCount, isSelected, persist, showToast, t]);
+  }, [wallets, selectedCount, isSelected, persist, showToast]);
 
   const bulkTag = useCallback(async (tag: string) => {
     const updated = wallets.map(w => {
@@ -126,18 +126,18 @@ export default function useBatchSelect(
     });
     await persist(updated);
     hapticSuccess();
-    showToast(t('batch.tagged', { count: selectedCount, tag }) || `Tagged ${selectedCount} wallets with "${tag}"`, 'success');
+    showToast({ key: 'batch.tagged', vars: { count: selectedCount, tag }, category: 'data' }, 'success');
     setSelectedIds(new Set());
     setSelectionMode(false);
-  }, [wallets, selectedCount, isSelected, persist, showToast, t]);
+  }, [wallets, selectedCount, isSelected, persist, showToast]);
 
   const bulkPin = useCallback(async () => {
     const updated = wallets.map(w => isSelected(w) ? { ...w, pinned: true } : w);
     await persist(updated);
     hapticSuccess();
-    showToast(t('batch.pinned', { count: selectedCount }) || `${selectedCount} wallets pinned`, 'success');
+    showToast({ key: 'batch.pinned', vars: { count: selectedCount }, category: 'data' }, 'success');
     setSelectedIds(new Set());
-  }, [wallets, selectedCount, isSelected, persist, showToast, t]);
+  }, [wallets, selectedCount, isSelected, persist, showToast]);
 
   return {
     selectionMode, toggleSelectionMode,

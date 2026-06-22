@@ -835,6 +835,7 @@ export const saveWallets = async (wallets: Wallet[], key: string | null, isDecoy
     const saveTask = previous.catch(() => {}).then(async () => {
         const encrypted = await runCryptoWorker<string>('ENCRYPT_WALLETS', { wallets, key });
         await saveVaultCipher(storageKey, encrypted);
+        if (!isDecoy) await Preferences.set({ key: 'xkey_vault_last_changed_at', value: new Date().toISOString() });
         return true;
     }).catch((e) => {
         console.error('Failed to save wallets', e);

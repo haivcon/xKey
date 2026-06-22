@@ -4,6 +4,7 @@ import { reauthenticate } from '../hooks/useReauth';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import type { Wallet } from '../types';
+import { saveTextFile } from '../utils/fileSaver';
 
 type CsvColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 type CsvColumn = {
@@ -34,6 +35,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
 
   const [selected, setSelected] = useState<Set<CsvColumnKey>>(new Set(COLUMNS.filter(c => c.default).map(c => c.key)));
   const [copied, setCopied] = useState(false);
+  const [fileName, setFileName] = useState('');
   const { showToast } = useToast();
 
   const toggle = async (key: CsvColumnKey) => {
@@ -41,7 +43,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     if (!col) return;
     if (col.sensitive && !selected.has(key)) {
       const ok = await reauthenticate(t('exportCSV.authPrompt') || 'Authenticate to include sensitive data');
-      if (!ok) { showToast(t('authError.vaultLocked') || 'Authentication required', 'warning'); return; }
+      if (!ok) { showToast({ key: 'authError.vaultLocked', category: 'warning' }, 'warning'); return; }
     }
     const next = new Set(selected);
     next.has(key) ? next.delete(key) : next.add(key);
@@ -59,36 +61,23 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     navigator.clipboard.writeText(buildCSV());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    showToast(t('exportCSV.copySuccess', { count: wallets.length }), 'success');
+    showToast({ key: 'exportCSV.copySuccess', vars: { count: wallets.length }, category: 'copy' }, 'success');
   };
 
   const handleDownload = async () => {
     try {
       const csv = buildCSV();
-      const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-      const { Share } = await import('@capacitor/share');
-      const fileName = `xkey_export_${Date.now()}.csv`;
+      const safeBaseName = fileName.trim()
+        .split('').map(character => character.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(character) ? '-' : character).join('')
+        .replace(/\.csv$/i, '')
+        .replace(/[-.\s]+$/g, '')
+        .slice(0, 80);
+      const exportFileName = `${safeBaseName || `xkey_export_${Date.now()}`}.csv`;
       
-      // Write to app cache (no permissions needed)
-      const fileResult = await Filesystem.writeFile({
-        path: fileName,
-        data: csv,
-        directory: Directory.Cache,
-        encoding: Encoding.UTF8
-      });
-      
-      // Open share sheet so user can save to Downloads, Drive, etc.
-      await Share.share({
-        title: 'xKey Export',
-        text: 'CSV backup from xKey',
-        url: fileResult.uri,
-        dialogTitle: 'Save CSV Export'
-      });
-      
-      showToast(t('exportCSV.exportSuccess'), 'success');
-    } catch { 
-      handleCopy(); 
-      showToast(t('exportCSV.exportSuccess'), 'success');
+      await saveTextFile(exportFileName, 'text/csv', csv);
+      showToast({ key: 'exportCSV.exportSuccess', category: 'data' }, 'success');
+    } catch (error: unknown) {
+      if (!(error instanceof Error && error.message.includes('SAVE_CANCELLED'))) showToast({ key: 'common.error', category: 'warning' }, 'error');
     }
   };
 
@@ -103,6 +92,12 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
         </div>
         <div className="p-5 space-y-4">
           <p className="text-sm text-surface-400">{t('exportCSV.selectColumns', { count: wallets.length })}</p>
+          <input
+            value={fileName}
+            onChange={(event) => setFileName(event.target.value)}
+            placeholder={t('exportCSV.fileName')}
+            className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2.5 text-sm text-white placeholder:text-surface-600 focus:border-brand-500 focus:outline-none"
+          />
           <div className="space-y-2">
             {COLUMNS.map(col => (
               <button key={col.key} onClick={() => toggle(col.key)}

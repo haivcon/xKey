@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSecureDisplay } from '../contexts/SecureDisplayContext';
+import { useT } from '../contexts/LanguageContext';
 
 const BASE_FONT_REM = 0.875;
 const BASE_PADDING_REM = 0.5;
@@ -16,6 +17,7 @@ export default function SecureGlyphText({ value, className = '', multiline = fal
   const wrapRef = useRef<HTMLSpanElement | null>(null);
   const [canvasHeight, setCanvasHeight] = useState(multiline ? 52 : 38);
   const { remapToSessionGlyphs } = useSecureDisplay();
+  const t = useT();
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -92,7 +94,7 @@ export default function SecureGlyphText({ value, className = '', multiline = fal
       ref={wrapRef}
       className={`secure-glyph-text block select-none rounded bg-surface-800 ${className}`}
       data-secure-glyph="true"
-      aria-label="Sensitive value rendered as secure display pixels"
+      aria-label={t('common.secureDisplayPixels')}
       role="img"
       style={{ minHeight: canvasHeight }}
     >

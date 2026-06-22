@@ -19,6 +19,8 @@ type BackupPreview = {
   };
   [key: string]: unknown;
 };
+type BackupImportAnalysis = { total: number; newWallets: number; duplicates: number; changed: number; missingSensitive: number; sensitive: number };
+type BackupImportMode = 'merge' | 'replace';
 
 type ExternalBackupFile = {
   data?: string;
@@ -33,10 +35,14 @@ type UseFileImportResult = {
   showPasswordPrompt: boolean;
   backupPreview: BackupPreview | null;
   importPassword: string;
+  backupAnalysis: BackupImportAnalysis | null;
+  backupImportMode: BackupImportMode;
+  setBackupImportMode: Dispatch<SetStateAction<BackupImportMode>>;
   setImportPassword: Dispatch<SetStateAction<string>>;
   handleFileUpload: (targetFolderName?: string) => Promise<void>;
   handleExternalBackupFile: (file: ExternalBackupFile) => Promise<boolean>;
   handleImportWithPassword: () => Promise<void>;
+  previewBackupWithPassword: () => Promise<void>;
   dismissPasswordPrompt: () => void;
 };
 
@@ -54,6 +60,8 @@ export default function useFileImport(
   const [pendingBackupData, setPendingBackupData] = useState<string | null>(null);
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
   const [importPassword, setImportPassword] = useState('');
+  const [backupAnalysis, setBackupAnalysis] = useState<BackupImportAnalysis | null>(null);
+  const [backupImportMode, setBackupImportMode] = useState<BackupImportMode>('merge');
 
   const { showToast } = useToast();
   const t = useT();
@@ -115,7 +123,7 @@ export default function useFileImport(
           }
           rawString = new TextDecoder().decode(bytes);
         } catch {
-          showToast(t('common.errorReadingFile') || 'Error reading file data.', 'error');
+          showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
           setLoading(false);
           return;
         }
@@ -146,7 +154,7 @@ export default function useFileImport(
             }));
             await importWallets(normalized, folderName);
           } catch (err: unknown) {
-            showToast((t('common.jsonParseError') || 'JSON parse error: ') + (err instanceof Error ? err.message : String(err)), 'error');
+            showToast(`${t('common.jsonParseError')}: ${err instanceof Error ? err.message : String(err)}`, 'error');
           }
           setLoading(false);
           return;
@@ -192,7 +200,7 @@ export default function useFileImport(
             setLoading(false);
           },
           error: (err: Error) => {
-            showToast((t('common.csvParseError') || 'CSV parse error: ') + err.message, 'error');
+            showToast(`${t('common.csvParseError')}: ${err.message}`, 'error');
             setLoading(false);
           }
         });
@@ -208,7 +216,7 @@ export default function useFileImport(
     if (!fileData) return false;
     const fileName = file.name || 'opened.xkey';
     if (!fileName.toLowerCase().endsWith('.xkey')) {
-      showToast(t('common.errorReadingFile') || 'Error reading file data.', 'error');
+      showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
       await appendAuditLog('backup.external_file_ignored', {
         fileName,
         mimeType: file.mimeType || '',
@@ -232,7 +240,7 @@ export default function useFileImport(
       return true;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'unknown';
-      showToast(message || t('common.errorReadingFile') || 'Error reading file data.', 'error');
+      showToast(message || { key: 'common.errorReadingFile', category: 'warning' }, 'error');
       await appendAuditLog('backup.external_open_failed', {
         fileName,
         reason: message,
@@ -241,7 +249,7 @@ export default function useFileImport(
     } finally {
       setLoading(false);
     }
-  }, [showToast, t]);
+  }, [showToast]);
 
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
@@ -258,20 +266,21 @@ export default function useFileImport(
       });
       const skipped = backup.wallets.length - uniqueBackup.length;
 
-      const newWallets = [...wallets, ...uniqueBackup];
+      const newWallets = backupImportMode === 'replace' ? backup.wallets : [...wallets, ...uniqueBackup];
       setWallets(newWallets);
       await saveWallets(newWallets, aesKey, isDecoyMode);
-      let msg = t('home.backupImported', { count: uniqueBackup.length });
-      if (skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
+      let msg = t('home.backupImported', { count: backupImportMode === 'replace' ? backup.wallets.length : uniqueBackup.length });
+      if (backupImportMode === 'merge' && skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
       showToast(msg, 'success');
       await appendAuditLog('backup.imported', {
-        walletCount: uniqueBackup.length,
+        walletCount: backupImportMode === 'replace' ? backup.wallets.length : uniqueBackup.length,
         skipped,
+        mode: backupImportMode,
         integrity: backupPreview?.integrity || 'unknown',
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '';
-      showToast(message || t('restore.wrongPassword'), 'error');
+      showToast(message || { key: 'restore.wrongPassword', category: 'backup' }, 'error');
       await appendAuditLog('backup.import_failed', {
         reason: message || 'unknown',
         integrity: backupPreview?.integrity || 'unknown',
@@ -281,22 +290,56 @@ export default function useFileImport(
     setPendingBackupData(null);
     setBackupPreview(null);
     setImportPassword('');
-  }, [pendingBackupData, wallets, setWallets, aesKey, isDecoyMode, importPassword, showToast, t, backupPreview]);
+  }, [pendingBackupData, wallets, setWallets, aesKey, isDecoyMode, importPassword, showToast, t, backupPreview, backupImportMode]);
+
+  const previewBackupWithPassword = useCallback(async () => {
+    if (!pendingBackupData) return;
+    try {
+      const backup = await parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as { wallets: Wallet[] };
+      const fingerprint = (wallet: Wallet) => JSON.stringify({
+        name: wallet.name || '',
+        address: (wallet.address || '').toLowerCase(),
+        privateKey: wallet.privateKey || '',
+        seedPhrase: wallet.seedPhrase || '',
+        balance: wallet.balance || '',
+        network: wallet.network || '',
+        notes: wallet.notes || '',
+        groupId: wallet.groupId || '',
+        tags: Array.isArray(wallet.tags) ? [...wallet.tags].sort() : [],
+      });
+      const existing = new Map(wallets.map(wallet => [wallet.address?.toLowerCase(), fingerprint(wallet)]).filter(([address]) => Boolean(address)) as [string, string][]);
+      const duplicates = backup.wallets.filter(wallet => !!wallet.address && existing.has(wallet.address.toLowerCase())).length;
+      const changed = backup.wallets.filter(wallet => {
+        if (!wallet.address) return false;
+        const current = existing.get(wallet.address.toLowerCase());
+        return Boolean(current && current !== fingerprint(wallet));
+      }).length;
+      const missingSensitive = backup.wallets.filter(wallet => !wallet.privateKey && !wallet.seedPhrase).length;
+      const sensitive = backup.wallets.filter(wallet => !!wallet.privateKey || !!wallet.seedPhrase).length;
+      setBackupAnalysis({ total: backup.wallets.length, duplicates, changed, missingSensitive, newWallets: backup.wallets.length - duplicates, sensitive });
+      await appendAuditLog('backup.decrypted_previewed', { walletCount: backup.wallets.length, duplicates, changed, missingSensitive });
+    } catch {
+      showToast({ key: 'restore.wrongPassword', category: 'backup' }, 'error');
+    }
+  }, [pendingBackupData, aesKey, importPassword, wallets, showToast]);
 
   const dismissPasswordPrompt = useCallback(() => {
     setShowPasswordPrompt(false);
     setPendingBackupData(null);
     setBackupPreview(null);
     setImportPassword('');
+    setBackupAnalysis(null);
+    setBackupImportMode('merge');
   }, []);
 
   return {
     loading,
-    showPasswordPrompt, backupPreview,
+    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode,
     importPassword, setImportPassword,
     handleFileUpload,
     handleExternalBackupFile,
     handleImportWithPassword,
+    previewBackupWithPassword,
     dismissPasswordPrompt,
   };
 }

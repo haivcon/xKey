@@ -41,7 +41,7 @@ const toImportedWallet = (value: unknown): Wallet => {
     balance: typeof wallet.balance === 'string' ? wallet.balance : '0.00',
     notes: typeof wallet.notes === 'string' ? wallet.notes : '',
     network: typeof wallet.network === 'string' ? wallet.network : 'ETH',
-    groupId: typeof wallet.groupId === 'string' ? wallet.groupId : 'Imported QR',
+    groupId: typeof wallet.groupId === 'string' ? wallet.groupId : undefined,
     createdAt: Date.now(),
   };
 };
@@ -130,7 +130,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
         if (!stopped) {
           console.error("Scanner Error:", err);
           // Show more detailed error
-          setError(getErrorMessage(err) || 'Camera access denied or no camera found. Please check App Permissions.');
+          setError(getErrorMessage(err) || t('qrReceive.cameraError'));
           setScanning(false);
         }
       }
@@ -145,7 +145,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
       stopped = true;
       stopScanner();
     };
-  }, [scanning]);
+  }, [scanning, t]);
 
   const handleClose = () => {
     stopScanner();
@@ -173,11 +173,14 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
       if (!Array.isArray(payload)) throw new Error('Invalid payload format');
 
       // Map to proper wallet format
-      const importedWallets = payload.map(toImportedWallet);
+      const importedWallets = payload.map(toImportedWallet).map(wallet => ({
+        ...wallet,
+        groupId: wallet.groupId || t('qrReceive.defaultFolder'),
+      }));
 
       onImport(importedWallets);
     } catch {
-      setError(t('settings.incorrectPassword') || 'Failed to decrypt or parse transfer data');
+      setError(t('qrReceive.decryptFailed'));
     } finally {
       setDecrypting(false);
     }
@@ -191,7 +194,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
         <div className="flex items-center justify-between p-4 border-b border-surface-800">
           <h2 className="text-white font-bold flex items-center gap-2">
             <Camera size={18} className="text-brand-400" />
-            {t('qrReceive.title') || 'Scan Transfer QR'}
+            {t('qrReceive.title')}
           </h2>
           <button onClick={handleClose} className="p-2 hover:bg-surface-800 rounded-full transition-colors text-surface-400">
             <X size={20} />
@@ -212,8 +215,8 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
                 <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Lock size={28} className="text-brand-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">{t('qrReceive.passwordTitle') || 'Transfer Received'}</h3>
-                <p className="text-sm text-surface-400">{t('qrReceive.passwordSubtitle') || 'Enter the password used to encrypt this transfer.'}</p>
+                <h3 className="text-lg font-bold text-white mb-1">{t('qrReceive.passwordTitle')}</h3>
+                <p className="text-sm text-surface-400">{t('qrReceive.passwordSubtitle')}</p>
               </div>
 
               {error && <p className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg">{error}</p>}
@@ -221,7 +224,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
               <PasswordInput
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder={t('settings.backupPassword') || 'Password'}
+                placeholder={t('settings.backupPassword')}
                 className="w-full bg-surface-950 border border-surface-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500"
                 onKeyDown={e => e.key === 'Enter' && handleDecrypt()}
               />
@@ -241,9 +244,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
               {totalChunks ? (
                 <div className="bg-surface-800 rounded-xl p-3 text-center">
                   <div className="text-sm font-medium text-white mb-1">
-                    {t('qrReceive.progress') 
-                      ? t('qrReceive.progress').replace('{current}', String(scannedCount)).replace('{total}', String(totalChunks))
-                      : `Scanned ${scannedCount} of ${totalChunks} parts`}
+                    {t('qrReceive.progress', { count: scannedCount, total: totalChunks })}
                   </div>
                   <div className="w-full bg-surface-950 rounded-full h-2 mt-2 overflow-hidden">
                     <div 
@@ -254,7 +255,7 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
                 </div>
               ) : (
                 <p className="text-surface-400 text-xs text-center">
-                  {t('qrReceive.hint') || 'Point your camera at a Transfer QR code'}
+                  {t('qrReceive.hint')}
                 </p>
               )}
             </>

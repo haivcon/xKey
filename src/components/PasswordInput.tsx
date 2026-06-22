@@ -1,6 +1,7 @@
 import { useState, useRef, type ChangeEventHandler, type FocusEvent, type InputHTMLAttributes, type MouseEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useScrambledKeyboard } from '../contexts/ScrambledKeyboardContext';
+import { useT } from '../contexts/LanguageContext';
 
 type PasswordInputEvent = FocusEvent<HTMLInputElement> | MouseEvent<HTMLInputElement>;
 type PasswordInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'onFocus' | 'onClick' | 'onChange'> & {
@@ -15,12 +16,13 @@ export default function PasswordInput({ className, wrapperClassName = "w-full", 
   const [show, setShow] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrambledKeyboard = useScrambledKeyboard();
+  const t = useT();
   
   // Combine custom wrapper class
   const wrapClass = `relative ${wrapperClassName}`;
   
   // Ensure the input has padding on the right so text doesn't hide behind the icon
-  const inputClass = `${className || ''} pr-10`;
+  const inputClass = `${className || ''} pr-12`;
 
   const handleFocus = (e: PasswordInputEvent) => {
     if (scrambledKeyboard.enabled) {
@@ -61,8 +63,9 @@ export default function PasswordInput({ className, wrapperClassName = "w-full", 
       <button 
         type="button"
         onClick={() => setShow(!show)} 
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-white p-1 focus:outline-none"
-        title={show ? "Hide" : "Show"}
+        className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md p-0 text-surface-400 hover:bg-surface-700/40 hover:text-white focus:outline-none"
+        title={show ? t('common.hide') : t('common.show')}
+        aria-label={show ? t('common.hide') : t('common.show')}
       >
         {show ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>

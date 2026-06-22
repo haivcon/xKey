@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.12.0]
+
+### Release Focus
+v5.12.0 focuses on backup safety, Android file-export reliability, Shamir QR usability, audit-log polish, full localization coverage, and post-TypeScript hardening.
+
+### Backup, Restore, and File Export
+- **Native Android save flow**: `.xkey`, CSV, and Shamir QR HTML exports can be saved through Android's document picker with user-selected file names and destinations.
+- **Verified saved backups**: portable `.xkey` exports can be verified after saving by checking the saved file URI, SHA-256 hash, metadata, backup ID, wallet count, and integrity state.
+- **Detailed `.xkey` preview**: restore dialogs show source device, created time, wallet/folder/network counts, source, backup ID, and full file hash before import.
+- **Copyable verification data**: backup ID, file hash, and the full verification report can be copied for offline comparison.
+- **Verify-only restore flow**: users can inspect external `.xkey` files without importing them into the vault.
+- **Safer restore choices**: backup preview supports Merge, Replace, and Verify only paths, with current-vault comparison data.
+- **Container recovery hardening**: the current `.xkey` format keeps metadata, encrypted payload, recovery footer, and Reed-Solomon 10+5 shard recovery.
+
+### Shamir QR Recovery
+- **Tap-to-zoom QR codes**: Shamir QR pages can be enlarged for easier scanning.
+- **Named Shamir exports**: Shamir QR sets can be saved as named `.html` files through the Android save flow.
+- **Safer HTML output**: exported Shamir HTML escapes wallet names and warning text before writing the file.
+- **Improved print/share flow**: current-part and all-part print/share actions remain available with clearer mobile controls.
+
+### Audit, History, and UX
+- **Audit Log redesign**: protected security audit entries are separated from local action history.
+- **Compact action history**: action history now shows summary counters, category filters with counts, a shorter default list, and an expandable view.
+- **Localized action history**: many toast/action history entries now store translation keys to reduce mixed-language history after language changes.
+- **Language switching polish**: changing app language no longer triggers unnecessary device-lock authentication.
+- **Keyboard ergonomics**: password and text fields scroll into view when the Android keyboard opens.
+- **Light-theme contrast**: warning, backup, restore, and notice panels have improved readability in light mode.
+
+### Security and Localization
+- **External backup caution**: files opened from external apps are clearly marked before import.
+- **Root/Data Tamper Guard polish**: device-risk and hardware-bound vault guidance is clearer across settings.
+- **Secure display accessibility**: secure display and sortable controls now use localized accessibility labels.
+- **Full locale coverage**: new strings are translated across `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, and `zh`.
+
+### Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run build`
+- `npx cap sync android`
+- `android\gradlew.bat assembleDebug`
+
 ## [5.11.0]
 
 ### Release Focus

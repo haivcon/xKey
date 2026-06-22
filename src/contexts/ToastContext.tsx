@@ -1,21 +1,29 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X, type LucideIcon } from 'lucide-react';
 import { logActionHistory } from '../utils/actionHistory';
+import { useT, type TranslationVars } from './LanguageContext';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 type ToastAction = {
   label: string;
   onClick?: () => void | Promise<void>;
 };
+type ToastMessage = unknown | {
+  key: string;
+  vars?: TranslationVars;
+  fallback?: string;
+  category?: 'all' | 'unlock' | 'backup' | 'copy' | 'warning' | 'data' | 'other';
+};
 type Toast = {
   id: number;
-  message: unknown;
+  message: ToastMessage;
+  resolvedMessage: string;
   type: ToastType;
   duration: number;
   action?: ToastAction;
 };
 type ToastContextValue = {
-  showToast: (message: unknown, type?: ToastType | string, duration?: number, action?: ToastAction) => void;
+  showToast: (message: ToastMessage, type?: ToastType | string, duration?: number, action?: ToastAction) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -104,6 +112,10 @@ const getToastDuration = (type: ToastType, duration: number | undefined, message
   return 3200;
 };
 
+const isKeyedToast = (message: ToastMessage): message is { key: string; vars?: TranslationVars; fallback?: string; category?: 'all' | 'unlock' | 'backup' | 'copy' | 'warning' | 'data' | 'other' } => (
+  !!message && typeof message === 'object' && !Array.isArray(message) && typeof (message as { key?: unknown }).key === 'string'
+);
+
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
   const [progress, setProgress] = useState(100);
   const [exiting, setExiting] = useState(false);
@@ -140,8 +152,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
   const style = TOAST_STYLES[toast.type];
   const Icon = TOAST_ICONS[toast.type] || Info;
-  const formatted = formatToastMessage(toast.message);
-  const messageText = String(toast.message ?? '');
+  const formatted = formatToastMessage(toast.resolvedMessage);
+  const messageText = toast.resolvedMessage;
 
   return (
     <div
@@ -201,18 +213,22 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const t = useT();
 
   const showToast = useCallback<ToastContextValue['showToast']>((message, type = 'info', duration, action) => {
     const id = ++toastId;
     const normalizedType = normalizeToastType(type);
-    const resolvedDuration = getToastDuration(normalizedType, duration, message);
-    logActionHistory(message, normalizedType).catch(() => {});
+    const resolvedMessage = isKeyedToast(message) ? t(message.key, message.vars) || message.fallback || message.key : String(message ?? '');
+    const resolvedDuration = getToastDuration(normalizedType, duration, resolvedMessage);
+    logActionHistory(resolvedMessage, isKeyedToast(message)
+      ? { type: normalizedType, messageKey: message.key, vars: message.vars, category: message.category }
+      : normalizedType).catch(() => {});
     setToasts(prev => {
       // Keep max 3 toasts visible
       const limited = prev.length >= 3 ? prev.slice(1) : prev;
-      return [...limited, { id, message, type: normalizedType, duration: resolvedDuration, action }];
+      return [...limited, { id, message, resolvedMessage, type: normalizedType, duration: resolvedDuration, action }];
     });
-  }, []);
+  }, [t]);
 
   const dismiss = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));

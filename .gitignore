@@ -20,7 +20,10 @@ blob-report/
 .env.*
 !.env.example
 .vite/
-docs/
+docs/local/
+docs/private/
+docs/TYPESCRIPT_MIGRATION_ROADMAP.md
+docs/XKEY_PROJECT_REVIEW_*.md
 
 # Logs
 logs/
@@ -90,6 +93,12 @@ android/app/google-services.json
 # xKey sensitive backup files
 *.xkey
 *.xkey.*
+xkey_export_*.csv
+xbot_export_*.csv
+xkey_shamir_*.html
+shamir_*.html
+wallets_*.csv
+wallets_*.zip
 
 # Local scratch / generated folders
 # IMPORTANT: keep the local 1/ workspace out of GitHub. It may contain notes,

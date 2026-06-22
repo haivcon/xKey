@@ -1,9 +1,10 @@
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
+import { Device } from '@capacitor/device';
 import CryptoJS from 'crypto-js';
 import { decryptEnvelope, encryptEnvelope, isCryptoEnvelope } from './cryptoEnvelope';
 import { appendAuditLog } from './auditLog';
+import { saveTextFile } from './fileSaver';
 import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from './reedSolomon';
 import type { Wallet } from '../types';
 
@@ -16,6 +17,8 @@ const V4_PAYLOAD = '-----BEGIN XKEY PAYLOAD-----';
 const V4_PAYLOAD_END = '-----END XKEY PAYLOAD-----';
 const V4_FOOTER = '-----BEGIN XKEY RECOVERY FOOTER-----';
 const V4_END = '-----END XKEY BACKUP V4-----';
+const BACKUP_HISTORY_KEY = 'xkey_backup_history_v1';
+const MAX_BACKUP_HISTORY_ENTRIES = 20;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
@@ -65,6 +68,9 @@ type BackupDescriptor = {
         platform?: string;
         native?: boolean;
         userAgent?: string;
+        manufacturer?: string;
+        model?: string;
+        osVersion?: string;
     };
     portable?: boolean;
     version?: number;
@@ -100,6 +106,7 @@ type BackupInspection = {
     status: string;
     title?: string;
     message?: string;
+    messageKey?: string;
     format?: string;
     backupId?: string;
     containerHash?: string;
@@ -122,6 +129,16 @@ type BackupInspection = {
         portable: boolean;
         scope: string;
     };
+};
+
+export type BackupHistoryEntry = {
+    fileName: string;
+    createdAt: string;
+    walletCount: number;
+    backupId: string;
+    verified?: boolean;
+    savedUri?: string;
+    fileHash?: string;
 };
 
 const getErrorMessage = (error: unknown): string => error instanceof Error ? error.message : String(error || '');
@@ -157,6 +174,52 @@ const createBackupId = (payloadHash: string, createdAt: string, summary?: Partia
     summary?.walletCount ?? 0,
     summary?.folderCount ?? 0,
 ].join('|')).slice(0, 20);
+
+const getBackupDeviceInfo = async () => {
+    try {
+        const info = await Device.getInfo();
+        return {
+            platform: Capacitor.getPlatform(),
+            native: Capacitor.isNativePlatform(),
+            userAgent: navigator.userAgent || '',
+            manufacturer: info.manufacturer || '',
+            model: info.model || '',
+            osVersion: info.osVersion || '',
+        };
+    } catch {
+        return { platform: Capacitor.getPlatform(), native: Capacitor.isNativePlatform(), userAgent: navigator.userAgent || '' };
+    }
+};
+
+const createExportFileName = (requestedName: string | undefined, extension: string, fallback: string): string => {
+    const baseName = (requestedName || '').trim()
+        .split('').map(character => character.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(character) ? '-' : character).join('')
+        .replace(new RegExp(`\\.${extension}$`, 'i'), '')
+        .replace(/[-.\s]+$/g, '')
+        .slice(0, 80);
+    return `${baseName || fallback}.${extension}`;
+};
+
+const recordBackupExport = async (entry: BackupHistoryEntry): Promise<void> => {
+    try {
+        const { value } = await Preferences.get({ key: BACKUP_HISTORY_KEY });
+        const current = value ? JSON.parse(value) : [];
+        const history = Array.isArray(current) ? current : [];
+        await Preferences.set({ key: BACKUP_HISTORY_KEY, value: JSON.stringify([entry, ...history].slice(0, MAX_BACKUP_HISTORY_ENTRIES)) });
+    } catch {
+        // Export has already succeeded; history is non-critical.
+    }
+};
+
+export const getBackupHistory = async (): Promise<BackupHistoryEntry[]> => {
+    try {
+        const { value } = await Preferences.get({ key: BACKUP_HISTORY_KEY });
+        const history = value ? JSON.parse(value) : [];
+        return Array.isArray(history) ? history as BackupHistoryEntry[] : [];
+    } catch {
+        return [];
+    }
+};
 
 const summarizeWallets = (wallets: Wallet[] = []): BackupSummary => {
     const folders = new Set<string>();
@@ -378,11 +441,7 @@ export const createPortableBackupText = async (wallets: Wallet[], config: Backup
         source: BACKUP_SOURCE,
         backupId,
         createdAt: backupPayload.timestamp,
-        createdBy: {
-            platform: Capacitor.getPlatform(),
-            native: Capacitor.isNativePlatform(),
-            userAgent: navigator.userAgent || '',
-        },
+        createdBy: await getBackupDeviceInfo(),
         portable: true,
         version: backupPayload.version,
         summary,
@@ -425,44 +484,27 @@ export const createPortableBackupText = async (wallets: Wallet[], config: Backup
 };
 
 // #14: Portable backup (uses user-chosen password)
-export const exportPortableBackup = async (wallets: Wallet[], config: BackupConfig, userPassword: string): Promise<boolean> => {
+export const exportPortableBackup = async (wallets: Wallet[], config: BackupConfig, userPassword: string, requestedFileName?: string): Promise<boolean> => {
     try {
         const encryptedData = await createPortableBackupText(wallets, config, userPassword);
-        const fileName = `xkey_portable_${new Date().getTime()}.xkey`;
+        const fileName = createExportFileName(requestedFileName, 'xkey', `xkey_portable_${new Date().getTime()}`);
 
-        if (!Capacitor.isNativePlatform()) {
-            const blob = new Blob([encryptedData], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
-            return true;
-        }
-
-        // Write to app cache (no permissions needed on any Android version)
-        const fileResult = await Filesystem.writeFile({
-            path: fileName,
-            data: encryptedData,
-            directory: Directory.Cache,
-            encoding: Encoding.UTF8
-        });
-
-        // Open share sheet so user can save to Downloads, Drive, etc.
-        await Share.share({
-            title: 'xKey Portable Backup',
-            text: 'Password-protected xKey vault backup.',
-            url: fileResult.uri,
-            dialogTitle: 'Save Portable Backup'
-        });
+        const savedFile = await saveTextFile(fileName, 'application/x-xkey', encryptedData);
 
         await appendAuditLog('backup.exported', {
             walletCount: wallets.length,
             portable: true,
             fileName,
+        });
+        const descriptor = parseV4BackupContainer(encryptedData);
+        await recordBackupExport({
+            fileName,
+            createdAt: new Date().toISOString(),
+            walletCount: wallets.length,
+            backupId: descriptor?.backupId || '',
+            verified: Boolean(savedFile.sha256) || !Capacitor.isNativePlatform(),
+            savedUri: savedFile.uri,
+            fileHash: savedFile.sha256 || sha256(encryptedData),
         });
         return true;
     } catch (e) {
@@ -473,6 +515,28 @@ export const exportPortableBackup = async (wallets: Wallet[], config: BackupConf
 
 export const inspectBackupFile = async (base64Data: string): Promise<BackupInspection> => {
     const rawText = decodeBackupFileData(base64Data);
+    if (!rawText.trim()) {
+        return {
+            legacy: false,
+            canPreview: false,
+            integrity: 'modified',
+            status: 'tampered',
+            title: 'Invalid xKey backup',
+            message: 'This file is empty or was not saved completely.',
+            messageKey: 'restore.emptyFile',
+        };
+    }
+    if (rawText.includes(V4_BEGIN) && (!rawText.includes(V4_PAYLOAD) || !rawText.includes(V4_END))) {
+        return {
+            legacy: false,
+            canPreview: false,
+            integrity: 'modified',
+            status: 'tampered',
+            title: 'Incomplete xKey backup',
+            message: 'This backup container is incomplete and cannot be imported.',
+            messageKey: 'restore.incompleteFile',
+        };
+    }
     const container = parseBackupContainer(rawText);
     if (!container) {
         return {
@@ -482,6 +546,7 @@ export const inspectBackupFile = async (base64Data: string): Promise<BackupInspe
             status: 'legacy',
             title: 'Legacy xKey backup',
             message: 'This backup was created by an older xKey version. Metadata preview is not available until it is decrypted.',
+            messageKey: 'restore.legacyNoPreview',
         };
     }
 
@@ -531,7 +596,7 @@ export const inspectBackupFile = async (base64Data: string): Promise<BackupInspe
             backupId: container.backupId || container.integrity?.backupId || '',
             containerHash: container.containerHash || sha256(rawText),
             createdAt: container.createdAt,
-            platform: container.createdBy?.platform || 'unknown',
+            platform: [container.createdBy?.manufacturer, container.createdBy?.model, container.createdBy?.osVersion ? `Android ${container.createdBy.osVersion}` : ''].filter(Boolean).join(' · ') || container.createdBy?.platform || 'unknown',
             native: !!container.createdBy?.native,
             walletCount: container.summary?.walletCount ?? 0,
             folderCount: container.summary?.folderCount ?? 0,

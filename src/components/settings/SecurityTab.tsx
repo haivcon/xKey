@@ -354,10 +354,10 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
   const handleChangePin = async () => {
     if (pinStep === 'current') {
       const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
-      if (hashPin(pinCurrent) !== stored) { setPinError('Incorrect current PIN'); return; }
+      if (hashPin(pinCurrent) !== stored) { setPinError(t('settings.incorrectCurrentPin')); return; }
       setPinStep('new'); setPinError('');
     } else if (pinStep === 'new') {
-      if (pinNew.length < 6) { setPinError('PIN must be 6 digits'); return; }
+      if (pinNew.length < 6) { setPinError(t('pinLock.enter6Digits')); return; }
       setPinStep('confirm'); setPinError('');
     } else if (pinStep === 'confirm') {
       if (pinConfirmVal !== pinNew) {
@@ -386,14 +386,14 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
 
   const handleToggleDecoy = async () => {
     if (hasDecoyPin) {
-      const confirmed = await showConfirm(t('settings.decoyRemoveWarning') || 'Are you sure you want to disable the Decoy Vault?', {
+      const confirmed = await showConfirm(t('settings.decoyRemoveWarning'), {
         danger: true,
-        title: t('settings.decoyRemoveConfirm') || 'Remove Decoy Vault PIN?',
+        title: t('settings.decoyRemoveConfirm'),
       });
       if (confirmed) {
         await Preferences.remove({ key: 'xkey_decoy_pin_hash' });
         setHasDecoyPin(false);
-        showToast(t('settings.decoyRemoved') || 'Decoy Vault disabled', 'info');
+        showToast(t('settings.decoyRemoved'), 'info');
       }
     } else {
       setShowDecoyPinInput(!showDecoyPinInput);
@@ -401,12 +401,12 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
   };
 
   const handleSetDecoyPin = async () => {
-    if (decoyPinInput.length !== 6) { showToast(t('pinLock.enter6Digits') || 'PIN must be 6 digits', 'error'); return; }
+    if (decoyPinInput.length !== 6) { showToast(t('pinLock.enter6Digits'), 'error'); return; }
     const { value: mainPinHash } = await Preferences.get({ key: PIN_HASH_KEY });
-    if (hashPin(decoyPinInput) === mainPinHash) { showToast(t('settings.decoySameAsMain') || 'Decoy PIN must be different from main PIN', 'error'); return; }
+    if (hashPin(decoyPinInput) === mainPinHash) { showToast(t('settings.decoySameAsMain'), 'error'); return; }
     await Preferences.set({ key: 'xkey_decoy_pin_hash', value: hashPin(decoyPinInput) });
     setHasDecoyPin(true); setShowDecoyPinInput(false); setDecoyPinInput('');
-    showToast(t('settings.decoyEnabled') || 'Decoy Vault enabled', 'success');
+    showToast(t('settings.decoyEnabled'), 'success');
   };
 
   const handleToggleShakeToLock = async () => {
@@ -414,7 +414,7 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
     if (newVal) {
       const hasPermission = await requestMotionPermission();
       if (!hasPermission) {
-        showToast(t('settings.shakePermissionDenied') || 'Motion permission was denied', 'error');
+        showToast(t('settings.shakePermissionDenied'), 'error');
         return;
       }
     }
@@ -1055,12 +1055,12 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
               <div className="flex items-center gap-3">
                 <ShieldAlert size={16} className={hasDecoyPin ? 'text-amber-400' : 'text-surface-400'} />
                 <div>
-                  <h3 className="text-white font-medium">{t('settings.decoyVaultTitle') || 'Decoy Vault'}</h3>
-                  <p className="text-xs text-surface-400">{t('settings.decoyVaultDesc') || 'Set a fake PIN to open an empty vault'}</p>
+                  <h3 className="text-white font-medium">{t('settings.decoyVaultTitle')}</h3>
+                  <p className="text-xs text-surface-400">{t('settings.decoyVaultDesc')}</p>
                 </div>
               </div>
               <button onClick={handleToggleDecoy} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${hasDecoyPin ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-surface-700 text-white hover:bg-surface-600'}`}>
-                {hasDecoyPin ? t('settings.removeDecoyPin') || 'Remove' : t('settings.setDecoyPin') || 'Setup'}
+                {hasDecoyPin ? t('settings.removeDecoyPin') : t('settings.setDecoyPin')}
               </button>
             </div>
             {showDecoyPinInput && !hasDecoyPin && (
@@ -1068,13 +1068,13 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
                 <PasswordInput 
                   value={decoyPinInput} 
                   onChange={(e) => setDecoyPinInput(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="6-digit PIN" 
+                  placeholder={t('pinLock.enter6Digits')}
                   maxLength={6} 
                   wrapperClassName="flex-1"
                   className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" 
                 />
                 <button onClick={handleSetDecoyPin} className="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-500 transition-colors">
-                  {t('settings.save') || 'Save'}
+                  {t('common.save')}
                 </button>
               </div>
             )}
@@ -1087,8 +1087,8 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
               <div className="flex items-center gap-3">
                 <Monitor size={16} className={shakeToLockEnabled ? 'text-brand-400' : 'text-surface-400'} />
                 <div className="text-left">
-                  <h3 className="text-white font-medium">{t('settings.shakeToLockTitle') || 'Shake to Lock'}</h3>
-                  <p className="text-xs text-surface-400">{t('settings.shakeToLockDesc') || 'Lock app immediately when shaking device'}</p>
+                  <h3 className="text-white font-medium">{t('settings.shakeToLockTitle')}</h3>
+                  <p className="text-xs text-surface-400">{t('settings.shakeToLockDesc')}</p>
                 </div>
               </div>
               <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${shakeToLockEnabled ? 'bg-brand-500' : 'bg-surface-700'}`}>
@@ -1098,8 +1098,8 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
             {shakeToLockEnabled && (
               <div className="px-4 pb-4">
                 <div className="flex items-center justify-between text-xs text-surface-400 mb-2">
-                  <span>{t('settings.shakeSensitivity') || 'Sensitivity'}</span>
-                  <span>{shakeSensitivity === 10 ? (t('settings.high') || 'High') : shakeSensitivity === 15 ? (t('settings.medium') || 'Medium') : (t('settings.low') || 'Low')}</span>
+                  <span>{t('settings.shakeSensitivity')}</span>
+                  <span>{shakeSensitivity === 10 ? t('settings.high') : shakeSensitivity === 15 ? t('settings.medium') : t('settings.low')}</span>
                 </div>
                 <input 
                   type="range" min="10" max="25" step="5"
@@ -1107,8 +1107,8 @@ export default function SecurityTab({ aesKey }: SecurityTabProps) {
                   className="w-full h-1 bg-surface-700 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-[0.625rem] text-surface-500 mt-1">
-                  <span>{t('settings.high') || 'High'}</span>
-                  <span>{t('settings.low') || 'Low'}</span>
+                  <span>{t('settings.high')}</span>
+                  <span>{t('settings.low')}</span>
                 </div>
               </div>
             )}
