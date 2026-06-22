@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "Your encrypted backup is the proof that you control your own keys. Store it offline and keep the password separate.",
+    "restoreNote": "Verify the backup ID, file hash, and device details before restoring. Only import files you trust.",
+    "csvExportNote": "CSV is for review and migration. It is not encrypted, so keep it away from shared storage and chat apps.",
+    "emptyVaultDesc": "Create or import a wallet when you are ready to hold your keys locally.",
+    "aboutDesc": "xKey is an offline-first vault built around one rule: the person who controls the key controls the crypto."
+  },
   "integrity": {
     "cryptoChecking": "Verifying crypto runtime...",
     "appChecking": "Checking app integrity...",
@@ -222,6 +229,8 @@ export default {
     "openGithub": "View source on GitHub",
     "tabAudit": "Audit Log",
     "appearance": "Appearance",
+    "brandReminders": "Security slogan reminders",
+    "brandRemindersDesc": "Show the xKey slogan in sensitive moments such as backup, restore, CSV export, and unlock screens.",
     "darkMode": "Dark",
     "lightMode": "Light",
     "language": "Language",
@@ -705,6 +714,7 @@ export default {
     "copyFailed": "Copy failed. Please try again.",
     "addressCopiedFull": "Copied {wallet} address: {address}",
     "fieldCopied": "Copied {field} for {wallet}",
+    "secretCopiedSafety": "{field} copied for {wallet}. Keep it offline and clear it when finished.",
     "moveBtn": "Move",
     "new": "NEW"
   },

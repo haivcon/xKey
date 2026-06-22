@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Key } from 'lucide-react';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 const LETTER_DELAY = 250;   // ms between each letter
 const HOLD_DURATION = 800;  // ms to hold after all visible
@@ -87,6 +88,12 @@ export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps
         <img src="/logo.png" alt="" className="splash-logo" />
         <div className="splash-text">
           {letters.map((ch, i) => renderChar(ch, i))}
+        </div>
+        <div
+          className={`splash-slogan ${badgeVisible ? 'is-visible' : ''}`}
+          aria-label={XKEY_SLOGAN}
+        >
+          <span>NOT YOUR </span><strong>KEY</strong><span>, NOT YOUR CRYPTO</span>
         </div>
         <div 
           className="splash-key-icon"

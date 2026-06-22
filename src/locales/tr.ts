@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "Şifreli yedek, anahtarların sizin kontrolünüzde olduğunu gösterir. Çevrimdışı saklayın ve parolayı ayrı tutun.",
+    "restoreNote": "Geri yüklemeden önce backup ID, dosya hash’i ve cihaz bilgilerini kontrol edin. Yalnızca güvendiğiniz dosyaları içe aktarın.",
+    "csvExportNote": "CSV inceleme ve taşıma içindir. Şifreli değildir; ortak depolama veya sohbet uygulamalarında tutmayın.",
+    "emptyVaultDesc": "Anahtarlarınızı bu cihazda yerel olarak tutmaya hazır olduğunuzda cüzdan oluşturun veya içe aktarın.",
+    "aboutDesc": "xKey, offline-first bir cüzdan kasasıdır ve tek kurala dayanır: anahtarı kontrol eden crypto’yu kontrol eder."
+  },
   "integrity": {
     "cryptoChecking": "Kripto çalışma ortamı doğrulanıyor...",
     "appChecking": "Uygulama bütünlüğü denetleniyor...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey'in kaynak kodu herkese açıktır ve cihazınızda yerel olarak çalışır. Kasanız hiçbir sunucuya gönderilmez; bu yüzden kimse verilerinize uzaktan erişemez veya müdahale edemez.",
     "openGithub": "Kaynağı GitHub'da görüntüle",
     "appearance": "Görünüm",
+    "brandReminders": "Güvenlik sloganı hatırlatmaları",
+    "brandRemindersDesc": "Yedekleme, geri yükleme, CSV dışa aktarma ve kilit açma ekranları gibi hassas anlarda xKey sloganını göster.",
     "darkMode": "Karanlık Mod",
     "lightMode": "Aydınlık Mod",
     "language": "Dil",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "Kopyalama başarısız. Tekrar deneyin.",
     "addressCopiedFull": "{wallet} adresi kopyalandı: {address}",
     "fieldCopied": "{wallet} için {field} kopyalandı",
+    "secretCopiedSafety": "{wallet} için {field} kopyalandı. Çevrimdışı saklayın ve işiniz bitince silin.",
     "moveBtn": "Hareket et",
     "new": "YENİ"
   },

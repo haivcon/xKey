@@ -12,12 +12,15 @@ type ThemeContextValue = {
   setDisplayScale: (next: number | string | null | undefined) => void;
   walletDensity: WalletDensity;
   setWalletDensity: (next: string | null | undefined) => void;
+  brandReminders: boolean;
+  setBrandReminders: (next: boolean) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_KEY = 'xkey_theme';
 const DISPLAY_SCALE_KEY = 'xkey_display_scale';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
+const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
 const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
@@ -60,6 +63,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [displayScale, setDisplayScaleState] = useState(DEFAULT_DISPLAY_SCALE);
   const [walletDensity, setWalletDensityState] = useState<WalletDensity>('comfortable');
+  const [brandReminders, setBrandRemindersState] = useState(true);
 
   useEffect(() => {
     applyDisplayScale(DEFAULT_DISPLAY_SCALE);
@@ -82,6 +86,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setWalletDensityState(value);
       }
     }).catch(() => {});
+
+    Preferences.get({ key: BRAND_REMINDERS_KEY }).then(({ value }) => {
+      if (value === 'false') setBrandRemindersState(false);
+      else if (value === 'true') setBrandRemindersState(true);
+    }).catch(() => {});
   }, []);
 
   const setTheme = useCallback((next: ThemeMode) => {
@@ -103,6 +112,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.set({ key: WALLET_DENSITY_KEY, value: normalized }).catch(() => {});
   }, []);
 
+  const setBrandReminders = useCallback((next: boolean) => {
+    setBrandRemindersState(next);
+    Preferences.set({ key: BRAND_REMINDERS_KEY, value: String(next) }).catch(() => {});
+  }, []);
+
   // Legacy toggle for backward compat
   const toggleTheme = useCallback(() => {
     setThemeState(prev => {
@@ -114,7 +128,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders }}>
       {children}
     </ThemeContext.Provider>
   );

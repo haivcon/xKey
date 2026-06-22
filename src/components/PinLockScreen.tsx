@@ -4,7 +4,9 @@ import CryptoJS from 'crypto-js';
 import { Delete, Lock, ShieldCheck, TimerReset } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { appendAuditLog } from '../utils/auditLog';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 const PIN_HASH_KEY = 'xkey_pin_hash';
 const PIN_ATTEMPTS_KEY = 'xkey_pin_attempts';
@@ -28,6 +30,7 @@ type PinLockScreenProps = {
 
 export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScreenProps) {
   const t = useT();
+  const { brandReminders } = useTheme();
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [mode, setMode] = useState<PinMode>('loading');
@@ -213,6 +216,11 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
             ? t('pinLock.tooManyAttempts')
             : t('pinLock.enter6Digits')}
         </p>
+        {brandReminders && (
+          <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300/80">
+            {XKEY_SLOGAN}
+          </p>
+        )}
       </div>
 
       {/* PIN dots */}

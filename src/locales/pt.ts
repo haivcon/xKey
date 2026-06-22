@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "O backup criptografado prova que você controla suas próprias chaves. Guarde-o offline e mantenha a senha separada.",
+    "restoreNote": "Confira o ID do backup, o hash do arquivo e os dados do dispositivo antes de restaurar. Importe apenas arquivos confiáveis.",
+    "csvExportNote": "CSV serve para revisão e migração. Ele não é criptografado, então evite armazenamento compartilhado e apps de conversa.",
+    "emptyVaultDesc": "Crie ou importe uma carteira quando estiver pronto para manter suas chaves localmente.",
+    "aboutDesc": "xKey é um cofre de carteiras offline-first baseado em uma regra: quem controla a chave controla o crypto."
+  },
   "integrity": {
     "cryptoChecking": "Verificando runtime criptográfico...",
     "appChecking": "Verificando integridade do app...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "O xKey tem código-fonte público e roda localmente no seu dispositivo. Seu cofre não é enviado a nenhum servidor, então ninguém pode acessar ou interferir nos seus dados remotamente.",
     "openGithub": "Ver código no GitHub",
     "appearance": "Aparência",
+    "brandReminders": "Lembretes do slogan de segurança",
+    "brandRemindersDesc": "Mostrar o slogan do xKey em momentos sensíveis como backup, restauração, exportação CSV e telas de desbloqueio.",
     "darkMode": "Modo escuro",
     "lightMode": "Modo claro",
     "language": "Idioma",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "Falha ao copiar. Tente novamente.",
     "addressCopiedFull": "Endereço de {wallet} copiado: {address}",
     "fieldCopied": "{field} copiado para {wallet}",
+    "secretCopiedSafety": "{field} copiado para {wallet}. Mantenha offline e apague quando terminar.",
     "moveBtn": "Mover",
     "new": "NOVO"
   },

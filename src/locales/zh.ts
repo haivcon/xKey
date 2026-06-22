@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "加密备份证明你掌控自己的密钥。请离线保存，并将密码分开保管。",
+    "restoreNote": "恢复前请核对备份 ID、文件哈希和设备信息。只导入你信任的文件。",
+    "csvExportNote": "CSV 适合查看和迁移数据。它未加密，请勿放在共享存储或聊天应用中。",
+    "emptyVaultDesc": "准备好在本机自主管理密钥时，再创建或导入钱包。",
+    "aboutDesc": "xKey 是离线优先的钱包保险库，核心原则是：掌控密钥的人才掌控加密资产。"
+  },
   "integrity": {
     "cryptoChecking": "正在验证加密运行环境...",
     "appChecking": "正在检查应用完整性...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey 的源代码公开，应用在你的设备本地运行。你的保险库不会发送到任何服务器，因此没有人可以远程访问或干预你的数据。",
     "openGithub": "在 GitHub 查看源码",
     "appearance": "外观",
+    "brandReminders": "安全标语提醒",
+    "brandRemindersDesc": "在备份、恢复、导出 CSV 和解锁等敏感场景显示 xKey 标语。",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
     "language": "语言",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "复制失败。请重试。",
     "addressCopiedFull": "已复制 {wallet} 地址：{address}",
     "fieldCopied": "已复制 {wallet} 的{field}",
+    "secretCopiedSafety": "已复制 {wallet} 的 {field}。请离线保存，用完后清除。",
     "moveBtn": "移动",
     "new": "新"
   },

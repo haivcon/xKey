@@ -9,6 +9,7 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { useTheme } from '../contexts/ThemeContext';
 import type { TranslationFn } from '../contexts/LanguageContext';
 import type { QrModalData, SortOrder, Wallet } from '../types';
+import BrandSlogan from './BrandSlogan';
 
 const getColumnCount = () => {
   if (typeof window === 'undefined') return 1;
@@ -52,7 +53,7 @@ export default function WalletList({
   activeFolder = 'All', searchQuery = '', onAddWallet, onImport
 }: WalletListProps) {
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
-  const { displayScale, walletDensity } = useTheme();
+  const { displayScale, walletDensity, brandReminders } = useTheme();
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const [listOffset, setListOffset] = useState(0);
@@ -151,6 +152,11 @@ export default function WalletList({
           <h3 className="text-sm font-bold text-white">
             {isEmptyFolder ? t('home.emptyFolderTitle', { name: activeFolder }) : t('home.noWallets')}
           </h3>
+          {brandReminders && !isEmptyFolder && !searchQuery && (
+            <div className="mx-auto mt-2 max-w-sm">
+              <BrandSlogan note={t('brand.emptyVaultDesc')} tone="brand" compact />
+            </div>
+          )}
           {isEmptyFolder && (
             <>
               <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-surface-400">

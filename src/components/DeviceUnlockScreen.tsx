@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Lock, Settings, ShieldCheck } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { isDeviceCredentialAvailable, openDeviceSecuritySettings } from '../utils/deviceCredential';
 import { appendAuditLog } from '../utils/auditLog';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 type DeviceUnlockScreenProps = {
   onUnlock: () => Promise<void>;
@@ -17,6 +19,7 @@ const getErrorField = (error: unknown, field: 'code' | 'message'): string => {
 
 export default function DeviceUnlockScreen({ onUnlock }: DeviceUnlockScreenProps) {
   const t = useT();
+  const { brandReminders } = useTheme();
   const [unlocking, setUnlocking] = useState(false);
   const [checking, setChecking] = useState(true);
   const [available, setAvailable] = useState(false);
@@ -118,6 +121,11 @@ export default function DeviceUnlockScreen({ onUnlock }: DeviceUnlockScreenProps
               ? t('deviceUnlock.subtitle')
               : t('deviceUnlock.setupRequired')}
         </p>
+        {brandReminders && (
+          <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300/80">
+            {XKEY_SLOGAN}
+          </p>
+        )}
       </div>
       {!checking && !available && (
         <div className="device-setup-note mt-6 max-w-sm rounded-2xl border p-4 text-left">

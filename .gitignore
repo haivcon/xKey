@@ -74,6 +74,8 @@ release-notes*.md
 CHANGELOG.local.md
 github-release-notes*.txt
 play-store-notes*.txt
+google-play-listing*.txt
+store-listing*.txt
 release/
 releases/
 

@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "La copia cifrada demuestra que controlas tus propias claves. Guárdala sin conexión y conserva la contraseña por separado.",
+    "restoreNote": "Verifica el ID de backup, el hash del archivo y los datos del dispositivo antes de restaurar. Importa solo archivos confiables.",
+    "csvExportNote": "CSV sirve para revisar y migrar datos. No está cifrado, así que evita guardarlo en almacenamiento compartido o apps de chat.",
+    "emptyVaultDesc": "Crea o importa una cartera cuando estés listo para guardar tus claves localmente.",
+    "aboutDesc": "xKey es una bóveda de carteras offline-first basada en una regla: quien controla la clave controla el crypto."
+  },
   "integrity": {
     "cryptoChecking": "Verificando entorno criptográfico...",
     "appChecking": "Comprobando integridad de la app...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey tiene código fuente público y se ejecuta localmente en tu dispositivo. Tu bóveda no se envía a ningún servidor, por lo que nadie puede acceder a tus datos ni intervenir de forma remota.",
     "openGithub": "Ver código en GitHub",
     "appearance": "Apariencia",
+    "brandReminders": "Recordatorios del eslogan de seguridad",
+    "brandRemindersDesc": "Mostrar el eslogan de xKey en momentos sensibles como backup, restauración, exportación CSV y pantallas de desbloqueo.",
     "darkMode": "Modo oscuro",
     "lightMode": "Modo claro",
     "language": "Idioma",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "No se pudo copiar. Inténtalo de nuevo.",
     "addressCopiedFull": "Dirección de {wallet} copiada: {address}",
     "fieldCopied": "{field} copiado para {wallet}",
+    "secretCopiedSafety": "{field} copiado para {wallet}. Guárdalo sin conexión y bórralo al terminar.",
     "moveBtn": "Mover",
     "new": "NUEVO"
   },

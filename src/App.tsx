@@ -20,6 +20,7 @@ import DeviceUnlockScreen from './components/DeviceUnlockScreen';
 import BatchActionBar from './components/BatchActionBar';
 import PasswordInput from './components/PasswordInput';
 import AnimatedSplash from './components/AnimatedSplash';
+import BrandSlogan from './components/BrandSlogan';
 
 // Components (Lazy loaded)
 const SettingsScreen = lazy(() => import('./components/SettingsScreen'));
@@ -58,14 +59,17 @@ import useAppVersion from './hooks/useAppVersion';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
+import { useTheme } from './contexts/ThemeContext';
 import { runRuntimeIntegrityChecks } from './utils/runtimeIntegrity';
 import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled } from './utils/deviceIntegrity';
 import { appendAuditLog } from './utils/auditLog';
 import { addXKeyFileOpenListener, getPendingXKeyFile } from './utils/nativeFileOpen';
 import { secureCopy } from './utils/clipboard';
+import { XKEY_SLOGAN } from './utils/branding';
 import type { QrModalData, Wallet } from './types';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
+const HEADER_SLOGAN_LETTERS = Array.from(XKEY_SLOGAN);
 
 type AssetBalanceChange = {
   wallet: Wallet;
@@ -154,6 +158,7 @@ export default function App() {
   const { showToast } = useToast() || {};
   const showConfirm = useConfirm();
   const appVersion = useAppVersion();
+  const { brandReminders } = useTheme();
 
   useEffect(() => {
     tRef.current = t;
@@ -683,9 +688,11 @@ export default function App() {
           <div className="relative flex justify-between items-center">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1">
-                {t('home.title')}
-              </h1>
+              <div>
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1 leading-tight">
+                  {t('home.title')}
+                </h1>
+              </div>
             </div>
             <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <div className="whitespace-nowrap rounded-full border border-brand-500/25 bg-brand-500/10 px-[0.625rem] py-[0.25rem] text-[0.625rem] font-semibold leading-none text-brand-200 shadow-sm shadow-brand-500/10 sm:px-[0.75rem] sm:text-[0.6875rem]">
@@ -700,6 +707,21 @@ export default function App() {
                 <Settings size={20} />
               </button>
             </div>
+            {brandReminders && (
+              <div className="pointer-events-none absolute left-1/2 top-full z-10 flex w-[min(92vw,28rem)] -translate-x-1/2 translate-y-[0.58rem] justify-center">
+                <div className="home-header-slogan rounded-full border border-brand-400/20 bg-surface-950/55 px-3 py-1 text-center shadow-[0_0_18px_rgba(56,189,248,0.16)] backdrop-blur-md">
+                  {HEADER_SLOGAN_LETTERS.map((letter, index) => (
+                    <span
+                      key={`${letter}-${index}`}
+                      className={letter === ' ' ? 'home-header-slogan-space' : 'home-header-slogan-letter'}
+                      style={{ animationDelay: `${index * 45}ms` }}
+                    >
+                      {letter === ' ' ? '\u00A0' : letter}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           </div>
         </header>
@@ -1000,6 +1022,7 @@ export default function App() {
               </div>
               <h3 className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
               <p className="text-surface-400 text-sm text-center mb-4">{t('restore.desc')}</p>
+              {brandReminders && <BrandSlogan note={t('brand.restoreNote')} tone="brand" className="mb-4 text-center" />}
               {backupPreview && (
                 <div className={`mb-4 rounded-xl border p-3 text-xs ${
                   backupPreview.status === 'tampered'
@@ -1113,6 +1136,7 @@ export default function App() {
               </div>
               <h3 className="text-white font-bold text-center mb-1">{t('actionBar.exportBackup')}</h3>
               <p className="text-surface-400 text-sm text-center mb-5">{t('settings.backupSubtitle')}</p>
+              {brandReminders && <BrandSlogan note={t('brand.backupExportNote')} tone="success" className="mb-4 text-center" />}
               <div className="space-y-3">
                 <input
                   value={backupFileName}

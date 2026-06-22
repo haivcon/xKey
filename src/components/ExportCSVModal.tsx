@@ -5,6 +5,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import type { Wallet } from '../types';
 import { saveTextFile } from '../utils/fileSaver';
+import { XKEY_SLOGAN } from '../utils/branding';
+import { useTheme } from '../contexts/ThemeContext';
+import BrandSlogan from './BrandSlogan';
 
 type CsvColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 type CsvColumn = {
@@ -22,6 +25,7 @@ type ExportCSVModalProps = {
 
 export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps) {
   const t = useT();
+  const { brandReminders } = useTheme();
 
   const COLUMNS: CsvColumn[] = [
     { key: 'name', label: t('exportCSV.colName'), default: true },
@@ -91,6 +95,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
           <button onClick={onClose} className="p-2 hover:bg-surface-800 rounded-full transition-colors text-surface-400"><X size={20} /></button>
         </div>
         <div className="p-5 space-y-4">
+          {brandReminders && <BrandSlogan note={t('brand.csvExportNote')} tone="success" />}
           <p className="text-sm text-surface-400">{t('exportCSV.selectColumns', { count: wallets.length })}</p>
           <input
             value={fileName}
@@ -110,7 +115,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
           {hasSensitive && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400 flex gap-2">
               <ShieldAlert size={14} className="flex-shrink-0 mt-0.5" />
-              <span>{t('exportCSV.sensitiveWarning')}</span>
+              <span>{brandReminders && <strong className="block text-red-300">{XKEY_SLOGAN}</strong>}{t('exportCSV.sensitiveWarning')}</span>
             </div>
           )}
         </div>

@@ -2,10 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.12.1]
+
+### Release Focus
+v5.12.1 focuses on xKey's product identity, slogan placement, Android UI polish, Shamir QR printed backup branding, and full localization for the new brand reminders.
+
+### Brand Identity and Slogan
+- Added the slogan **NOT YOUR KEY, NOT YOUR CRYPTO** as a consistent xKey security message across product surfaces.
+- Added a reusable BrandSlogan component and a centralized slogan constant to prevent inconsistent wording across the app.
+- Added a subtle animated home-header slogan in the unused space between the version badge and folder bar without increasing the header height or reducing the visible wallet list.
+- Added contextual slogan reminders to lock, backup, restore, CSV export, empty-vault, secret-copy, and backup-health surfaces.
+- Added a Settings toggle for security slogan reminders so users can reduce repeated brand prompts while keeping Splash, About, README, and printed materials branded.
+
+### UI and Backup Presentation
+- Centered slogan blocks and explanatory text in backup and CSV flows for cleaner Android presentation.
+- Increased the About screen slogan size and centered the xKey brand description.
+- Added xKey watermarking to Shamir QR UI, print sheets, and saved HTML files, including slogan, backup ID, creation time, and backup safety context.
+- Added Google Play listing copy to README using the new slogan.
+
+### Localization
+- Added full translations for all new brand reminder, slogan explanation, and warning text across `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, and `zh`.
+
+### Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run build`
+- `npx cap sync android`
+- `android\gradlew.bat assembleDebug`
+
 ## [5.12.0]
 
 ### Release Focus
 v5.12.0 focuses on backup safety, Android file-export reliability, Shamir QR usability, audit-log polish, full localization coverage, and post-TypeScript hardening.
+
+### Brand Identity and Slogan
+- Added the xKey slogan **NOT YOUR KEY, NOT YOUR CRYPTO** across splash, lock, backup, restore, CSV export, empty state, About, onboarding, Shamir QR print/export, README, and release materials.
+- Added a reusable BrandSlogan UI component and centralized slogan constant to keep the phrase consistent across the app.
+- Added a Settings toggle for contextual security slogan reminders so users can reduce repeated prompts while keeping the slogan in core brand surfaces.
+- Added Shamir QR print/HTML watermarking with xKey branding, slogan, backup ID, creation time, and backup safety context.
+- Added Google Play listing copy that uses the slogan without changing app behavior.
 
 ### Backup, Restore, and File Export
 - **Native Android save flow**: `.xkey`, CSV, and Shamir QR HTML exports can be saved through Android's document picker with user-selected file names and destinations.

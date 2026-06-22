@@ -8,6 +8,7 @@ import { verifySavedTextFile } from '../../utils/fileSaver';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import PasswordInput from '../PasswordInput';
 import QRTransferModal from '../QRTransferModal';
@@ -17,6 +18,7 @@ import ShamirRestoreModal from '../ShamirRestoreModal';
 import DangerZone from './DangerZone';
 import Notice from '../Notice';
 import type { Wallet } from '../../types';
+import { XKEY_SLOGAN } from '../../utils/branding';
 
 type AutoBackupInterval = 'off' | 'daily' | 'weekly';
 
@@ -55,6 +57,7 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   const { showToast } = useToast();
   const showConfirm = useConfirm();
   const t = useT();
+  const { brandReminders } = useTheme();
 
   // Load saved auto-backup settings
   useEffect(() => {
@@ -196,9 +199,14 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
           </div>
         </div>
 
-        <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-3.5 mb-3 flex gap-2.5">
-          <ShieldCheck size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-surface-300 leading-relaxed">{t('settings.backupInfo')}</p>
+        <div className="mb-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3.5 text-center">
+          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10">
+            <ShieldCheck size={16} className="text-emerald-400" />
+          </div>
+          <div className="mx-auto max-w-2xl">
+            {brandReminders && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>}
+            <p className={`${brandReminders ? 'mt-1' : ''} text-xs text-surface-300 leading-relaxed`}>{t('settings.backupInfo')}</p>
+          </div>
         </div>
         <Notice variant="warning" className="mb-5">
           {t('settings.hardwareBoundPortableBackupNote')}
@@ -271,7 +279,7 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
       <div className="glass-card p-6">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/10"><Download size={20} className="text-brand-400" /></div>
-          <div><h2 className="text-lg font-semibold text-white">{t('settings.backupHistoryTitle')}</h2><p className="text-xs text-surface-400">{t('settings.backupHistoryDesc')}</p></div>
+          <div><h2 className="text-lg font-semibold text-white">{t('settings.backupHistoryTitle')}</h2><p className="text-xs text-surface-400">{t('settings.backupHistoryDesc')}</p>{brandReminders && <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-300/80">{XKEY_SLOGAN}</p>}</div>
         </div>
         {backupHistory.length > 0 && vaultChangedAt && new Date(vaultChangedAt).getTime() > new Date(backupHistory[0].createdAt).getTime() && (
           <Notice variant="warning" className="mb-4">{t('settings.backupOutdated')}</Notice>

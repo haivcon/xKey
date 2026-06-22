@@ -1,6 +1,8 @@
 <div align="center">
   <h1>xKey - Offline Web3 Wallet Vault</h1>
 
+  <p><strong>NOT YOUR KEY, NOT YOUR CRYPTO</strong></p>
+
   <p><strong>A private, offline-first cold vault for managing Web3 wallets, secrets, backups, Shamir QR recovery, and local audit history.</strong></p>
 
   ![GitHub Release](https://img.shields.io/github/v/release/haivcon/xKey?color=blue&label=Latest%20Release)
@@ -16,26 +18,22 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.12.0
+## Current Release: v5.12.1
 
-v5.12.0 focuses on backup safety, Android file-export reliability, Shamir QR usability, audit-log polish, full localization coverage, and post-TypeScript hardening.
+v5.12.1 focuses on xKey's product identity, slogan placement, Android UI polish, Shamir QR printed backup branding, and full localization for the new brand reminders.
 
 ### Main Upgrades
 
-- **Professional Android file export:** `.xkey`, CSV, and Shamir QR HTML exports use a native Android save flow so users can choose the destination and file name instead of relying only on the share sheet.
-- **Verified portable backups:** after exporting a `.xkey` file, xKey can verify the saved file location, hash, metadata, backup ID, wallet count, and integrity state.
-- **Tamper-evident `.xkey` preview:** backup restore now shows metadata before import, including source device, creation time, wallet/folder/network counts, full file hash, backup ID, external-app warning, and copy buttons for verification.
-- **Verify-only restore flow:** external `.xkey` files can be opened and verified without importing, with a copyable verification report.
-- **Self-healing backup format:** portable backups use the current container format with metadata, encrypted payload, recovery footer, and Reed-Solomon 10+5 shard recovery.
-- **Safer restore decisions:** restore preview compares the backup with the current vault and supports Merge, Replace, and Verify only paths.
-- **Shamir QR improvements:** Shamir QR codes can be enlarged with one tap, copied, printed, shared, saved as named HTML files, and reviewed more comfortably on mobile.
-- **Audit Log redesign:** the Audit Log tab now separates protected security audit entries from local action history, shows compact summaries, category filters, counts, and a shorter expandable history list.
-- **Localized action history:** toast/action history entries now store translation keys where possible, reducing mixed-language history after switching languages.
-- **Language-switch polish:** changing the app language no longer triggers unnecessary device-lock authentication.
-- **Light-theme readability:** warning, backup, import, and notice panels have improved contrast in light mode.
-- **Input keyboard ergonomics:** password and text inputs scroll into view when the Android keyboard opens, reducing hidden fields in modal dialogs.
-- **Security and device guard polish:** Root/Data Tamper Guard, hardware-bound vault notes, external backup warnings, secure display labels, and restore/import messages have improved localization.
-- **Full locale coverage:** new UI strings are translated across `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, and `zh`.
+- **Slogan-first brand identity:** xKey now consistently uses **NOT YOUR KEY, NOT YOUR CRYPTO** as the primary security message.
+- **Animated home header slogan:** the slogan appears in the unused space below the version badge and above the folder bar, using a subtle letter-by-letter glow without increasing header height or shrinking the wallet list.
+- **Reusable brand component:** added a shared BrandSlogan UI component and a centralized slogan constant so the phrase stays consistent across screens.
+- **Contextual brand reminders:** sensitive screens such as lock, backup, restore, CSV export, empty vault, and wallet secret-copy warnings can show the slogan when reminders are enabled.
+- **User-controlled reminders:** Settings now includes a localized toggle for security slogan reminders; Splash, About, README, and printed materials keep the core brand line.
+- **About screen upgrade:** the About tab presents the slogan as a larger centered brand statement with a clearer product description.
+- **Backup and CSV polish:** slogan blocks in backup and CSV flows are centered with cleaner spacing and translated explanatory text.
+- **Shamir QR watermarking:** Shamir QR UI, print sheets, and saved HTML now include xKey branding, slogan, backup ID, creation time, and safety context.
+- **Store listing copy:** README now includes short and long Google Play listing copy that uses the slogan.
+- **Full locale coverage:** all new brand-reminder text is translated across `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, and `zh`.
 
 ### Verification for This Release
 
@@ -44,6 +42,16 @@ v5.12.0 focuses on backup safety, Android file-export reliability, Shamir QR usa
 - `npm run build`
 - `npx cap sync android`
 - `android\gradlew.bat assembleDebug`
+
+### Store Listing Copy
+
+Short description:
+
+`Offline wallet vault. NOT YOUR KEY, NOT YOUR CRYPTO.`
+
+Long description opener:
+
+`xKey is an offline-first Web3 wallet vault for people who want direct local control of wallet keys, backups, audit history, and recovery files. NOT YOUR KEY, NOT YOUR CRYPTO.`
 
 ---
 
@@ -69,8 +77,9 @@ v5.12.0 focuses on backup safety, Android file-export reliability, Shamir QR usa
 
 ## Previous Release Highlights
 
+- **v5.12.0:** added native Android save flow, verified `.xkey` backup metadata, verify-only restore previews, copyable backup IDs/file hashes, Reed-Solomon 10+5 backup recovery, Shamir QR zoom/save improvements, audit-log redesign, keyboard ergonomics, light-theme contrast fixes, and full localization for those flows.
 - **v5.11.0:** completed the strict TypeScript migration and typed security-critical backup, storage, key, and build paths.
-- **v5.10.x:** introduced self-healing Reed-Solomon storage, tamper-evident backup previews, encrypted audit logs, Android `.xkey` open handling, runtime integrity checks, and Root/Data Tamper Guard.
+- **v5.10.x:** introduced self-healing storage, tamper-evident backup previews, encrypted audit logs, Android `.xkey` open handling, runtime integrity checks, and Root/Data Tamper Guard.
 - **Older releases:** added hardware-bound vault mode, secure glyph display, scrambled keyboard, Shamir backup/restore, folders, tags, vanity tools, QR workflows, CSV import/export, manual balances, decoy vault, kill switch, native clipboard, and haptics.
 
 Detailed older notes are kept in [CHANGELOG.md](./CHANGELOG.md).
@@ -120,14 +129,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.12.0
-git push origin v5.12.0
+git tag v5.12.1
+git push origin v5.12.1
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.12.0.apk`
-- `xKey-GooglePlay-v5.12.0.aab`
+- `xKey-GitHub-v5.12.1.apk`
+- `xKey-GooglePlay-v5.12.1.aab`
 
 Android package: `com.haivcon.xkey`.
 

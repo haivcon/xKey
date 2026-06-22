@@ -11,6 +11,7 @@ import { useT } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import type { Wallet as WalletModel } from '../types';
 import type { ShamirSharePage } from '../utils/shamir';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 const PART_LABELS = ['A', 'B', 'C'];
 
@@ -130,12 +131,21 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
       body { margin: 0; padding: 16px; background: #fff; color: #000; font-family: Arial, sans-serif; }
       .shamir-print-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
       .shamir-print-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #111; border-radius: 8px; padding: 10px; }
+      .xkey-watermark { border: 1px solid #0f766e; border-radius: 10px; padding: 10px; margin: 0 0 14px; background: #ecfdf5; }
+      .xkey-slogan { font-size: 12px; font-weight: 800; letter-spacing: .14em; color: #047857; margin: 0 0 4px; }
+      .xkey-meta { font-size: 11px; color: #334155; margin: 2px 0; }
       svg { width: 240px; height: 240px; max-width: 100%; }
       @media print { body { padding: 10mm; } }
     </style>
   </head>
   <body>
     <h1 style="font-size:20px;margin:0 0 6px">${escapeHtml(title)}</h1>
+    <div class="xkey-watermark">
+      <p class="xkey-slogan">${escapeHtml(XKEY_SLOGAN)}</p>
+      <p class="xkey-meta">Created: ${escapeHtml(new Date().toLocaleString())}</p>
+      <p class="xkey-meta">Backup ID: ${escapeHtml(pages[0]?.id || '')}</p>
+      <p class="xkey-meta">${escapeHtml(t('shamir.printWarning'))}</p>
+    </div>
     <p style="font-size:12px;margin:0 0 6px">${escapeHtml(selectedWallet?.name || t('walletCard.unnamed'))} - ${escapeHtml(shortAddress(selectedWallet?.address))}</p>
     <p style="font-size:12px;margin:0 0 12px">${escapeHtml(t('shamir.printWarning'))}</p>
     <div class="shamir-print-grid">${cardsMarkup}</div>
@@ -359,6 +369,10 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
               </div>
 
               <div className="rounded-xl border border-surface-700 bg-surface-950/60 p-3 text-center">
+                <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-left">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-surface-400">Backup ID: {activePage?.id || '-'}</p>
+                </div>
                 <p className="mb-3 text-xs font-semibold text-surface-400">
                   {t('shamir.printPage', {
                     part: PART_LABELS[activeIndex],
@@ -456,6 +470,11 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
 
               <div ref={printSheetRef} className="shamir-print-sheet">
                 <h1 style={{ fontSize: 20, margin: '0 0 6px' }}>xKey Single-Wallet Shamir Backup 2-of-3</h1>
+                <div style={{ border: '1px solid #0f766e', borderRadius: 10, padding: 10, margin: '0 0 14px', background: '#ecfdf5' }}>
+                  <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.14em', color: '#047857', margin: '0 0 4px' }}>{XKEY_SLOGAN}</p>
+                  <p style={{ fontSize: 11, color: '#334155', margin: '2px 0' }}>Created: {new Date().toLocaleString()}</p>
+                  <p style={{ fontSize: 11, color: '#334155', margin: '2px 0' }}>Backup ID: {pages[0]?.id || ''}</p>
+                </div>
                 <p style={{ fontSize: 12, margin: '0 0 6px' }}>
                   {selectedWallet?.name || t('walletCard.unnamed')} - {shortAddress(selectedWallet?.address)}
                 </p>
@@ -472,6 +491,7 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
                         })}
                       </h2>
                       <p style={{ fontSize: 10, margin: '0 0 8px' }}>Backup ID: {page.id}</p>
+                      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: '#047857', margin: '0 0 8px' }}>{XKEY_SLOGAN}</p>
                       <QRCodeSVG value={JSON.stringify(page)} size={240} bgColor="#ffffff" fgColor="#000000" />
                     </div>
                   ))}

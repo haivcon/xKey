@@ -4,6 +4,7 @@ import { useT } from '../../contexts/LanguageContext';
 import { hapticTap } from '../../utils/haptics';
 import useAppVersion from '../../hooks/useAppVersion';
 import DonateModal from '../DonateModal';
+import BrandSlogan from '../BrandSlogan';
 
 export default function InfoTab() {
   const t = useT();
@@ -42,6 +43,14 @@ export default function InfoTab() {
                 {t('settings.openGithub')}
                 <ExternalLink size={13} />
             </a>
+        </div>
+      </div>
+
+      <div className="glass-card overflow-hidden p-5">
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+          <BrandSlogan tone="success" large className="mb-4" />
+          <h2 className="mt-2 text-center text-2xl font-black text-white">xKey</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-center text-sm leading-relaxed text-surface-300">{t('brand.aboutDesc')}</p>
         </div>
       </div>
 

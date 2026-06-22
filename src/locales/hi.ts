@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "एन्क्रिप्टेड बैकअप इस बात का प्रमाण है कि आपकी keys आपके नियंत्रण में हैं। इसे ऑफलाइन रखें और पासवर्ड अलग रखें।",
+    "restoreNote": "रिस्टोर करने से पहले backup ID, file hash और device details जांचें। केवल भरोसेमंद फाइल ही import करें।",
+    "csvExportNote": "CSV समीक्षा और migration के लिए है। यह encrypted नहीं होता, इसलिए इसे shared storage या chat apps में न रखें।",
+    "emptyVaultDesc": "जब आप अपनी keys इसी device पर local रखना चाहें, तब wallet बनाएं या import करें।",
+    "aboutDesc": "xKey एक offline-first wallet vault है जिसका नियम साफ है: key जिसके पास, crypto उसी के नियंत्रण में।"
+  },
   "integrity": {
     "cryptoChecking": "क्रिप्टो रनटाइम की जांच हो रही है...",
     "appChecking": "ऐप की अखंडता जांची जा रही है...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey का सोर्स कोड सार्वजनिक है और ऐप आपके डिवाइस पर स्थानीय रूप से चलता है। आपका वॉल्ट किसी सर्वर पर नहीं भेजा जाता, इसलिए कोई भी आपके डेटा को दूर से एक्सेस या प्रभावित नहीं कर सकता।",
     "openGithub": "GitHub पर सोर्स देखें",
     "appearance": "दिखावट",
+    "brandReminders": "सुरक्षा slogan reminders",
+    "brandRemindersDesc": "Backup, restore, CSV export और unlock screen जैसे संवेदनशील समय पर xKey slogan दिखाएं।",
     "darkMode": "डार्क मोड",
     "lightMode": "लाइट मोड",
     "language": "भाषा",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "कॉपी विफल रही। कृपया फिर कोशिश करें।",
     "addressCopiedFull": "{wallet} का पता कॉपी हुआ: {address}",
     "fieldCopied": "{wallet} के लिए {field} कॉपी हुआ",
+    "secretCopiedSafety": "{wallet} के लिए {field} कॉपी किया गया। इसे offline रखें और काम पूरा होने पर साफ करें।",
     "moveBtn": "चलें",
     "new": "नया"
   },

@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "Bản sao lưu đã mã hóa là bằng chứng bạn tự kiểm soát khóa của mình. Hãy lưu ngoại tuyến và cất mật khẩu riêng.",
+    "restoreNote": "Hãy kiểm tra mã backup, hash tệp và thông tin thiết bị trước khi khôi phục. Chỉ nhập tệp bạn tin tưởng.",
+    "csvExportNote": "CSV chỉ nên dùng để kiểm tra hoặc di chuyển dữ liệu. CSV không được mã hóa, nên tránh lưu ở bộ nhớ dùng chung hoặc gửi qua chat.",
+    "emptyVaultDesc": "Tạo hoặc nhập ví khi bạn sẵn sàng tự giữ khóa ngay trên thiết bị này.",
+    "aboutDesc": "xKey là kho ví ưu tiên ngoại tuyến, xoay quanh một nguyên tắc: ai kiểm soát khóa thì người đó kiểm soát crypto."
+  },
   "integrity": {
     "cryptoChecking": "Đang kiểm tra môi trường mã hóa...",
     "appChecking": "Đang kiểm tra tính toàn vẹn ứng dụng...",
@@ -222,6 +229,8 @@ export default {
     "openGithub": "Xem mã nguồn trên GitHub",
     "tabAudit": "Nhật ký",
     "appearance": "Giao diện",
+    "brandReminders": "Nhắc slogan bảo mật",
+    "brandRemindersDesc": "Hiển thị slogan xKey ở các thao tác nhạy cảm như sao lưu, khôi phục, xuất CSV và màn hình mở khóa.",
     "darkMode": "Chế độ tối",
     "lightMode": "Chế độ sáng",
     "language": "Ngôn ngữ",
@@ -705,6 +714,7 @@ export default {
     "copyFailed": "Sao chép thất bại. Vui lòng thử lại.",
     "addressCopiedFull": "Đã sao chép địa chỉ của {wallet}: {address}",
     "fieldCopied": "Đã sao chép {field} của {wallet}",
+    "secretCopiedSafety": "Đã sao chép {field} của {wallet}. Hãy giữ ngoại tuyến và xóa khi dùng xong.",
     "moveBtn": "Di chuyển",
     "new": "MỚI"
   },

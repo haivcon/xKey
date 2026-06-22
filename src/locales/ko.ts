@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "암호화된 백업은 키를 직접 관리한다는 증거입니다. 오프라인에 보관하고 비밀번호는 따로 보관하세요.",
+    "restoreNote": "복원하기 전에 백업 ID, 파일 해시, 기기 정보를 확인하세요. 신뢰하는 파일만 가져오세요.",
+    "csvExportNote": "CSV는 검토와 이전용입니다. 암호화되지 않으므로 공유 저장소나 메신저에 두지 마세요.",
+    "emptyVaultDesc": "이 기기에서 직접 키를 관리할 준비가 되면 지갑을 만들거나 가져오세요.",
+    "aboutDesc": "xKey는 오프라인 우선 지갑 금고이며, 키를 가진 사람이 crypto를 통제한다는 원칙을 따릅니다."
+  },
   "integrity": {
     "cryptoChecking": "암호화 런타임 확인 중...",
     "appChecking": "앱 무결성 확인 중...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey의 소스 코드는 공개되어 있으며 앱은 기기에서 로컬로 실행됩니다. 볼트는 어떤 서버로도 전송되지 않으므로 누구도 원격으로 데이터에 접근하거나 개입할 수 없습니다.",
     "openGithub": "GitHub에서 소스 보기",
     "appearance": "외관",
+    "brandReminders": "보안 슬로건 알림",
+    "brandRemindersDesc": "백업, 복원, CSV 내보내기, 잠금 해제 화면 같은 민감한 순간에 xKey 슬로건을 표시합니다.",
     "darkMode": "다크",
     "lightMode": "라이트",
     "language": "언어",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "복사에 실패했습니다. 다시 시도하세요.",
     "addressCopiedFull": "{wallet} 주소를 복사했습니다: {address}",
     "fieldCopied": "{wallet}의 {field}을(를) 복사했습니다",
+    "secretCopiedSafety": "{wallet}의 {field}이(가) 복사되었습니다. 오프라인에 보관하고 사용 후 지우세요.",
     "moveBtn": "움직이다",
     "new": "NEW"
   },

@@ -1,0 +1,1 @@
+export const XKEY_SLOGAN = 'NOT YOUR KEY, NOT YOUR CRYPTO';

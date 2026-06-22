@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "Backup terenkripsi adalah bukti bahwa Anda mengendalikan kunci sendiri. Simpan offline dan pisahkan kata sandinya.",
+    "restoreNote": "Periksa ID backup, hash file, dan detail perangkat sebelum memulihkan. Impor hanya file yang Anda percaya.",
+    "csvExportNote": "CSV dipakai untuk peninjauan dan migrasi. File ini tidak terenkripsi, jadi jangan simpan di penyimpanan bersama atau aplikasi chat.",
+    "emptyVaultDesc": "Buat atau impor dompet saat Anda siap menyimpan kunci secara lokal di perangkat ini.",
+    "aboutDesc": "xKey adalah brankas dompet offline-first dengan satu aturan: siapa yang memegang kunci, dia yang mengendalikan crypto."
+  },
   "integrity": {
     "cryptoChecking": "Memverifikasi runtime kripto...",
     "appChecking": "Memeriksa integritas aplikasi...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "Kode sumber xKey terbuka untuk publik dan berjalan lokal di perangkat Anda. Brankas Anda tidak dikirim ke server mana pun, sehingga tidak ada pihak yang dapat mengakses atau mengubah data Anda dari jarak jauh.",
     "openGithub": "Lihat kode di GitHub",
     "appearance": "Tampilan",
+    "brandReminders": "Pengingat slogan keamanan",
+    "brandRemindersDesc": "Tampilkan slogan xKey pada momen sensitif seperti backup, pemulihan, ekspor CSV, dan layar buka kunci.",
     "darkMode": "Mode Gelap",
     "lightMode": "Mode Terang",
     "language": "Bahasa",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "Gagal menyalin. Coba lagi.",
     "addressCopiedFull": "Alamat {wallet} disalin: {address}",
     "fieldCopied": "{field} untuk {wallet} disalin",
+    "secretCopiedSafety": "{field} untuk {wallet} telah disalin. Simpan offline dan hapus setelah selesai.",
     "moveBtn": "Gerak",
     "new": "BARU"
   },

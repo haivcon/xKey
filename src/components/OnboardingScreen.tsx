@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ShieldCheck, Lock, Download, ChevronRight } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { useT } from '../contexts/LanguageContext';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 const ONBOARDED_KEY = 'xkey_onboarded';
 
@@ -64,6 +65,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     <div className="min-h-screen bg-surface-900 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <img src="/logo.png" alt="xKey" className="w-20 h-20 rounded-2xl logo-animated mb-8" />
+      <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-brand-300">
+        {XKEY_SLOGAN}
+      </p>
 
       {/* Slide Content */}
       <div className={`w-full max-w-sm bg-gradient-to-br ${s.bg} rounded-3xl p-8 text-center mb-8 transition-all duration-300`}>

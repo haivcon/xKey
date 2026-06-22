@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "Das verschlüsselte Backup zeigt, dass Sie Ihre Schlüssel selbst kontrollieren. Bewahren Sie es offline auf und halten Sie das Passwort getrennt.",
+    "restoreNote": "Prüfen Sie Backup-ID, Datei-Hash und Gerätedetails vor der Wiederherstellung. Importieren Sie nur vertrauenswürdige Dateien.",
+    "csvExportNote": "CSV ist für Prüfung und Migration gedacht. Es ist nicht verschlüsselt, daher nicht in gemeinsamem Speicher oder Chats ablegen.",
+    "emptyVaultDesc": "Erstellen oder importieren Sie eine Wallet, wenn Sie Ihre Schlüssel lokal auf diesem Gerät halten möchten.",
+    "aboutDesc": "xKey ist ein Offline-First-Wallet-Tresor mit einer einfachen Regel: Wer den Schlüssel kontrolliert, kontrolliert das crypto."
+  },
   "integrity": {
     "cryptoChecking": "Krypto-Laufzeit wird geprüft...",
     "appChecking": "App-Integrität wird geprüft...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey ist öffentlich einsehbarer Quellcode und läuft lokal auf deinem Gerät. Dein Tresor wird an keinen Server gesendet, daher kann niemand aus der Ferne darauf zugreifen oder eingreifen.",
     "openGithub": "Quellcode auf GitHub ansehen",
     "appearance": "Erscheinungsbild",
+    "brandReminders": "Sicherheits-Slogan anzeigen",
+    "brandRemindersDesc": "Den xKey-Slogan bei sensiblen Aktionen wie Backup, Wiederherstellung, CSV-Export und Entsperren anzeigen.",
     "darkMode": "Dunkelmodus",
     "lightMode": "Hellmodus",
     "language": "Sprache",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "Kopieren fehlgeschlagen. Bitte erneut versuchen.",
     "addressCopiedFull": "Adresse von {wallet} kopiert: {address}",
     "fieldCopied": "{field} für {wallet} kopiert",
+    "secretCopiedSafety": "{field} für {wallet} kopiert. Offline aufbewahren und nach der Nutzung löschen.",
     "moveBtn": "Bewegen",
     "new": "NEU"
   },

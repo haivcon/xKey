@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "暗号化バックアップは、自分で鍵を管理している証明です。オフラインで保存し、パスワードは別に保管してください。",
+    "restoreNote": "復元前にバックアップ ID、ファイルハッシュ、端末情報を確認してください。信頼できるファイルだけをインポートしてください。",
+    "csvExportNote": "CSV は確認や移行用です。暗号化されないため、共有ストレージやチャットに置かないでください。",
+    "emptyVaultDesc": "この端末で鍵を自分で管理する準備ができたら、ウォレットを作成またはインポートしてください。",
+    "aboutDesc": "xKey はオフライン優先のウォレット保管庫です。鍵を管理する人が crypto を管理する、という原則で作られています。"
+  },
   "integrity": {
     "cryptoChecking": "暗号ランタイムを検証中...",
     "appChecking": "アプリの整合性を確認中...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "xKey のソースコードは公開されており、アプリは端末上でローカルに動作します。保管庫はサーバーへ送信されないため、第三者がリモートでアクセスしたり介入したりすることはできません。",
     "openGithub": "GitHubでソースを見る",
     "appearance": "外観",
+    "brandReminders": "セキュリティスローガン表示",
+    "brandRemindersDesc": "バックアップ、復元、CSV 出力、ロック解除など重要な場面で xKey のスローガンを表示します。",
     "darkMode": "ダークモード",
     "lightMode": "ライトモード",
     "language": "言語",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "コピーに失敗しました。もう一度お試しください。",
     "addressCopiedFull": "{wallet} のアドレスをコピーしました: {address}",
     "fieldCopied": "{wallet} の {field} をコピーしました",
+    "secretCopiedSafety": "{wallet} の {field} をコピーしました。オフラインで保管し、使い終わったら消去してください。",
     "moveBtn": "動く",
     "new": "新規"
   },

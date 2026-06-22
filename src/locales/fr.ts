@@ -1,4 +1,11 @@
 export default {
+  "brand": {
+    "backupExportNote": "La sauvegarde chiffrée prouve que vous gardez le contrôle de vos clés. Conservez-la hors ligne et gardez le mot de passe séparé.",
+    "restoreNote": "Vérifiez l’ID de sauvegarde, le hash du fichier et les détails de l’appareil avant de restaurer. N’importez que des fichiers fiables.",
+    "csvExportNote": "Le CSV sert à vérifier ou migrer des données. Il n’est pas chiffré, évitez donc le stockage partagé et les applications de chat.",
+    "emptyVaultDesc": "Créez ou importez un portefeuille quand vous êtes prêt à garder vos clés localement.",
+    "aboutDesc": "xKey est un coffre de portefeuilles pensé pour fonctionner hors ligne, avec une règle simple : celui qui contrôle la clé contrôle le crypto."
+  },
   "integrity": {
     "cryptoChecking": "Vérification de l'environnement cryptographique...",
     "appChecking": "Vérification de l'intégrité de l'app...",
@@ -201,6 +208,8 @@ export default {
     "openSourceDesc": "Le code source de xKey est public et l’app fonctionne localement sur votre appareil. Votre coffre n’est envoyé à aucun serveur, donc personne ne peut y accéder ni intervenir à distance.",
     "openGithub": "Voir le code sur GitHub",
     "appearance": "Apparence",
+    "brandReminders": "Rappels du slogan de sécurité",
+    "brandRemindersDesc": "Afficher le slogan xKey lors des actions sensibles comme la sauvegarde, la restauration, l’export CSV et le déverrouillage.",
     "darkMode": "Mode sombre",
     "lightMode": "Mode clair",
     "language": "Langue",
@@ -688,6 +697,7 @@ export default {
     "copyFailed": "La copie a échoué. Réessayez.",
     "addressCopiedFull": "Adresse de {wallet} copiée : {address}",
     "fieldCopied": "{field} copié pour {wallet}",
+    "secretCopiedSafety": "{field} copié pour {wallet}. Gardez-le hors ligne et effacez-le après utilisation.",
     "moveBtn": "Bouger",
     "new": "NOUVEAU"
   },

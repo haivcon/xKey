@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3 } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -52,7 +52,7 @@ export default function GeneralTab() {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders } = useTheme();
   const t = useT();
   const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
@@ -217,6 +217,29 @@ export default function GeneralTab() {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* ═══ Brand Reminders ═══ */}
+      <div className="glass-card p-4 mt-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <ShieldCheck size={20} className="text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-white font-medium text-sm">{t('settings.brandReminders')}</p>
+              <p className="text-xs text-surface-400">{t('settings.brandRemindersDesc')}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { hapticTap(); setBrandReminders(!brandReminders); }}
+            className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${brandReminders ? 'bg-emerald-500' : 'bg-surface-600'}`}
+            aria-pressed={brandReminders}
+          >
+            <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${brandReminders ? 'translate-x-7' : 'translate-x-1'}`} />
+          </button>
         </div>
       </div>
 

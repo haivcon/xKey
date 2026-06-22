@@ -5,6 +5,7 @@ import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import MarkdownRenderer from './MarkdownRenderer';
 import { secureCopy } from '../utils/clipboard';
 import { useToast } from '../contexts/ToastContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useMasterPassword } from '../contexts/MasterPasswordContext';
 import PasswordInput from './PasswordInput';
 import SecureTextarea from './SecureTextarea';
@@ -14,6 +15,7 @@ import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount 
 import { useSecureDisplay } from '../contexts/SecureDisplayContext';
 import { appendAuditLog } from '../utils/auditLog';
 import type { NetworkColor, Wallet } from '../types';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -68,6 +70,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const fullAddressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
   const { showToast } = useToast();
+  const { brandReminders } = useTheme();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const secureDisplay = useSecureDisplay();
   const [showMPPrompt, setShowMPPrompt] = useState<SensitiveAction | null>(null);
@@ -129,6 +132,8 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
     if (field === 'pk' || field === 'seed') {
       appendAuditLog('wallet.secret_copied', { wallet: walletName, field }).catch(() => {});
+      showToast(`${brandReminders ? `${XKEY_SLOGAN}\n` : ''}${t('walletCard.secretCopiedSafety', { field: label, wallet: walletName })}`, 'warning');
+      return;
     }
     showToast(t('walletCard.fieldCopied', { field: label, wallet: walletName }), 'success');
   };
