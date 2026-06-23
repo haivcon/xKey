@@ -18,20 +18,17 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.13.0
+## Current Release: v5.14.0
 
-v5.13.0 adds a Key Health center for long-term cold-vault maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys draft-signature checks.
+v5.14.0 introduces native Hierarchical Deterministic (HD) BIP39 Wallet support, enabling secure storage of multiple master seed phrases, support for both 12 and 24-word mnemonic phrases, off-main-thread encryption/decryption, and an interactive derivation tree visualizer in the creation modal.
 
 ### Main Upgrades
 
-- **Key Health center:** a home-screen bell opens a focused maintenance view for wallet age, rotation status, PQ-ready status, Proof-of-Keys results, and follow-up actions.
-- **Post-quantum preparation beta:** wallet creation can generate a local one-time-signature reserve and public commitment for future migration workflows. The UI clearly states that this does not make current Bitcoin, Ethereum, or EVM transactions quantum-safe today.
-- **Separated PQ reserve storage:** new wallets keep only `pqReserveId` and public commitment metadata in the wallet record. PQ reserve material is stored separately and encrypted with the vault key.
-- **Key rotation workflow:** wallets can be marked reviewed, snoozed for 30 days, or used as a starting point for creating a replacement wallet.
-- **Scoped Proof-of-Keys checks:** users can run local draft-signature checks for all wallets, visible wallets, signable wallets, or only wallets that need attention.
-- **Detailed Proof-of-Keys reports:** checks now produce pass/fail/skipped details with a copyable report and audit-log entry. No blockchain transaction is created or broadcast.
-- **Test coverage:** a dedicated `test:key-health` script covers rotation status, snooze/review behavior, PQ envelope metadata, proof check pass/fail/skipped states, and scope selection.
-- **Android sync-ready release:** Android metadata is now version code 75 and version name 5.13.0.
+- **BIP39 HD Seed Phrase Storage:** Master seeds are securely stored and isolated in the encrypted vault (`hdStorage.ts`). Only the master seeds are stored, and leaf wallets can be safely derived and added.
+- **Support for 12 and 24-Word Seeds:** HD derivation tree visualizer updated to support importing/generating both 12-word and 24-word mnemonic seeds.
+- **Background Crypto Worker Integration:** BIP39 key derivation and master seed encryption/decryption are processed off-main-thread via the dedicated background worker to ensure optimal app performance.
+- **HD Wallet Derivation Visualizer:** Provides interactive derivation UI tree allowing users to inspect addresses and derive keys cleanly.
+- **Android sync-ready release:** Android metadata version code updated to 76 and version name to 5.14.0.
 
 ### Verification for This Release
 
@@ -79,7 +76,9 @@ Long description opener:
 
 ## Earlier Releases
 
-Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, vanity wallet generation, recovery-session safety, and the TypeScript migration foundation.
+- **v5.14.0:** BIP39 Hierarchical Deterministic (HD) Wallet support, 12 and 24-word mnemonic keys, background derivation worker, and interactive derivation visualizer tree.
+- **v5.13.0:** Key Health center for long-term maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys checks.
+- Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, vanity wallet generation, recovery-session safety, and the TypeScript migration foundation.
 
 ---
 
@@ -126,14 +125,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.13.0
-git push origin v5.13.0
+git tag v5.14.0
+git push origin v5.14.0
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.13.0.apk`
-- `xKey-GooglePlay-v5.13.0.aab`
+- `xKey-GitHub-v5.14.0.apk`
+- `xKey-GooglePlay-v5.14.0.aab`
 
 Android package: `com.haivcon.xkey`.
 

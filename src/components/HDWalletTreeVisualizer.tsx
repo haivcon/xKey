@@ -43,6 +43,7 @@ const shortAddress = (address?: string): string => address ? `${address.slice(0,
 export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets = [] }: HDWalletTreeVisualizerProps) {
   const t = useT();
   const [seedPhrase, setSeedPhrase] = useState('');
+  const [wordCountType, setWordCountType] = useState<12 | 24>(24);
   const [network, setNetwork] = useState('XLAYER');
   const [account, setAccount] = useState(0);
   const [leafCount, setLeafCount] = useState(5);
@@ -54,7 +55,7 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
 
   const selectedNetwork: HdNetwork = HD_NETWORKS.find(item => item.value === network) || HD_NETWORKS[0];
   const normalizedWords = useMemo(() => seedPhrase.trim().split(/\s+/).filter(Boolean), [seedPhrase]);
-  const canDerive = normalizedWords.length === 24;
+  const canDerive = normalizedWords.length === 12 || normalizedWords.length === 24;
   const activeWallet = derivedWallets[selectedIndex] || null;
   const activePath = `m/44'/${selectedNetwork.coinType}'/${account}'/0/${selectedIndex}`;
   const activeDuplicate = useMemo(() => {
@@ -75,7 +76,7 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
     }
     if (!canDerive) {
       setDerivedWallets([]);
-      setError(t('createWallet.hdTreeSeedError'));
+      setError(t('createWallet.hdTreeSeedError').replace(/24/g, '12/24'));
       return;
     }
     try {
@@ -94,7 +95,7 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
           hdIndex: index,
           hdCoinType: selectedNetwork.coinType,
           hdNetwork: network,
-          hdRootType: 'bip39-24-word',
+          hdRootType: normalizedWords.length === 12 ? 'bip39-12-word' : 'bip39-24-word',
           balance: '0.00',
         };
       });
@@ -112,7 +113,8 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
   }, [deriveWallets]);
 
   const generateSeed = () => {
-    const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(32));
+    const entropyBytes = wordCountType === 12 ? 16 : 32;
+    const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(entropyBytes));
     setSeedPhrase(mnemonic.phrase);
     setSelectedIndex(0);
     hapticSuccess();
@@ -162,7 +164,7 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
         <div className="flex items-start gap-3">
           <ShieldAlert size={18} className="mt-0.5 flex-shrink-0 text-amber-300" />
           <div className="space-y-1 text-xs leading-relaxed text-amber-100">
-            <p>{t('createWallet.hdTreeWarning')}</p>
+            <p>{t('createWallet.hdTreeWarning').replace(/24/g, '12/24')}</p>
             <p>{t('createWallet.hdTreeSeedNotSaved')}</p>
           </div>
         </div>
@@ -171,21 +173,47 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-surface-400">{t('createWallet.seedPhrase')}</label>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label className="text-xs font-semibold text-surface-400">{t('createWallet.seedPhrase')}</label>
+              <div className="flex items-center gap-1 rounded-lg border border-surface-750 bg-surface-900/60 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setWordCountType(12)}
+                  className={`px-2 py-0.5 text-[0.6875rem] font-bold rounded transition-colors ${
+                    wordCountType === 12
+                      ? 'bg-brand-600 text-white'
+                      : 'text-surface-400 hover:text-white'
+                  }`}
+                >
+                  12w
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWordCountType(24)}
+                  className={`px-2 py-0.5 text-[0.6875rem] font-bold rounded transition-colors ${
+                    wordCountType === 24
+                      ? 'bg-brand-600 text-white'
+                      : 'text-surface-400 hover:text-white'
+                  }`}
+                >
+                  24w
+                </button>
+              </div>
+            </div>
             <SecureTextarea
               value={seedPhrase}
               onChange={(event) => setSeedPhrase(event.target.value)}
               rows={5}
               secureLabel={t('createWallet.seedPhrase')}
-              placeholder={t('createWallet.hdTreeSeedPlaceholder')}
+              placeholder={t('createWallet.hdTreeSeedPlaceholder').replace(/24/g, '12/24')}
               className="w-full resize-none rounded-xl border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-white placeholder:text-surface-600 focus:border-brand-500 focus:outline-none"
             />
             <div className="mt-2 flex items-center justify-between gap-2">
               <p className={`text-[0.6875rem] ${canDerive ? 'text-emerald-300' : 'text-surface-500'}`}>
-                {t('createWallet.hdTreeWordCount', { count: normalizedWords.length })}
+                {t('createWallet.hdTreeWordCount', { count: normalizedWords.length }).replace('/24', '/' + (normalizedWords.length <= 12 ? 12 : 24))}
               </p>
               <button type="button" onClick={generateSeed} className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-200">
-                <RefreshCw size={13} /> {t('createWallet.hdTreeGenerateSeed')}
+                <RefreshCw size={13} /> {t('createWallet.hdTreeGenerateSeed').replace(/24/g, String(wordCountType))}
               </button>
             </div>
           </div>

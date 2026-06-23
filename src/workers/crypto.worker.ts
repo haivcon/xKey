@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import type { Wallet } from '../types';
+import type { Wallet, HDRoot } from '../types';
 
 type EncryptedWallet = Wallet & {
     _fieldEncrypted?: boolean;
@@ -14,6 +14,16 @@ type CryptoWorkerRequest =
     | {
         id: string;
         type: 'DECRYPT_WALLETS';
+        payload: { cipherText: string; key: string };
+    }
+    | {
+        id: string;
+        type: 'ENCRYPT_HD_ROOTS';
+        payload: { roots: HDRoot[]; key: string };
+    }
+    | {
+        id: string;
+        type: 'DECRYPT_HD_ROOTS';
         payload: { cipherText: string; key: string };
     }
     | {
@@ -118,6 +128,34 @@ self.onmessage = (e: MessageEvent<CryptoWorkerRequest>) => {
                 }));
                 
                 self.postMessage({ id, success: true, result: wallets });
+                break;
+            }
+            
+            case 'ENCRYPT_HD_ROOTS': {
+                const { roots, key } = payload;
+                const fieldKey = deriveFieldKey(key);
+                
+                const protected_ = roots.map(r => ({
+                    ...r,
+                    encryptedSeed: encryptField(r.encryptedSeed, fieldKey) || '',
+                }));
+                
+                const encrypted = encryptData(protected_, key);
+                self.postMessage({ id, success: true, result: encrypted });
+                break;
+            }
+
+            case 'DECRYPT_HD_ROOTS': {
+                const { cipherText, key } = payload;
+                let roots = decryptData(cipherText, key) as unknown as HDRoot[];
+                
+                const fieldKey = deriveFieldKey(key);
+                roots = roots.map(r => ({
+                    ...r,
+                    encryptedSeed: decryptField(r.encryptedSeed, fieldKey) || '',
+                }));
+                
+                self.postMessage({ id, success: true, result: roots });
                 break;
             }
             

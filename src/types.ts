@@ -1,3 +1,14 @@
+/** Core HD Root metadata model. */
+export interface HDRoot {
+  _id: string;
+  name: string;
+  encryptedSeed: string;
+  wordCount: 12 | 24;
+  createdAt: number;
+  lastDerivedIndex?: number;
+  networks?: string[];
+}
+
 /** Core wallet data model used throughout the app. */
 export interface Wallet {
   _id?: string;
@@ -12,6 +23,11 @@ export interface Wallet {
   pinned?: boolean;
   tags?: string[];
   createdAt?: number;
+  hdRootId?: string;
+  derivationPath?: string;
+  hdAccount?: number;
+  hdIndex?: number;
+  hdNetwork?: string;
   /**
    * Offline post-quantum preparation metadata.
    * This does not make current ECDSA chains quantum-safe; it stores a local

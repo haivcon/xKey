@@ -496,7 +496,7 @@ const saveFragmentedVaultCipher = async (storageKey: string, value: string): Pro
     await removeStoredFragments(previousManifest);
 };
 
-const saveVaultCipher = async (storageKey: string, value: string): Promise<void> => {
+export const saveVaultCipher = async (storageKey: string, value: string): Promise<void> => {
     if (!Capacitor.isNativePlatform()) {
         await Preferences.set({ key: storageKey, value });
         return;
@@ -519,7 +519,7 @@ const saveVaultCipher = async (storageKey: string, value: string): Promise<void>
     }
 };
 
-const loadVaultCipher = async (storageKey: string): Promise<VaultCipherResult> => {
+export const loadVaultCipher = async (storageKey: string): Promise<VaultCipherResult> => {
     if (Capacitor.isNativePlatform()) {
         const [{ value: legacyValue }, legacyOverride, manifest] = await Promise.all([
             Preferences.get({ key: storageKey }),
