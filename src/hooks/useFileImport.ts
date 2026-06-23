@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Preferences } from '@capacitor/preferences';
@@ -9,6 +9,7 @@ import { useT } from '../contexts/LanguageContext';
 import { appendAuditLog } from '../utils/auditLog';
 import { saveTextFile } from '../utils/fileSaver';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
+import { withTimeout } from '../utils/asyncTimeout';
 import type { Wallet } from '../types';
 
 type BackupPreview = {
@@ -24,6 +25,8 @@ type BackupPreview = {
 type BackupImportAnalysis = { total: number; newWallets: number; duplicates: number; changed: number; missingSensitive: number; sensitive: number };
 type BackupImportMode = 'merge' | 'replace';
 const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
+const FILE_IMPORT_TIMEOUT_MS = 15000;
+const EXTERNAL_FILE_DEDUPE_MS = 3000;
 
 type ExternalBackupFile = {
   data?: string;
@@ -70,6 +73,7 @@ export default function useFileImport(
   const [backupAnalysis, setBackupAnalysis] = useState<BackupImportAnalysis | null>(null);
   const [backupImportMode, setBackupImportMode] = useState<BackupImportMode>('merge');
   const [updateMissingSensitive, setUpdateMissingSensitive] = useState(false);
+  const lastExternalFileRef = useRef<{ fingerprint: string; ts: number } | null>(null);
 
   const { showToast } = useToast();
   const t = useT();
@@ -125,7 +129,11 @@ export default function useFileImport(
         if (file.name && file.name.toLowerCase().endsWith('.xkey')) {
           setFileOperationKey('fileStatus.verifying');
           const { inspectBackupFile } = await import('../utils/backupUtils');
-          const preview = await inspectBackupFile(fileData) as BackupPreview;
+          const preview = await withTimeout(
+            inspectBackupFile(fileData) as Promise<BackupPreview>,
+            FILE_IMPORT_TIMEOUT_MS,
+            () => new Error(t('common.errorReadingFile')),
+          );
           setPendingBackupData(fileData);
           setBackupPreview({ ...preview, fileName: file.name });
           setShowPasswordPrompt(true);
@@ -248,6 +256,11 @@ export default function useFileImport(
     const fileData = file?.data || file?.base64 || '';
     if (!fileData) return false;
     const fileName = file.name || 'opened.xkey';
+    const fingerprint = `${fileName}|${file.size || 0}|${fileData.slice(0, 64)}`;
+    const latest = lastExternalFileRef.current;
+    if (latest?.fingerprint === fingerprint && Date.now() - latest.ts < EXTERNAL_FILE_DEDUPE_MS) return true;
+    lastExternalFileRef.current = { fingerprint, ts: Date.now() };
+
     if (!fileName.toLowerCase().endsWith('.xkey')) {
       showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
       await appendAuditLog('backup.external_file_ignored', {
@@ -261,7 +274,11 @@ export default function useFileImport(
     setFileOperationKey('fileStatus.verifying');
     try {
       const { inspectBackupFile } = await import('../utils/backupUtils');
-      const preview = await inspectBackupFile(fileData) as BackupPreview;
+      const preview = await withTimeout(
+        inspectBackupFile(fileData) as Promise<BackupPreview>,
+        FILE_IMPORT_TIMEOUT_MS,
+        () => new Error(t('common.errorReadingFile')),
+      );
       setPendingBackupData(fileData);
       setBackupPreview({ ...preview, fileName, openedFromExternal: true });
       setShowPasswordPrompt(true);
@@ -285,7 +302,7 @@ export default function useFileImport(
       setLoading(false);
       setFileOperationKey('');
     }
-  }, [showToast]);
+  }, [showToast, t]);
 
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
@@ -293,7 +310,11 @@ export default function useFileImport(
       setLoading(true);
       setFileOperationKey('fileStatus.decrypting');
       const { parseVaultBackupFile } = await import('../utils/backupUtils');
-      const backup = await parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as { wallets: Wallet[] };
+      const backup = await withTimeout(
+        parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as Promise<{ wallets: Wallet[] }>,
+        FILE_IMPORT_TIMEOUT_MS,
+        () => new Error(t('restore.wrongPassword')),
+      );
       // Dedup
       const existingAddrs = new Set(wallets.map(w => w.address?.toLowerCase()).filter(Boolean));
       const uniqueBackup = backup.wallets.filter(w => {
@@ -387,7 +408,11 @@ export default function useFileImport(
       setLoading(true);
       setFileOperationKey('fileStatus.previewing');
       const { parseVaultBackupFile } = await import('../utils/backupUtils');
-      const backup = await parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as { wallets: Wallet[] };
+      const backup = await withTimeout(
+        parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as Promise<{ wallets: Wallet[] }>,
+        FILE_IMPORT_TIMEOUT_MS,
+        () => new Error(t('restore.wrongPassword')),
+      );
       const fingerprint = (wallet: Wallet) => JSON.stringify({
         name: wallet.name || '',
         address: (wallet.address || '').toLowerCase(),
@@ -416,7 +441,7 @@ export default function useFileImport(
       setLoading(false);
       setFileOperationKey('');
     }
-  }, [pendingBackupData, aesKey, importPassword, wallets, showToast]);
+  }, [pendingBackupData, aesKey, importPassword, wallets, showToast, t]);
 
   const dismissPasswordPrompt = useCallback(() => {
     setShowPasswordPrompt(false);

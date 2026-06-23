@@ -23,6 +23,7 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   const runtimeIntegrity = await readSource('src/utils/runtimeIntegrity.ts');
   const viteConfig = await readSource('vite.config.ts');
   const app = await readSource('src/App.tsx');
+  const asyncTimeout = await readSource('src/utils/asyncTimeout.ts');
 
   expect(runtimeIntegrity).toContain('runCryptoKnownAnswerTests');
   expect(runtimeIntegrity).toContain('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
@@ -43,6 +44,10 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   expect(viteConfig).toContain('xkey-integrity-manifest');
   expect(app).toContain('runRuntimeIntegrityChecks');
   expect(app).toContain('integrityCheckRef');
+  expect(app).toContain('STARTUP_WATCHDOG_MS');
+  expect(app).toContain("setAuthError(tRef.current('integrity.failureBody'))");
+  expect(asyncTimeout).toContain('Promise.race');
+  expect(asyncTimeout).toContain('setTimeout');
 });
 
 test('root and data tamper guard is wired to Android risk checks and settings', async () => {
@@ -94,6 +99,18 @@ test('folder actions menu uses fixed portal rendering', async () => {
   expect(folderTabs).toContain('onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}');
 });
 
+test('home header keeps xKey brand literal across all languages', async () => {
+  const app = await readSource('src/App.tsx');
+  const headerStart = app.indexOf('{/* Header */}');
+  const headerEnd = app.indexOf('<FolderTabs', headerStart);
+  const headerSource = app.slice(headerStart, headerEnd);
+
+  expect(headerSource).toMatch(/<h1[^>]*>\s*xKey\s*<\/h1>/);
+  expect(headerSource).not.toContain("t('home.title')");
+  expect(headerSource).toContain('text-[5px]');
+  expect(headerSource).toContain('{appVersion.version}');
+});
+
 test('audit log tab and tamper-evident backup preview are wired into settings and import flow', async () => {
   const settingsScreen = await readSource('src/components/SettingsScreen.tsx');
   const auditTab = await readSource('src/components/settings/AuditLogTab.tsx');
@@ -128,6 +145,27 @@ test('backup replacement, import reports, and vanity recovery retain encrypted r
   expect(createWallet).toContain('restoreVanitySession');
   expect(createWallet).toContain('vanityPerformanceMode');
   expect(app).toContain('aesKey={aesKey}');
+});
+
+test('vanity wallet generator can auto-keep extra repeated-character matches', async () => {
+  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
+  const vanityWorker = await readSource('src/workers/vanityWorker.ts');
+
+  expect(createWallet).toContain('vanityCaptureExtras');
+  expect(createWallet).toContain('VANITY_EXTRA_MIN_RUNS');
+  expect(createWallet).toContain('VANITY_EXTRA_LIMITS');
+  expect(createWallet).toContain('vanityExtraFolder');
+  expect(createWallet).toContain("t('createWallet.vanityPrimaryMatches')");
+  expect(createWallet).toContain("t('createWallet.vanityExtraKept')");
+  expect(createWallet).toContain('vanityExtraScore');
+  expect(createWallet).toContain("saveFound: false");
+  expect(createWallet).toContain("CapacitorApp.addListener('appStateChange'");
+  expect(createWallet).toContain('extraRanks');
+  expect(vanityWorker).toContain('detectExtraVanityMatch');
+  expect(vanityWorker).toContain("type: 'extras'");
+  expect(vanityWorker).not.toContain('seenExtraAddresses');
+  expect(vanityWorker).toContain('extraLimit');
+  expect(vanityWorker).toContain('extraMinRun');
 });
 
 test('dependency audit is report-only and does not update packages automatically', async () => {
@@ -191,6 +229,8 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   expect(nativeFileOpen).toContain("registerPlugin<XKeyFileOpenPlugin>('XKeyFileOpen')");
   expect(app).toContain('getPendingXKeyFile');
   expect(app).toContain('addXKeyFileOpenListener');
+  expect(app).toContain('EXTERNAL_BACKUP_DEDUPE_MS');
+  expect(app).toContain('lastExternalBackupRef');
   expect(app).toContain("t('restore.openedExternal')");
   expect(app).toContain("t('restore.externalWaiting')");
   expect(app).toContain('handleCopyVerificationReport');
@@ -199,6 +239,8 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   expect(fileImport).toContain('handleExternalBackupFile');
   expect(fileImport).toContain('openedFromExternal: true');
   expect(fileImport).toContain('backup.opened_from_android');
+  expect(fileImport).toContain('EXTERNAL_FILE_DEDUPE_MS');
+  expect(fileImport).toContain('lastExternalFileRef');
   const packageJson = await readSource('package.json');
   const adbTest = await readSource('tests/adb-open-xkey.mjs');
   expect(packageJson).toContain('test:adb-open');
@@ -251,6 +293,18 @@ test('all locale files include security and integrity guidance keys', async () =
     'updateMissingSensitive',
     'updateMissingSensitiveHelp',
     'updateMissingSensitiveConfirm',
+    'vanityExtraCaptureTitle',
+    'vanityExtraCaptureDesc',
+    'vanityExtraMinRun_3',
+    'vanityExtraMinRun_4',
+    'vanityExtraMinRun_5',
+    'vanityExtraMinRun_6',
+    'vanityExtraLimit',
+    'vanityExtraFolder',
+    'vanityPrimaryMatches',
+    'vanityExtraKept',
+    'vanityExtraScore',
+    'vanityExtraBoth',
   ];
 
   for (const file of localeFiles) {
@@ -306,12 +360,23 @@ test('file import progress status always clears through finally blocks', async (
     expect(localeEn).toContain(`"${key}"`);
   }
   expect(fileImport).toContain('fileOperationKey');
+  expect(fileImport).toContain('FILE_IMPORT_TIMEOUT_MS');
+  expect(fileImport).toContain('withTimeout');
   expect(fileImport).toContain("setFileOperationKey('fileStatus.decrypting')");
   expect(fileImport).toContain("setFileOperationKey('fileStatus.importing')");
   expect(fileImport).toContain("setFileOperationKey('fileStatus.previewing')");
   expect(fileImport).toContain('} finally {\n      setLoading(false);\n      setFileOperationKey');
   expect(app).toContain("t(fileOperationKey || 'fileStatus.processing')");
   expect(app).toContain('disabled={loading');
+});
+
+test('wallet list remains virtualized and memoized for large vaults', async () => {
+  const walletList = await readSource('src/components/WalletList.tsx');
+
+  expect(walletList).toContain('useWindowVirtualizer');
+  expect(walletList).toContain('overscan: 4');
+  expect(walletList).toContain('useMemo(');
+  expect(walletList).toContain('export default memo(WalletList)');
 });
 
 test('action history tab supports compact review, filtering, and duplicate suppression', async () => {

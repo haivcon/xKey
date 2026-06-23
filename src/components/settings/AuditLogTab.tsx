@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, ClipboardCopy, Clock3, Database, FileArchive, FileText, KeyRound, LockKeyhole, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { authenticateDeviceCredential, isDeviceCredentialAvailable } from '../../utils/deviceCredential';
@@ -8,10 +8,16 @@ import { useLanguage, useT, type TranslationFn } from '../../contexts/LanguageCo
 import Notice from '../Notice';
 import { clearActionHistory, getActionHistory, type ActionHistoryCategory, type ActionHistoryItem } from '../../utils/actionHistory';
 
-const formatDetails = (details: AuditDetails = {}, t: TranslationFn) => Object.entries(details)
-  .filter(([, value]) => value !== undefined && value !== null && value !== '')
-  .map(([key, value]) => `${t(`auditDetails.${key}`)}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
-  .join(' | ');
+const formatDetails = (details: AuditDetails = {}, t: TranslationFn) => {
+  try {
+    return Object.entries(details)
+      .filter(([, value]) => value !== undefined && value !== null && value !== '')
+      .map(([key, value]) => `${t(`auditDetails.${key}`)}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)
+      .join(' | ');
+  } catch {
+    return '';
+  }
+};
 
 const getEventLabel = (type: string, t: TranslationFn): string => {
   const group = type.split('.')[0] || 'unknown';
@@ -32,14 +38,23 @@ export default function AuditLogTab() {
   const [tampered, setTampered] = useState(false);
   const [error, setError] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const [result, actions] = await Promise.all([readAuditLog(), getActionHistory()]);
-    setEntries(result.entries);
-    setActionHistory(actions);
-    setTampered(result.tampered);
-    setLoading(false);
-  };
+    setError('');
+    try {
+      const [result, actions] = await Promise.all([readAuditLog(), getActionHistory()]);
+      setEntries(result.entries);
+      setActionHistory(actions);
+      setTampered(result.tampered);
+    } catch {
+      setEntries([]);
+      setActionHistory([]);
+      setTampered(false);
+      setError(t('common.error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     if (!unlocked) return undefined;
@@ -55,7 +70,7 @@ export default function AuditLogTab() {
       window.removeEventListener('xkey-audit-log-updated', update);
       window.removeEventListener('xkey-action-history-updated', updateActions as EventListener);
     };
-  }, [unlocked]);
+  }, [load, unlocked]);
 
   const unlock = async () => {
     hapticTap();
@@ -159,6 +174,7 @@ export default function AuditLogTab() {
         </div>
       </div>
       <div className="p-4">
+        {error && <Notice variant="danger" className="mb-4">{error}</Notice>}
         {tampered ? (
           <Notice variant="danger" className="mb-4">
             <span className="inline-flex items-center gap-2"><AlertTriangle size={14} /> {t('audit.tampered')}</span>

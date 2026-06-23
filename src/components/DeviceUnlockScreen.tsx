@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { isDeviceCredentialAvailable, openDeviceSecuritySettings } from '../utils/deviceCredential';
 import { appendAuditLog } from '../utils/auditLog';
 import { XKEY_SLOGAN } from '../utils/branding';
+import { withTimeout } from '../utils/asyncTimeout';
 
 type DeviceUnlockScreenProps = {
   onUnlock: () => Promise<void>;
@@ -16,6 +17,8 @@ const getErrorField = (error: unknown, field: 'code' | 'message'): string => {
   const value = (error as Record<string, unknown>)[field];
   return typeof value === 'string' ? value : '';
 };
+
+const DEVICE_UNLOCK_TIMEOUT_MS = 30000;
 
 export default function DeviceUnlockScreen({ onUnlock }: DeviceUnlockScreenProps) {
   const t = useT();
@@ -36,7 +39,11 @@ export default function DeviceUnlockScreen({ onUnlock }: DeviceUnlockScreenProps
     setError('');
     setHint('');
     try {
-      await onUnlock();
+      await withTimeout(
+        onUnlock(),
+        DEVICE_UNLOCK_TIMEOUT_MS,
+        () => new Error(t('deviceUnlock.unlockFailed')),
+      );
       await appendAuditLog('device.unlock_success');
     } catch (err) {
       const code = getErrorField(err, 'code');

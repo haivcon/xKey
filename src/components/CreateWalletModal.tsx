@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { Preferences } from '@capacitor/preferences';
+import { App as CapacitorApp } from '@capacitor/app';
 import { X, Plus, Copy, Check, Wallet, RefreshCw, Keyboard, AlertTriangle, Info, Camera, ChevronDown, Gauge, Timer, ShieldCheck, Sparkles, Folder, Tag, Trees, Pause, Play, Square } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +21,9 @@ const VANITY_HEX_PATTERN = /^[0-9a-f]*$/i;
 const VANITY_MAX_SAFE_LENGTH = 6;
 const VANITY_TIME_LIMITS = [60, 300, 600, 0];
 const VANITY_DEFAULT_FOLDER = 'Vanity Wallets';
+const VANITY_EXTRA_DEFAULT_FOLDER = 'Extra Vanity Wallets';
+const VANITY_EXTRA_LIMITS = [10, 25, 50, 100];
+const VANITY_EXTRA_MIN_RUNS = [3, 4, 5, 6];
 const VANITY_SETTINGS_KEY = 'xkey_vanity_settings_v1';
 const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
 
@@ -34,6 +38,13 @@ type GeneratedWallet = WalletModel & {
   hdCoinType?: number;
   hdNetwork?: string;
   hdRootType?: string;
+  vanityMatchType?: 'primary' | 'extra';
+  vanityRepeatSide?: 'head' | 'tail' | 'both';
+  vanityRepeatChar?: string;
+  vanityRepeatLength?: number;
+  vanityScore?: number;
+  vanityHeadRun?: string;
+  vanityTailRun?: string;
 };
 type FloatingEffect = { key: number; count: number; address?: string };
 type VanityCandidate = { address: string; matched: boolean };
@@ -44,6 +55,10 @@ type VanitySettings = {
   timeLimit?: number;
   network?: string;
   folder?: string;
+  captureExtras?: boolean;
+  extraMinRun?: number;
+  extraLimit?: number;
+  extraFolder?: string;
   performanceMode?: VanityPerformanceMode;
 };
 type VanityPerformanceMode = 'eco' | 'balanced' | 'fast';
@@ -56,9 +71,14 @@ type VanitySessionState = {
   timeLimit: number;
   network: string;
   folder: string;
+  captureExtras: boolean;
+  extraMinRun: number;
+  extraLimit: number;
+  extraFolder: string;
   tags: string[];
   performanceMode: VanityPerformanceMode;
   candidates: VanityCandidate[];
+  extraWallets: GeneratedWallet[];
   selectedAddresses: string[];
   savedAddresses: string[];
 };
@@ -201,11 +221,16 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const [vanityNetwork, setVanityNetwork] = useState('XLAYER');
   const defaultSaveFolder = activeFolder && activeFolder !== 'All' ? activeFolder : VANITY_DEFAULT_FOLDER;
   const [vanityFolder, setVanityFolder] = useState(defaultSaveFolder);
+  const [vanityCaptureExtras, setVanityCaptureExtras] = useState(true);
+  const [vanityExtraMinRun, setVanityExtraMinRun] = useState(4);
+  const [vanityExtraLimit, setVanityExtraLimit] = useState<number | string>(50);
+  const [vanityExtraFolder, setVanityExtraFolder] = useState(VANITY_EXTRA_DEFAULT_FOLDER);
   const [vanityTagInput, setVanityTagInput] = useState('');
   const [vanityTags, setVanityTags] = useState<string[]>([]);
   const [vanityStopReason, setVanityStopReason] = useState('');
   const [vanitySavedCount, setVanitySavedCount] = useState(0);
   const [vanityCandidates, setVanityCandidates] = useState<VanityCandidate[]>([]);
+  const [vanityExtraWallets, setVanityExtraWallets] = useState<GeneratedWallet[]>([]);
   const [selectedVanityAddresses, setSelectedVanityAddresses] = useState<string[]>([]);
   const [vanityPaused, setVanityPaused] = useState(false);
   const [vanityPerformanceMode, setVanityPerformanceMode] = useState<VanityPerformanceMode>('balanced');
@@ -214,9 +239,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const vanityWorkerRef = useRef<Worker | null>(null);
   const vanityActivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vanityFoundRef = useRef<GeneratedWallet[]>([]);
+  const vanityExtraRef = useRef<GeneratedWallet[]>([]);
   const vanitySelectedRef = useRef<Set<string>>(new Set());
   const vanitySavedRef = useRef<Set<string>>(new Set());
   const vanitySettingsLoadedRef = useRef(false);
+  const vanitySessionPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const vanitySessionPersistQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const vanitySessionGenerationRef = useRef(0);
+  const vanitySessionPersistNowRef = useRef<() => Promise<void>>(async () => {});
   const closingRef = useRef(false);
 
   const vanityPrefixRaw = vanityPrefix.trim();
@@ -231,6 +261,8 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const vanityTooLong = vanityPatternLength > VANITY_MAX_SAFE_LENGTH;
   const vanityCanStart = vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
   const vanitySafeTargetCount = Math.max(1, Math.min(100, Number(vanityTargetCount) || 1));
+  const vanitySafeExtraLimit = Math.max(0, Math.min(500, Number(vanityExtraLimit) || 0));
+  const vanitySafeExtraMinRun = Math.max(3, Math.min(6, Number(vanityExtraMinRun) || 4));
   const liteModeActive = typeof document !== 'undefined' && document.documentElement.classList.contains('lite-mode');
   const vanityBatchSize = liteModeActive
     ? (vanityPerformanceMode === 'eco' ? 20 : vanityPerformanceMode === 'fast' ? 120 : 60)
@@ -246,7 +278,33 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const vanityProgress = vanityTimeLimit > 0
     ? Math.min(100, (vanityTime / vanityTimeLimit) * 100)
     : Math.min(100, (generatedWallets.length / vanitySafeTargetCount) * 100);
+  const allVanityWallets = [...generatedWallets, ...vanityExtraWallets];
   const hasSelectedUnsavedVanityWallets = selectedVanityAddresses.some(address => !vanitySavedRef.current.has(address));
+  const getVanityExtraLabel = (wallet: GeneratedWallet) => {
+    if (wallet.vanityRepeatSide === 'both') {
+      return t('createWallet.vanityExtraBoth', {
+        head: wallet.vanityHeadRun || '-',
+        tail: wallet.vanityTailRun || '-',
+      });
+    }
+    const sideKey = wallet.vanityRepeatSide === 'head' ? 'createWallet.vanityExtraHead' : 'createWallet.vanityExtraTail';
+    const repeat = `${wallet.vanityRepeatChar || ''}`.repeat(Math.max(0, wallet.vanityRepeatLength || 0));
+    return t(sideKey, { pattern: repeat || '-' });
+  };
+  const renderVanityExtraAddress = (address: string, wallet: GeneratedWallet) => {
+    const clean = address.slice(2).toLowerCase();
+    const headLength = Math.max(0, wallet.vanityHeadRun?.length || (wallet.vanityRepeatSide === 'head' ? wallet.vanityRepeatLength || 0 : 0));
+    const tailLength = Math.max(0, wallet.vanityTailRun?.length || (wallet.vanityRepeatSide === 'tail' ? wallet.vanityRepeatLength || 0 : 0));
+    if (!headLength && !tailLength) return renderVanityAddress(address);
+    const middleStart = Math.min(headLength, clean.length);
+    const middleEnd = Math.max(middleStart, clean.length - tailLength);
+    return <>
+      <span>0x</span>
+      <span className={headLength ? 'underline decoration-cyan-300 decoration-2 underline-offset-2' : ''}>{clean.slice(0, middleStart)}</span>
+      <span>{clean.slice(middleStart, middleEnd)}</span>
+      <span className={tailLength ? 'underline decoration-cyan-300 decoration-2 underline-offset-2' : ''}>{clean.slice(middleEnd)}</span>
+    </>;
+  };
   const renderVanityAddress = (address: string) => {
     const clean = address.slice(2).toLowerCase();
     const prefixEnd = vanityPrefixClean.length;
@@ -270,13 +328,21 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       .filter(folder => folder !== VANITY_DEFAULT_FOLDER)
       .map(folder => ({ value: folder, label: folder }))
   ];
+  const vanityExtraFolderOptions = [
+    { value: VANITY_EXTRA_DEFAULT_FOLDER, label: t('createWallet.vanityExtraFolderDefault') },
+    ...usableFolders
+      .filter(folder => folder !== VANITY_EXTRA_DEFAULT_FOLDER)
+      .map(folder => ({ value: folder, label: folder }))
+  ];
 
   const closeCreateWalletModal = async () => {
     if (closingRef.current) return;
     closingRef.current = true;
     try {
-      if (vanityRunActive) {
-        await finishVanityRun({ reason: t('createWallet.vanityStopped') });
+      if (vanityGenerating) {
+        await pauseVanity();
+      } else if (vanityPaused) {
+        await enqueueVanitySessionPersist().catch(() => {});
       }
       onClose();
     } finally {
@@ -317,6 +383,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       isVanityRunningRef.current = false;
       if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
       if (vanityWorkerRef.current) vanityWorkerRef.current.terminate();
+      if (vanitySessionPersistTimerRef.current) clearTimeout(vanitySessionPersistTimerRef.current);
     };
   }, []);
 
@@ -335,6 +402,10 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         if (typeof settings.timeLimit === 'number' && VANITY_TIME_LIMITS.includes(settings.timeLimit)) setVanityTimeLimit(settings.timeLimit);
         if (settings.network && NETWORKS.includes(settings.network)) setVanityNetwork(settings.network);
         if (settings.folder) setVanityFolder(settings.folder);
+        if (typeof settings.captureExtras === 'boolean') setVanityCaptureExtras(settings.captureExtras);
+        if (settings.extraMinRun && VANITY_EXTRA_MIN_RUNS.includes(settings.extraMinRun)) setVanityExtraMinRun(settings.extraMinRun);
+        if (settings.extraLimit) setVanityExtraLimit(Math.max(1, Math.min(500, settings.extraLimit)));
+        if (settings.extraFolder) setVanityExtraFolder(settings.extraFolder);
         if (settings.performanceMode === 'eco' || settings.performanceMode === 'balanced' || settings.performanceMode === 'fast') setVanityPerformanceMode(settings.performanceMode);
       })
       .catch(() => {})
@@ -342,12 +413,12 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     return () => { active = false; };
   }, []);
 
-  // The session is deliberately captured from the latest render snapshot while the worker is active.
+  // Persist periodically while scanning. Writes are queued so a slower native write
+  // cannot overwrite a newer encrypted session.
   useEffect(() => {
-    if (!generatedWallets.length || !vanityGenerating) return;
-    void persistVanitySession().catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatedWallets, selectedVanityAddresses, vanityScanned, vanityTime, vanityCandidates, vanityGenerating]);
+    if ((!generatedWallets.length && !vanityExtraWallets.length) || !vanityGenerating) return;
+    scheduleVanitySessionPersist();
+  }, [generatedWallets, vanityExtraWallets, selectedVanityAddresses, vanityScanned, vanityTime, vanityCandidates, vanityGenerating]);
 
   useEffect(() => {
     if (!vanitySettingsLoadedRef.current) return;
@@ -358,12 +429,22 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         timeLimit: vanityTimeLimit,
         network: vanityNetwork,
         folder: vanityFolder,
+        captureExtras: vanityCaptureExtras,
+        extraMinRun: vanitySafeExtraMinRun,
+        extraLimit: vanitySafeExtraLimit,
+        extraFolder: vanityExtraFolder,
         performanceMode: vanityPerformanceMode
       } satisfies VanitySettings)
     }).catch(() => {});
-  }, [vanitySafeTargetCount, vanityTimeLimit, vanityNetwork, vanityFolder, vanityPerformanceMode]);
+  }, [vanitySafeTargetCount, vanityTimeLimit, vanityNetwork, vanityFolder, vanityCaptureExtras, vanitySafeExtraMinRun, vanitySafeExtraLimit, vanityExtraFolder, vanityPerformanceMode]);
 
   const clearVanitySession = async () => {
+    vanitySessionGenerationRef.current += 1;
+    if (vanitySessionPersistTimerRef.current) {
+      clearTimeout(vanitySessionPersistTimerRef.current);
+      vanitySessionPersistTimerRef.current = null;
+    }
+    await vanitySessionPersistQueueRef.current.catch(() => {});
     const { value } = await Preferences.get({ key: VANITY_SESSION_KEY });
     const storedRef = parseInternalTextRef(value);
     setHasRecoverableVanitySession(false);
@@ -372,7 +453,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   };
 
   const persistVanitySession = async () => {
-    if (!vanityFoundRef.current.length) return;
+    if (!vanityFoundRef.current.length && !vanityExtraRef.current.length) return;
     const state: VanitySessionState = {
       prefix: vanityPrefix,
       suffix: vanitySuffix,
@@ -382,9 +463,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       timeLimit: vanityTimeLimit,
       network: vanityNetwork,
       folder: vanityFolder,
+      captureExtras: vanityCaptureExtras,
+      extraMinRun: vanitySafeExtraMinRun,
+      extraLimit: vanitySafeExtraLimit,
+      extraFolder: vanityExtraFolder,
       tags: vanityTags,
       performanceMode: vanityPerformanceMode,
       candidates: vanityCandidates,
+      extraWallets: vanityExtraRef.current,
       selectedAddresses: [...vanitySelectedRef.current],
       savedAddresses: [...vanitySavedRef.current],
     };
@@ -397,6 +483,31 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     if (previousRef) await deleteInternalText(previousRef);
     setHasRecoverableVanitySession(true);
   };
+
+  const enqueueVanitySessionPersist = async () => {
+    const generation = vanitySessionGenerationRef.current;
+    const nextWrite = vanitySessionPersistQueueRef.current
+      .catch(() => {})
+      .then(() => generation === vanitySessionGenerationRef.current ? persistVanitySession() : undefined);
+    vanitySessionPersistQueueRef.current = nextWrite;
+    await nextWrite;
+  };
+  vanitySessionPersistNowRef.current = enqueueVanitySessionPersist;
+
+  const scheduleVanitySessionPersist = () => {
+    if (vanitySessionPersistTimerRef.current) return;
+    vanitySessionPersistTimerRef.current = setTimeout(() => {
+      vanitySessionPersistTimerRef.current = null;
+      void vanitySessionPersistNowRef.current().catch(() => {});
+    }, 1500);
+  };
+
+  useEffect(() => {
+    const appStateListener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) void vanitySessionPersistNowRef.current().catch(() => {});
+    });
+    return () => { void appStateListener.then(listener => listener.remove()); };
+  }, []);
 
   const restoreVanitySession = async () => {
     try {
@@ -416,17 +527,25 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       setVanityTimeLimit(VANITY_TIME_LIMITS.includes(state.timeLimit) ? state.timeLimit : 300);
       setVanityNetwork(NETWORKS.includes(state.network) ? state.network : 'XLAYER');
       setVanityFolder(state.folder || VANITY_DEFAULT_FOLDER);
+      setVanityCaptureExtras(typeof state.captureExtras === 'boolean' ? state.captureExtras : true);
+      setVanityExtraMinRun(VANITY_EXTRA_MIN_RUNS.includes(state.extraMinRun) ? state.extraMinRun : 4);
+      setVanityExtraLimit(Math.max(1, Math.min(500, Number(state.extraLimit) || 50)));
+      setVanityExtraFolder(state.extraFolder || VANITY_EXTRA_DEFAULT_FOLDER);
       setVanityTags(Array.isArray(state.tags) ? state.tags : []);
       setVanityPerformanceMode(state.performanceMode === 'eco' || state.performanceMode === 'fast' ? state.performanceMode : 'balanced');
       setVanityCandidates(Array.isArray(state.candidates) ? state.candidates.slice(-6) : []);
       vanityFoundRef.current = restored.wallets;
-      vanitySelectedRef.current = new Set(state.selectedAddresses || restored.wallets.map(wallet => wallet.address).filter(Boolean) as string[]);
+      vanityExtraRef.current = Array.isArray(state.extraWallets) ? state.extraWallets : [];
+      vanitySelectedRef.current = new Set(
+        state.selectedAddresses
+        || [...restored.wallets, ...vanityExtraRef.current].map(wallet => wallet.address).filter(Boolean) as string[]
+      );
       vanitySavedRef.current = new Set(state.savedAddresses || []);
       setGeneratedWallets(restored.wallets);
+      setVanityExtraWallets(vanityExtraRef.current);
       setSelectedVanityAddresses([...vanitySelectedRef.current]);
       setVanityPaused(true);
       setVanityStopReason(t('createWallet.vanitySessionRestored'));
-      await clearVanitySession();
     } catch {
       await clearVanitySession();
       showToast({ key: 'createWallet.vanitySessionUnavailable', category: 'warning' }, 'error');
@@ -444,7 +563,9 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   useEffect(() => {
     const validFolders = new Set([VANITY_DEFAULT_FOLDER, ...usableFolders]);
     if (!validFolders.has(vanityFolder)) setVanityFolder(defaultSaveFolder);
-  }, [defaultSaveFolder, usableFolders, vanityFolder]);
+    const validExtraFolders = new Set([VANITY_EXTRA_DEFAULT_FOLDER, ...usableFolders]);
+    if (!validExtraFolders.has(vanityExtraFolder)) setVanityExtraFolder(VANITY_EXTRA_DEFAULT_FOLDER);
+  }, [defaultSaveFolder, usableFolders, vanityFolder, vanityExtraFolder]);
 
   const addVanityTag = () => {
     const next = vanityTagInput.trim().toLowerCase();
@@ -463,19 +584,48 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     createdAt: Date.now() + index
   });
 
-  const saveVanityWallets = async (walletsToSave: GeneratedWallet[], closeAfterSave = false) => {
-    const selectedWallets = walletsToSave.filter(wallet => !!wallet.address && vanitySelectedRef.current.has(wallet.address) && !vanitySavedRef.current.has(wallet.address));
-    if (!selectedWallets.length) return;
-    await onSave(selectedWallets.length === 1 ? selectedWallets[0] : selectedWallets);
-    selectedWallets.forEach(wallet => {
-      if (wallet.address) vanitySavedRef.current.add(wallet.address);
-    });
-    setVanitySavedCount(selectedWallets.length);
-    showToast({ key: 'createWallet.vanityAutoSaved', vars: { count: selectedWallets.length, folder: selectedWallets[0].groupId, label: t('walletCard.new') }, category: 'data' }, 'success');
-    if (closeAfterSave) onClose();
+  const buildVanityExtraWallet = (wallet: GeneratedWallet, index: number): GeneratedWallet => ({
+    ...wallet,
+    name: `${t('createWallet.vanityExtraWalletName')} ${index + 1}`,
+    network: vanityNetwork,
+    groupId: vanityExtraFolder || VANITY_EXTRA_DEFAULT_FOLDER,
+    tags: [...new Set([...vanityTags, 'extra-vanity'])],
+    balance: '0.00',
+    createdAt: Date.now() + index + 100000,
+  });
+
+  const saveVanityWallets = async (walletsToSave: GeneratedWallet[], closeAfterSave = false): Promise<boolean> => {
+    const extraRanks = new Map(
+      walletsToSave
+        .filter(wallet => wallet.vanityMatchType === 'extra' && !!wallet.address)
+        .sort((left, right) => (right.vanityScore || 0) - (left.vanityScore || 0))
+        .map((wallet, index) => [wallet.address!.toLowerCase(), index + 1]),
+    );
+    const selectedWallets = walletsToSave
+      .filter(wallet => !!wallet.address && vanitySelectedRef.current.has(wallet.address) && !vanitySavedRef.current.has(wallet.address))
+      .map(wallet => {
+        const rank = wallet.address ? extraRanks.get(wallet.address.toLowerCase()) : undefined;
+        return rank ? { ...wallet, name: `${t('createWallet.vanityExtraWalletName')} ${rank}` } : wallet;
+      });
+    if (!selectedWallets.length) return true;
+
+    try {
+      await onSave(selectedWallets.length === 1 ? selectedWallets[0] : selectedWallets);
+      selectedWallets.forEach(wallet => {
+        if (wallet.address) vanitySavedRef.current.add(wallet.address);
+      });
+      setVanitySavedCount(selectedWallets.length);
+      showToast({ key: 'createWallet.vanityAutoSaved', vars: { count: selectedWallets.length, folder: selectedWallets[0].groupId, label: t('walletCard.new') }, category: 'data' }, 'success');
+      if (closeAfterSave) onClose();
+      return true;
+    } catch {
+      await enqueueVanitySessionPersist().catch(() => {});
+      showToast(t('assetBalance.autoSaveError'), 'error');
+      return false;
+    }
   };
 
-  const finishVanityRun = async ({ reason = '', closeAfterSave = false } = {}) => {
+  const finishVanityRun = async ({ reason = '', closeAfterSave = false, saveFound = true } = {}): Promise<boolean> => {
     isVanityRunningRef.current = false;
     setVanityGenerating(false);
     if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
@@ -486,13 +636,17 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       vanityWorkerRef.current = null;
     }
     if (reason) setVanityStopReason(reason);
-    const foundWallets = [...vanityFoundRef.current];
-    if (foundWallets.length > 0) {
-      await saveVanityWallets(foundWallets, closeAfterSave);
+    const foundWallets = [...vanityFoundRef.current, ...vanityExtraRef.current];
+    if (foundWallets.length > 0 && saveFound) {
+      const saved = await saveVanityWallets(foundWallets, closeAfterSave);
+      if (!saved) return false;
       if (foundWallets.every(wallet => !!wallet.address && vanitySavedRef.current.has(wallet.address))) {
         await clearVanitySession();
       }
+    } else if (foundWallets.length > 0) {
+      await enqueueVanitySessionPersist().catch(() => {});
     }
+    return true;
   };
 
   const startVanity = async (resume = false) => {
@@ -517,11 +671,13 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
        setVanityStopReason('');
        setVanitySavedCount(0);
       setGeneratedWallets([]);
+      setVanityExtraWallets([]);
       setVanityCandidates([]);
       setSelectedVanityAddresses([]);
       vanitySelectedRef.current = new Set();
       vanitySavedRef.current = new Set();
       vanityFoundRef.current = [];
+      vanityExtraRef.current = [];
      }
 
      window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
@@ -535,7 +691,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
      vanityWorkerRef.current = worker;
 
      worker.onmessage = (event) => {
-       const { type, scanned, elapsed, wallet, candidate } = event.data || {};
+       const { type, scanned, elapsed, wallet, candidate, matchType } = event.data || {};
        if (!isVanityRunningRef.current) return;
 
        window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
@@ -551,17 +707,43 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
        }
 
        if (vanityTimeLimit > 0 && safeElapsed >= vanityTimeLimit) {
-         finishVanityRun({ reason: t('createWallet.vanityTimeLimitReached') });
+          void finishVanityRun({ reason: t('createWallet.vanityTimeLimitReached'), saveFound: false });
          return;
        }
 
-       if (type === 'found' && wallet) {
-         const nextWallet = buildVanityWallet(wallet, vanityFoundRef.current.length);
-         vanityFoundRef.current = [...vanityFoundRef.current, nextWallet];
-         setGeneratedWallets(vanityFoundRef.current);
-         vanitySelectedRef.current.add(wallet.address);
-         setSelectedVanityAddresses(prev => [...prev, wallet.address]);
-         setVanityCandidates(prev => [...prev.slice(-5), { address: wallet.address, matched: true }]);
+        if (type === 'extras' && Array.isArray(event.data.wallets)) {
+          const previousExtras = vanityExtraRef.current;
+          const byAddress = new Map(previousExtras.map(item => [item.address?.toLowerCase(), item]));
+          const workerExtras = event.data.wallets as GeneratedWallet[];
+          const nextExtras: GeneratedWallet[] = workerExtras
+            .filter((item: GeneratedWallet) => !!item.address)
+            .map((item: GeneratedWallet, index: number) => byAddress.get(item.address?.toLowerCase() || '') || buildVanityExtraWallet(item, index));
+          const nextAddresses = new Set(nextExtras.map(item => item.address?.toLowerCase()).filter(Boolean));
+          const previousAddresses = new Set(previousExtras.map(item => item.address?.toLowerCase()).filter(Boolean));
+          previousExtras.forEach(item => {
+            const address = item.address?.toLowerCase();
+            if (address && !nextAddresses.has(address)) vanitySelectedRef.current.delete(item.address || '');
+          });
+          nextExtras.forEach(item => {
+            const address = item.address?.toLowerCase();
+            if (address && !previousAddresses.has(address)) vanitySelectedRef.current.add(item.address || '');
+          });
+          vanityExtraRef.current = nextExtras;
+          setVanityExtraWallets(nextExtras);
+          setSelectedVanityAddresses([...vanitySelectedRef.current]);
+          const newest = nextExtras.find(item => !previousAddresses.has(item.address?.toLowerCase() || ''));
+          if (newest?.address) setVanityCandidates(prev => [...prev.slice(-5), { address: newest.address!, matched: true }]);
+        }
+
+        if (type === 'found' && wallet) {
+          if (matchType !== 'extra') {
+            const nextWallet = buildVanityWallet(wallet, vanityFoundRef.current.length);
+            vanityFoundRef.current = [...vanityFoundRef.current, nextWallet];
+            setGeneratedWallets(vanityFoundRef.current);
+           vanitySelectedRef.current.add(wallet.address);
+           setSelectedVanityAddresses(prev => prev.includes(wallet.address) ? prev : [...prev, wallet.address]);
+           setVanityCandidates(prev => [...prev.slice(-5), { address: wallet.address, matched: true }]);
+         }
          setWalletName(t('createWallet.vanityWalletName'));
        }
 
@@ -571,7 +753,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
      };
 
      worker.onerror = () => {
-       stopVanity();
+        void finishVanityRun({ reason: t('createWallet.vanityWorkerError'), saveFound: false });
        showToast({ key: 'createWallet.vanityWorkerError', category: 'warning' }, 'error');
      };
 
@@ -582,11 +764,24 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
        batchSize: vanityBatchSize,
        targetCount: Math.max(1, vanitySafeTargetCount - vanityFoundRef.current.length),
        initialScanned: resume ? vanityScanned : 0,
-       elapsedOffset: resume ? vanityTime : 0
+       elapsedOffset: resume ? vanityTime : 0,
+        captureExtras: vanityCaptureExtras,
+        extraMinRun: vanitySafeExtraMinRun,
+        extraLimit: vanitySafeExtraLimit,
+        initialExtraCandidates: vanityExtraRef.current.map(wallet => ({
+          address: wallet.address,
+          vanityMatchType: 'extra' as const,
+          vanityRepeatSide: wallet.vanityRepeatSide,
+          vanityRepeatChar: wallet.vanityRepeatChar,
+          vanityRepeatLength: wallet.vanityRepeatLength,
+          vanityScore: wallet.vanityScore,
+          vanityHeadRun: wallet.vanityHeadRun,
+          vanityTailRun: wallet.vanityTailRun,
+        })),
      });
   };
 
-  const pauseVanity = () => {
+  const pauseVanity = async () => {
     isVanityRunningRef.current = false;
     vanityWorkerRef.current?.postMessage({ type: 'stop' });
     vanityWorkerRef.current?.terminate();
@@ -596,10 +791,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     setVanityGenerating(false);
     setVanityPaused(true);
     setVanityStopReason(t('createWallet.vanityPaused'));
+    await enqueueVanitySessionPersist().catch(() => {});
   };
 
   const stopVanity = async () => {
-     await finishVanityRun({ reason: t('createWallet.vanityStopped') });
+     await finishVanityRun({ reason: t('createWallet.vanityStopped'), saveFound: false });
   };
 
   const toggleVanitySelection = (address: string) => {
@@ -609,6 +805,19 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       else vanitySelectedRef.current.add(address);
       return selected ? current.filter(value => value !== address) : [...current, address];
     });
+  };
+
+  const resetVanityResults = () => {
+    setGeneratedWallets([]);
+    setVanityExtraWallets([]);
+    setVanityScanned(0);
+    setVanitySavedCount(0);
+    setSelectedVanityAddresses([]);
+    vanitySelectedRef.current = new Set();
+    vanitySavedRef.current = new Set();
+    vanityFoundRef.current = [];
+    vanityExtraRef.current = [];
+    void clearVanitySession().catch(() => {});
   };
 
   const createRandomWalletRecord = (name: string): GeneratedWallet => {
@@ -1283,6 +1492,70 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                   <p className="mt-1 text-[11px] text-surface-500">{t(`createWallet.vanityPerformanceHint_${vanityPerformanceMode}`)}</p>
                 </div>
 
+                <section className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={vanityCaptureExtras}
+                      disabled={vanityGenerating}
+                      onChange={(event) => setVanityCaptureExtras(event.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-cyan-500 disabled:opacity-50"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-cyan-100">{t('createWallet.vanityExtraCaptureTitle')}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-cyan-100/75">{t('createWallet.vanityExtraCaptureDesc')}</span>
+                      <span className="mt-1 block text-[11px] leading-relaxed text-cyan-100/60">{t('createWallet.vanityExtraExample')}</span>
+                    </span>
+                  </label>
+                  {vanityCaptureExtras && (
+                    <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-cyan-100/80">{t('createWallet.vanityExtraMinRun')}</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {VANITY_EXTRA_MIN_RUNS.map(count => (
+                            <button
+                              key={count}
+                              type="button"
+                              disabled={vanityGenerating}
+                              onClick={() => setVanityExtraMinRun(count)}
+                              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraMinRun === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100' : 'border-surface-700 bg-surface-900 text-surface-300 hover:border-cyan-500/50'} disabled:opacity-50`}
+                            >
+                              {t(`createWallet.vanityExtraMinRun_${count}`)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-cyan-100/80">{t('createWallet.vanityExtraLimit')}</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {VANITY_EXTRA_LIMITS.map(count => (
+                            <button
+                              key={count}
+                              type="button"
+                              disabled={vanityGenerating}
+                              onClick={() => setVanityExtraLimit(count)}
+                              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraLimit === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100' : 'border-surface-700 bg-surface-900 text-surface-300 hover:border-cyan-500/50'} disabled:opacity-50`}
+                            >
+                              {count}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-cyan-100/80">
+                          <Folder size={13} /> {t('createWallet.vanityExtraFolder')}
+                        </label>
+                        <InlineSelect
+                          value={vanityExtraFolder}
+                          disabled={vanityGenerating}
+                          onChange={setVanityExtraFolder}
+                          options={vanityExtraFolderOptions}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </section>
+
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-surface-400">
                     <Tag size={13} /> {t('createWallet.tags')}
@@ -1352,7 +1625,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                 )}
               </div>
 
-              {!vanityGenerating && !vanityPaused && generatedWallets.length === 0 ? (
+              {!vanityGenerating && !vanityPaused && allVanityWallets.length === 0 ? (
                 <>
                 {hasRecoverableVanitySession && (
                   <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
@@ -1400,7 +1673,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
                   <section className="overflow-hidden rounded-xl border border-emerald-500/25 bg-emerald-500/5">
                     <div className="flex items-center justify-between border-b border-emerald-500/15 px-3 py-2">
-                      <p className="text-xs font-bold text-emerald-200">{t('createWallet.vanityFoundCount', { count: selectedVanityAddresses.length, total: vanitySafeTargetCount })}</p>
+                      <p className="text-xs font-bold text-emerald-200">{t('createWallet.vanityPrimaryMatches')}</p>
                       <span className="text-[11px] text-emerald-300">{generatedWallets.length}</span>
                     </div>
                     <div className="max-h-36 space-y-1.5 overflow-y-auto p-2">
@@ -1420,6 +1693,36 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     </div>
                   </section>
 
+                  {vanityCaptureExtras && (
+                    <section className="overflow-hidden rounded-xl border border-cyan-500/25 bg-cyan-500/5">
+                      <div className="flex items-center justify-between border-b border-cyan-500/15 px-3 py-2">
+                        <p className="text-xs font-bold text-cyan-100">{t('createWallet.vanityExtraKept')}</p>
+                        <span className="text-[11px] text-cyan-200">{vanityExtraWallets.length}/{vanitySafeExtraLimit}</span>
+                      </div>
+                      <div className="max-h-36 space-y-1.5 overflow-y-auto p-2">
+                        {vanityExtraWallets.length === 0 ? <p className="px-2 py-3 text-xs text-surface-500">{t('createWallet.vanityExtraEmpty')}</p> : vanityExtraWallets.map((wallet, index) => {
+                          const address = wallet.address || '';
+                          const selected = selectedVanityAddresses.includes(address);
+                          return <div key={address || index} className={`flex items-center gap-2 rounded-lg border p-2 transition-colors ${selected ? 'border-cyan-400/35 bg-cyan-500/15 text-cyan-50' : 'border-surface-700 bg-surface-900 text-surface-300'}`}>
+                            <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-pressed={selected}>
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${selected ? 'bg-cyan-300 text-surface-950' : 'bg-surface-700 text-surface-300'}`}>{index + 1}</span>
+                              <span className="min-w-0 flex-1">
+                                <code className="block truncate text-[11px]">{renderVanityExtraAddress(address, wallet)}</code>
+                                <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-cyan-100/75">
+                                  <span>{getVanityExtraLabel(wallet)}</span>
+                                  <span className="rounded-full bg-black/15 px-1.5 py-0.5">{t('createWallet.vanityExtraScore', { score: wallet.vanityScore || 0 })}</span>
+                                </span>
+                              </span>
+                            </button>
+                            <button type="button" onClick={() => handleCopy(address, `vanity-extra-${index}`)} className="shrink-0 p-1 text-surface-400 hover:text-white" aria-label={t('common.copy')}>
+                              {copiedField === `vanity-extra-${index}` ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                            </button>
+                          </div>;
+                        })}
+                      </div>
+                    </section>
+                  )}
+
                   <section className="overflow-hidden rounded-xl border border-surface-700 bg-surface-950 p-3 font-mono text-[11px]">
                     <div className="mb-2 flex items-center justify-between text-surface-500"><span>{t('createWallet.vanityTerminal')}</span><span>{vanityCandidates.length}/6</span></div>
                     <div className="h-28 space-y-1 overflow-hidden">
@@ -1435,7 +1738,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
                   <p className="px-1 text-[11px] leading-relaxed text-surface-500">{t('createWallet.vanityAutoLockPaused')}</p>
                   <div className="flex items-center justify-center gap-3">
-                    {vanityPaused ? <button onClick={() => startVanity(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500"><Play size={14} />{t('createWallet.vanityResume')}</button> : <button onClick={pauseVanity} className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"><Pause size={14} />{t('createWallet.vanityPause')}</button>}
+                    {vanityPaused ? <button onClick={() => startVanity(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500"><Play size={14} />{t('createWallet.vanityResume')}</button> : <button onClick={() => { void pauseVanity(); }} className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"><Pause size={14} />{t('createWallet.vanityPause')}</button>}
                     <button onClick={stopVanity} className="inline-flex items-center gap-2 px-2 py-2 text-xs font-semibold text-red-300 hover:text-red-200"><Square size={13} />{t('createWallet.stopVanity')}</button>
                   </div>
                 </div>
@@ -1443,26 +1746,35 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                 <div className="bg-surface-800 rounded-xl overflow-hidden border border-surface-700">
                   <div className="p-4 border-b border-surface-700 flex justify-between items-center bg-surface-800/50">
                     <div>
-                      <h3 className="font-medium text-white text-sm">{walletName || generatedWallets[0].name}</h3>
+                      <h3 className="font-medium text-white text-sm">{walletName || allVanityWallets[0].name}</h3>
                       <p className="mt-0.5 text-[11px] text-emerald-300">
                         {vanitySavedCount > 0
-                          ? t('createWallet.vanitySavedSummary', { count: vanitySavedCount, folder: generatedWallets[0]?.groupId || VANITY_DEFAULT_FOLDER })
-                          : t('createWallet.vanityFoundCount', { count: generatedWallets.length, total: vanitySafeTargetCount })}
+                          ? t('createWallet.vanitySavedSummary', { count: vanitySavedCount, folder: allVanityWallets[0]?.groupId || VANITY_DEFAULT_FOLDER })
+                          : t('createWallet.vanityResultSummary', { primary: generatedWallets.length, extra: vanityExtraWallets.length })}
                       </p>
                     </div>
-                    <button onClick={() => { setGeneratedWallets([]); setVanityScanned(0); setVanitySavedCount(0); setSelectedVanityAddresses([]); vanitySelectedRef.current = new Set(); vanitySavedRef.current = new Set(); vanityFoundRef.current = []; }} className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                    <button onClick={resetVanityResults} className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
                       <RefreshCw size={12} /> {t('authError.retry')}
                     </button>
                   </div>
                   <div className="max-h-72 space-y-2 overflow-y-auto p-4">
-                    {generatedWallets.map((wallet, index) => (
+                    {allVanityWallets.map((wallet, index) => (
                       (() => {
                         const address = wallet.address || '';
                         const selected = selectedVanityAddresses.includes(address);
+                        const isExtra = wallet.vanityMatchType === 'extra';
                         return <div key={`${address}-${index}`} className={`flex items-center gap-3 rounded-lg border p-3 ${selected ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-surface-700 bg-surface-900/50'}`}>
                           <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-pressed={selected}>
                             <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${selected ? 'bg-emerald-500/15 text-emerald-300' : 'bg-surface-700 text-surface-300'}`}>{index + 1}</span>
-                            <code className="min-w-0 break-all text-xs text-emerald-200">{renderVanityAddress(address)}</code>
+                            <span className="min-w-0 flex-1">
+                              <code className="block break-all text-xs text-emerald-200">{isExtra ? renderVanityExtraAddress(address, wallet) : renderVanityAddress(address)}</code>
+                              {isExtra && (
+                                <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-cyan-200">
+                                  <span>{getVanityExtraLabel(wallet)}</span>
+                                  <span className="rounded-full bg-cyan-500/10 px-1.5 py-0.5">{t('createWallet.vanityExtraScore', { score: wallet.vanityScore || 0 })}</span>
+                                </span>
+                              )}
+                            </span>
                           </button>
                           <button onClick={() => handleCopy(address, `vanity-found-${index}`)} className="shrink-0 p-1 text-surface-400 hover:text-white" aria-label={t('common.copy')}>
                             {copiedField === `vanity-found-${index}` ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
@@ -1476,7 +1788,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                       <button
                         type="button"
                         disabled={selectedVanityAddresses.length === 0}
-                        onClick={() => saveVanityWallets([...vanityFoundRef.current], true)}
+                        onClick={() => saveVanityWallets([...vanityFoundRef.current, ...vanityExtraRef.current], true)}
                         className="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-500 disabled:cursor-not-allowed disabled:bg-surface-700 disabled:text-surface-400"
                       >
                         {t('createWallet.saveToVault')}

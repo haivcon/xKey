@@ -21,6 +21,27 @@ const allowedEnglish = new Set([
 ]);
 
 const englishLeakPattern = /\b(Wrong password|Portable Backups|Enter master password|Change network|Copied!|Backup is valid|Pick backup file)\b/;
+const requiredLocalizedKeys = [
+  'createWallet.vanityExtraCaptureTitle',
+  'createWallet.vanityExtraCaptureDesc',
+  'createWallet.vanityExtraExample',
+  'createWallet.vanityExtraMinRun',
+  'createWallet.vanityExtraMinRun_3',
+  'createWallet.vanityExtraMinRun_4',
+  'createWallet.vanityExtraMinRun_5',
+  'createWallet.vanityExtraMinRun_6',
+  'createWallet.vanityExtraLimit',
+  'createWallet.vanityExtraFolder',
+  'createWallet.vanityPrimaryMatches',
+  'createWallet.vanityExtraKept',
+  'createWallet.vanityExtraEmpty',
+  'createWallet.vanityExtraHead',
+  'createWallet.vanityExtraTail',
+  'createWallet.vanityExtraBoth',
+  'createWallet.vanityExtraScore',
+  'createWallet.vanityExtraWalletName',
+  'createWallet.vanityResultSummary',
+];
 
 const extractDefaultObject = (source) => {
   const cleaned = source
@@ -56,13 +77,15 @@ for (const [code, tree] of Object.entries(locales)) {
   const leaked = Object.entries(flat)
     .filter(([, value]) => typeof value === 'string')
     .filter(([, value]) => englishLeakPattern.test(value) && !allowedEnglish.has(value));
+  const untranslated = requiredLocalizedKeys.filter(key => flat[key] === base[key]);
 
-  if (missing.length || extra.length || leaked.length) {
+  if (missing.length || extra.length || leaked.length || untranslated.length) {
     failed = true;
     console.error(`Locale ${code} failed audit.`);
     if (missing.length) console.error(`  Missing keys: ${missing.slice(0, 20).join(', ')}${missing.length > 20 ? ' ...' : ''}`);
     if (extra.length) console.error(`  Extra keys: ${extra.slice(0, 20).join(', ')}${extra.length > 20 ? ' ...' : ''}`);
     if (leaked.length) console.error(`  English leaks: ${leaked.slice(0, 20).map(([key, value]) => `${key}="${value}"`).join(', ')}`);
+    if (untranslated.length) console.error(`  Required translations still use English: ${untranslated.join(', ')}`);
   }
 }
 

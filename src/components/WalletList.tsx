@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus, UploadCloud } from 'lucide-react';
@@ -44,7 +44,7 @@ type WalletListProps = {
  * Wallet list with lazy rendering and optional drag-and-drop reordering.
  * DnD is only active when sortOrder === 'custom'.
  */
-export default function WalletList({
+function WalletList({
   vaultLoading, filteredWallets,
   setQrModalData, handleDeleteWallet, handleRenameWallet,
   handleEditWallet, handleTogglePin, setMovingWallet, t,
@@ -97,6 +97,11 @@ export default function WalletList({
     overscan: 4,
     scrollMargin: listOffset,
   });
+
+  const itemIds = useMemo(
+    () => filteredWallets.map((w, i) => getWalletId(w, i)),
+    [filteredWallets],
+  );
 
   useEffect(() => {
     rowVirtualizer.measure();
@@ -185,8 +190,6 @@ export default function WalletList({
     );
   }
 
-  const itemIds = filteredWallets.map((w, i) => getWalletId(w, i));
-
   const renderVirtualList = () => (
     <div ref={listRef} style={{ position: 'relative', width: '100%', height: `${rowVirtualizer.getTotalSize()}px` }}>
       {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -245,3 +248,5 @@ export default function WalletList({
     </div>
   );
 }
+
+export default memo(WalletList);

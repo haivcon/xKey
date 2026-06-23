@@ -19,6 +19,8 @@ blob-report/
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
 .vite/
 docs/
 

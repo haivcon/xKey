@@ -67,6 +67,7 @@ import { addXKeyFileOpenListener, getPendingXKeyFile } from './utils/nativeFileO
 import { secureCopy } from './utils/clipboard';
 import { XKEY_SLOGAN } from './utils/branding';
 import { cleanupInternalTextFiles } from './utils/internalTextStore';
+import { withTimeout } from './utils/asyncTimeout';
 import type { QrModalData, Wallet } from './types';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
@@ -74,6 +75,9 @@ const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
 const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
 const INTERNAL_TEXT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const HEADER_SLOGAN_LETTERS = Array.from(XKEY_SLOGAN);
+const STARTUP_WATCHDOG_MS = 18000;
+const EXTERNAL_BACKUP_TIMEOUT_MS = 10000;
+const EXTERNAL_BACKUP_DEDUPE_MS = 3000;
 
 type AssetBalanceChange = {
   wallet: Wallet;
@@ -154,6 +158,7 @@ export default function App() {
   // Without it, the first replayed effect is cancelled while the second one is
   // prevented from subscribing, leaving the splash screen visible forever.
   const integrityCheckRef = useRef<Promise<void> | null>(null);
+  const lastExternalBackupRef = useRef<{ fingerprint: string; ts: number } | null>(null);
   const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
   // Folder editing
@@ -209,6 +214,18 @@ export default function App() {
   useEffect(() => {
     if (splashAnimationDone && integrityReady) setShowSplash(false);
   }, [splashAnimationDone, integrityReady]);
+
+  useEffect(() => {
+    if (!showSplash || integrityReady || integrityFailed) return undefined;
+    const timer = window.setTimeout(() => {
+      setIntegrityStatus('');
+      setIntegrityFailed(true);
+      setAuthError(tRef.current('integrity.failureBody'));
+      setVaultLoading(false);
+      setShowSplash(false);
+    }, STARTUP_WATCHDOG_MS);
+    return () => window.clearTimeout(timer);
+  }, [integrityFailed, integrityReady, showSplash]);
 
   useEffect(() => {
     if (!aesKey) return;
@@ -348,10 +365,22 @@ export default function App() {
 
     const consumePendingFile = async () => {
       try {
-        const file = await getPendingXKeyFile();
+        const file = await withTimeout(
+          getPendingXKeyFile(),
+          EXTERNAL_BACKUP_TIMEOUT_MS,
+          () => new Error('External file open timed out'),
+        );
         if (!cancelled && file?.available) {
+          const fingerprint = `${file.name || ''}|${file.size || 0}|${(file.base64 || '').slice(0, 64)}`;
+          const latest = lastExternalBackupRef.current;
+          if (latest?.fingerprint === fingerprint && Date.now() - latest.ts < EXTERNAL_BACKUP_DEDUPE_MS) return;
+          lastExternalBackupRef.current = { fingerprint, ts: Date.now() };
           setExternalBackupWaiting(true);
-          await handleExternalBackupFile(file);
+          await withTimeout(
+            handleExternalBackupFile(file),
+            EXTERNAL_BACKUP_TIMEOUT_MS,
+            () => new Error('External backup preview timed out'),
+          );
         }
       } catch (err) {
         console.warn('Unable to consume pending .xkey file intent.', err);
@@ -729,11 +758,11 @@ export default function App() {
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
-              <div className="flex min-w-0 items-baseline gap-1.5">
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1 leading-tight">
-                  {t('home.title')}
+              <div className="flex min-w-0 items-baseline gap-1">
+                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 leading-tight">
+                  xKey
                 </h1>
-                <span className="shrink-0 text-[7px] font-semibold leading-none text-surface-400">
+                <span className="shrink-0 text-[5px] font-semibold leading-none text-surface-400">
                   {appVersion.version}
                 </span>
               </div>
