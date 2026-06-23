@@ -1,6 +1,6 @@
 export default {
   "health": {
-      "title": "Startup health",
+      "title": "Add Wallet",
       "replaceSnapshotPending": "A replace-vault undo snapshot is available.",
       "vanitySessionPending": "A saved vanity wallet session is waiting.",
       "externalBackupPending": "One external backup is waiting after unlock.",
@@ -644,6 +644,11 @@ export default {
     "vanityNeedPattern": "Enter a prefix or suffix",
     "vanityScanned": "Scanned",
     "vanityTerminal": "Live address stream",
+    "advancedEntropyTitle": "Advanced entropy controls",
+    "vanitySecurityTitle": "Local-only generation",
+    "vanitySecurityDesc": "Vanity search runs inside this device. Private keys are created locally and are not sent to a server. Use short patterns for faster results and always back up the seed/private key after saving.",
+    "vanityWorkers": "{count} workers",
+    "vanityBatch": "batch {count}",
     "vanityScanning": "Scanning addresses...",
     "vanitySessionAvailable": "Encrypted vanity-generation results from a previous session were found.", "vanitySessionRestore": "Restore session", "vanitySessionRestored": "Vanity-generation session restored.", "vanitySessionUnavailable": "The saved vanity-generation session could not be opened.",
     "vanityPerformance": "Performance profile", "vanityPerformance_eco": "Eco", "vanityPerformance_balanced": "Balanced", "vanityPerformance_fast": "Fast", "vanityPerformanceHint_eco": "Uses less battery and may be slower.", "vanityPerformanceHint_balanced": "Balances speed and battery use.", "vanityPerformanceHint_fast": "Searches fastest and may increase heat and battery use.",

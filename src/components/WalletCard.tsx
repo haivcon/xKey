@@ -260,7 +260,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             setExpanded(!expanded);
           }
         }}>
-        <div className={`flex items-center ${rowGap} overflow-hidden`}>
+        <div className={`flex min-w-0 flex-1 items-center ${rowGap} overflow-hidden`}>
           <div className={`${iconBox} rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
             {selectionMode ? (
               isSelected ? <CheckSquare size={iconSize} /> : <Square size={iconSize} />
@@ -268,7 +268,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               <WalletIcon size={iconSize} />
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
             {renaming ? (
               <input className="bg-transparent border-b border-brand-500 text-white text-sm outline-none w-full" value={editName}
                 onClick={(e) => e.stopPropagation()} onChange={(e) => setEditName(e.target.value)}
@@ -304,7 +304,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 )}
               </div>
             )}
-            <p className={`text-surface-400 font-mono ${showFullAddress ? 'whitespace-nowrap text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : `truncate ${addressClass}`}`}>
+            <p className={`max-w-full text-surface-400 font-mono ${showFullAddress ? 'overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : `truncate ${addressClass}`}`}>
               {displayAddress}
             </p>
             {wallet.createdAt && (
@@ -322,7 +322,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             )}
           </div>
         </div>
-        <div className={`flex items-center ${isUltraCompact ? 'gap-2' : 'gap-3'}`}>
+        <div className={`flex flex-shrink-0 items-center ${isUltraCompact ? 'gap-2' : 'gap-3'}`}>
           {parseAmount(wallet.balance) > 0 && (
             <div className="text-right">
               <p className="text-white font-semibold">{formatAssetValue(wallet.balance, assetUnit)}</p>

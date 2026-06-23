@@ -64,16 +64,26 @@ const postVanityMessage = (message: VanityWorkerResponse): void => {
   self.postMessage(message);
 };
 
+const deriveAddressFromPrivateKey = (privateKey: string): string => {
+  const publicKey = ethers.SigningKey.computePublicKey(privateKey, false);
+  return `0x${ethers.keccak256(`0x${publicKey.slice(4)}`).slice(-40)}`;
+};
+
+const wipePrivateKeyBytes = (bytes: Uint8Array): void => {
+  bytes.fill(0);
+};
+
 const createVanityWallet = (
-  wallet: ethers.HDNodeWallet,
+  privateKey: string,
+  address: string,
   matchType: 'primary' | 'extra',
   extra?: VanityExtraMatch | null,
 ): VanityWallet => ({
   name: 'Vanity Wallet',
-  address: wallet.address,
-  privateKey: wallet.privateKey,
-  mnemonic: wallet.mnemonic?.phrase || '',
-  seedPhrase: wallet.mnemonic?.phrase || '',
+  address: ethers.getAddress(address),
+  privateKey,
+  mnemonic: '',
+  seedPhrase: '',
   balance: '0.00',
   network: 'XLAYER',
   vanityMatchType: matchType,
@@ -143,8 +153,9 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     if (!running) return;
 
     for (let i = 0; i < safeBatchSize; i += 1) {
-      const wallet = ethers.Wallet.createRandom();
-      const address = wallet.address.toLowerCase();
+      const privateKeyBytes = ethers.randomBytes(32);
+      const privateKey = ethers.hexlify(privateKeyBytes);
+      const address = deriveAddressFromPrivateKey(privateKey).toLowerCase();
       lastCandidate = address;
       scanned += 1;
 
@@ -158,7 +169,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           scanned,
           found,
           elapsed: (Date.now() - startTime) / 1000,
-          wallet: createVanityWallet(wallet, 'primary', extraMatch),
+          wallet: createVanityWallet(privateKey, address, 'primary', extraMatch),
           matchType: 'primary',
         });
 
@@ -173,7 +184,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           return;
         }
       } else if (extraMatch && !extraWallets.some(item => item.address?.toLowerCase() === address)) {
-        const extraWallet = createVanityWallet(wallet, 'extra', extraMatch);
+        const extraWallet = createVanityWallet(privateKey, address, 'extra', extraMatch);
         const weakest = extraWallets[extraWallets.length - 1];
         if (extraWallets.length < safeExtraLimit || (weakest && compareWalletScore(extraWallet, weakest) < 0)) {
           extraWallets.push(extraWallet);
@@ -186,7 +197,11 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
             elapsed: (Date.now() - startTime) / 1000,
             wallets: extraWallets,
           });
+        } else {
+          wipePrivateKeyBytes(privateKeyBytes);
         }
+      } else {
+        wipePrivateKeyBytes(privateKeyBytes);
       }
     }
 

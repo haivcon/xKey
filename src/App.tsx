@@ -1005,7 +1005,7 @@ export default function App() {
 
               <section className="min-w-0">
                 <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 backdrop-blur-md border-b border-surface-900/80">
-                  <div className="lg:hidden flex items-center gap-3">
+                  <div className="lg:hidden flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="min-w-0 flex-1">
                       <FolderTabs
                         folders={folders} activeFolder={activeFolder} wallets={wallets}
@@ -1033,7 +1033,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                      className="mb-4 flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-right hover:bg-surface-800"
+                      className="mb-1 w-full flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-left hover:bg-surface-800 sm:mb-4 sm:w-auto sm:text-right"
                     >
                       <span className="block text-[9px] font-semibold uppercase tracking-wider text-surface-500">{t('home.totalAssets')}</span>
                       <span className="block text-sm font-bold leading-none text-white">{totalBalanceText}</span>
