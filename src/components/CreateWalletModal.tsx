@@ -15,6 +15,7 @@ import { APP_ACTIVITY_EVENT } from '../hooks/useAutoLock';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
 import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import type { Wallet as WalletModel } from '../types';
+import AdvancedEntropyPanel from './entropy/AdvancedEntropyPanel';
 
 const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 const VANITY_PRESETS = ['000', '111', '123', '888', '999', 'abc', 'def'];
@@ -29,7 +30,7 @@ const VANITY_SETTINGS_KEY = 'xkey_vanity_settings_v1';
 const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
 
 type SelectOption = { value: string; label: ReactNode };
-type CreateWalletTab = 'manual' | 'generate' | 'hdTree' | 'vanity';
+type CreateWalletTab = 'manual' | 'generate' | 'hdTree' | 'vanity' | 'advancedEntropy';
 type GeneratedWallet = WalletModel & {
   mnemonic?: string;
   derivationPath?: string;
@@ -337,6 +338,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       .filter(folder => folder !== VANITY_EXTRA_DEFAULT_FOLDER)
       .map(folder => ({ value: folder, label: folder }))
   ];
+
+  const handleAdvancedEntropyGenerated = (_entropy: Uint8Array, seedPhrase: string, address: string) => {
+    // Fill the manual input form with the generated phrase
+    setManualSeed(seedPhrase);
+    setManualAddress(address);
+    setWalletName(`${t('createWallet.tabAdvancedEntropy') || 'Advanced Entropy'} Wallet`);
+    setTab('manual');
+  };
 
   const closeCreateWalletModal = async () => {
     if (closingRef.current) return;
@@ -1041,6 +1050,9 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
           <button onClick={() => setTab('vanity')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'vanity' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
             <Wallet size={16} /> {t('createWallet.tabVanity')}
           </button>
+          <button onClick={() => setTab('advancedEntropy')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'advancedEntropy' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
+            <Sparkles size={16} /> {t('createWallet.tabAdvancedEntropy') || 'Advanced'}
+          </button>
         </div>
 
         <div className="keyboard-scroll-target p-5 space-y-4 overflow-y-auto flex-1">
@@ -1396,6 +1408,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
           {/* ── HD Wallet Explorer Tab ── */}
           {tab === 'hdTree' && (
             <HDWalletTreeVisualizer onSaveWallet={handleSaveHDWallet} existingWallets={existingWallets} />
+          )}
+
+          {/* ── Advanced Entropy Tab ── */}
+          {tab === 'advancedEntropy' && (
+            <AdvancedEntropyPanel onGenerated={handleAdvancedEntropyGenerated} />
           )}
 
           {/* ── Vanity Tab ── */}

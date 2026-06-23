@@ -18,17 +18,17 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.14.0
+## Current Release: v5.15.0
 
-v5.14.0 introduces native Hierarchical Deterministic (HD) BIP39 Wallet support, enabling secure storage of multiple master seed phrases, support for both 12 and 24-word mnemonic phrases, off-main-thread encryption/decryption, and an interactive derivation tree visualizer in the creation modal.
+v5.15.0 introduces **Advanced Entropy Generation**, giving users granular control over wallet creation and child phrase derivation for maximum security and deterministic workflows.
 
 ### Main Upgrades
 
-- **BIP39 HD Seed Phrase Storage:** Master seeds are securely stored and isolated in the encrypted vault (`hdStorage.ts`). Only the master seeds are stored, and leaf wallets can be safely derived and added.
-- **Support for 12 and 24-Word Seeds:** HD derivation tree visualizer updated to support importing/generating both 12-word and 24-word mnemonic seeds.
-- **Background Crypto Worker Integration:** BIP39 key derivation and master seed encryption/decryption are processed off-main-thread via the dedicated background worker to ensure optimal app performance.
-- **HD Wallet Derivation Visualizer:** Provides interactive derivation UI tree allowing users to inspect addresses and derive keys cleanly.
-- **Android sync-ready release:** Android metadata version code updated to 76 and version name to 5.14.0.
+- **Pointer/Movement Entropy:** Capture true physical randomness by recording pointer and device movements to generate high-quality entropy for new wallets.
+- **Physical Dice Entropy:** Support for entering physical 6-sided dice rolls directly into the app to manually generate offline wallets based on verifiable real-world entropy.
+- **BIP85 Deterministic Derivation:** Derive standard BIP39 child phrases deterministically from an existing master seed. The master seed is only processed in memory and is safely discarded without being saved to the vault, allowing you to create reproducible offline backup strategies.
+- **Multilingual Support:** All 15 supported languages updated with full translation keys for the new Advanced Entropy interfaces.
+- **Android sync-ready release:** Android metadata version code updated to 77 and version name to 5.15.0.
 
 ### Verification for This Release
 
@@ -76,9 +76,14 @@ Long description opener:
 
 ## Earlier Releases
 
+<details>
+<summary>Click to expand previous release history</summary>
+
 - **v5.14.0:** BIP39 Hierarchical Deterministic (HD) Wallet support, 12 and 24-word mnemonic keys, background derivation worker, and interactive derivation visualizer tree.
 - **v5.13.0:** Key Health center for long-term maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys checks.
 - Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, vanity wallet generation, recovery-session safety, and the TypeScript migration foundation.
+
+</details>
 
 ---
 
@@ -125,14 +130,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.14.0
-git push origin v5.14.0
+git tag v5.15.0
+git push origin v5.15.0
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.14.0.apk`
-- `xKey-GooglePlay-v5.14.0.aab`
+- `xKey-GitHub-v5.15.0.apk`
+- `xKey-GooglePlay-v5.15.0.aab`
 
 Android package: `com.haivcon.xkey`.
 
