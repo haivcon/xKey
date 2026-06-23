@@ -46,6 +46,8 @@ const runCryptoWorker = <T = unknown>(type: string, payload: unknown): Promise<T
     });
 };
 
+export { runCryptoWorker as runCryptoAction };
+
 const STORAGE_KEYS = {
     WALLETS: 'xkey_wallets',
     DECOY_WALLETS: 'xkey_decoy_wallets',
