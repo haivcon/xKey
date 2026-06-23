@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
 import {
-  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart, FolderPlus, Copy
+  UploadCloud, ShieldAlert, BarChart3, Settings, Plus, Heart, FolderPlus, Copy, Bell
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -32,6 +32,7 @@ const MoveToFolderModal = lazy(() => import('./components/MoveToFolderModal'));
 const DonateModal = lazy(() => import('./components/DonateModal'));
 const BulkNetworkModal = lazy(() => import('./components/BulkNetworkModal'));
 const AssetBalanceModal = lazy(() => import('./components/AssetBalanceModal'));
+const KeyHealthModal = lazy(() => import('./components/KeyHealthModal'));
 
 // Utils & Hooks
 import {
@@ -68,6 +69,7 @@ import { secureCopy } from './utils/clipboard';
 import { XKEY_SLOGAN } from './utils/branding';
 import { cleanupInternalTextFiles } from './utils/internalTextStore';
 import { withTimeout } from './utils/asyncTimeout';
+import { runWalletProofCheck, selectProofWallets, shouldShowProofOfKeysReminder, summarizeKeyHealth, type ProofCheckReport, type ProofScope } from './utils/keyHealth';
 import type { QrModalData, Wallet } from './types';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
@@ -132,6 +134,7 @@ export default function App() {
   const [movingWallet, setMovingWallet] = useState<Wallet | null>(null);
   const [showDonate, setShowDonate] = useState(false);
   const [showAssetBalance, setShowAssetBalance] = useState(false);
+  const [showKeyHealth, setShowKeyHealth] = useState(false);
   const [assetUnit, setAssetUnit] = useState('$');
   const homeHeaderRef = useRef<HTMLElement | null>(null);
   const createWalletCloseHandlerRef = useRef<(() => void | Promise<void>) | null>(null);
@@ -265,6 +268,9 @@ export default function App() {
     pinnedFolders, defaultFolder,
   } = useWallets(aesKey, isDecoyMode);
   const totalBalanceText = formatAssetValue(totalBalance, assetUnit);
+  const keyHealthSummary = useMemo(() => summarizeKeyHealth(wallets), [wallets]);
+  const showProofOfKeysReminder = shouldShowProofOfKeysReminder();
+  const keyHealthAttentionCount = keyHealthSummary.attentionCount + (showProofOfKeysReminder ? 1 : 0);
 
   useEffect(() => {
     Preferences.get({ key: ASSET_UNIT_KEY }).then(({ value }) => {
@@ -312,6 +318,56 @@ export default function App() {
     }
     return savedWallets;
   }, [handleSaveWallet, setActiveFolder, setSearchQuery, setActiveFilter, setSortOrder]);
+
+  const getWalletIdentity = useCallback((wallet: Wallet) => (
+    wallet._id || `${wallet.address || ''}|${wallet.name || ''}|${wallet.groupId || ''}|${wallet.createdAt || ''}`
+  ), []);
+
+  const handleRunProofOfKeysCheck = useCallback(async (scope: ProofScope): Promise<ProofCheckReport> => {
+    const now = Date.now();
+    if (!aesKey || wallets.length === 0) {
+      return { total: 0, passed: 0, failed: 0, skipped: 0, checkedAt: now, scope, results: [] };
+    }
+    const targetWallets = selectProofWallets(wallets, scope, filteredWallets, now);
+    if (targetWallets.length === 0) {
+      return { total: 0, passed: 0, failed: 0, skipped: 0, checkedAt: now, scope, results: [] };
+    }
+    const randomNonce = crypto.getRandomValues(new Uint8Array(16));
+    const nonce = Array.from(randomNonce, byte => byte.toString(16).padStart(2, '0')).join('');
+    const checkedTargets = await Promise.all(targetWallets.map(wallet => runWalletProofCheck(wallet, nonce, now)));
+    const checkedById = new Map(checkedTargets.map(wallet => [getWalletIdentity(wallet), wallet]));
+    const checked = wallets.map(wallet => checkedById.get(getWalletIdentity(wallet)) || wallet);
+    setWallets(checked);
+    await saveWallets(checked, aesKey, isDecoyMode);
+    const passed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'passed').length;
+    const failed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'failed').length;
+    const skipped = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'skipped').length;
+    const report: ProofCheckReport = {
+      total: checkedTargets.length,
+      passed,
+      failed,
+      skipped,
+      checkedAt: now,
+      scope,
+      results: checkedTargets.map(wallet => ({
+        name: wallet.name || t('walletCard.unnamed'),
+        address: wallet.address || '',
+        status: wallet.lastProofOfKeysStatus || 'skipped',
+        message: wallet.lastProofOfKeysMessage || '',
+      })),
+    };
+    appendAuditLog('wallet.proof_of_keys_check', { total: checkedTargets.length, passed, failed, skipped, scope }).catch(() => {});
+    showToast?.(t('keyHealth.proofResult', { passed, total: checkedTargets.length, failed, skipped }), failed > 0 ? 'warning' : 'success');
+    return report;
+  }, [aesKey, wallets, filteredWallets, getWalletIdentity, setWallets, isDecoyMode, showToast, t]);
+
+  const patchKeyHealthWallets = useCallback(async (targetWallets: Wallet[], patch: Partial<Wallet>) => {
+    if (!aesKey || targetWallets.length === 0) return;
+    const targetIds = new Set(targetWallets.map(getWalletIdentity));
+    const updated = wallets.map(wallet => targetIds.has(getWalletIdentity(wallet)) ? { ...wallet, ...patch } : wallet);
+    setWallets(updated);
+    await saveWallets(updated, aesKey, isDecoyMode);
+  }, [aesKey, wallets, getWalletIdentity, setWallets, isDecoyMode]);
 
   const startCreateFolder = useCallback(() => {
     setEditingFolder(null);
@@ -783,6 +839,19 @@ export default function App() {
               )}
             </div>
             <div className="flex items-center justify-self-end gap-1">
+              <button
+                onClick={() => { hapticTap(); setShowKeyHealth(true); }}
+                className="btn-icon-glow relative rounded-full bg-surface-800 p-2 text-surface-400 transition-colors hover:bg-surface-700 hover:text-white"
+                title={t('keyHealth.title')}
+                aria-label={t('keyHealth.title')}
+              >
+                <Bell size={20} />
+                {keyHealthAttentionCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-surface-900 bg-red-500 px-1 text-[9px] font-black leading-none text-white">
+                    {Math.min(9, keyHealthAttentionCount)}
+                  </span>
+                )}
+              </button>
               <button onClick={() => { hapticTap(); setShowDonate(true); }} className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse" title={t('donate.button')} aria-label={t('donate.button')}>
                 <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
               </button>
@@ -807,6 +876,19 @@ export default function App() {
                 {healthMessages.map(message => <p key={message}>{message}</p>)}
               </div>
             </div>
+          )}
+          {wallets.length > 0 && keyHealthAttentionCount > 0 && (
+            <button
+              type="button"
+              onClick={() => { hapticTap(); setShowKeyHealth(true); }}
+              className="mb-3 flex w-full items-center justify-between gap-3 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-left text-xs text-amber-100 transition-colors hover:bg-amber-400/15"
+            >
+              <span className="min-w-0">
+                <span className="block font-semibold">{showProofOfKeysReminder ? t('keyHealth.proofDayTitle') : t('keyHealth.attentionTitle')}</span>
+                <span className="mt-0.5 block truncate text-amber-100/80">{t('keyHealth.attentionDesc', { count: keyHealthAttentionCount })}</span>
+              </span>
+              <Bell size={16} className="shrink-0" />
+            </button>
           )}
           {wallets.length === 0 ? (
             <div className="space-y-4 mt-10 max-w-2xl mx-auto">
@@ -1070,6 +1152,18 @@ export default function App() {
             onClose={() => setShowAssetBalance(false)}
             onSave={handleSaveAssetBalances}
             onUnitChange={updateAssetUnit}
+            t={t}
+          />
+        )}
+        {showKeyHealth && (
+          <KeyHealthModal
+            wallets={wallets}
+            visibleWallets={filteredWallets}
+            onClose={() => setShowKeyHealth(false)}
+            onRunProofCheck={handleRunProofOfKeysCheck}
+            onMarkReviewed={(targetWallets) => patchKeyHealthWallets(targetWallets, { keyHealthReviewedAt: Date.now(), rotationSnoozedUntil: undefined })}
+            onRemindLater={(targetWallets) => patchKeyHealthWallets(targetWallets, { rotationSnoozedUntil: Date.now() + 30 * 24 * 60 * 60 * 1000 })}
+            onCreateReplacement={() => { setShowKeyHealth(false); setShowCreateWallet(true); }}
             t={t}
           />
         )}

@@ -13,6 +13,7 @@ import HDWalletTreeVisualizer from './HDWalletTreeVisualizer';
 import { formatAmountInput, normalizeAmountInput } from '../utils/amountFormat';
 import { APP_ACTIVITY_EVENT } from '../hooks/useAutoLock';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
+import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import type { Wallet as WalletModel } from '../types';
 
 const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
@@ -194,6 +195,8 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const [bulkResult, setBulkResult] = useState<BulkResult>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [walletName, setWalletName] = useState('');
+  const [postQuantumMode, setPostQuantumMode] = useState(false);
+  const [rotationReminderMonths, setRotationReminderMonths] = useState(DEFAULT_ROTATION_MONTHS);
   const { showToast } = useToast();
   const showConfirm = useConfirm();
   const t = useT();
@@ -820,7 +823,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     void clearVanitySession().catch(() => {});
   };
 
-  const createRandomWalletRecord = (name: string): GeneratedWallet => {
+  const createRandomWalletRecord = async (name: string): Promise<GeneratedWallet> => {
     let w;
     if (Number(seedWordCount) === 24) {
       const mnemonic = ethers.Mnemonic.fromEntropy(ethers.randomBytes(32));
@@ -837,7 +840,9 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       mnemonic: phrase,
       seedPhrase: phrase,
       balance: '0.00',
-      network: 'XLAYER'
+      network: 'XLAYER',
+      rotationReminderMonths,
+      ...(postQuantumMode ? await createPostQuantumEnvelope(aesKey) : {})
     };
   };
 
@@ -853,7 +858,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       
       const processSingle = async (i: number, newWallets: GeneratedWallet[]) => {
         if (i < count) {
-          const record = createRandomWalletRecord(count === 1 ? `Wallet ${Date.now().toString(36).slice(-4).toUpperCase()}` : `Wallet ${i + 1}`);
+          const record = await createRandomWalletRecord(count === 1 ? `Wallet ${Date.now().toString(36).slice(-4).toUpperCase()}` : `Wallet ${i + 1}`);
           newWallets.push(record);
           setGenerateProgress(i + 1);
           setFloatingEffects(prev => [...prev.slice(-4), { count: i + 1, address: record.address, key: Math.random() }]);
@@ -879,7 +884,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       const processChunk = async (i: number) => {
         const limit = Math.min(i + chunkSize, count);
         for (let j = i; j < limit; j++) {
-          newWallets.push(createRandomWalletRecord(`Wallet ${j + 1}`));
+          newWallets.push(await createRandomWalletRecord(`Wallet ${j + 1}`));
         }
         setGenerateProgress(limit);
         const lastW = newWallets[newWallets.length - 1];
@@ -930,6 +935,16 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       network: w.network || 'XLAYER',
       groupId: w.groupId,
       tags: w.tags || [],
+      rotationReminderMonths: w.rotationReminderMonths || rotationReminderMonths,
+      ...(w.pqPrepared ? {
+        pqPrepared: w.pqPrepared,
+        pqScheme: w.pqScheme,
+        pqCreatedAt: w.pqCreatedAt,
+        pqPublicCommitment: w.pqPublicCommitment,
+        pqOneTimeSlots: w.pqOneTimeSlots,
+        pqUsedSlots: w.pqUsedSlots,
+        pqReserveId: w.pqReserveId,
+      } : {}),
       createdAt: Date.now() + index
     }));
     
@@ -959,7 +974,18 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       showToast({ key: 'createWallet.fillRequired', category: 'warning' }, 'warning');
       return;
     }
-    const saved = await onSave({ name: walletName || 'Manual Wallet', address: manualAddress.trim(), privateKey: manualPK.trim(), seedPhrase: manualSeed.trim(), balance: normalizeAmountInput(manualBalance) || '0.00', notes: manualNotes.trim(), network: manualNetwork, createdAt: Date.now() });
+    const saved = await onSave({
+      name: walletName || 'Manual Wallet',
+      address: manualAddress.trim(),
+      privateKey: manualPK.trim(),
+      seedPhrase: manualSeed.trim(),
+      balance: normalizeAmountInput(manualBalance) || '0.00',
+      notes: manualNotes.trim(),
+      network: manualNetwork,
+      rotationReminderMonths,
+      ...(postQuantumMode ? await createPostQuantumEnvelope(aesKey) : {}),
+      createdAt: Date.now()
+    });
     const savedWallet = (Array.isArray(saved) ? saved[0] : saved) as GeneratedWallet | undefined;
     showToast(duplicateWarning
       ? { key: 'createWallet.walletAddedDuplicate', category: 'warning' }
@@ -1018,6 +1044,48 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         </div>
 
         <div className="keyboard-scroll-target p-5 space-y-4 overflow-y-auto flex-1">
+          {(tab === 'manual' || tab === 'generate') && (
+            <section className="rounded-xl border border-surface-700 bg-surface-800/35 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={postQuantumMode}
+                    onChange={(event) => setPostQuantumMode(event.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-brand-500"
+                  />
+                  <span>
+                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <ShieldCheck size={16} className="text-emerald-400" />
+                      {t('keyHealth.pqCreateTitle')}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-surface-400">
+                      {t('keyHealth.pqCreateDesc')}
+                    </span>
+                  </span>
+                </label>
+                <div className="shrink-0 sm:w-44">
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                    {t('keyHealth.rotationCadence')}
+                  </label>
+                  <select
+                    value={rotationReminderMonths}
+                    onChange={(event) => setRotationReminderMonths(Number(event.target.value) || DEFAULT_ROTATION_MONTHS)}
+                    className="w-full rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-xs font-semibold text-surface-100 outline-none focus:border-brand-500"
+                  >
+                    <option value={6}>{t('keyHealth.rotation6mo')}</option>
+                    <option value={12}>{t('keyHealth.rotation1y')}</option>
+                    <option value={36}>{t('keyHealth.rotation3y')}</option>
+                  </select>
+                </div>
+              </div>
+              {postQuantumMode && (
+                <div className="mt-3 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+                  {t('keyHealth.pqBetaWarning')}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* ── Manual Entry Tab ── */}
           {tab === 'manual' && (

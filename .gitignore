@@ -104,6 +104,8 @@ xkey_shamir_*.html
 shamir_*.html
 wallets_*.csv
 wallets_*.zip
+key-health-report*.txt
+proof-of-keys-report*.txt
 
 # Local scratch / generated folders
 # IMPORTANT: keep the local 1/ workspace out of GitHub. It may contain notes,

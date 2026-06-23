@@ -18,28 +18,32 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.12.4
+## Current Release: v5.13.0
 
-v5.12.4 hardens long-running vanity wallet generation, recovery-session safety, Android lifecycle handling, and localization verification.
+v5.13.0 adds a Key Health center for long-term cold-vault maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys draft-signature checks.
 
 ### Main Upgrades
 
-- **Ranked extra vanity wallets:** while searching for a main prefix/suffix, xKey can keep a bounded top-N set of addresses with repeated characters at the beginning, end, or both ends. Rankings update as stronger matches appear.
-- **Safer scan controls:** closing the generator pauses and encrypts the session; stopping shows results for review instead of silently saving them. Saving failures preserve the recovery session and show a localized error.
-- **Resilient Android lifecycle:** active vanity sessions flush encrypted recovery data when the app enters the background. Long scans no longer accumulate every discarded candidate in memory.
-- **Consistent final naming:** extra vanity wallets receive names based on their final score rank when saved, not the incidental order in which they were found.
-- **Localization and test hardening:** all 15 languages include the new vanity states, locale audit rejects untranslated vanity strings, and a dedicated algorithm test covers head, tail, combined, and ranked repeated-character matches.
-- **Android sync-ready release:** Android metadata is now version code 74 and version name 5.12.4.
+- **Key Health center:** a home-screen bell opens a focused maintenance view for wallet age, rotation status, PQ-ready status, Proof-of-Keys results, and follow-up actions.
+- **Post-quantum preparation beta:** wallet creation can generate a local one-time-signature reserve and public commitment for future migration workflows. The UI clearly states that this does not make current Bitcoin, Ethereum, or EVM transactions quantum-safe today.
+- **Separated PQ reserve storage:** new wallets keep only `pqReserveId` and public commitment metadata in the wallet record. PQ reserve material is stored separately and encrypted with the vault key.
+- **Key rotation workflow:** wallets can be marked reviewed, snoozed for 30 days, or used as a starting point for creating a replacement wallet.
+- **Scoped Proof-of-Keys checks:** users can run local draft-signature checks for all wallets, visible wallets, signable wallets, or only wallets that need attention.
+- **Detailed Proof-of-Keys reports:** checks now produce pass/fail/skipped details with a copyable report and audit-log entry. No blockchain transaction is created or broadcast.
+- **Test coverage:** a dedicated `test:key-health` script covers rotation status, snooze/review behavior, PQ envelope metadata, proof check pass/fail/skipped states, and scope selection.
+- **Android sync-ready release:** Android metadata is now version code 75 and version name 5.13.0.
 
 ### Verification for This Release
 
 - `npm run lint`
 - `npm run type-check`
 - `npm run locale:audit`
+- `npm run test:key-health`
+- `npm run test:shamir`
+- `npm run test:reed-solomon`
 - `npm run test:vanity`
 - `npm run build`
-- `npx playwright test tests/smoke/settings-regression.spec.js`
-- `npx cap sync android`
+- `npm run test:smoke`
 
 ### Store Listing Copy
 
@@ -75,7 +79,7 @@ Long description opener:
 
 ## Earlier Releases
 
-Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, and the TypeScript migration foundation.
+Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, vanity wallet generation, recovery-session safety, and the TypeScript migration foundation.
 
 ---
 
@@ -122,14 +126,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.12.4
-git push origin v5.12.4
+git tag v5.13.0
+git push origin v5.13.0
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.12.4.apk`
-- `xKey-GooglePlay-v5.12.4.aab`
+- `xKey-GitHub-v5.13.0.apk`
+- `xKey-GooglePlay-v5.13.0.aab`
 
 Android package: `com.haivcon.xkey`.
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
-import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins } from 'lucide-react';
+import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import MarkdownRenderer from './MarkdownRenderer';
@@ -14,6 +14,7 @@ import { TagBadge, TagEditor } from './TagSystem';
 import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
 import { useSecureDisplay } from '../contexts/SecureDisplayContext';
 import { appendAuditLog } from '../utils/auditLog';
+import { formatKeyAge, getWalletHealth } from '../utils/keyHealth';
 import type { NetworkColor, Wallet } from '../types';
 import { XKEY_SLOGAN } from '../utils/branding';
 
@@ -86,6 +87,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const actionButtonClass = isUltraCompact ? 'p-1.5' : 'p-2';
   const actionIconSize = isUltraCompact ? 16 : 18;
   const isNewWallet = !!wallet.newUntil && wallet.newUntil > nowTick;
+  const keyHealth = getWalletHealth(wallet, nowTick);
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
@@ -295,11 +297,21 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {t('walletCard.new')}
                   </span>
                 )}
+                {wallet.pqPrepared && (
+                  <span className={`${isUltraCompact ? 'text-[0.5rem] px-1.5 py-px' : 'text-[0.55rem] px-1.5 py-[0.0625rem]'} inline-flex items-center gap-1 rounded-full border border-emerald-500/35 bg-emerald-500/10 font-black uppercase leading-none text-emerald-300`}>
+                    <ShieldCheck size={10} /> PQ
+                  </span>
+                )}
               </div>
             )}
             <p className={`text-surface-400 font-mono ${showFullAddress ? 'whitespace-nowrap text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : `truncate ${addressClass}`}`}>
               {displayAddress}
             </p>
+            {wallet.createdAt && (
+              <p className={`mt-0.5 text-[10px] ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
+                {t('keyHealth.age')}: {formatKeyAge(wallet.createdAt, nowTick)}
+              </p>
+            )}
             {wallet.tags && wallet.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {wallet.tags.slice(0, 3).map(tag => (

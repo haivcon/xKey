@@ -12,6 +12,26 @@ export interface Wallet {
   pinned?: boolean;
   tags?: string[];
   createdAt?: number;
+  /**
+   * Offline post-quantum preparation metadata.
+   * This does not make current ECDSA chains quantum-safe; it stores a local
+   * one-time-signature reserve and public commitment for future migration flows.
+   */
+  pqPrepared?: boolean;
+  pqScheme?: 'lamport-sha256-prepare-v1';
+  pqCreatedAt?: number;
+  pqPublicCommitment?: string;
+  pqOneTimeSlots?: number;
+  pqUsedSlots?: number;
+  pqReserveId?: string;
+  /** @deprecated New wallets store PQ reserve material outside the wallet record. */
+  pqSecretMaterial?: string[];
+  rotationReminderMonths?: number;
+  rotationSnoozedUntil?: number;
+  keyHealthReviewedAt?: number;
+  lastProofOfKeysAt?: number;
+  lastProofOfKeysStatus?: 'passed' | 'failed' | 'skipped';
+  lastProofOfKeysMessage?: string;
   /** Raw CSV row data preserved on import */
   _raw?: Record<string, string>;
 }

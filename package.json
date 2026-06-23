@@ -1,7 +1,7 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "5.12.4",
+  "version": "5.13.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
     "test:shamir": "tsx tests/shamir.test.mjs",
     "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:vanity": "tsx tests/vanity-match.test.mjs",
+    "test:key-health": "tsx tests/key-health.test.mjs",
     "test:adb-open": "node tests/adb-open-xkey.mjs",
     "audit:report": "node scripts/audit-report.mjs",
     "locale:audit": "node scripts/locale-audit.mjs",
