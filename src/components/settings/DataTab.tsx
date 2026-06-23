@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Download, Lock, ShieldCheck, ShieldAlert, Save, ChevronDown, QrCode, Camera, SplitSquareVertical, CheckCircle2, MapPin, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Preferences } from '@capacitor/preferences';
@@ -13,8 +13,6 @@ import { hapticTap, hapticSuccess } from '../../utils/haptics';
 import PasswordInput from '../PasswordInput';
 import QRTransferModal from '../QRTransferModal';
 import QRReceiveModal from '../QRReceiveModal';
-import ShamirBackupModal from '../ShamirBackupModal';
-import ShamirRestoreModal from '../ShamirRestoreModal';
 import DangerZone from './DangerZone';
 import Notice from '../Notice';
 import type { Wallet } from '../../types';
@@ -29,6 +27,8 @@ type DataTabProps = {
 };
 
 const AUTO_BACKUP_INTERVALS: AutoBackupInterval[] = ['off', 'daily', 'weekly'];
+const ShamirBackupModal = lazy(() => import('../ShamirBackupModal'));
+const ShamirRestoreModal = lazy(() => import('../ShamirRestoreModal'));
 
 export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   // Auto-Backup
@@ -406,32 +406,36 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
       )}
 
       {showShamirBackup && (
-        <ShamirBackupModal wallets={shamirWallets} onClose={() => setShowShamirBackup(false)} />
+        <Suspense fallback={null}>
+          <ShamirBackupModal wallets={shamirWallets} onClose={() => setShowShamirBackup(false)} />
+        </Suspense>
       )}
 
       {showShamirRestore && (
-        <ShamirRestoreModal
-          aesKey={aesKey}
-          onClose={() => setShowShamirRestore(false)}
-          onRestore={async (importedWallets) => {
-            const current = await loadWallets(aesKey) || [];
-            const existingAddrs = new Set(current.map(w => w.address?.toLowerCase()).filter(Boolean));
-            const uniqueNew = importedWallets.filter(w => {
-              if (!w.address) return true;
-              const lower = w.address.toLowerCase();
-              if (existingAddrs.has(lower)) return false;
-              existingAddrs.add(lower);
-              return true;
-            });
-            const skippedCount = importedWallets.length - uniqueNew.length;
-            const finalWallets = [...current, ...uniqueNew];
-            await saveWallets(finalWallets, aesKey);
-            onImport?.(finalWallets);
-            let msg = t('home.importSuccess', { count: uniqueNew.length, folder: 'Shamir QR' });
-            if (skippedCount > 0) msg += t('home.duplicatesSkipped', { count: skippedCount });
-            showToast(msg, 'success');
-          }}
-        />
+        <Suspense fallback={null}>
+          <ShamirRestoreModal
+            aesKey={aesKey}
+            onClose={() => setShowShamirRestore(false)}
+            onRestore={async (importedWallets) => {
+              const current = await loadWallets(aesKey) || [];
+              const existingAddrs = new Set(current.map(w => w.address?.toLowerCase()).filter(Boolean));
+              const uniqueNew = importedWallets.filter(w => {
+                if (!w.address) return true;
+                const lower = w.address.toLowerCase();
+                if (existingAddrs.has(lower)) return false;
+                existingAddrs.add(lower);
+                return true;
+              });
+              const skippedCount = importedWallets.length - uniqueNew.length;
+              const finalWallets = [...current, ...uniqueNew];
+              await saveWallets(finalWallets, aesKey);
+              onImport?.(finalWallets);
+              let msg = t('home.importSuccess', { count: uniqueNew.length, folder: 'Shamir QR' });
+              if (skippedCount > 0) msg += t('home.duplicatesSkipped', { count: skippedCount });
+              showToast(msg, 'success');
+            }}
+          />
+        </Suspense>
       )}
     </>
   );

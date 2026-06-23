@@ -1,4 +1,20 @@
 export default {
+  "health": {
+      "title": "Состояние запуска",
+      "replaceSnapshotPending": "Доступен снимок отмены замены хранилища.",
+      "vanitySessionPending": "Ожидает сохраненный сеанс красивых адресов.",
+      "externalBackupPending": "После разблокировки ожидает один внешний backup.",
+      "cleanedTempFiles": "Очищено старых файлов восстановления: {count}."
+  },
+  "fileStatus": {
+      "reading": "Чтение файла...",
+      "verifying": "Проверка файла...",
+      "parsing": "Разбор файла...",
+      "decrypting": "Расшифровка backup...",
+      "previewing": "Создание предпросмотра...",
+      "importing": "Импорт кошельков...",
+      "processing": "Обработка..."
+  },
   "brand": {
     "backupExportNote": "Зашифрованная резервная копия подтверждает, что ключи контролируете вы. Храните ее офлайн, а пароль отдельно.",
     "restoreNote": "Перед восстановлением проверьте ID резервной копии, хэш файла и данные устройства. Импортируйте только доверенные файлы.",
@@ -177,7 +193,13 @@ export default {
     "reportRecoveredShards": "Восстановленные шарды",
     "copyVerificationReport": "Копировать отчет",
     "replaceConfirm": "Заменить текущее хранилище этой копией? Текущие кошельки, которых нет в копии, будут удалены.",
+    "merge": "Объединить кошельки",
+    "mergeHelp": "Сохраняет текущее хранилище и добавляет кошельки из резервной копии. Данные дублирующихся адресов по умолчанию не меняются.",
+    "updateMissingSensitive": "Заполнить отсутствующие приватные ключи или seed-фразы",
+    "updateMissingSensitiveHelp": "Заполняет только отсутствующие конфиденциальные данные для совпадающих адресов. Существующие ключи и seed-фразы не заменяются.",
+    "updateMissingSensitiveConfirm": "Заполнить отсутствующие приватные ключи или seed-фразы из этой копии? Существующие конфиденциальные данные не будут заменены.",
     "replace": "Заменить хранилище",
+    "replaceHelp": "Заменяет текущее хранилище этой копией. После подтверждения кошельки, которых нет в копии, будут удалены.",
     "previewOnly": "Предпросмотр",
     "verifyOnly": "Только проверить",
     "footerRecovered": "Использован восстановительный футер, потому что основной заголовок не читается.",
@@ -198,7 +220,7 @@ export default {
   "audit": {
     "title": "Журнал аудита безопасности", "subtitle": "Просматривайте локальные разблокировки, резервные копии, восстановление и чувствительные действия.", "lockedNotice": "Подтвердите блокировкой устройства перед просмотром журнала аудита.", "unlock": "Открыть журнал аудита", "unlockTitle": "Открыть журнал аудита безопасности", "unlockSubtitle": "Используйте блокировку устройства для просмотра локальной истории безопасности.", "unlockFailed": "Не удалось открыть журнал аудита.", "entryCount": "Записей: {count}", "tampered": "Целостность журнала аудита нарушена. Записи могли быть изменены или удалены.", "healthy": "Цепочка хешей журнала аудита не нарушена.", "time": "Время", "event": "Событие", "details": "Сведения", "integrity": "Целостность", "empty": "Событий аудита пока нет.", "modified": "Изменено", "verified": "Проверено"
   },
-  "auditEvent": { "app": "Активность приложения", "backup": "Резервное копирование", "device": "Активность по разблокировке устройства", "pin": "Активность PIN-кода", "wallet": "Действие, касающееся кошелька", "vault": "Действия по восстановлению хранилища", "audit": "Аудит активности журнала", "unknown": "Охранная деятельность" },
+  "auditEvent": { "app": "Активность приложения", "backup": "Резервное копирование", "device": "Активность по разблокировке устройства", "pin": "Закрепить", "wallet": "Действие, касающееся кошелька", "vault": "Действия по восстановлению хранилища", "audit": "Аудит активности журнала", "unknown": "Охранная деятельность" },
   "settings": {
     "title": "Настройки",
     "tabAudit": "Журнал аудита",
@@ -396,7 +418,7 @@ export default {
     "removeMPConfirm": "Удалить мастер-пароль?",
     "currentHiddenPassword": "Введите текущий пароль",
     "masterPasswordRemoveRequired": "Пожалуйста, введите свой текущий пароль перед выключением.",
-    "masterPasswordWrong": "Неправильный текущий пароль",
+    "masterPasswordWrong": "Неверный пароль показа",
     "mpEnabled": "Вкл",
     "mpDisabled": "Выкл",
     "confirmChange": "Изменить {setting} на {value}?",
@@ -478,9 +500,13 @@ export default {
     "actionFilter_data": "Data",
     "actionFilter_warning": "Warnings",
     "actionFilter_copy": "Copy",
-    "actionFilter_backup": "Backup",
+    "actionFilter_backup": "Резервные копии",
     "actionFilter_unlock": "Unlock",
     "actionFilter_all": "All",
+      "actionSeverity_all": "Все",
+      "actionSeverity_info": "Инфо",
+      "actionSeverity_warning": "Предупреждения",
+      "actionSeverity_critical": "Критично",
     "activityHistoryAuditNote": "Action history is a local convenience log and can be cleared. Security audit log entries above remain separate.",
     "clearActionHistory": "Clear action history",
     "okxGuideTitle": "Инструкция для мультичейна кошелька OKX",
@@ -522,6 +548,8 @@ export default {
     "storageCapacityLow": "Not enough available storage for this operation.",
     "vanityResume": "Resume",
     "vanityPaused": "Generator paused",
+    "vanitySessionAvailable": "Найдены зашифрованные результаты предыдущего сеанса генерации красивых адресов.", "vanitySessionRestore": "Восстановить сеанс", "vanitySessionRestored": "Сеанс генерации красивых адресов восстановлен.", "vanitySessionUnavailable": "Не удалось открыть сохраненный сеанс генерации красивых адресов.",
+    "vanityPerformance": "Профиль производительности", "vanityPerformance_eco": "Экономичный", "vanityPerformance_balanced": "Сбалансированный", "vanityPerformance_fast": "Быстрый", "vanityPerformanceHint_eco": "Расходует меньше батареи, но может работать медленнее.", "vanityPerformanceHint_balanced": "Балансирует скорость и расход батареи.", "vanityPerformanceHint_fast": "Ищет быстрее всего и может увеличить нагрев и расход батареи.",
     "vanityPause": "Pause",
     "vanityScanning": "Scanning addresses...",
     "vanityTerminal": "Live address stream",
@@ -684,12 +712,12 @@ export default {
     "pkWarning": "Любой с этим ключом полностью контролирует кошелёк.",
     "pin": "Закрепить",
     "unpin": "Открепить",
-    "pinned": "Закреплен",
+    "pinned": "Закреплено",
     "network": "Сеть",
     "clipboardCleared": "Буфер обмена очищен",
-    "masterPasswordRequired": "Введите мастер-пароль",
-    "masterPasswordWrong": "Неверный пароль",
-    "changeNetwork": "Change network",
+    "masterPasswordRequired": "Введите пароль, чтобы показать скрытые значения",
+    "masterPasswordWrong": "Неверный пароль показа",
+    "changeNetwork": "Нажмите, чтобы сменить сеть",
     "addressCopied": "Адрес скопирован",
     "copyAddress": "Скопировать адрес",
     "showAddressQR": "Показать QR адреса",
@@ -718,7 +746,7 @@ export default {
     "balanceLow": "Баланс низ. → выс.",
     "addressAsc": "Адрес A → Z",
     "allNetworks": "Все сети",
-    "pinned": "Закрепленные",
+    "pinned": "Закреплено",
     "byChain": "By Chain",
     "tools": "Инструменты",
     "moreTools": "Больше инструментов",
@@ -853,6 +881,7 @@ export default {
     "tagged": "Кошельки с тегами"
   },
   "exportCSV": {
+    "fileName": "Имя CSV-файла (необязательно)",
     "title": "Экспорт CSV",
     "selectColumns": "Выберите столбцы ({count} кошельков)",
     "sensitiveWarning": "Конфиденциальные данные будут экспортированы открытым текстом. Обращайтесь крайне осторожно.",
@@ -882,7 +911,7 @@ export default {
     "slide1Desc": "Ключи никогда не покидают устройство.",
     "slide2Title": "Военное шифрование",
     "slide2Desc": "Двойной AES-256 с биометрией.",
-    "slide3Title": "Портативные бэкапы",
+    "slide3Title": "Портативные резервные копии",
     "slide3Desc": "Защищенные паролем файлы.",
     "next": "Далее",
     "skip": "Пропустить",
@@ -933,7 +962,7 @@ export default {
     "deleted": "Удалено кошельков: {count}",
     "moved": "Перемещено кошельков {count} в {folder}",
     "tagged": "Кошельков с тегом {tag}: {count}",
-    "pinned": "Закреплено кошельков: {count}"
+    "pinned": "Закреплено"
   },
   "donate": {
     "title": "Пожертвовать",

@@ -1,4 +1,20 @@
 export default {
+  "health": {
+      "title": "시작 상태",
+      "replaceSnapshotPending": "볼트 교체 실행 취소 스냅샷이 있습니다.",
+      "vanitySessionPending": "저장된 맞춤 주소 생성 세션이 대기 중입니다.",
+      "externalBackupPending": "잠금 해제 후 외부 백업 1개가 대기 중입니다.",
+      "cleanedTempFiles": "오래된 복구 파일 {count}개를 정리했습니다."
+  },
+  "fileStatus": {
+      "reading": "파일 읽는 중...",
+      "verifying": "파일 확인 중...",
+      "parsing": "파일 분석 중...",
+      "decrypting": "백업 복호화 중...",
+      "previewing": "미리보기 생성 중...",
+      "importing": "지갑 가져오는 중...",
+      "processing": "처리 중..."
+  },
   "brand": {
     "backupExportNote": "암호화된 백업은 키를 직접 관리한다는 증거입니다. 오프라인에 보관하고 비밀번호는 따로 보관하세요.",
     "restoreNote": "복원하기 전에 백업 ID, 파일 해시, 기기 정보를 확인하세요. 신뢰하는 파일만 가져오세요.",
@@ -177,7 +193,13 @@ export default {
     "reportRecoveredShards": "복구된 샤드",
     "copyVerificationReport": "보고서 복사",
     "replaceConfirm": "현재 볼트를 이 백업으로 교체할까요? 백업에 없는 현재 지갑은 제거됩니다.",
+    "merge": "지갑 병합",
+    "mergeHelp": "현재 볼트를 유지하고 백업의 지갑을 추가합니다. 중복 주소의 데이터는 기본적으로 유지됩니다.",
+    "updateMissingSensitive": "누락된 개인 키 또는 시드 문구 채우기",
+    "updateMissingSensitiveHelp": "일치하는 주소에서 비어 있는 민감한 데이터만 채웁니다. 기존 개인 키와 시드 문구는 절대 덮어쓰지 않습니다.",
+    "updateMissingSensitiveConfirm": "이 백업에서 누락된 개인 키 또는 시드 문구를 채울까요? 기존 민감한 데이터는 덮어쓰지 않습니다.",
     "replace": "볼트 교체",
+    "replaceHelp": "현재 볼트를 이 백업으로 교체합니다. 확인 후 백업에 없는 지갑은 제거됩니다.",
     "previewOnly": "미리보기",
     "verifyOnly": "확인만",
     "footerRecovered": "기본 헤더를 읽을 수 없어 복구 푸터를 사용했습니다.",
@@ -198,7 +220,7 @@ export default {
   "audit": {
     "title": "보안 감사 로그", "subtitle": "로컬 잠금 해제, 백업, 복구 및 민감한 작업을 검토합니다.", "lockedNotice": "감사 로그를 보기 전에 기기 잠금으로 확인하세요.", "unlock": "감사 로그 잠금 해제", "unlockTitle": "보안 감사 로그 열기", "unlockSubtitle": "기기 잠금을 사용하여 로컬 보안 기록을 봅니다.", "unlockFailed": "감사 로그를 열 수 없습니다.", "entryCount": "{count}개 항목", "tampered": "감사 로그 무결성이 손상되었습니다. 항목이 변경되거나 제거되었을 수 있습니다.", "healthy": "감사 로그 해시 체인이 정상입니다.", "time": "시간", "event": "이벤트", "details": "세부 정보", "integrity": "무결성", "empty": "아직 감사 이벤트가 없습니다.", "modified": "수정됨", "verified": "검증됨"
   },
-  "auditEvent": { "app": "애플리케이션 활동", "backup": "백업 활동", "device": "기기 잠금 해제 활동", "pin": "PIN 활동", "wallet": "지갑에 민감한 작업", "vault": "볼트 복구 활동", "audit": "로그 활동 감사", "unknown": "보안 활동" },
+  "auditEvent": { "app": "애플리케이션 활동", "backup": "백업 활동", "device": "기기 잠금 해제 활동", "pin": "고정", "wallet": "지갑에 민감한 작업", "vault": "볼트 복구 활동", "audit": "로그 활동 감사", "unknown": "보안 활동" },
   "settings": {
     "title": "설정",
     "tabAudit": "감사 로그",
@@ -396,7 +418,7 @@ export default {
     "removeMPConfirm": "마스터 비밀번호를 제거하시겠습니까?",
     "currentHiddenPassword": "현재 비밀번호를 입력하세요",
     "masterPasswordRemoveRequired": "종료하기 전에 현재 비밀번호를 입력하세요.",
-    "masterPasswordWrong": "잘못된 현재 비밀번호",
+    "masterPasswordWrong": "표시 비밀번호가 올바르지 않습니다",
     "mpEnabled": "활성화",
     "mpDisabled": "비활성화",
     "confirmChange": "{setting}을(를) {value}(으)로 변경하시겠습니까?",
@@ -478,9 +500,13 @@ export default {
     "actionFilter_data": "Data",
     "actionFilter_warning": "Warnings",
     "actionFilter_copy": "Copy",
-    "actionFilter_backup": "Backup",
+    "actionFilter_backup": "백업",
     "actionFilter_unlock": "Unlock",
     "actionFilter_all": "All",
+      "actionSeverity_all": "전체",
+      "actionSeverity_info": "정보",
+      "actionSeverity_warning": "경고",
+      "actionSeverity_critical": "중요",
     "activityHistoryAuditNote": "Action history is a local convenience log and can be cleared. Security audit log entries above remain separate.",
     "clearActionHistory": "Clear action history",
     "okxGuideTitle": "OKX Wallet 멀티체인에 대한 지침",
@@ -522,6 +548,8 @@ export default {
     "storageCapacityLow": "Not enough available storage for this operation.",
     "vanityResume": "Resume",
     "vanityPaused": "Generator paused",
+    "vanitySessionAvailable": "이전 세션의 암호화된 맞춤 주소 생성 결과가 있습니다.", "vanitySessionRestore": "세션 복원", "vanitySessionRestored": "맞춤 주소 생성 세션을 복원했습니다.", "vanitySessionUnavailable": "저장된 맞춤 주소 생성 세션을 열 수 없습니다.",
+    "vanityPerformance": "성능 프로필", "vanityPerformance_eco": "절전", "vanityPerformance_balanced": "균형", "vanityPerformance_fast": "고속", "vanityPerformanceHint_eco": "배터리 사용량은 줄지만 더 느릴 수 있습니다.", "vanityPerformanceHint_balanced": "속도와 배터리 사용량의 균형을 맞춥니다.", "vanityPerformanceHint_fast": "가장 빠르게 검색하며 발열과 배터리 사용량이 늘 수 있습니다.",
     "vanityPause": "Pause",
     "vanityScanning": "Scanning addresses...",
     "vanityTerminal": "Live address stream",
@@ -687,9 +715,9 @@ export default {
     "pinned": "고정됨",
     "network": "네트워크",
     "clipboardCleared": "클립보드가 삭제되었습니다",
-    "masterPasswordRequired": "마스터 비밀번호를 입력하세요",
-    "masterPasswordWrong": "잘못된 마스터 비밀번호",
-    "changeNetwork": "Change network",
+    "masterPasswordRequired": "숨겨진 값을 보려면 비밀번호를 입력하세요",
+    "masterPasswordWrong": "표시 비밀번호가 올바르지 않습니다",
+    "changeNetwork": "탭하여 네트워크 변경",
     "addressCopied": "주소가 복사되었습니다",
     "copyAddress": "주소 복사",
     "showAddressQR": "주소 QR 표시",
@@ -853,6 +881,7 @@ export default {
     "tagged": "태그된 지갑"
   },
   "exportCSV": {
+    "fileName": "CSV 파일 이름(선택 사항)",
     "title": "CSV 내보내기",
     "selectColumns": "포함할 열 선택 ({count}개 지갑)",
     "sensitiveWarning": "민감한 데이터(개인키/시드)가 평문으로 내보내집니다. 극도로 주의하세요.",
@@ -882,7 +911,7 @@ export default {
     "slide1Desc": "개인 키와 시드 구문은 기기를 떠나지 않습니다.",
     "slide2Title": "군사급 암호화",
     "slide2Desc": "이중 AES-256 암호화와 생체 인증.",
-    "slide3Title": "이동식 백업",
+    "slide3Title": "휴대용 백업",
     "slide3Desc": "암호로 보호된 백업 파일을 모든 기기에서 사용.",
     "next": "다음",
     "skip": "건너뛰기",
@@ -933,7 +962,7 @@ export default {
     "deleted": "{count}개 지갑을 삭제했습니다",
     "moved": "{count}개 지갑을 {folder}(으)로 이동했습니다",
     "tagged": "{count}개 지갑에 {tag} 태그를 추가했습니다",
-    "pinned": "{count}개 지갑을 고정했습니다"
+    "pinned": "고정됨"
   },
   "donate": {
     "title": "기부하다",

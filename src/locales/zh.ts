@@ -1,4 +1,20 @@
 export default {
+  "health": {
+      "title": "启动状态",
+      "replaceSnapshotPending": "有可用的替换保险库撤销快照。",
+      "vanitySessionPending": "有已保存的靓号钱包会话等待恢复。",
+      "externalBackupPending": "解锁后有一个外部备份等待处理。",
+      "cleanedTempFiles": "已清理 {count} 个旧恢复文件。"
+  },
+  "fileStatus": {
+      "reading": "正在读取文件...",
+      "verifying": "正在验证文件...",
+      "parsing": "正在解析文件...",
+      "decrypting": "正在解密备份...",
+      "previewing": "正在生成预览...",
+      "importing": "正在导入钱包...",
+      "processing": "正在处理..."
+  },
   "brand": {
     "backupExportNote": "加密备份证明你掌控自己的密钥。请离线保存，并将密码分开保管。",
     "restoreNote": "恢复前请核对备份 ID、文件哈希和设备信息。只导入你信任的文件。",
@@ -177,7 +193,13 @@ export default {
     "reportRecoveredShards": "已恢复分片",
     "copyVerificationReport": "复制报告",
     "replaceConfirm": "用此备份替换当前保险库？备份中没有的当前钱包将被移除。",
+    "merge": "合并钱包",
+    "mergeHelp": "保留当前保险库并添加备份中的钱包。默认保留重复地址的数据不变。",
+    "updateMissingSensitive": "补全缺失的私钥或助记词",
+    "updateMissingSensitiveHelp": "只为匹配地址补全缺失的敏感数据，绝不会覆盖现有私钥或助记词。",
+    "updateMissingSensitiveConfirm": "要从此备份补全缺失的私钥或助记词吗？现有敏感数据不会被覆盖。",
     "replace": "替换保险库",
+    "replaceHelp": "用此备份替换当前保险库。确认后，备份中没有的钱包将被移除。",
     "previewOnly": "预览",
     "verifyOnly": "仅验证",
     "footerRecovered": "主头部不可读，已使用恢复页脚。",
@@ -198,7 +220,7 @@ export default {
   "audit": {
     "title": "安全审计日志", "subtitle": "查看本地解锁、备份、恢复和敏感操作。", "lockedNotice": "查看审计日志前，请使用设备锁验证。", "unlock": "解锁审计日志", "unlockTitle": "打开安全审计日志", "unlockSubtitle": "使用设备锁查看本地安全历史记录。", "unlockFailed": "无法解锁审计日志。", "entryCount": "{count} 条记录", "tampered": "审计日志完整性已损坏。记录可能已被更改或删除。", "healthy": "审计日志哈希链完整。", "time": "时间", "event": "事件", "details": "详情", "integrity": "完整性", "empty": "暂无审计事件。", "modified": "已修改", "verified": "已验证"
   },
-  "auditEvent": { "app": "应用活动", "backup": "备份活动", "device": "设备解锁活动", "pin": "PIN 活动", "wallet": "钱包敏感动作", "vault": "保管库恢复活动", "audit": "审核日志活动", "unknown": "安全活动" },
+  "auditEvent": { "app": "应用活动", "backup": "备份活动", "device": "设备解锁活动", "pin": "置顶", "wallet": "钱包敏感动作", "vault": "保管库恢复活动", "audit": "审核日志活动", "unknown": "安全活动" },
   "settings": {
     "title": "设置",
     "tabAudit": "审计日志",
@@ -351,7 +373,7 @@ export default {
     "removeMPConfirm": "移除主密码？",
     "currentHiddenPassword": "输入当前密码",
     "masterPasswordRemoveRequired": "关闭前请输入您当前的密码。",
-    "masterPasswordWrong": "当前密码不正确",
+    "masterPasswordWrong": "显示密码错误",
     "mpEnabled": "已启用",
     "mpDisabled": "未启用",
     "confirmChange": "将{setting}更改为{value}？",
@@ -433,9 +455,13 @@ export default {
     "actionFilter_data": "Data",
     "actionFilter_warning": "Warnings",
     "actionFilter_copy": "Copy",
-    "actionFilter_backup": "Backup",
+    "actionFilter_backup": "备份",
     "actionFilter_unlock": "Unlock",
     "actionFilter_all": "All",
+      "actionSeverity_all": "全部",
+      "actionSeverity_info": "信息",
+      "actionSeverity_warning": "警告",
+      "actionSeverity_critical": "严重",
     "activityHistoryAuditNote": "Action history is a local convenience log and can be cleared. Security audit log entries above remain separate.",
     "clearActionHistory": "Clear action history",
     "okxGuideTitle": "OKX钱包多链使用说明",
@@ -522,6 +548,8 @@ export default {
     "storageCapacityLow": "Not enough available storage for this operation.",
     "vanityResume": "Resume",
     "vanityPaused": "Generator paused",
+    "vanitySessionAvailable": "发现了上次会话中加密保存的靓号钱包结果。", "vanitySessionRestore": "恢复会话", "vanitySessionRestored": "已恢复靓号钱包生成会话。", "vanitySessionUnavailable": "无法打开已保存的靓号钱包会话。",
+    "vanityPerformance": "性能模式", "vanityPerformance_eco": "省电", "vanityPerformance_balanced": "均衡", "vanityPerformance_fast": "快速", "vanityPerformanceHint_eco": "耗电更少，但可能较慢。", "vanityPerformanceHint_balanced": "平衡速度与耗电。", "vanityPerformanceHint_fast": "搜索最快，但可能增加发热和耗电。",
     "vanityPause": "Pause",
     "vanityScanning": "Scanning addresses...",
     "vanityTerminal": "Live address stream",
@@ -687,9 +715,9 @@ export default {
     "pinned": "已置顶",
     "network": "网络",
     "clipboardCleared": "剪贴板已清除",
-    "masterPasswordRequired": "输入主密码",
-    "masterPasswordWrong": "密码错误",
-    "changeNetwork": "Change network",
+    "masterPasswordRequired": "输入密码以显示隐藏值",
+    "masterPasswordWrong": "显示密码错误",
+    "changeNetwork": "点按以更改网络",
     "addressCopied": "地址已复制",
     "copyAddress": "复制地址",
     "showAddressQR": "显示地址二维码",
@@ -853,6 +881,7 @@ export default {
     "tagged": "已标记钱包"
   },
   "exportCSV": {
+    "fileName": "CSV 文件名（可选）",
     "title": "导出CSV",
     "selectColumns": "选择要包含的列（{count} 个钱包）",
     "sensitiveWarning": "敏感数据（私钥/助记词）将以明文导出。请极其谨慎处理。",
@@ -933,7 +962,7 @@ export default {
     "deleted": "已删除 {count} 个钱包",
     "moved": "已将 {count} 个钱包移动到 {folder}",
     "tagged": "已为 {count} 个钱包添加 {tag} 标签",
-    "pinned": "已置顶 {count} 个钱包"
+    "pinned": "已置顶"
   },
   "donate": {
     "title": "捐赠",

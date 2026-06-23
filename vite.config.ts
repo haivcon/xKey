@@ -148,7 +148,18 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes('node_modules')) return undefined;
+            const normalizedId = id.split(path.sep).join('/');
+            if (!normalizedId.includes('node_modules')) {
+              if (normalizedId.includes('/src/utils/backupUtils')
+                || normalizedId.includes('/src/utils/reedSolomon')
+                || normalizedId.includes('/src/utils/cryptoEnvelope')
+                || normalizedId.includes('/src/utils/internalTextStore')) return 'backup-core';
+              if (normalizedId.includes('/src/utils/shamir')) return 'shamir-core';
+              if (normalizedId.includes('/src/workers/')
+                || normalizedId.includes('/src/utils/integrity')
+                || normalizedId.includes('/src/utils/deviceIntegrity')) return 'integrity';
+              return undefined;
+            }
             if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-router-dom/')) return 'react';
             if (id.includes('/@capacitor/') || id.includes('/@capawesome/') || id.includes('/@capgo/')) return 'capacitor';
             if (id.includes('/ethers/') || id.includes('/crypto-js/')) return 'wallet';

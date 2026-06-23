@@ -2,6 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 
 const ACTION_HISTORY_KEY = 'xkey_action_history';
 const MAX_HISTORY_ITEMS = 80;
+const DUPLICATE_WINDOW_MS = 3000;
 
 const SENSITIVE_WORDS = ['private key', 'seed phrase', 'khóa riêng tư', 'cum tu', 'cụm từ'];
 
@@ -77,6 +78,16 @@ export async function logActionHistory(message: unknown, typeOrOptions: ActionHi
   };
 
   const current = await getActionHistory();
+  const latest = current[0];
+  if (
+    latest
+    && latest.message === nextItem.message
+    && latest.messageKey === nextItem.messageKey
+    && latest.category === nextItem.category
+    && Date.now() - latest.ts < DUPLICATE_WINDOW_MS
+  ) {
+    return;
+  }
   const next = [nextItem, ...current].slice(0, MAX_HISTORY_ITEMS);
   await Preferences.set({ key: ACTION_HISTORY_KEY, value: JSON.stringify(next) });
   window.dispatchEvent(new CustomEvent('xkey-action-history-updated', { detail: next }));

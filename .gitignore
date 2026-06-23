@@ -20,10 +20,7 @@ blob-report/
 .env.*
 !.env.example
 .vite/
-docs/local/
-docs/private/
-docs/TYPESCRIPT_MIGRATION_ROADMAP.md
-docs/XKEY_PROJECT_REVIEW_*.md
+docs/
 
 # Logs
 logs/
@@ -115,4 +112,5 @@ local-notes/
 release-drafts/
 *.tmp
 *.bak
+audit-report.json
 preview/

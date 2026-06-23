@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { Preferences } from '@capacitor/preferences';
-import locales from '../locales';
+import { defaultLocale, isSupportedLanguage, loadLocale, type LanguageCode } from '../locales';
 
 type LocalePrimitive = string | number | boolean | null | undefined;
 type LocaleValue = LocalePrimitive | LocaleValue[] | { [key: string]: LocaleValue };
@@ -15,7 +15,6 @@ type LanguageContextValue = {
   ready: boolean;
 };
 
-const typedLocales = locales as unknown as Record<string, LocaleTree> & { en: LocaleTree };
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 const LANG_KEY = 'xkey_language';
 
@@ -50,7 +49,7 @@ const detectDeviceLanguage = (): string => {
   try {
     const navLang = navigator.language || navigator.languages?.[0] || 'en';
     const code = navLang.split('-')[0].toLowerCase();
-    return typedLocales[code] ? code : 'en';
+    return isSupportedLanguage(code) ? code : 'en';
   } catch {
     return 'en';
   }
@@ -71,30 +70,47 @@ export function useLanguage(): LanguageContextValue {
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState('en');
   const [ready, setReady] = useState(false);
+  const [loadedLocales, setLoadedLocales] = useState<Record<string, LocaleTree>>({ en: defaultLocale });
+  const loadedLocalesRef = useRef<Record<string, LocaleTree>>({ en: defaultLocale });
+
+  const loadLocaleTree = useCallback(async (code: string): Promise<LanguageCode> => {
+    const safeCode = isSupportedLanguage(code) ? code : 'en';
+    if (!loadedLocalesRef.current[safeCode]) {
+      const locale = await loadLocale(safeCode);
+      loadedLocalesRef.current = { ...loadedLocalesRef.current, [safeCode]: locale };
+      setLoadedLocales(prev => ({ ...prev, [safeCode]: locale }));
+    }
+    return safeCode;
+  }, []);
 
   // Load saved language or auto-detect from device
   useEffect(() => {
+    let active = true;
     Preferences.get({ key: LANG_KEY }).then(({ value }) => {
-      if (value && typedLocales[value]) {
-        setLang(value);
-      } else {
-        // First launch: detect device language
-        const detected = detectDeviceLanguage();
-        setLang(detected);
-        Preferences.set({ key: LANG_KEY, value: detected }).catch(() => {});
-      }
-      setReady(true);
+      const nextLang = value && isSupportedLanguage(value) ? value : detectDeviceLanguage();
+      return loadLocaleTree(nextLang).then(code => {
+        if (!active) return;
+        setLang(code);
+        if (!value || value !== code) Preferences.set({ key: LANG_KEY, value: code }).catch(() => {});
+        setReady(true);
+      });
     }).catch(() => {
-      setLang(detectDeviceLanguage());
+      if (!active) return;
+      setLang('en');
       setReady(true);
     });
-  }, []);
+    return () => { active = false; };
+  }, [loadLocaleTree]);
 
   const changeLang = useCallback((code: string) => {
-    if (!typedLocales[code]) return;
-    setLang(code);
-    Preferences.set({ key: LANG_KEY, value: code }).catch(() => {});
-  }, []);
+    if (!isSupportedLanguage(code)) return;
+    loadLocaleTree(code)
+      .then(safeCode => {
+        setLang(safeCode);
+        Preferences.set({ key: LANG_KEY, value: safeCode }).catch(() => {});
+      })
+      .catch(() => {});
+  }, [loadLocaleTree]);
 
   /**
    * Translation function.
@@ -102,19 +118,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
    *        t('home.importSuccess', { count: 5, folder: 'CSV1' }) → "Imported 5 wallets from CSV1"
    */
   const t = useCallback<TranslationFn>((key, vars) => {
-    const currentLocale = typedLocales[lang] || typedLocales.en;
+    const currentLocale = loadedLocales[lang] || defaultLocale;
     let value = getNestedValue(currentLocale, key);
 
     // Fallback to English if key not found in current locale
     if (value === undefined) {
-      value = getNestedValue(typedLocales.en, key);
+      value = getNestedValue(defaultLocale, key);
     }
 
     // If still not found, return the key itself (makes debugging easy)
     if (value === undefined) return key;
 
     return interpolate(value, vars);
-  }, [lang]);
+  }, [lang, loadedLocales]);
 
   return (
     <LanguageContext.Provider value={{ lang, changeLang, t, ready }}>

@@ -113,6 +113,39 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
   expect(app).toContain("appendAuditLog('app.opened'");
 });
 
+test('backup replacement, import reports, and vanity recovery retain encrypted recovery paths', async () => {
+  const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
+  const app = await readSource('src/App.tsx');
+
+  expect(fileImport).toContain('xkey_replace_snapshot_v1');
+  expect(fileImport).toContain('createPortableBackupText(wallets');
+  expect(fileImport).toContain('restoreReplaceSnapshot');
+  expect(fileImport).toContain('xkey_import_report_');
+  expect(fileImport).toContain('saveTextFile');
+  expect(createWallet).toContain('xkey_vanity_session_v1');
+  expect(createWallet).toContain('createPortableBackupText(vanityFoundRef.current');
+  expect(createWallet).toContain('restoreVanitySession');
+  expect(createWallet).toContain('vanityPerformanceMode');
+  expect(app).toContain('aesKey={aesKey}');
+});
+
+test('dependency audit is report-only and does not update packages automatically', async () => {
+  const packageJson = JSON.parse(await readSource('package.json'));
+  const workflow = await readSource('.github/workflows/dependency-audit.yml');
+  const gitignore = await readSource('.gitignore');
+  const auditScript = await readSource('scripts/audit-report.mjs');
+
+  expect(packageJson.scripts['audit:report']).toContain('scripts/audit-report.mjs');
+  expect(auditScript).toContain('npm audit --omit=dev --json');
+  expect(auditScript).toContain('process.exit(0)');
+  expect(workflow).toContain('npm ci');
+  expect(workflow).toContain('npm run audit:report');
+  expect(workflow).toContain('actions/upload-artifact@v4');
+  expect(workflow).not.toContain('npm update');
+  expect(gitignore).toContain('audit-report.json');
+});
+
 test('vault and backup self-healing Reed-Solomon checks are present', async () => {
   const reedSolomon = await readSource('src/utils/reedSolomon.ts');
   const storage = await readSource('src/utils/storage.ts');
@@ -201,7 +234,7 @@ test('folder actions menu opens with one click and is not clipped by the folder 
 
 test('all locale files include security and integrity guidance keys', async () => {
   const localeDir = path.join(repoRoot, 'src/locales');
-  const localeFiles = (await readdir(localeDir)).filter(file => file.endsWith('.js') && file !== 'index.js');
+  const localeFiles = (await readdir(localeDir)).filter(file => file.endsWith('.ts') && file !== 'index.ts');
   const requiredKeys = [
     'hardwareBoundConfirmTitle',
     'hardwareBoundBackupDeviceNote',
@@ -213,6 +246,11 @@ test('all locale files include security and integrity guidance keys', async () =
     'appChecking',
     'failureTitle',
     'failureBody',
+    'mergeHelp',
+    'replaceHelp',
+    'updateMissingSensitive',
+    'updateMissingSensitiveHelp',
+    'updateMissingSensitiveConfirm',
   ];
 
   for (const file of localeFiles) {
@@ -221,6 +259,91 @@ test('all locale files include security and integrity guidance keys', async () =
       expect(source, `${file} should include ${key}`).toContain(`"${key}"`);
     }
   }
+});
+
+test('locale loading is lazy and does not require repeated initialization effects', async () => {
+  const localeIndex = await readSource('src/locales/index.ts');
+  const languageContext = await readSource('src/contexts/LanguageContext.tsx');
+
+  expect(localeIndex).toContain("en: () => Promise.resolve({ default: en as LocaleTree })");
+  expect(localeIndex).toContain("vi: () => import('./vi')");
+  expect(localeIndex).toContain('loadLocale = async');
+  expect(languageContext).toContain('loadedLocalesRef');
+  expect(languageContext).toContain('loadedLocalesRef.current');
+  expect(languageContext).toContain('useCallback(async (code: string): Promise<LanguageCode>');
+  expect(languageContext).toContain('}, []);');
+  expect(languageContext).toContain('changeLang = useCallback');
+});
+
+test('backup import and vanity recovery keep large temporary payloads out of Preferences', async () => {
+  const internalTextStore = await readSource('src/utils/internalTextStore.ts');
+  const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
+  const app = await readSource('src/App.tsx');
+
+  expect(internalTextStore).toContain('Directory.Data');
+  expect(internalTextStore).toContain('writeInternalText');
+  expect(internalTextStore).toContain('readInternalText');
+  expect(internalTextStore).toContain('deleteInternalText');
+  expect(internalTextStore).toContain('cleanupInternalTextFiles');
+  expect(internalTextStore).toContain('internal-text-ref');
+  expect(fileImport).toContain("writeInternalText('xkey-replace-snapshot'");
+  expect(fileImport).toContain('serializeInternalTextRef(snapshotRef)');
+  expect(fileImport).toContain('readInternalText(storedRef)');
+  expect(createWallet).toContain("writeInternalText('xkey-vanity-session'");
+  expect(createWallet).toContain('parseInternalTextRef');
+  expect(createWallet).toContain('readInternalText(');
+  expect(app).toContain("cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session']");
+  expect(app).toContain('INTERNAL_TEXT_MAX_AGE_MS');
+});
+
+test('file import progress status always clears through finally blocks', async () => {
+  const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const app = await readSource('src/App.tsx');
+  const localeEn = await readSource('src/locales/en.ts');
+
+  for (const key of ['reading', 'verifying', 'parsing', 'decrypting', 'previewing', 'importing', 'processing']) {
+    expect(localeEn).toContain(`"${key}"`);
+  }
+  expect(fileImport).toContain('fileOperationKey');
+  expect(fileImport).toContain("setFileOperationKey('fileStatus.decrypting')");
+  expect(fileImport).toContain("setFileOperationKey('fileStatus.importing')");
+  expect(fileImport).toContain("setFileOperationKey('fileStatus.previewing')");
+  expect(fileImport).toContain('} finally {\n      setLoading(false);\n      setFileOperationKey');
+  expect(app).toContain("t(fileOperationKey || 'fileStatus.processing')");
+  expect(app).toContain('disabled={loading');
+});
+
+test('action history tab supports compact review, filtering, and duplicate suppression', async () => {
+  const auditTab = await readSource('src/components/settings/AuditLogTab.tsx');
+  const actionHistory = await readSource('src/utils/actionHistory.ts');
+  const localeEn = await readSource('src/locales/en.ts');
+
+  expect(auditTab).toContain('actionSearch');
+  expect(auditTab).toContain('actionSeverity');
+  expect(auditTab).toContain('groupedActions');
+  expect(auditTab).toContain('toLocaleTimeString');
+  expect(auditTab).toContain("t('settings.actionSearchPlaceholder')");
+  expect(actionHistory).toContain('DUPLICATE_WINDOW_MS');
+  expect(actionHistory).toContain('Date.now() - latest.ts < DUPLICATE_WINDOW_MS');
+  for (const key of ['actionSeverity_all', 'actionSeverity_info', 'actionSeverity_warning', 'actionSeverity_critical']) {
+    expect(localeEn).toContain(`"${key}"`);
+  }
+});
+
+test('android and screenshot verification helpers are documented for device testing', async () => {
+  const packageJson = await readSource('package.json');
+  const adbTest = await readSource('tests/adb-open-xkey.mjs');
+  const screenshotTest = await readSource('tests/smoke/ui-screenshots.spec.js');
+  const checklist = await readSource('docs/ANDROID_DEVICE_TEST_CHECKLIST.md');
+
+  expect(packageJson).toContain('test:adb-open');
+  expect(adbTest).toContain('adb');
+  expect(adbTest).toContain('android.intent.action.VIEW');
+  expect(screenshotTest).toContain('ui-screenshots');
+  expect(screenshotTest).toContain("['compact', 320, 720]");
+  expect(checklist).toContain('Android Device Test Checklist');
+  expect(checklist).toContain('Backup open intent');
 });
 
 test('production build writes an asset integrity manifest with valid hashes', async () => {

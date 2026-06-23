@@ -1,7 +1,7 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "5.12.2",
+  "version": "5.12.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,8 @@
     "test:shamir": "tsx tests/shamir.test.mjs",
     "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:adb-open": "node tests/adb-open-xkey.mjs",
+    "audit:report": "node scripts/audit-report.mjs",
+    "locale:audit": "node scripts/locale-audit.mjs",
     "test:smoke": "playwright test",
     "preview": "vite preview",
     "sync": "npm run build && npx cap sync android",

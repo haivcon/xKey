@@ -1,18 +1,4 @@
 import en from './en';
-import vi from './vi';
-import zh from './zh';
-import ko from './ko';
-import ja from './ja';
-import ru from './ru';
-import hi from './hi';
-import ar from './ar';
-import id from './id';
-import th from './th';
-import fr from './fr';
-import es from './es';
-import pt from './pt';
-import de from './de';
-import tr from './tr';
 
 export type LanguageCode = 'en' | 'vi' | 'zh' | 'ko' | 'ja' | 'ru' | 'hi' | 'ar' | 'id' | 'th' | 'fr' | 'es' | 'pt' | 'de' | 'tr';
 
@@ -26,7 +12,6 @@ export type LanguageOption = {
 
 export type LocaleValue = string | number | boolean | null | undefined | LocaleValue[] | { [key: string]: LocaleValue };
 export type LocaleTree = { [key: string]: LocaleValue };
-export type LocalesMap = Record<LanguageCode, LocaleTree>;
 
 export const LANGUAGES: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
@@ -46,5 +31,30 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
 ];
 
-export const locales: LocalesMap = { en, vi, zh, ko, ja, ru, hi, ar, id, th, fr, es, pt, de, tr };
-export default locales;
+const localeLoaders: Record<LanguageCode, () => Promise<{ default: LocaleTree }>> = {
+  en: () => Promise.resolve({ default: en as LocaleTree }),
+  vi: () => import('./vi'),
+  zh: () => import('./zh'),
+  ko: () => import('./ko'),
+  ja: () => import('./ja'),
+  ru: () => import('./ru'),
+  hi: () => import('./hi'),
+  ar: () => import('./ar'),
+  id: () => import('./id'),
+  th: () => import('./th'),
+  fr: () => import('./fr'),
+  es: () => import('./es'),
+  pt: () => import('./pt'),
+  de: () => import('./de'),
+  tr: () => import('./tr'),
+};
+
+export const defaultLocale = en as LocaleTree;
+export const isSupportedLanguage = (code: string): code is LanguageCode => (
+  Object.prototype.hasOwnProperty.call(localeLoaders, code)
+);
+
+export const loadLocale = async (code: LanguageCode): Promise<LocaleTree> => {
+  const module = await localeLoaders[code]();
+  return module.default;
+};

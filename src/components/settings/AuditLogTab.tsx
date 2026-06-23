@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ClipboardCopy, Clock3, Database, FileArchive, FileText, KeyRound, LockKeyhole, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ClipboardCopy, Clock3, Database, FileArchive, FileText, KeyRound, LockKeyhole, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { authenticateDeviceCredential, isDeviceCredentialAvailable } from '../../utils/deviceCredential';
 import { appendAuditLog, readAuditLog, type AuditDetails, type DecodedAuditEntry } from '../../utils/auditLog';
@@ -26,6 +26,8 @@ export default function AuditLogTab() {
   const [entries, setEntries] = useState<DecodedAuditEntry[]>([]);
   const [actionHistory, setActionHistory] = useState<ActionHistoryItem[]>([]);
   const [actionFilter, setActionFilter] = useState<ActionHistoryCategory>('all');
+  const [actionSeverity, setActionSeverity] = useState<'all' | 'info' | 'warning' | 'critical'>('all');
+  const [actionSearch, setActionSearch] = useState('');
   const [showAllActions, setShowAllActions] = useState(false);
   const [tampered, setTampered] = useState(false);
   const [error, setError] = useState('');
@@ -96,9 +98,29 @@ export default function AuditLogTab() {
   }
 
   const actionFilters: ActionHistoryCategory[] = ['all', 'unlock', 'backup', 'copy', 'warning', 'data'];
-  const visibleActions = actionHistory.filter(item => actionFilter === 'all' || item.category === actionFilter || (actionFilter === 'warning' && (item.type === 'error' || item.type === 'warning')));
+  const severityFilters = ['all', 'info', 'warning', 'critical'] as const;
+  const actionMessage = (item: ActionHistoryItem) => item.messageKey ? t(item.messageKey, item.vars) : item.message;
+  const matchesSeverity = (item: ActionHistoryItem) => {
+    if (actionSeverity === 'all') return true;
+    if (actionSeverity === 'critical') return item.type === 'error';
+    if (actionSeverity === 'warning') return item.type === 'warning' || item.category === 'warning';
+    return item.type !== 'error' && item.type !== 'warning' && item.category !== 'warning';
+  };
+  const visibleActions = actionHistory.filter(item => {
+    const categoryMatches = actionFilter === 'all' || item.category === actionFilter || (actionFilter === 'warning' && (item.type === 'error' || item.type === 'warning'));
+    const search = actionSearch.trim().toLowerCase();
+    const searchMatches = !search || actionMessage(item).toLowerCase().includes(search) || new Date(item.ts).toLocaleString(lang).toLowerCase().includes(search);
+    return categoryMatches && matchesSeverity(item) && searchMatches;
+  });
   const displayedActions = showAllActions ? visibleActions : visibleActions.slice(0, 6);
   const hiddenActionCount = Math.max(0, visibleActions.length - displayedActions.length);
+  const groupedActions = displayedActions.reduce<Array<{ day: string; items: ActionHistoryItem[] }>>((groups, item) => {
+    const day = new Date(item.ts).toLocaleDateString(lang);
+    const current = groups[groups.length - 1];
+    if (current?.day === day) current.items.push(item);
+    else groups.push({ day, items: [item] });
+    return groups;
+  }, []);
   const countByCategory = (category: ActionHistoryCategory) => actionHistory.filter(item => (
     category === 'all' || item.category === category || (category === 'warning' && (item.type === 'error' || item.type === 'warning'))
   )).length;
@@ -117,8 +139,6 @@ export default function AuditLogTab() {
     if (item.type === 'success') return 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200';
     return 'border-surface-700 bg-surface-900/50 text-surface-200';
   };
-  const actionMessage = (item: ActionHistoryItem) => item.messageKey ? t(item.messageKey, item.vars) : item.message;
-
   return (
     <div className="space-y-6">
     <div className="glass-card overflow-hidden">
@@ -217,6 +237,29 @@ export default function AuditLogTab() {
           </div>
         </div>
         <Notice variant="info" className="mb-4">{t('settings.activityHistoryAuditNote')}</Notice>
+        <div className="mb-3 rounded-xl border border-surface-700 bg-surface-900/70 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <Search size={14} className="text-surface-500" />
+            <input
+              value={actionSearch}
+              onChange={(event) => setActionSearch(event.target.value)}
+              placeholder={t('settings.actionSearchPlaceholder')}
+              className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-surface-500"
+            />
+          </div>
+        </div>
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {severityFilters.map(filter => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setActionSeverity(filter)}
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${actionSeverity === filter ? 'border-emerald-500 bg-emerald-500/15 text-emerald-100' : 'border-surface-700 bg-surface-900 text-surface-400 hover:text-white'}`}
+            >
+              {t(`settings.actionSeverity_${filter}`)}
+            </button>
+          ))}
+        </div>
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
           {actionFilters.map(filter => (
             <button
@@ -234,22 +277,27 @@ export default function AuditLogTab() {
             <p className="rounded-xl border border-surface-700/70 bg-surface-900/40 px-3 py-5 text-center text-xs text-surface-400">
               {t('settings.noActivityHistory')}
             </p>
-          ) : (
-            displayedActions.map(item => {
-              const Icon = actionIcon(item);
-              return (
-                <div key={item.id} className={`border-b border-surface-800/80 px-3 py-2.5 last:border-b-0 ${actionStyle(item).replace('rounded-xl border ', '')}`}>
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/15"><Icon size={15} /></div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold">{actionMessage(item)}</p>
-                      <p className="mt-0.5 text-[0.625rem] opacity-70">{new Date(item.ts).toLocaleString(lang)}</p>
+          ) : groupedActions.map(group => (
+            <div key={group.day}>
+              <div className="border-b border-surface-800/80 bg-surface-900/70 px-3 py-1.5 text-[0.625rem] font-bold uppercase tracking-wide text-surface-500">
+                {group.day}
+              </div>
+              {group.items.map(item => {
+                const Icon = actionIcon(item);
+                return (
+                  <div key={item.id} className={`border-b border-surface-800/80 px-3 py-2.5 last:border-b-0 ${actionStyle(item).replace('rounded-xl border ', '')}`}>
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/15"><Icon size={15} /></div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold">{actionMessage(item)}</p>
+                        <p className="mt-0.5 text-[0.625rem] opacity-70">{new Date(item.ts).toLocaleTimeString(lang)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })}
+            </div>
+          ))}
         </div>
         {hiddenActionCount > 0 || showAllActions ? (
           <button

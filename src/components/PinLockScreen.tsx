@@ -217,7 +217,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
             : t('pinLock.enter6Digits')}
         </p>
         {brandReminders && (
-          <p className="pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300/80">
+          <p className="mx-auto w-full whitespace-nowrap pt-1 text-center text-[10px] font-semibold uppercase tracking-[0.08em] text-brand-300/80">
             {XKEY_SLOGAN}
           </p>
         )}

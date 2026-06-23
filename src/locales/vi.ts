@@ -1,4 +1,20 @@
 export default {
+  "health": {
+      "title": "Trạng thái khởi động",
+      "replaceSnapshotPending": "Đang có snapshot hoàn tác thay vault.",
+      "vanitySessionPending": "Đang có phiên tạo ví đẹp đã lưu.",
+      "externalBackupPending": "Có một backup bên ngoài đang chờ sau khi mở khóa.",
+      "cleanedTempFiles": "Đã dọn {count} file khôi phục cũ."
+  },
+  "fileStatus": {
+      "reading": "Đang đọc file...",
+      "verifying": "Đang xác minh file...",
+      "parsing": "Đang phân tích file...",
+      "decrypting": "Đang giải mã backup...",
+      "previewing": "Đang tạo bản xem trước...",
+      "importing": "Đang nhập ví...",
+      "processing": "Đang xử lý..."
+  },
   "brand": {
     "backupExportNote": "Bản sao lưu đã mã hóa là bằng chứng bạn tự kiểm soát khóa của mình. Hãy lưu ngoại tuyến và cất mật khẩu riêng.",
     "restoreNote": "Hãy kiểm tra mã backup, hash tệp và thông tin thiết bị trước khi khôi phục. Chỉ nhập tệp bạn tin tưởng.",
@@ -180,7 +196,7 @@ export default {
     "verifyOnly": "Chỉ xác minh",
     "previewOnly": "Xem trước",
     "previewSummary": "Xem trước: {total} ví, {newWallets} ví mới, {duplicates} trùng lặp, {changed} ví có dữ liệu khác, {missingSensitive} ví thiếu private key/seed phrase, {sensitive} ví có dữ liệu nhạy cảm.",
-    "merge": "Gộp ví", "replace": "Thay vault",
+    "merge": "Gộp ví", "mergeHelp": "Giữ vault hiện tại và thêm ví từ backup. Địa chỉ trùng được giữ nguyên mặc định.", "updateMissingSensitive": "Bù private key hoặc seed phrase còn thiếu", "updateMissingSensitiveHelp": "Chỉ bù dữ liệu nhạy cảm còn trống ở địa chỉ trùng. Private key và seed phrase đang có sẽ không bị ghi đè.", "updateMissingSensitiveConfirm": "Bù private key hoặc seed phrase còn thiếu từ backup này? Dữ liệu nhạy cảm đang có sẽ không bị ghi đè.", "replace": "Thay vault", "replaceHelp": "Thay toàn bộ vault hiện tại bằng backup này. Ví không có trong backup sẽ bị xóa sau khi xác nhận.",
     "replaceConfirm": "Thay vault hiện tại bằng backup này? Các ví hiện tại không có trong backup sẽ bị xóa.",
     "copyVerificationReport": "Copy báo cáo",
     "reportCopied": "Đã copy báo cáo xác minh",
@@ -215,7 +231,7 @@ export default {
     "verified": "Đã xác minh"
   },
   "auditEvent": {
-    "app": "Hoạt động ứng dụng", "backup": "Hoạt động sao lưu", "device": "Hoạt động mở khóa thiết bị", "pin": "Hoạt động mã PIN", "wallet": "Thao tác nhạy cảm của ví", "vault": "Hoạt động phục hồi kho", "audit": "Hoạt động nhật ký kiểm toán", "unknown": "Hoạt động bảo mật"
+    "app": "Hoạt động ứng dụng", "backup": "Hoạt động sao lưu", "device": "Hoạt động mở khóa thiết bị", "pin": "Ghim", "wallet": "Thao tác nhạy cảm của ví", "vault": "Hoạt động phục hồi kho", "audit": "Hoạt động nhật ký kiểm toán", "unknown": "Hoạt động bảo mật"
   },
   "auditDetails": {
     "fileName": "Tệp", "integrity": "Toàn vẹn", "walletCount": "Số ví", "portable": "Di động", "version": "Phiên bản", "reason": "Lý do", "size": "Kích thước", "mimeType": "Loại tệp", "backupId": "Mã backup", "openedFromExternal": "Nguồn bên ngoài"
@@ -417,7 +433,7 @@ export default {
     "removeMPConfirm": "Tắt mật khẩu xem ký tự ẩn? Sau khi tắt, private key và seed phrase chỉ còn lớp bảo vệ khóa thiết bị.",
     "currentHiddenPassword": "Nhập mật khẩu hiện tại",
     "masterPasswordRemoveRequired": "Hãy nhập mật khẩu hiện tại trước khi tắt.",
-    "masterPasswordWrong": "Sai mật khẩu hiện tại",
+    "masterPasswordWrong": "Sai mật khẩu hiển thị",
     "mpEnabled": "Đã bật",
     "mpDisabled": "Tắt",
     "confirmChange": "Thay đổi {setting} thành {value}?",
@@ -499,9 +515,13 @@ export default {
     "actionFilter_data": "Dữ liệu",
     "actionFilter_warning": "Cảnh báo",
     "actionFilter_copy": "Copy",
-    "actionFilter_backup": "Backup",
+    "actionFilter_backup": "Sao lưu",
     "actionFilter_unlock": "Mở khóa",
     "actionFilter_all": "Tất cả",
+      "actionSeverity_all": "Tất cả",
+      "actionSeverity_info": "Thông tin",
+      "actionSeverity_warning": "Cảnh báo",
+      "actionSeverity_critical": "Nghiêm trọng",
     "activityHistoryAuditNote": "Lịch sử thao tác là nhật ký tiện ích cục bộ và có thể xóa. Nhật ký bảo mật phía trên vẫn được tách riêng.",
     "clearActionHistory": "Xóa lịch sử thao tác",
     "okxGuideTitle": "Hướng dẫn OKX Wallet multi-chain",
@@ -544,7 +564,7 @@ export default {
     "addressExplain": "Địa chỉ công khai của ví (bắt đầu bằng 0x cho chuỗi EVM). An toàn để chia sẻ — như số tài khoản ngân hàng.",
     "pkExplain": "Khóa bí mật kiểm soát ví này. Bất kỳ ai có khóa riêng tư đều có thể tiêu hết tiền. KHÔNG BAO GIỜ chia sẻ.",
     "seedExplain": "12 hoặc 24 từ có thể tạo lại khóa riêng tư. Lưu trữ ngoại tuyến, không chụp màn hình hay chia sẻ.",
-    "network": "Mạng lưới",
+    "network": "Mạng",
     "scanQR": "Quét QR",
     "tabVanity": "Ví Đẹp",
     "vanityPrefix": "Tiền tố (đầu)",
@@ -572,6 +592,8 @@ export default {
     "vanityScanned": "Đã quét",
     "vanityTerminal": "Luồng địa chỉ đang quét",
     "vanityScanning": "Đang quét địa chỉ...",
+    "vanitySessionAvailable": "Đã tìm thấy kết quả tạo ví đẹp được mã hóa từ phiên trước.", "vanitySessionRestore": "Khôi phục phiên", "vanitySessionRestored": "Đã khôi phục phiên tạo ví đẹp.", "vanitySessionUnavailable": "Không thể mở phiên tạo ví đẹp đã lưu.",
+    "vanityPerformance": "Chế độ hiệu năng", "vanityPerformance_eco": "Tiết kiệm", "vanityPerformance_balanced": "Cân bằng", "vanityPerformance_fast": "Nhanh", "vanityPerformanceHint_eco": "Dùng ít pin hơn nhưng có thể chậm hơn.", "vanityPerformanceHint_balanced": "Cân bằng tốc độ và mức dùng pin.", "vanityPerformanceHint_fast": "Quét nhanh nhất, có thể làm máy ấm hơn và dùng nhiều pin hơn.",
     "vanityPause": "Tạm dừng", "vanityPaused": "Đã tạm dừng trình tạo", "vanityResume": "Tiếp tục", "storageCapacityLow": "Không đủ dung lượng trống cho thao tác này.",
     "vanitySpeed": "Tốc độ",
     "vanityElapsed": "Thời gian",
@@ -702,10 +724,10 @@ export default {
     "pin": "Ghim",
     "unpin": "Bỏ ghim",
     "pinned": "Đã ghim",
-    "network": "Mạng lưới",
+    "network": "Mạng",
     "clipboardCleared": "Đã xóa clipboard",
-    "masterPasswordRequired": "Nhập mật khẩu để xem ký tự ẩn",
-    "masterPasswordWrong": "Sai mật khẩu xem ký tự ẩn",
+    "masterPasswordRequired": "Nhập mật khẩu để hiển thị giá trị đang ẩn",
+    "masterPasswordWrong": "Sai mật khẩu hiển thị",
     "changeNetwork": "Chạm để đổi mạng",
     "addressCopied": "Đã sao chép địa chỉ",
     "copyAddress": "Sao chép địa chỉ",
@@ -951,7 +973,7 @@ export default {
     "deleted": "Đã xóa {count} ví",
     "moved": "Đã di chuyển {count} ví vào {folder}",
     "tagged": "Đã gắn thẻ {tag} cho {count} ví",
-    "pinned": "Đã ghim {count} ví"
+    "pinned": "Đã ghim"
   },
   "donate": {
     "title": "Ủng hộ dự án",

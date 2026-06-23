@@ -18,28 +18,30 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.12.2
+## Current Release: v5.12.3
 
-v5.12.2 focuses on reliable startup, safer long-running vanity-wallet generation, responsive backup restore controls, and Android lifecycle hardening.
+v5.12.3 focuses on release hardening after the latest UI, backup, audit, localization, Android, and startup reliability upgrades.
 
 ### Main Upgrades
 
-- **Startup deadlock recovery:** React Strict Mode no longer leaves the app stuck on the animated splash screen after a cancelled first integrity-effect subscription.
-- **Bounded startup integrity checks:** each asset request has a short timeout, the complete check has a hard timeout, outstanding asset requests are aborted on timeout, and verification is limited to two concurrent assets to reduce startup CPU and memory spikes.
-- **Responsive backup restore dialog:** restore metadata uses more of the available device width, scrolls safely within the viewport, ignores backdrop taps, and wraps long localized actions instead of clipping them.
-- **Safer Android back handling:** Android Back now invokes the same safe close flow as the modal close button while vanity generation is active.
-- **Professional vanity workspace:** active vanity generation collapses the setup form into a progress workspace with cumulative scan metrics, a bounded live terminal, highlighted matches, copy controls, selectable results, and explicit pause/resume/stop controls.
-- **Reliable pause and resume:** vanity workers preserve cumulative scan count and elapsed time across pause/resume, so time limits and progress remain accurate.
-- **No lost selected results:** matching wallets remain available until the user starts over; selected wallets can be saved after a stop without duplicate writes.
-- **Validated remembered settings:** the app restores only valid vanity time limits and available folders, while remembering the last non-sensitive network, folder, quantity, and time-limit choices.
+- **More reliable startup and language loading:** locale bundles now load lazily with a stable cache, reducing startup work and preventing unnecessary initialization loops after a language is loaded.
+- **Safer backup import lifecycle:** restore/import progress is now explicit and always clears through guarded cleanup paths, so the UI does not remain stuck after failed passwords, corrupt files, or interrupted imports.
+- **Internal recovery payload storage:** large replace-vault undo snapshots and vanity recovery sessions are stored as internal app files instead of oversized Preferences values, with automatic cleanup of old temporary recovery files.
+- **Polished audit/action history:** the Audit Log tab now includes compact action history review, search, severity filters, grouped days, duplicate suppression, and fully localized filter labels.
+- **Complete localization pass:** new health, file-operation, backup, audit, severity, and CSV/export strings are covered across all supported languages.
+- **Backup and Android test coverage:** regression tests now cover lazy locales, internal recovery files, import progress status, action history filters, Android `.xkey` open intent wiring, and screenshot checks for light/dark responsive shells.
+- **Dependency audit workflow:** a report-only GitHub Actions audit job records dependency risk without automatically changing package versions.
+- **Android sync-ready release:** Android build metadata is updated to version code 73 and version name 5.12.3.
 
 ### Verification for This Release
 
 - `npm run lint`
 - `npm run type-check`
+- `npm run locale:audit`
 - `npm run build`
+- `npx playwright test`
+- `npm run audit:report`
 - `npx cap sync android`
-- `android\gradlew.bat assembleDebug`
 
 ### Store Listing Copy
 
@@ -75,6 +77,7 @@ Long description opener:
 
 ## Previous Release Highlights
 
+- **v5.12.2:** fixed startup deadlock risks, bounded integrity checks, improved backup restore modal sizing, and hardened vanity generation lifecycle.
 - **v5.12.1:** established slogan-first product identity, branded backup and Shamir QR surfaces, and localized reminder controls.
 - **v5.12.0:** delivered verified native backup export, detailed restore preview, Reed-Solomon recovery, audit-log polish, and Android file workflows.
 - **v5.11.0 and earlier:** completed strict TypeScript migration and introduced the offline vault, backup, audit, Shamir, QR, vanity, security, and Android native foundations.
@@ -126,14 +129,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.12.2
-git push origin v5.12.2
+git tag v5.12.3
+git push origin v5.12.3
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.12.2.apk`
-- `xKey-GooglePlay-v5.12.2.aab`
+- `xKey-GitHub-v5.12.3.apk`
+- `xKey-GooglePlay-v5.12.3.aab`
 
 Android package: `com.haivcon.xkey`.
 

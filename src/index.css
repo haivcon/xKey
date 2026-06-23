@@ -76,9 +76,7 @@ body {
   }
 }
 
-body.keyboard-open,
-body.keyboard-open .overflow-y-auto,
-body.keyboard-open .overflow-auto {
+body.keyboard-open .keyboard-scroll-target {
   padding-bottom: 60vh !important;
 }
 
@@ -685,6 +683,8 @@ html {
 .home-header-slogan {
   white-space: nowrap;
   color: #38bdf8;
+  transform: scaleX(0.9);
+  transform-origin: center;
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.35), 0 0 22px rgba(16, 185, 129, 0.18);
   animation: home-slogan-glow 3.8s ease-in-out infinite;
 }
@@ -692,10 +692,10 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.56rem, 2vw, 0.72rem);
+  font-size: 0.5rem;
   font-weight: 900;
   line-height: 1;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
@@ -703,6 +703,12 @@ html {
 
 .home-header-slogan-space {
   width: 0.38em;
+}
+
+@media (max-width: 380px) {
+  .home-header-slogan {
+    transform: scaleX(0.78);
+  }
 }
 
 @keyframes home-slogan-letter-in {

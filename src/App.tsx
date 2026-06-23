@@ -66,9 +66,13 @@ import { appendAuditLog } from './utils/auditLog';
 import { addXKeyFileOpenListener, getPendingXKeyFile } from './utils/nativeFileOpen';
 import { secureCopy } from './utils/clipboard';
 import { XKEY_SLOGAN } from './utils/branding';
+import { cleanupInternalTextFiles } from './utils/internalTextStore';
 import type { QrModalData, Wallet } from './types';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
+const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
+const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
+const INTERNAL_TEXT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const HEADER_SLOGAN_LETTERS = Array.from(XKEY_SLOGAN);
 
 type AssetBalanceChange = {
@@ -145,6 +149,7 @@ export default function App() {
   const [integrityStatus, setIntegrityStatus] = useState('');
   const [integrityFailed, setIntegrityFailed] = useState(false);
   const [externalBackupWaiting, setExternalBackupWaiting] = useState(false);
+  const [healthMessages, setHealthMessages] = useState<string[]>([]);
   // A shared promise survives React Strict Mode's development-only effect replay.
   // Without it, the first replayed effect is cancelled while the second one is
   // prevented from subscribing, leaving the splash screen visible forever.
@@ -204,6 +209,27 @@ export default function App() {
   useEffect(() => {
     if (splashAnimationDone && integrityReady) setShowSplash(false);
   }, [splashAnimationDone, integrityReady]);
+
+  useEffect(() => {
+    if (!aesKey) return;
+    let active = true;
+    (async () => {
+      const messages: string[] = [];
+      const [snapshot, vanitySession, cleaned] = await Promise.all([
+        Preferences.get({ key: REPLACE_SNAPSHOT_KEY }).then(({ value }) => value).catch(() => ''),
+        Preferences.get({ key: VANITY_SESSION_KEY }).then(({ value }) => value).catch(() => ''),
+        cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session'], INTERNAL_TEXT_MAX_AGE_MS),
+      ]);
+      if (snapshot) messages.push(tRef.current('health.replaceSnapshotPending'));
+      if (vanitySession) messages.push(tRef.current('health.vanitySessionPending'));
+      if (externalBackupWaiting) messages.push(tRef.current('health.externalBackupPending'));
+      if (cleaned > 0) messages.push(tRef.current('health.cleanedTempFiles', { count: cleaned }));
+      if (active) setHealthMessages(messages);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [aesKey, externalBackupWaiting]);
 
   // ─── Custom Hooks ───
   const {
@@ -310,8 +336,8 @@ export default function App() {
   }, [location.pathname]);
 
   const {
-    loading,
-    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode, importPassword, setImportPassword,
+    loading, fileOperationKey,
+    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
     handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
 
@@ -700,21 +726,21 @@ export default function App() {
         {/* Header */}
         <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
           <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
               <div className="flex min-w-0 items-baseline gap-1.5">
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 pr-1 leading-tight">
                   {t('home.title')}
                 </h1>
-                <span className="shrink-0 rounded border border-brand-500/20 bg-brand-500/10 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-brand-200">
+                <span className="shrink-0 text-[7px] font-semibold leading-none text-surface-400">
                   {appVersion.version}
                 </span>
               </div>
             </div>
-            <div className="pointer-events-none min-w-0 justify-self-stretch overflow-hidden text-center" aria-label={XKEY_SLOGAN}>
+            <div className="pointer-events-none min-w-0 justify-self-center text-center" aria-label={XKEY_SLOGAN}>
               {brandReminders && (
-                <div className="home-header-slogan whitespace-nowrap rounded-full border border-brand-400/20 bg-surface-950/55 px-2 py-1 text-center shadow-[0_0_18px_rgba(56,189,248,0.16)] backdrop-blur-md">
+                <div className="home-header-slogan whitespace-nowrap text-center">
                   {HEADER_SLOGAN_LETTERS.map((letter, index) => (
                     <span
                       key={`${letter}-${index}`}
@@ -743,6 +769,14 @@ export default function App() {
           {externalBackupWaiting && (
             <div className="mb-3 rounded-lg border border-sky-400/25 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-100">
               {t('restore.externalWaiting')}
+            </div>
+          )}
+          {healthMessages.length > 0 && (
+            <div className="mb-3 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-100">
+              <div className="font-semibold">{t('health.title')}</div>
+              <div className="mt-1 space-y-0.5">
+                {healthMessages.map(message => <p key={message}>{message}</p>)}
+              </div>
             </div>
           )}
           {wallets.length === 0 ? (
@@ -964,6 +998,7 @@ export default function App() {
             onClose={() => setShowCreateWallet(false)}
             registerCloseHandler={registerCreateWalletCloseHandler}
             onSave={handleCreateWalletSave}
+            aesKey={aesKey}
             existingWallets={wallets}
             folders={folders}
             activeFolder={activeFolder}
@@ -1121,27 +1156,70 @@ export default function App() {
               <PasswordInput
                 value={importPassword}
                 onChange={(e) => setImportPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleImportWithPassword()}
+                onKeyDown={async (e) => {
+                  if (e.key !== 'Enter') return;
+                  if (backupImportMode === 'replace' && !backupAnalysis) {
+                    await previewBackupWithPassword();
+                    return;
+                  }
+                  if (backupImportMode === 'replace' && !await showConfirm(t('restore.replaceConfirm'), { danger: true })) return;
+                  handleImportWithPassword();
+                }}
                 placeholder={t('restore.placeholder')}
                 disabled={backupPreview?.status === 'tampered'}
                 wrapperClassName="mb-4 w-full"
                 className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
               />
-              {backupAnalysis && <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200"><p>{t('restore.previewSummary', backupAnalysis)}</p><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => setBackupImportMode('merge')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'merge' ? 'border-brand-400 bg-brand-500/15 text-brand-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.merge')}</button><button onClick={() => setBackupImportMode('replace')} className={`rounded-lg border px-2 py-2 font-semibold ${backupImportMode === 'replace' ? 'border-amber-400 bg-amber-500/15 text-amber-200' : 'border-surface-700 text-surface-400'}`}>{t('restore.replace')}</button></div></div>}
+              {backupAnalysis && (
+                <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200">
+                  <p>{t('restore.previewSummary', backupAnalysis)}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button onClick={() => setBackupImportMode('merge')} className={`min-h-20 rounded-lg border px-3 py-2 text-left transition-colors ${backupImportMode === 'merge' ? 'border-brand-400 bg-brand-500/15 text-brand-100' : 'border-surface-700 text-surface-300 hover:border-surface-500'}`}>
+                      <span className="block font-semibold">{t('restore.merge')}</span>
+                      <span className="mt-1 block leading-relaxed text-surface-400">{t('restore.mergeHelp')}</span>
+                    </button>
+                    <button onClick={() => setBackupImportMode('replace')} className={`min-h-20 rounded-lg border px-3 py-2 text-left transition-colors ${backupImportMode === 'replace' ? 'border-amber-400 bg-amber-500/15 text-amber-100' : 'border-surface-700 text-surface-300 hover:border-surface-500'}`}>
+                      <span className="block font-semibold">{t('restore.replace')}</span>
+                      <span className="mt-1 block leading-relaxed text-surface-400">{t('restore.replaceHelp')}</span>
+                    </button>
+                  </div>
+                  {backupImportMode === 'merge' && (
+                    <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg border border-brand-500/20 bg-surface-900/50 p-2.5 text-xs text-surface-300">
+                      <input
+                        type="checkbox"
+                        checked={updateMissingSensitive}
+                        onChange={async (event) => {
+                          const enabled = event.target.checked;
+                          if (enabled && !await showConfirm(t('restore.updateMissingSensitiveConfirm'))) return;
+                          setUpdateMissingSensitive(enabled);
+                        }}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
+                      />
+                      <span><span className="block font-semibold text-brand-200">{t('restore.updateMissingSensitive')}</span><span className="mt-0.5 block leading-relaxed text-surface-400">{t('restore.updateMissingSensitiveHelp')}</span></span>
+                    </label>
+                  )}
+                </div>
+              )}
+              {(loading || fileOperationKey) && (
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-100">
+                  <Settings size={14} className={loading ? 'animate-spin' : ''} />
+                  {t(fileOperationKey || 'fileStatus.processing')}
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <button onClick={() => { hapticTap(); dismissPasswordPrompt(); }}
                   className="shrink-0 px-2 py-2.5 font-semibold text-red-300 transition-colors hover:text-red-200 focus:outline-none focus-visible:underline">{t('common.cancel')}</button>
                 {backupPreview?.openedFromExternal && (
-                  <button onClick={() => { hapticTap(); handleVerifyBackupOnly(); }}
-                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-sky-200 transition-colors hover:bg-surface-700">{t('restore.verifyOnly')}</button>
+                  <button onClick={() => { hapticTap(); handleVerifyBackupOnly(); }} disabled={loading}
+                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-sky-200 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.verifyOnly')}</button>
                 )}
-                <button onClick={() => { hapticTap(); previewBackupWithPassword(); }} disabled={backupPreview?.status === 'tampered'} className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-brand-300 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.previewOnly')}</button>
+                <button onClick={() => { hapticTap(); previewBackupWithPassword(); }} disabled={loading || backupPreview?.status === 'tampered'} className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-brand-300 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.previewOnly')}</button>
                 {backupPreview?.openedFromExternal && (
-                  <button onClick={() => { hapticTap(); handleCopyVerificationReport(); }}
-                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-surface-200 transition-colors hover:bg-surface-700">{t('restore.copyVerificationReport')}</button>
+                  <button onClick={() => { hapticTap(); handleCopyVerificationReport(); }} disabled={loading}
+                    className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-surface-200 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.copyVerificationReport')}</button>
                 )}
                 <button onClick={async () => { if (backupImportMode === 'replace' && !await showConfirm(t('restore.replaceConfirm'), { danger: true })) return; hapticSuccess(); handleImportWithPassword(); }}
-                  disabled={backupPreview?.status === 'tampered'}
+                  disabled={loading || backupPreview?.status === 'tampered' || (backupImportMode === 'replace' && !backupAnalysis)}
                   className="btn-glow btn-glow-success min-w-28 flex-1 whitespace-normal rounded-lg bg-brand-600 py-2.5 font-medium text-white transition-colors hover:bg-brand-500 disabled:opacity-50">{t('restore.button')}</button>
               </div>
             </div>
@@ -1149,8 +1227,8 @@ export default function App() {
         )}
 
         {showBackupExport && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-surface-900 border border-surface-700 w-full max-w-sm rounded-2xl shadow-2xl p-6">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+            <div className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] max-w-xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
                 <UploadCloud size={22} className="text-emerald-400" />
               </div>

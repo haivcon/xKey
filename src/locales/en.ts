@@ -1,4 +1,20 @@
 export default {
+  "health": {
+      "title": "Startup health",
+      "replaceSnapshotPending": "A replace-vault undo snapshot is available.",
+      "vanitySessionPending": "A saved vanity wallet session is waiting.",
+      "externalBackupPending": "One external backup is waiting after unlock.",
+      "cleanedTempFiles": "Cleaned {count} old recovery file(s)."
+  },
+  "fileStatus": {
+      "reading": "Reading file...",
+      "verifying": "Verifying file...",
+      "parsing": "Parsing file...",
+      "decrypting": "Decrypting backup...",
+      "previewing": "Creating preview...",
+      "importing": "Importing wallets...",
+      "processing": "Processing..."
+  },
   "brand": {
     "backupExportNote": "Your encrypted backup is the proof that you control your own keys. Store it offline and keep the password separate.",
     "restoreNote": "Verify the backup ID, file hash, and device details before restoring. Only import files you trust.",
@@ -180,7 +196,7 @@ export default {
     "verifyOnly": "Verify only",
     "previewOnly": "Preview",
     "previewSummary": "Preview: {total} wallets, {newWallets} new, {duplicates} duplicates, {changed} changed, {missingSensitive} without private key/seed phrase, {sensitive} with sensitive data.",
-    "merge": "Merge wallets", "replace": "Replace vault",
+    "merge": "Merge wallets", "mergeHelp": "Keep the current vault and add backup wallets. Duplicate addresses stay unchanged by default.", "updateMissingSensitive": "Fill missing private keys or seed phrases", "updateMissingSensitiveHelp": "Only fills missing sensitive data on matching addresses. Existing keys and seed phrases are never replaced.", "updateMissingSensitiveConfirm": "Fill missing private keys or seed phrases from this backup? Existing sensitive data will not be overwritten.", "replace": "Replace vault", "replaceHelp": "Replace the current vault with this backup. Wallets not in the backup are removed after confirmation.",
     "replaceConfirm": "Replace the current vault with this backup? Current wallets not included in the backup will be removed.",
     "copyVerificationReport": "Copy report",
     "reportCopied": "Verification report copied",
@@ -502,6 +518,10 @@ export default {
     "actionFilter_backup": "Backup",
     "actionFilter_unlock": "Unlock",
     "actionFilter_all": "All",
+      "actionSeverity_all": "All",
+      "actionSeverity_info": "Info",
+      "actionSeverity_warning": "Warnings",
+      "actionSeverity_critical": "Critical",
     "activityHistoryAuditNote": "Action history is a local convenience log and can be cleared. Security audit log entries above remain separate.",
     "clearActionHistory": "Clear action history",
     "okxGuideTitle": "OKX Wallet multi-chain guide",
@@ -572,6 +592,8 @@ export default {
     "vanityScanned": "Scanned",
     "vanityTerminal": "Live address stream",
     "vanityScanning": "Scanning addresses...",
+    "vanitySessionAvailable": "Encrypted vanity-generation results from a previous session were found.", "vanitySessionRestore": "Restore session", "vanitySessionRestored": "Vanity-generation session restored.", "vanitySessionUnavailable": "The saved vanity-generation session could not be opened.",
+    "vanityPerformance": "Performance profile", "vanityPerformance_eco": "Eco", "vanityPerformance_balanced": "Balanced", "vanityPerformance_fast": "Fast", "vanityPerformanceHint_eco": "Uses less battery and may be slower.", "vanityPerformanceHint_balanced": "Balances speed and battery use.", "vanityPerformanceHint_fast": "Searches fastest and may increase heat and battery use.",
     "vanityPause": "Pause", "vanityPaused": "Generator paused", "vanityResume": "Resume", "storageCapacityLow": "Not enough available storage for this operation.",
     "vanitySpeed": "Speed",
     "vanityElapsed": "Elapsed",

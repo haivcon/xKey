@@ -23,9 +23,17 @@ setTimeout(hideNativeSplash, 1200);
 function Boot() {
   const [AppComponent, setAppComponent] = useState<ComponentType | null>(null);
   const [bootError, setBootError] = useState<unknown>(null);
+  const [bootSlow, setBootSlow] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
+    setBootSlow(false);
+    setBootError(null);
+    const slowTimer = window.setTimeout(() => {
+      if (mounted) setBootSlow(true);
+    }, 5000);
+
     import('./App')
       .then(module => {
         if (mounted) setAppComponent(() => module.default);
@@ -34,12 +42,16 @@ function Boot() {
         console.error('Failed to boot xKey', error);
         if (mounted) setBootError(error);
       })
-      .finally(hideNativeSplash);
+      .finally(() => {
+        window.clearTimeout(slowTimer);
+        hideNativeSplash();
+      });
 
     return () => {
       mounted = false;
+      window.clearTimeout(slowTimer);
     };
-  }, []);
+  }, [bootAttempt]);
 
   if (bootError) {
     return (
@@ -57,8 +69,22 @@ function Boot() {
 
   if (!AppComponent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-[56px] font-bold tracking-[2px] text-white">
-        xKey
+      <div className="flex min-h-screen items-center justify-center bg-black p-6 text-center text-white">
+        <div>
+          <div className="text-[56px] font-bold tracking-[2px]">xKey</div>
+          {bootSlow && (
+            <div className="mt-5 max-w-xs text-sm text-surface-300">
+              <p className="mb-3">xKey is still starting. If this screen does not change, retry the app shell.</p>
+              <button
+                type="button"
+                onClick={() => setBootAttempt(attempt => attempt + 1)}
+                className="rounded-lg bg-brand-500 px-4 py-2 font-semibold text-white"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
