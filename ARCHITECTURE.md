@@ -10,6 +10,7 @@ xKey is built as a **local, offline-first Web3 wallet vault**.
 - **Native Bridge:** Capacitor 8
 - **Storage:** Capacitor Preferences (Encrypted via custom wrapper on top)
 - **Cryptography:** Web Crypto API, native Android Keystore integrations.
+- **Workers:** Web Workers for heavy background tasks (e.g., Vanity Wallet Generation).
 
 ## 2. Core Modules
 

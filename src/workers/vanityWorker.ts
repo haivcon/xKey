@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import type { Wallet } from '../types';
-import { compareVanityExtraMatches, detectExtraVanityMatch, type VanityExtraMatch, type VanityRepeatSide } from '../utils/vanityMatch';
+import { compareVanityExtraMatches, detectExtraVanityMatch, type VanityExtraMatch, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanityMatch';
 
 let running = false;
 
@@ -27,11 +27,12 @@ type VanityWallet = Wallet & {
   vanityScore?: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
+  vanityPatternType?: VanityExtraPatternType;
 };
 
 type VanityExtraCandidate = Pick<VanityWallet,
   'address' | 'vanityMatchType' | 'vanityRepeatSide' | 'vanityRepeatChar' |
-  'vanityRepeatLength' | 'vanityScore' | 'vanityHeadRun' | 'vanityTailRun'
+  'vanityRepeatLength' | 'vanityScore' | 'vanityHeadRun' | 'vanityTailRun' | 'vanityPatternType'
 >;
 
 type RankedVanityWallet = VanityWallet | VanityExtraCandidate;
@@ -93,6 +94,7 @@ const createVanityWallet = (
   vanityScore: extra?.score,
   vanityHeadRun: extra?.headRun,
   vanityTailRun: extra?.tailRun,
+  vanityPatternType: extra?.patternType,
 });
 
 const compareWalletScore = (left: RankedVanityWallet, right: RankedVanityWallet): number => compareVanityExtraMatches({
@@ -102,6 +104,7 @@ const compareWalletScore = (left: RankedVanityWallet, right: RankedVanityWallet)
   score: left.vanityScore || 0,
   headRun: left.vanityHeadRun,
   tailRun: left.vanityTailRun,
+  patternType: left.vanityPatternType,
 }, {
   side: right.vanityRepeatSide || 'head',
   char: right.vanityRepeatChar || '',
@@ -109,6 +112,7 @@ const compareWalletScore = (left: RankedVanityWallet, right: RankedVanityWallet)
   score: right.vanityScore || 0,
   headRun: right.vanityHeadRun,
   tailRun: right.vanityTailRun,
+  patternType: right.vanityPatternType,
 });
 
 self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {

@@ -18,15 +18,16 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.16.0
+## Current Release: v5.17.0
 
-v5.16.0 focuses on **Locale and Translations Fixes** for the new Create Wallet interfaces, specifically addressing cross-contamination and missing translations across all supported languages.
+v5.17.0 focuses on **Advanced Vanity Wallet Generation**, significantly improving the vanity wallet generator's pattern matching capabilities, UI/UX, and saving options.
 
 ### Main Upgrades
 
-- **Create Wallet UI Fixes:** Fixed hidden locale cross-contamination issues affecting the manual and generation tabs during wallet creation.
-- **Full Translations:** Fully translated Advanced Entropy and UI elements across all 15 supported languages.
-- **Android sync-ready release:** Android metadata version code updated to 78 and version name to 5.16.0.
+- **Advanced Vanity Pattern Matching:** Upgraded the vanity worker to detect high-value multi-patterns including full symmetry, forward/backward sequences, and dual-end repetitions.
+- **Improved UI/UX & Visibility:** Fixed light/dark theme contrast issues, optimized wallet address truncation for ultra-wide screens to keep endings visible, and added secure view/copy toggles for private keys and seed phrases.
+- **Customizable Saving:** Users can now input a custom quantity of extra vanity wallets to save during generation runs.
+- **Android sync-ready release:** Android metadata version code updated to 79 and version name to 5.17.0.
 
 ### Verification for This Release
 
@@ -77,6 +78,7 @@ Long description opener:
 <details>
 <summary>Click to expand previous release history</summary>
 
+- **v5.16.0:** Locale and translations fixes for the new Create Wallet interfaces, specifically addressing cross-contamination and missing translations across all supported languages.
 - **v5.15.0:** Advanced Entropy Generation (Pointer/Movement, Physical Dice, BIP85 Deterministic Derivation), with complete UI integrations and multilingual support.
 - **v5.14.0:** BIP39 Hierarchical Deterministic (HD) Wallet support, 12 and 24-word mnemonic keys, background derivation worker, and interactive derivation visualizer tree.
 - **v5.13.0:** Key Health center for long-term maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys checks.
@@ -129,14 +131,14 @@ Production builds require runtime-integrity signing keys. Use `.env.local` local
 GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
 
 ```bash
-git tag v5.16.0
-git push origin v5.16.0
+git tag v5.17.0
+git push origin v5.17.0
 ```
 
 Generated artifacts:
 
-- `xKey-GitHub-v5.16.0.apk`
-- `xKey-GooglePlay-v5.16.0.aab`
+- `xKey-GitHub-v5.17.0.apk`
+- `xKey-GooglePlay-v5.17.0.aab`
 
 Android package: `com.haivcon.xkey`.
 

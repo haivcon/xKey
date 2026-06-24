@@ -581,6 +581,7 @@ export default {
     "okxGuideStep3": "Dùng xKey làm kho lưu seed/private key ngoại tuyến, còn OKX Wallet chỉ dùng khi cần ký giao dịch và chuyển tài sản multi-chain."
   },
   "createWallet": {
+    "vanitySecurityNote": "Lưu ý bảo mật: Địa chỉ ví đẹp (vanity) được tạo từ các khóa ngẫu nhiên. Xác suất hai người tạo ra cùng một ví chính xác là gần như bằng không (1 trên 2¹⁶⁰). Tuy nhiên, nếu bạn sử dụng một mẫu phổ biến như '0x1234', nhiều người có thể tìm thấy các địa chỉ có mẫu đó, nhưng mỗi địa chỉ sẽ có một khóa riêng (private key) hoàn toàn khác nhau và an toàn.",
     "title": "Thêm ví",
     "tabManual": "Nhập thủ công",
     "tabGenerate": "Tạo ngẫu nhiên",
@@ -686,6 +687,12 @@ export default {
     "vanityExtraTail": "Cuối lặp {pattern}",
     "vanityExtraBoth": "Lặp đầu {head} và cuối {tail}",
     "vanityExtraScore": "Điểm {score}",
+    "vanityExtraAutoReplaceHint": "Sắp xếp theo điểm; khi đầy giới hạn sẽ tự thay ví điểm thấp nhất.",
+    "vanityExtraSaveAll": "Lưu tất cả",
+    "vanityExtraClearAll": "Xóa tất cả",
+    "vanityExtraSaveOne": "Lưu ví này",
+    "vanityExtraRemoveOne": "Xóa ví này",
+    "vanityExtraSaved": "Đã lưu",
     "vanityExtraWalletName": "Ví đẹp phụ",
     "vanityResultSummary": "{primary} ví khớp chính, {extra} ví phụ đã giữ.",
     "vanityAutoSaved": "{label}: đã lưu {count} ví đẹp vào {folder}.",

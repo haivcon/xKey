@@ -27,6 +27,9 @@ blob-report/
 .vite/
 docs/
 
+# Custom ignores
+1/
+
 # Logs
 logs/
 *.log

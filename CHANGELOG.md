@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [5.17.0]
+
+### Release Focus
+v5.17.0 focuses on **Advanced Vanity Wallet Generation**, significantly improving the vanity wallet generator's pattern matching capabilities, UI/UX, and saving options.
+
+### Vanity Generation Enhancements
+- **Advanced Pattern Matching:** Upgraded the vanity worker (`vanityWorker.ts`) and matching logic (`vanityMatch.ts`) to detect high-value multi-patterns.
+- **New Patterns Supported:** Added support for full symmetry, forward/backward sequences, dual-end repetitions, and complex nested patterns.
+- **Customizable Saving:** Users can now specify a custom quantity of extra vanity wallets to retain during a generation run.
+- **Performance:** Optimized worker message passing and array allocations during high-speed scans.
+
+### UI and Accessibility Improvements
+- **Theme Readability:** Fixed light/dark theme contrast issues within the Create Wallet Modal, ensuring text is legible in both modes.
+- **Address Display:** Optimized wallet address truncation for ultra-wide screens, keeping both the start and end of the address visible.
+- **Secure View/Copy:** Added secure toggles to view and copy private keys and seed phrases within the generation results.
+- **Localization:** Fixed missing translation keys for the generator's pause/resume states across all supported languages.
+
+### Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run test:vanity`
+- `npm run build`
+- `npx cap sync android`
+
+<details>
+<summary>Click to expand previous release history</summary>
+
 ## [5.12.2]
 
 ### Release Focus
@@ -151,3 +178,5 @@ v5.11.0 completes the full TypeScript migration for xKey and enables strict stat
 - **v5.10.3**: added signed runtime integrity checks, offline crypto KATs, manifest source binding to `github.com/haivcon/xKey`, and release workflow support for integrity signing keys.
 - **v5.10.2**: improved security settings UX, hardware-bound backup guidance, light-theme warning contrast, Data-tab Danger Zone placement, folder action menus, and locale coverage.
 - **v5.10.1 and earlier**: added hardware-bound vault mode, Android screen-capture controls, secure glyph display, scrambled keyboard options, fragmented encrypted vault storage, Settings navigation, Shamir backup/restore, folders, tags, vanity tools, QR workflows, CSV import/export, manual balances, decoy vault, kill switch, and native clipboard/haptics.
+
+</details>
