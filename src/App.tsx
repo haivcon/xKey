@@ -1004,8 +1004,8 @@ export default function App() {
               </aside>
 
               <section className="min-w-0">
-                <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 backdrop-blur-md border-b border-surface-900/80">
-                  <div className="lg:hidden flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-white/95 text-surface-950 backdrop-blur-md border-b border-surface-200/80 dark:bg-surface-950/95 dark:text-white dark:border-surface-900/80">
+                  <div className="lg:hidden grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:items-center">
                     <div className="min-w-0 flex-1">
                       <FolderTabs
                         folders={folders} activeFolder={activeFolder} wallets={wallets}
@@ -1033,10 +1033,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                      className="mb-1 w-full flex-shrink-0 rounded-full border border-surface-800 bg-surface-900 px-3 py-2 text-left hover:bg-surface-800 sm:mb-4 sm:w-auto sm:text-right"
+                      className="w-auto max-w-[44vw] flex-shrink-0 rounded-2xl border border-surface-200 bg-white px-3 py-2 text-right shadow-sm hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
                     >
                       <span className="block text-[9px] font-semibold uppercase tracking-wider text-surface-500">{t('home.totalAssets')}</span>
-                      <span className="block text-sm font-bold leading-none text-white">{totalBalanceText}</span>
+                      <span className="block truncate text-sm font-bold leading-none text-surface-950 dark:text-white">{totalBalanceText}</span>
                     </button>
                   </div>
                   <ActionBar

@@ -207,10 +207,17 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     setEditMode(false);
   };
 
+  const visibleTags = (wallet.tags || []).filter(tag => tag !== 'extra-vanity');
+
+  const compactWalletAddress = (address: string, head = 12, tail = 12) => {
+    if (address.length <= head + tail + 3) return address;
+    return `${address.slice(0, head)}...${address.slice(-tail)}`;
+  };
+
   const displayAddress = wallet.address
     ? showFullAddress
       ? wallet.address
-      : `${wallet.address.substring(0, 6)}...${wallet.address.substring(wallet.address.length - 4)}`
+      : compactWalletAddress(wallet.address, isUltraCompact ? 8 : 10, isUltraCompact ? 8 : 10)
     : t('walletCard.noAddress');
 
   const editInput = (key: keyof EditFields, label: string, type = 'text', multiline = false) => (
@@ -312,12 +319,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 {t('keyHealth.age')}: {formatKeyAge(wallet.createdAt, nowTick)}
               </p>
             )}
-            {wallet.tags && wallet.tags.length > 0 && (
+            {visibleTags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
-                {wallet.tags.slice(0, 3).map(tag => (
+                {visibleTags.slice(0, 3).map(tag => (
                   <TagBadge key={tag} tag={tag} small />
                 ))}
-                {wallet.tags.length > 3 && <span className="text-[9px] text-surface-500">+{wallet.tags.length - 3}</span>}
+                {visibleTags.length > 3 && <span className="text-[9px] text-surface-500">+{visibleTags.length - 3}</span>}
               </div>
             )}
           </div>
@@ -436,7 +443,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 block">{t('walletCard.address')}</label>
                   <div className="flex items-center gap-2">
-                    <code className="min-w-0 flex-1 whitespace-nowrap rounded bg-surface-800 p-2 font-mono text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight text-brand-300">{wallet.address}</code>
+                    <code className="min-w-0 flex-1 whitespace-nowrap rounded bg-surface-800 p-2 font-mono text-[clamp(0.68rem,2vw,0.875rem)] leading-tight text-brand-300 overflow-hidden text-ellipsis">{compactWalletAddress(wallet.address, 14, 14)}</code>
                     <button onClick={() => onShowQR(wallet.address || '', t('walletCard.address'), wallet.name || '')} className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded transition-colors"><QrCode size={18} /></button>
                     <button
                       onClick={() => handleCopy(wallet.address, 'address', t('walletCard.address'), { revealAddress: true })}
