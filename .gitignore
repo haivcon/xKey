@@ -8,6 +8,7 @@ node_modules/
 dist/
 dist-ssr/
 build/
+docs/
 
 # Test and coverage outputs
 coverage/
