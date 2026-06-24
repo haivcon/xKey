@@ -1,73 +1,153 @@
 # xKey Architecture Overview
 
-This document provides a high-level overview of xKey's architecture, specifically focusing on its security model, data flow, and cross-platform structure. 
+xKey is a local, offline-first Web3 wallet vault built to manage wallet records, private keys, seed phrases, folders, tags, encrypted backups, Shamir QR recovery, local audit history, and advanced offline vanity wallet generation.
 
-xKey is built as a **local, offline-first Web3 wallet vault**.
+The architecture prioritizes local control, explicit secret handling, and a release pipeline that can build Android artifacts from signed git tags.
 
-## 1. High-Level Tech Stack
+---
 
-- **Frontend:** React (UI components, state management), Vite (bundler)
-- **Native Bridge:** Capacitor 8
-- **Storage:** Capacitor Preferences (Encrypted via custom wrapper on top)
-- **Cryptography:** Web Crypto API, native Android Keystore integrations.
-- **Workers:** Web Workers for heavy background tasks (e.g., Vanity Wallet Generation).
+## 1. Technology Stack
 
-## 2. Core Modules
+- **UI:** React
+- **Build tool:** Vite
+- **Native bridge:** Capacitor 8
+- **Android package:** `com.haivcon.xkey`
+- **Storage:** Capacitor Preferences plus application-level encryption wrappers
+- **Cryptography:** Web Crypto API, CryptoJS utilities, and Android Keystore integrations where available
+- **Workers:** Web Workers for CPU-heavy jobs such as vanity wallet generation
+- **Testing and verification:** ESLint, TypeScript, focused wallet/security tests, Vite build, and Capacitor Android sync
 
-### 2.1. Authentication & Key Management
-xKey does not use a traditional username/password system. Access is granted via the device's native security or a fallback mechanism.
+---
 
-1. **Vault Key Generation:** Upon vault creation, a strong random master vault key is generated.
-2. **Android Keystore Wrapping (Android Only):** The vault key is wrapped using Android's Hardware-backed Keystore (AES/GCM/NoPadding).
-3. **Authentication (Unlock):** 
-   - Android prompts the system lock screen (Biometrics, PIN, Pattern).
-   - Upon success, the Keystore unwraps the vault key, allowing xKey to decrypt the storage.
-4. **Field-Level Encryption:** A derived field key (from the vault key) is used to encrypt highly sensitive specific fields (like private keys and seed phrases) to provide an extra layer of defense.
-
-### 2.2. Storage Resilience (Self-Healing)
-xKey employs **Reed-Solomon Error Correction** for vault storage and `.xkey` backups.
-- **Sharding:** Data is split into 10 data shards + 5 parity shards.
-- **Recovery:** If portions of the backup file or local storage become corrupted, the system uses the parity shards to reconstruct the original data before decryption.
-
-### 2.3. Anti-Tamper & Integrity Guards
-- **Startup Guard:** Detects root traces, test-keys, `su` binaries, and ADB status.
-- **Tamper-evident Backups:** Backups (`.xkey`) use a container-based format with a readable header, hashed payload, and a recovery footer.
-- **Audit Log:** An immutable, hash-chained local audit log records security-sensitive events (unlocks, imports, exports, self-healing events).
-
-## 3. Data Flow Diagram
-
-*(Conceptual representation of the vault unlock and decryption process)*
+## 2. Runtime Architecture
 
 ```mermaid
-sequenceDiagram
-    participant User
-    participant App as xKey App (React)
-    participant OS as Android OS / Biometrics
-    participant Keystore as Android Keystore
-    participant Storage as Local Storage
-
-    User->>App: Opens App
-    App->>OS: Request Authentication
-    OS->>User: Prompt Biometric/PIN
-    User-->>OS: Provide Credential
-    OS-->>App: Success
-    App->>Keystore: Request Key Unwrap
-    Keystore-->>App: Unwrapped Vault Key
-    App->>Storage: Read Encrypted Data
-    Storage-->>App: Encrypted Vault Blob
-    App->>App: Verify Integrity & Decrypt (AES-GCM)
-    App-->>User: Render Vault UI
+flowchart TD
+    UI[React UI] --> State[Vault State and Contexts]
+    State --> Crypto[Crypto and Vault Utilities]
+    State --> Storage[Encrypted Local Storage]
+    UI --> Workers[Web Workers]
+    Workers --> Vanity[Vanity Wallet Scanner]
+    UI --> Bridge[Capacitor Bridge]
+    Bridge --> Android[Android Device Credential and Keystore]
+    Crypto --> Backup[Encrypted .xkey Backups]
+    Crypto --> Shamir[Shamir QR Recovery]
 ```
 
-## 4. Offline First Constraints
+The UI never depends on a custody server. User data remains local unless the user manually exports it.
 
-To maintain its security posture, xKey enforces strict rules on development:
-- **No Telemetry:** No tracking scripts or analytics that could leak IPs or usage times.
-- **No Cloud Sync:** Backups are entirely manual and file-based (`.xkey`).
-- **No Background execution:** The app auto-locks when put into the background.
+---
 
-## 5. Build and Release Pipeline
+## 3. Authentication and Key Handling
 
-- Builds are triggered via GitHub Actions on `v*` tags.
-- Android APKs and AABs are signed using a secure Keystore managed in GitHub Secrets.
-- Integrity verification keys (`XKEY_INTEGRITY_PUBLIC_KEY_PEM`) are baked into the build to ensure the app manifest and code have not been tampered with post-compilation.
+xKey does not use a traditional hosted account model.
+
+1. A vault key is generated or restored locally.
+2. On Android, the vault key can be protected by Android Device Credential and Android Keystore capabilities.
+3. On web fallback builds, security depends on browser storage and the local device environment.
+4. Sensitive fields such as private keys and seed phrases are treated as secret material and revealed only through explicit UI actions.
+5. If Android device security changes and hardware-protected keys become unavailable, the user must restore from a valid backup or reset the vault.
+
+---
+
+## 4. Storage, Backup, and Recovery
+
+- Vault data is encrypted before persistence.
+- `.xkey` backups are encrypted portable containers controlled by the user.
+- Backup metadata and tamper-aware structures support safer restore workflows.
+- Shamir Secret Sharing QR recovery can split recovery material into shares for offline storage.
+- Reed-Solomon resilience is used in backup/storage flows where corruption recovery is supported.
+- xKey cannot recover user data without the required key, backup password, or recovery shares.
+
+---
+
+## 5. Vanity Wallet Generator
+
+The vanity generator runs as an offline CPU-bound workflow.
+
+### Current v5.18.1 behavior
+
+- Scans for user-provided vanity targets.
+- Keeps additional mathematically interesting secondary matches.
+- Detects patterns such as forward/reverse sequences, dual-end repetitions, symmetry, palindromes, alternating groups, and bracket-style endings.
+- Shows expanded scrollable result lists with middle-truncated addresses for better prefix/suffix visibility.
+- Keeps generated private keys and seed phrases hidden until the user explicitly reveals them.
+- Supports individual saves, bulk saves, and direct folder routing.
+- Allows a bounded secondary reserve limit to control memory usage.
+- Displays CPU heat and battery-health guidance for long-running scans.
+
+### Safety constraints
+
+- No generated secret should be transmitted to a remote service.
+- Secret reveal/copy must remain explicit.
+- Long-running scans should stay pausable/stoppable.
+- Memory usage must remain bounded.
+- Users must receive clear heat and device-health warnings.
+
+---
+
+## 6. Offline-First Constraints
+
+xKey development should preserve these constraints:
+
+- No hidden telemetry.
+- No cloud sync by default.
+- No custodial key storage.
+- No remote key recovery.
+- No background upload of vault data, private keys, seed phrases, backups, or vanity scan results.
+- Manual export/import for backups.
+- Clear warnings before secret display, copy, export, or recovery actions.
+
+---
+
+## 7. Android Build Metadata
+
+For v5.18.1:
+
+- `package.json` version: `5.18.1`
+- Android `versionName`: `5.18.1`
+- Android `versionCode`: `81`
+- Android package: `com.haivcon.xkey`
+
+The top-level Android Gradle configuration keeps shared repository and plugin configuration, while `android/app/build.gradle` owns application version metadata and release build settings.
+
+---
+
+## 8. Build and Release Pipeline
+
+Release builds are intended to be triggered by git tags matching `v*`.
+
+Recommended release verification:
+
+```bash
+npm run lint
+npm run type-check
+npm run test:vanity
+npm run build
+npx cap sync android
+```
+
+Release flow:
+
+1. Update app version metadata and documentation.
+2. Run verification commands.
+3. Commit only intended source and documentation files.
+4. Ensure local-only folders such as `1/` and build artifacts are ignored.
+5. Create an annotated tag such as `v5.18.1`.
+6. Push `main` and the tag to GitHub.
+7. Let GitHub Actions build Android artifacts from the clean tag.
+
+---
+
+## 9. Repository Hygiene
+
+The repository should exclude:
+
+- `node_modules/`
+- Web and Android build outputs
+- APK/AAB/release artifacts
+- Local environment files and secrets
+- Playwright/test output folders
+- Local instruction or scratch folders such as `1/`
+
+Documentation should keep the current release information prominent while older release notes remain collapsed or summarized.

@@ -14,7 +14,7 @@ export default function DonateModal({ onClose }: DonateModalProps) {
   const [copied, setCopied] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   
-  const donateAddress = '0x5c6253e43c834ed82916256681aa70eb8692eddb';
+  const donateAddress = '0xBBBB8FE7A23e22D6B880B4e5c7eF42Cd1bC98009';
   const donateNetwork = 'XLAYER';
 
   const handleCopy = async () => {

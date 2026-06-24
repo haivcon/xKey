@@ -3,7 +3,7 @@
 
   <p><strong>NOT YOUR KEY, NOT YOUR CRYPTO</strong></p>
 
-  <p><strong>A private, offline-first cold vault for managing Web3 wallets, secrets, backups, Shamir QR recovery, and local audit history.</strong></p>
+  <p><strong>A private, offline-first cold vault for Web3 wallets, private keys, seed phrases, encrypted backups, Shamir QR recovery, local audit history, and advanced vanity wallet generation.</strong></p>
 
   ![GitHub Release](https://img.shields.io/github/v/release/haivcon/xKey?color=blue&label=Latest%20Release)
   ![License](https://img.shields.io/github/license/haivcon/xKey?color=green)
@@ -12,44 +12,54 @@
 
 <br />
 
-**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, folders, tags, QR workflows, CSV files, manual balances, encrypted portable backups, and local security history.
+**xKey** is an offline-first Web3 wallet vault for managing wallet addresses, private keys, seed phrases, folders, tags, QR workflows, CSV files, manual balances, encrypted portable backups, local security history, and offline vanity wallet generation.
 
 The app is designed as a private cold-vault style manager, not a network-connected trading wallet. Source code: `github.com/haivcon/xKey`.
 
 ---
 
-## Current Release: v5.17.0
+## Current Release: v5.18.1
 
-v5.17.0 focuses on **Advanced Vanity Wallet Generation**, significantly improving the vanity wallet generator's pattern matching capabilities, UI/UX, and saving options.
+v5.18.1 is a release metadata, Android build, and documentation refresh for the current advanced vanity-wallet generation upgrade. It keeps the v5.18 feature set focused on safer long-running scans, better visibility of generated addresses, secure reveal/copy flows, and clearer multilingual guidance.
 
 ### Main Upgrades
 
-- **Advanced Vanity Pattern Matching:** Upgraded the vanity worker to detect high-value multi-patterns including full symmetry, forward/backward sequences, and dual-end repetitions.
-- **Improved UI/UX & Visibility:** Fixed light/dark theme contrast issues, optimized wallet address truncation for ultra-wide screens to keep endings visible, and added secure view/copy toggles for private keys and seed phrases.
-- **Customizable Saving:** Users can now input a custom quantity of extra vanity wallets to save during generation runs.
-- **Android sync-ready release:** Android metadata version code updated to 79 and version name to 5.17.0.
+- **Advanced vanity match discovery:** The vanity worker can retain extra high-value addresses that match mathematical patterns such as forward and reverse sequences, dual-end repetitions, symmetry, palindromes, alternating patterns, and bracket-style matches.
+- **Larger match viewer:** Generated vanity addresses are shown in expanded scrollable lists with middle truncation so both the prefix and suffix remain visible on narrow and wide screens.
+- **Secure result details:** Private keys and seed phrases in vanity results remain hidden by default and require an explicit reveal action before copy operations.
+- **Individual and bulk save actions:** Users can save discovered vanity wallets one by one or in bulk and route them directly into a selected vault folder.
+- **Configurable secondary wallet reserve:** Users can choose how many extra beautiful secondary matches should be retained during a scan, with safe limits to protect memory usage.
+- **CPU and heat safety guidance:** The UI now explains why long-running vanity generation can heat the device, affect battery health, and require cooling breaks or reduced workload.
+- **Theme and layout improvements:** Light/dark contrast, generator metrics, status indicators, address display, and responsive spacing were refined.
+- **Localization refresh:** Vanity, pause/resume, folder routing, heat warning, and advanced match descriptions were synchronized across supported locales.
+- **Android release metadata:** Android version metadata is updated to `versionCode 81` and `versionName 5.18.1`.
+- **Release documentation refresh:** README, changelog, security, contributing, code of conduct, architecture, and git ignore rules were updated for the current release while older release notes are collapsed.
 
 ### Verification for This Release
 
-- `npm run lint`
-- `npm run type-check`
-- `npm run locale:audit`
-- `npm run test:key-health`
-- `npm run test:shamir`
-- `npm run test:reed-solomon`
-- `npm run test:vanity`
-- `npm run build`
-- `npm run test:smoke`
+Run before publishing:
+
+```bash
+npm run lint
+npm run type-check
+npm run test:vanity
+npm run build
+npx cap sync android
+```
 
 ### Store Listing Copy
 
 Short description:
 
-`Offline wallet vault. NOT YOUR KEY, NOT YOUR CRYPTO.`
+```text
+Offline wallet vault. NOT YOUR KEY, NOT YOUR CRYPTO.
+```
 
 Long description opener:
 
-`xKey is an offline-first Web3 wallet vault for people who want direct local control of wallet keys, backups, audit history, and recovery files. NOT YOUR KEY, NOT YOUR CRYPTO.`
+```text
+xKey is an offline-first Web3 wallet vault for people who want direct local control of wallet keys, encrypted backups, audit history, Shamir QR recovery, and advanced vanity wallet generation. NOT YOUR KEY, NOT YOUR CRYPTO.
+```
 
 ---
 
@@ -63,102 +73,69 @@ Long description opener:
 - Screen capture blocking, clipboard auto-clear, auto-lock, decoy vault, kill switch, and protected audit log.
 - Encrypted portable `.xkey` backups with metadata, tamper detection, verify-only preview, and recovery footer.
 - Shamir Secret Sharing QR backups for single-wallet paper/offline recovery.
+- No account system, no cloud sync, and no telemetry requirement.
 
 ### Wallet and Data Management
 
 - Folder and tag organization, search, filters, sorting, and batch actions.
 - QR scan/display/share workflows and CSV import/export.
-- Vanity wallet generation, manual asset balance tracking, and configurable wallet density.
+- Manual asset balance tracking and configurable wallet density.
+- Advanced vanity wallet generation with explicit CPU/heat warnings.
 - Multi-language UI: `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`.
+
+### Vanity Wallet Generation
+
+The vanity generator is intended for offline address discovery. It can scan for user-provided patterns and retain additional mathematically interesting results. Long scans are CPU intensive. Users should:
+
+- Keep the device cool and ventilated.
+- Avoid running scans while charging on hot surfaces.
+- Pause scans if the device becomes uncomfortable to touch.
+- Use lower reserve limits on low-memory devices.
+- Treat every generated private key and seed phrase as secret material.
+
+---
+
+## Build
+
+```bash
+npm install
+npm run lint
+npm run type-check
+npm run test:vanity
+npm run build
+npx cap sync android
+```
+
+Android release builds are triggered by GitHub tags matching `v*`.
 
 ---
 
 ## Earlier Releases
 
 <details>
-<summary>Click to expand previous release history</summary>
+<summary>Previous release history is collapsed to keep the current release notes focused.</summary>
 
-- **v5.16.0:** Locale and translations fixes for the new Create Wallet interfaces, specifically addressing cross-contamination and missing translations across all supported languages.
-- **v5.15.0:** Advanced Entropy Generation (Pointer/Movement, Physical Dice, BIP85 Deterministic Derivation), with complete UI integrations and multilingual support.
-- **v5.14.0:** BIP39 Hierarchical Deterministic (HD) Wallet support, 12 and 24-word mnemonic keys, background derivation worker, and interactive derivation visualizer tree.
-- **v5.13.0:** Key Health center for long-term maintenance, post-quantum preparation metadata, key-rotation reminders, and scoped Proof-of-Keys checks.
-- Previous releases established offline vault security, encrypted backups, recovery, audit logs, QR workflows, Android file handling, vanity wallet generation, recovery-session safety, and the TypeScript migration foundation.
+### v5.18.0
+
+- Introduced expanded vanity result visibility.
+- Added secure reveal/copy details for generated private keys and seed phrases.
+- Added individual/bulk save actions and folder routing.
+- Added advanced mathematical vanity match discovery.
+- Added configurable reserve limits for extra beautiful wallet matches.
+- Improved light/dark theme compatibility.
+
+### v5.17.x and older
+
+Earlier releases focused on startup integrity, encrypted backup reliability, Shamir QR recovery, Reed-Solomon resilience, Android Back handling, UI responsiveness, localization, and the initial advanced vanity-wallet workflow.
 
 </details>
 
 ---
 
-## Tech Stack
+## Security
 
-- React 19
-- Vite 8
-- TypeScript strict mode
-- Capacitor 8 for Android
-- Node.js 22+
-- Java 21+
+Read [SECURITY.md](./SECURITY.md) before storing real funds or sensitive seed phrases. xKey cannot recover encrypted vault data without your device key, backup password, or valid recovery material.
 
----
+## Contributing
 
-## Development
-
-```bash
-npm install
-npm run type-check
-npm run lint
-npm run build
-```
-
-For Android:
-
-```bash
-npm run sync
-android\gradlew.bat -p android assembleDebug
-```
-
-Production builds require runtime-integrity signing keys. Use `.env.local` locally and GitHub Actions repository secrets in CI:
-
-- `KEYSTORE_BASE64`
-- `KEYSTORE_PASSWORD`
-- `KEY_ALIAS`
-- `KEY_PASSWORD`
-- `XKEY_INTEGRITY_PUBLIC_KEY_PEM`
-- `XKEY_INTEGRITY_PRIVATE_KEY_PEM`
-
----
-
-## Release Workflow
-
-GitHub Actions builds and signs release artifacts when a `v*` tag is pushed.
-
-```bash
-git tag v5.17.0
-git push origin v5.17.0
-```
-
-Generated artifacts:
-
-- `xKey-GitHub-v5.17.0.apk`
-- `xKey-GooglePlay-v5.17.0.aab`
-
-Android package: `com.haivcon.xkey`.
-
----
-
-## Security Notice
-
-> [!WARNING]
-> Never share private keys, seed phrases, `.xkey` backup files, backup passwords, Shamir shares, Android signing keys, or `XKEY_INTEGRITY_PRIVATE_KEY_PEM`.
-
-xKey stores vault data locally and is designed for offline use. Startup integrity checks, secure displays, tamper guards, recovery metadata, and audit logs improve safety, but no app can fully protect against a completely compromised OS, malicious root access, device-owner abuse, or physical camera recording.
-
----
-
-## Links
-
-- Website: [xlayer.my](https://xlayer.my)
-- X: [@haivcon](https://x.com/haivcon)
-- Telegram: [@haivcon](https://t.me/haivcon)
-
-## License
-
-MIT License
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening issues or pull requests. Security vulnerabilities must be reported privately.

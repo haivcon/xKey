@@ -91,7 +91,7 @@ export default function DiceEntropyInput({ onComplete, requiredRolls = 99 }: Dic
         <button
           onClick={handleReset}
           className="p-2 rounded-xl border border-surface-700 bg-surface-800 text-surface-400 hover:text-white hover:border-surface-600 transition-colors"
-          title={t('Reset')}
+          title={t('common.reset')}
         >
           <RefreshCw size={18} />
         </button>
@@ -103,7 +103,7 @@ export default function DiceEntropyInput({ onComplete, requiredRolls = 99 }: Dic
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <p className="text-surface-400 text-sm font-medium flex items-center gap-2">
               <Dices size={18} className="text-brand-400" />
-              {t('Roll a physical dice and input the results')}
+              {t('createWallet.entropy.dicePrompt')}
             </p>
           </div>
         ) : (
@@ -122,7 +122,7 @@ export default function DiceEntropyInput({ onComplete, requiredRolls = 99 }: Dic
         {isCompleted && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface-900/90 backdrop-blur-[2px]">
             <p className="text-emerald-400 font-bold text-lg drop-shadow-md">
-              {t('Entropy Generated')} ✓
+              {t('createWallet.entropy.generated')} ✓
             </p>
           </div>
         )}

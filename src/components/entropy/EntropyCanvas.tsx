@@ -142,7 +142,7 @@ export default function EntropyCanvas({ onComplete, requiredEvents = 128 }: Entr
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <p className="text-surface-400 font-medium animate-pulse flex flex-col items-center gap-2">
               <Sparkles size={24} className="text-brand-400" />
-              {t('Swipe randomly here')}
+              {t('createWallet.entropy.swipePrompt')}
             </p>
           </div>
         )}
@@ -150,7 +150,7 @@ export default function EntropyCanvas({ onComplete, requiredEvents = 128 }: Entr
         {isCompleted && (
           <div className="absolute inset-0 flex items-center justify-center bg-surface-900/80 backdrop-blur-sm pointer-events-none">
             <p className="text-emerald-400 font-bold text-xl drop-shadow-md">
-              {t('Entropy Generated')} 100%
+              {t('createWallet.entropy.generated')} 100%
             </p>
           </div>
         )}
@@ -169,7 +169,7 @@ export default function EntropyCanvas({ onComplete, requiredEvents = 128 }: Entr
         <button
           onClick={handleReset}
           className="p-2 rounded-xl border border-surface-700 bg-surface-800 text-surface-400 hover:text-white hover:border-surface-600 transition-colors"
-          title={t('Reset')}
+          title={t('common.reset')}
         >
           <RefreshCw size={18} />
         </button>

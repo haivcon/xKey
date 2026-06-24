@@ -1001,8 +1001,8 @@ export default function App() {
               </aside>
 
               <section className="min-w-0">
-                <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-white/95 text-surface-950 backdrop-blur-md border-b border-surface-200/80 dark:bg-surface-950/95 dark:text-white dark:border-surface-900/80">
-                  <div className="lg:hidden grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:items-center">
+                <div className="sticky top-[var(--home-header-height)] z-20 -mx-4 px-4 pt-3 pb-2 bg-surface-950/95 text-white backdrop-blur-md border-b border-surface-900/80">
+                  <div className="lg:hidden grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                     <div className="min-w-0 flex-1">
                       <FolderTabs
                         folders={folders} activeFolder={activeFolder} wallets={wallets}
@@ -1030,10 +1030,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                      className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-surface-200 bg-white px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
+                      className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-brand-500/30 bg-surface-900 px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-800"
                     >
-                      <span className="block text-[8px] font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-500">{t('home.totalAssets')}</span>
-                      <span className="block truncate text-xs font-bold leading-none text-surface-950 dark:text-white">{totalBalanceText}</span>
+                      <span className="block text-[8px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
+                      <span className="block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200">{totalBalanceText}</span>
                     </button>
                   </div>
                   <ActionBar

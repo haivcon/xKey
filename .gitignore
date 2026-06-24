@@ -1,34 +1,35 @@
-# Instructions / Temporaries
+# Local instruction / scratch folders
 1/
 
 # Dependencies
 node_modules/
 
-# Production builds
+# Web build outputs
 dist/
 dist-ssr/
 build/
+
+# Test and coverage outputs
 coverage/
 playwright-report/
 test-results/
 blob-report/
 .nyc_output/
+
+# Caches
 .eslintcache
 *.tsbuildinfo
-# Vite / local environment
-# Keep runtime-integrity signing keys local. GitHub Actions receives them
-# through repository secrets, not committed files.
+.vite/
+
+# Local environment and secrets
+# Runtime-integrity signing keys and app secrets must be provided through
+# local files or GitHub Actions secrets, never committed.
 *.local
 .env
 .env.*
 !.env.example
 .envrc
 .direnv/
-.vite/
-docs/
-
-# Custom ignores
-1/
 
 # Logs
 logs/
@@ -78,47 +79,3 @@ android/**/*.iml
 *.sha1
 *.sha256
 *.sha512
-*.asc
-release-notes*.md
-CHANGELOG.local.md
-github-release-notes*.txt
-play-store-notes*.txt
-google-play-listing*.txt
-store-listing*.txt
-release/
-releases/
-
-# Signing keys and secrets
-*.keystore
-*.jks
-*.p12
-*.pem
-*.key
-*.properties.local
-keystore_base64.txt
-keystore.properties
-signing.properties
-google-services.json
-android/app/google-services.json
-
-# xKey sensitive backup files
-*.xkey
-*.xkey.*
-xkey_export_*.csv
-xbot_export_*.csv
-xkey_shamir_*.html
-shamir_*.html
-wallets_*.csv
-wallets_*.zip
-key-health-report*.txt
-proof-of-keys-report*.txt
-
-# Local scratch / generated folders
-# IMPORTANT: keep the local 1/ workspace out of GitHub. It may contain notes,
-# release drafts, keystores, or other machine-local files.
-local-notes/
-release-drafts/
-*.tmp
-*.bak
-audit-report.json
-preview/

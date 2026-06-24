@@ -21,6 +21,7 @@ hideNativeSplash();
 setTimeout(hideNativeSplash, 1200);
 
 function Boot() {
+  const t = useT();
   const [AppComponent, setAppComponent] = useState<ComponentType | null>(null);
   const [bootError, setBootError] = useState<unknown>(null);
   const [bootSlow, setBootSlow] = useState(false);
@@ -57,8 +58,8 @@ function Boot() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-950 p-6 text-center text-surface-100">
         <div className="max-w-sm">
-          <h1 className="mb-2 text-xl font-bold text-white">xKey failed to start</h1>
-          <p className="mb-4 text-sm text-surface-400">Restart the app. If this keeps happening, reset the app data or reinstall xKey.</p>
+          <h1 className="mb-2 text-xl font-bold text-white">{t('boot.failedTitle')}</h1>
+          <p className="mb-4 text-sm text-surface-400">{t('boot.failedBody')}</p>
           <pre className="max-h-48 overflow-auto rounded-lg bg-surface-900 p-3 text-left text-[11px] text-red-300">
             {bootError instanceof Error ? bootError.message : String(bootError)}
           </pre>
@@ -74,13 +75,13 @@ function Boot() {
           <div className="text-[56px] font-bold tracking-[2px]">xKey</div>
           {bootSlow && (
             <div className="mt-5 max-w-xs text-sm text-surface-300">
-              <p className="mb-3">xKey is still starting. If this screen does not change, retry the app shell.</p>
+              <p className="mb-3">{t('boot.slowBody')}</p>
               <button
                 type="button"
                 onClick={() => setBootAttempt(attempt => attempt + 1)}
                 className="rounded-lg bg-brand-500 px-4 py-2 font-semibold text-white"
               >
-                Retry
+                {t('boot.retry')}
               </button>
             </div>
           )}

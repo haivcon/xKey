@@ -31,7 +31,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
   const handleDerive = () => {
     setError(null);
     if (!masterKey.trim()) {
-      setError(t('Please enter a master seed phrase or xprv.'));
+      setError(t('createWallet.entropy.bip85ErrorRequired'));
       return;
     }
 
@@ -41,7 +41,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
     setTimeout(() => {
       try {
         if (!isValidMasterNode(masterKey)) {
-          setError(t('Invalid master seed phrase or xprv key.'));
+          setError(t('createWallet.entropy.bip85ErrorInvalid'));
           setIsValidating(false);
           return;
         }
@@ -56,7 +56,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        setError(err.message || t('Failed to derive mnemonic'));
+        setError(err.message || t('createWallet.entropy.bip85ErrorDeriveFailed'));
       } finally {
         setIsValidating(false);
       }
@@ -68,10 +68,9 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 text-blue-400">
         <Info className="w-5 h-5 shrink-0 mt-0.5" />
         <div className="text-sm">
-          <p className="font-medium mb-1">BIP85 Deterministic Derivation</p>
+          <p className="font-medium mb-1">{t('createWallet.entropy.bip85Title')}</p>
           <p className="opacity-90">
-            Generate multiple independent standard recovery phrases from a single master seed. 
-            Backing up the master seed backs up all derived phrases automatically.
+            {t('createWallet.entropy.bip85Desc')}
           </p>
         </div>
       </div>
@@ -79,7 +78,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
       <div className="space-y-4 bg-[#1a1b1e] rounded-xl p-4 border border-white/5">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            {t('Master Seed Phrase or Extended Private Key (xprv)')}
+            {t('createWallet.entropy.bip85InputLabel')}
           </label>
           <div className="relative">
             <textarea
@@ -89,7 +88,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
                 error ? 'border-red-500/50' : 'border-white/10'
               }`}
               rows={3}
-              placeholder={t('Enter 12/24 words or xprv...')}
+              placeholder={t('createWallet.entropy.bip85Placeholder')}
               style={{
                 WebkitTextSecurity: showKey ? 'none' : 'disc'
               } as React.CSSProperties}
@@ -103,7 +102,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
             </button>
           </div>
         <p className="mt-2 text-xs text-gray-500">
-          {t('entropy.bip85MasterWarning') || 'The master seed is used only in memory for this derivation and is not saved by xKey.'}
+          {t('createWallet.entropy.bip85MasterWarning')}
         </p>
           {error && (
             <div className="flex items-center gap-2 mt-2 text-red-400 text-sm">
@@ -116,7 +115,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t('Word Count')}
+              {t('createWallet.entropy.wordCount')}
             </label>
             <div className="flex bg-[#141517] rounded-lg p-1 border border-white/5">
               {[12, 24].map((count) => (
@@ -138,7 +137,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">
-              {t('Index')}
+              {t('createWallet.entropy.index')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -162,7 +161,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         </div>
 
         <div className="bg-black/20 rounded-lg p-3 border border-white/5">
-          <div className="text-xs text-gray-500 mb-1">Derivation Path</div>
+          <div className="text-xs text-gray-500 mb-1">{t('createWallet.entropy.derivationPath')}</div>
           <div className="font-mono text-sm text-gray-400 break-all">
             m/83696968'/39'/0'/{words}'/{index}'
           </div>
@@ -178,12 +177,12 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         {isValidating ? (
           <>
             <RefreshCw className="w-5 h-5 animate-spin" />
-            <span>{t('Deriving...')}</span>
+            <span>{t('createWallet.entropy.deriving')}</span>
           </>
         ) : (
           <>
             <Key className="w-5 h-5" />
-            <span>{t('Derive Phrase')}</span>
+            <span>{t('createWallet.entropy.derivePhrase')}</span>
           </>
         )}
       </button>

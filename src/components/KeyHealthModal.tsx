@@ -103,58 +103,104 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
             </div>
           )}
 
-          <section className={`mt-4 rounded-xl border p-4 ${proofDay ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-surface-700 bg-surface-800/40'}`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-bold text-white">
-                  <CheckCircle2 size={16} className="text-emerald-300" />
-                  {t('keyHealth.proofTitle')}
-                </h3>
-                <p className="mt-1 text-xs leading-relaxed text-surface-400">
-                  {proofDay ? t('keyHealth.proofDayDesc') : t('keyHealth.proofDesc')}
-                </p>
+          <section className={`mt-4 rounded-2xl border p-4 ${proofDay ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-surface-700 bg-surface-800/40'}`}>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+                      <CheckCircle2 size={16} className="text-emerald-300" />
+                      {t('keyHealth.proofTitle')}
+                    </h3>
+                    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                      running
+                        ? 'border-brand-500/25 bg-brand-500/10 text-brand-200'
+                        : report
+                          ? report.failed > 0
+                            ? 'border-red-500/25 bg-red-500/10 text-red-200'
+                            : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200'
+                          : 'border-surface-700 bg-surface-900 text-surface-300'
+                    }`}>
+                      {running ? t('keyHealth.proofStatusRunning') : report ? (report.failed > 0 ? t('keyHealth.proofStatusFailed') : t('keyHealth.proofStatusPassed')) : t('keyHealth.proofStatusIdle')}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-surface-400">
+                    {proofDay ? t('keyHealth.proofDayDesc') : t('keyHealth.proofDesc')}
+                  </p>
+                </div>
+                <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                  <button
+                    type="button"
+                    onClick={runCheck}
+                    disabled={running || proofTargets.length === 0}
+                    className="btn-glow shrink-0 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-surface-700 disabled:text-surface-400"
+                  >
+                    {running ? t('keyHealth.proofRunning') : t('keyHealth.proofSignTest')}
+                  </button>
+                  {report && (
+                    <button type="button" onClick={copyReport} className="text-[11px] text-surface-400 hover:text-emerald-300 transition-colors flex items-center justify-center gap-1">
+                      <Copy size={10} /> {copyState ? t('common.copied') : t('keyHealth.copyReport')}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:w-56">
-                <select
-                  value={proofScope}
-                  onChange={(event) => setProofScope(event.target.value as ProofScope)}
-                  className="rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-xs font-semibold text-surface-100 outline-none focus:border-emerald-500"
-                >
-                  <option value="attention">{t('keyHealth.scope_attention')}</option>
-                  <option value="visible">{t('keyHealth.scope_visible')}</option>
-                  <option value="signable">{t('keyHealth.scope_signable')}</option>
-                  <option value="all">{t('keyHealth.scope_all')}</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={runCheck}
-                  disabled={running || proofTargets.length === 0}
-                  className="btn-glow rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-surface-700 disabled:text-surface-400"
-                >
-                  {running ? t('keyHealth.proofRunning') : t('keyHealth.runProofCount', { count: proofTargets.length })}
-                </button>
+
+              <div className="grid gap-2 sm:grid-cols-4">
+                {(['attention', 'visible', 'signable', 'all'] as ProofScope[]).map(scope => {
+                  const active = proofScope === scope;
+                  return (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => setProofScope(scope)}
+                      className={`rounded-xl border p-3 text-left text-xs transition-colors ${active ? 'border-emerald-500 bg-emerald-500/15 text-emerald-100' : 'border-surface-700 bg-surface-900/70 text-surface-300 hover:border-surface-500 hover:bg-surface-800'}`}
+                    >
+                      <span className="block font-bold">{t(`keyHealth.scope_${scope}`)}</span>
+                      <span className="mt-1 block text-[11px] leading-relaxed opacity-75">{t(`keyHealth.scope_${scope}_desc`)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-2 text-[11px] text-surface-400 sm:grid-cols-3">
+                <div className="flex items-start gap-1.5 rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2">
+                  <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span>{t('keyHealth.proofNoteNoGas')}</span>
+                </div>
+                <div className="flex items-start gap-1.5 rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2">
+                  <ShieldCheck size={12} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span>{t('keyHealth.proofNoteNoBroadcast')}</span>
+                </div>
+                <div className="flex items-start gap-1.5 rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2">
+                  <KeyRound size={12} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span>{t('keyHealth.proofNoteOwnership')}</span>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-surface-500">
+                {t('keyHealth.proofTargetCount', { count: proofTargets.length })}
               </div>
             </div>
           </section>
 
           {report && (
-            <section className="mt-4 rounded-xl border border-surface-700 bg-surface-800/35">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-700 px-4 py-3">
+            <section className="mt-4 rounded-xl border border-surface-700 bg-surface-800/35 overflow-hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-surface-700 px-4 py-3 bg-surface-800/50">
                 <div>
                   <h3 className="text-sm font-bold text-white">{t('keyHealth.reportTitle')}</h3>
                   <p className="mt-0.5 text-xs text-surface-400">{t('keyHealth.proofResult', { passed: report.passed, total: report.total, failed: report.failed, skipped: report.skipped })}</p>
                 </div>
-                <button type="button" onClick={copyReport} className="inline-flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-3 py-2 text-xs font-semibold text-surface-200 hover:bg-surface-800">
-                  <Copy size={14} /> {copyState ? t('common.copied') : t('keyHealth.copyReport')}
-                </button>
               </div>
               <div className="max-h-44 divide-y divide-surface-800 overflow-y-auto">
                 {report.results.map((item, index) => (
-                  <div key={`${item.address}-${index}`} className="grid gap-1 px-4 py-2 text-xs sm:grid-cols-[5rem_minmax(0,1fr)]">
-                    <span className={item.status === 'passed' ? 'font-bold text-emerald-300' : item.status === 'failed' ? 'font-bold text-red-300' : 'font-bold text-surface-400'}>{t(`keyHealth.result_${item.status}`)}</span>
+                  <div key={`${item.address}-${index}`} className={`grid gap-2 px-4 py-2 text-xs sm:grid-cols-[5rem_minmax(0,1fr)] items-center transition-colors hover:bg-surface-800/50 ${item.status === 'failed' ? 'bg-red-500/5' : ''}`}>
+                    <span className={`inline-flex items-center gap-1.5 font-bold ${item.status === 'passed' ? 'text-emerald-400' : item.status === 'failed' ? 'text-red-400' : 'text-surface-400'}`}>
+                      {item.status === 'passed' ? <CheckCircle2 size={12} /> : item.status === 'failed' ? <AlertTriangle size={12} /> : <Clock3 size={12} />}
+                      {t(`keyHealth.result_${item.status}`)}
+                    </span>
                     <span className="min-w-0">
                       <span className="block truncate font-semibold text-white">{item.name}</span>
-                      <span className="block truncate text-surface-500">{item.message}</span>
+                      <span className="block truncate text-[11px] text-surface-500 font-mono mt-0.5">{item.message}</span>
                     </span>
                   </div>
                 ))}

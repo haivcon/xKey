@@ -17,11 +17,13 @@ type VanityWorkerRequest = {
   extraLimit?: number;
   extraFilters?: Partial<Record<VanityExtraPatternKey, Partial<VanityExtraFilterRule>>>;
   initialExtraCandidates?: VanityExtraCandidate[];
+  generationMode?: 'privateKey' | 'mnemonic';
+  mnemonicWords?: 12 | 24;
 };
 
 type VanityWallet = Wallet & {
   mnemonic?: string;
-  vanityMatchType?: 'primary' | 'extra';
+  vanityMatchType?: 'main' | 'extra';
   vanityRepeatSide?: VanityRepeatSide;
   vanityRepeatChar?: string;
   vanityRepeatLength?: number;
@@ -45,7 +47,7 @@ type VanityWorkerResponse =
       found: number;
       elapsed: number;
       wallet: VanityWallet;
-      matchType: 'primary' | 'extra';
+      matchType: 'main' | 'extra';
     }
   | {
       type: 'extras';
@@ -78,14 +80,15 @@ const wipePrivateKeyBytes = (bytes: Uint8Array): void => {
 const createVanityWallet = (
   privateKey: string,
   address: string,
-  matchType: 'primary' | 'extra',
+  matchType: 'main' | 'extra',
   extra?: VanityExtraMatch | null,
+  mnemonic?: string,
 ): VanityWallet => ({
   name: 'Vanity Wallet',
   address: ethers.getAddress(address),
   privateKey,
-  mnemonic: '',
-  seedPhrase: '',
+  mnemonic: mnemonic || '',
+  seedPhrase: mnemonic || '',
   balance: '0.00',
   network: 'XLAYER',
   vanityMatchType: matchType,
@@ -130,6 +133,8 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     extraLimit = 50,
     extraFilters,
     initialExtraCandidates = [],
+    generationMode = 'privateKey',
+    mnemonicWords = 12,
   } = event.data || {};
 
   if (type === 'stop') {
@@ -154,15 +159,36 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     .sort(compareWalletScore)
     .slice(0, safeExtraLimit);
 
-  const safeBatchSize = Math.max(1, Math.min(5000, Number(batchSize) || 120));
+  const safeBatchSize = Math.max(1, Math.min(20000, Number(batchSize) || 1024));
 
   const runBatch = (): void => {
     if (!running) return;
 
     for (let i = 0; i < safeBatchSize; i += 1) {
-      const privateKeyBytes = ethers.randomBytes(32);
-      const privateKey = ethers.hexlify(privateKeyBytes);
-      const address = deriveAddressFromPrivateKey(privateKey).toLowerCase();
+      let privateKeyBytes: Uint8Array | null = null;
+      let privateKey: string;
+      let address: string;
+      let mnemonic = '';
+
+      if (generationMode === 'mnemonic') {
+        if (mnemonicWords === 24) {
+          const m = ethers.Mnemonic.fromEntropy(ethers.randomBytes(32));
+          const wallet = ethers.HDNodeWallet.fromMnemonic(m);
+          privateKey = wallet.privateKey;
+          address = wallet.address.toLowerCase();
+          mnemonic = wallet.mnemonic?.phrase || '';
+        } else {
+          const wallet = ethers.Wallet.createRandom();
+          privateKey = wallet.privateKey;
+          address = wallet.address.toLowerCase();
+          mnemonic = wallet.mnemonic?.phrase || '';
+        }
+      } else {
+        privateKeyBytes = ethers.randomBytes(32);
+        privateKey = ethers.hexlify(privateKeyBytes);
+        address = deriveAddressFromPrivateKey(privateKey).toLowerCase();
+      }
+
       lastCandidate = address;
       scanned += 1;
 
@@ -176,8 +202,8 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           scanned,
           found,
           elapsed: (Date.now() - startTime) / 1000,
-          wallet: createVanityWallet(privateKey, address, 'primary', extraMatch),
-          matchType: 'primary',
+          wallet: createVanityWallet(privateKey, address, 'main', extraMatch, mnemonic),
+          matchType: 'main',
         });
 
         if (found >= safeTargetCount) {
@@ -191,7 +217,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           return;
         }
       } else if (extraMatch && !extraWallets.some(item => item.address?.toLowerCase() === address)) {
-        const extraWallet = createVanityWallet(privateKey, address, 'extra', extraMatch);
+        const extraWallet = createVanityWallet(privateKey, address, 'extra', extraMatch, mnemonic);
         const weakest = extraWallets[extraWallets.length - 1];
         if (extraWallets.length < safeExtraLimit || (weakest && compareWalletScore(extraWallet, weakest) < 0)) {
           extraWallets.push(extraWallet);
@@ -205,10 +231,10 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
             wallets: extraWallets,
           });
         } else {
-          wipePrivateKeyBytes(privateKeyBytes);
+          if (privateKeyBytes) wipePrivateKeyBytes(privateKeyBytes);
         }
       } else {
-        wipePrivateKeyBytes(privateKeyBytes);
+        if (privateKeyBytes) wipePrivateKeyBytes(privateKeyBytes);
       }
     }
 
@@ -224,7 +250,11 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
       });
     }
 
-    setTimeout(runBatch, 0);
+    if (typeof queueMicrotask === 'function' && safeBatchSize <= 5000) {
+      queueMicrotask(runBatch);
+    } else {
+      setTimeout(runBatch, 0);
+    }
   };
 
   runBatch();

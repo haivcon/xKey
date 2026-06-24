@@ -1,84 +1,135 @@
 # Contributing to xKey
 
-First off, thank you for considering contributing to xKey! It's people like you that make xKey a great, secure tool for the Web3 community.
+Thank you for helping improve xKey. Contributions are welcome when they preserve the project's offline-first, local-vault security model.
 
-We welcome all kinds of contributions: bug reports, feature suggestions, code contributions, translation improvements, and documentation updates.
-
----
-
-## 🛡️ Important Security Note
-
-**Do NOT report security vulnerabilities in public issues!** 
-
-If you have discovered a security vulnerability, please refer to our **[Security Policy](./SECURITY.md#reporting-a-vulnerability)** on how to report it privately.
+You can contribute with bug reports, feature proposals, documentation updates, translations, tests, and code improvements.
 
 ---
 
-## 🐛 Reporting Bugs
+## Security First
 
-If you find a bug, please create a GitHub Issue and include:
-- Your operating system and device model.
-- The xKey version you are using.
-- Detailed steps to reproduce the bug.
-- Expected behavior vs actual behavior.
-- Screenshots or logs (make sure to **remove/blur any sensitive information** like wallet addresses or keys).
+Do not report security vulnerabilities in public issues or discussions.
 
-## 💡 Suggesting Features
+Use the private reporting process in [SECURITY.md](./SECURITY.md#reporting-a-vulnerability). Remove or blur private keys, seed phrases, wallet addresses, backup files, QR codes, screenshots, and logs before sharing diagnostic material.
 
-We love new ideas! When requesting a feature, please:
-- Check existing issues to see if it has already been suggested.
-- Explain the use case and why it would be beneficial for the offline vault model.
-- Remember that xKey is designed as a *local, offline-first vault*, not a hot wallet with network connectivity. Features that require remote servers or telemetry will likely be rejected.
+---
 
-## 🛠️ Development Setup
+## Project Principles
 
-To contribute code, you'll need to set up the project locally.
+xKey should remain:
+
+- Offline-first.
+- Local-only by default.
+- Non-custodial.
+- Free of telemetry requirements.
+- Explicit about secret reveal/copy actions.
+- Careful with CPU-intensive workflows such as vanity wallet generation.
+- Clear about backup, recovery, and user responsibility.
+
+Features that require custody, remote key recovery, hidden background uploads, analytics tracking, or server-side wallet access are out of scope.
+
+---
+
+## Development Setup
 
 ### Prerequisites
+
 - Node.js 22+
+- npm
 - Java 21+
-- Android Studio (if working on Android native features)
+- Android Studio if working on Android or Capacitor native features
 
-### Installation
-1. Fork the repository and clone your fork:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/xKey.git
-   cd xKey
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the web development server:
-   ```bash
-   npm run dev
-   ```
+### Install
 
-### Code Style & Quality
-- We use ESLint and Prettier. Please ensure your code passes linting before submitting a PR:
-  ```bash
-  npm run lint
-  ```
-- Before pushing, make sure the project builds successfully:
-  ```bash
-  npm run build
-  ```
+```bash
+git clone https://github.com/haivcon/xKey.git
+cd xKey
+npm install
+```
 
-## 🔀 Pull Request Process
+### Run Locally
 
-1. Create a new branch for your feature or bugfix (`git checkout -b feature/your-feature-name`).
-2. Make your changes and commit them with clear, descriptive commit messages.
-3. Push your branch to your fork (`git push origin feature/your-feature-name`).
-4. Open a Pull Request against the `main` branch of the original xKey repository.
-5. In the PR description, explain what changes were made and why. Link any related issues.
-6. A maintainer will review your PR. Be prepared to make requested changes.
+```bash
+npm run dev
+```
 
-## 🌐 Translations
+### Build and Sync Android
 
-xKey supports multiple languages. If you find a translation error or want to add a new language, feel free to submit a PR modifying the JSON/JS translation files in the `src/locales` directory. 
-
-*Note: Please ensure security-critical strings (like backup warnings) are translated accurately and unambiguously.*
+```bash
+npm run build
+npx cap sync android
+```
 
 ---
 
-Thank you for contributing!
+## Quality Checks
+
+Before opening a pull request or publishing a release, run the relevant checks:
+
+```bash
+npm run lint
+npm run type-check
+npm run test:vanity
+npm run build
+npx cap sync android
+```
+
+Additional targeted tests may be useful:
+
+```bash
+npm run test:key-health
+npm run test:shamir
+npm run test:reed-solomon
+npm run locale:audit
+```
+
+---
+
+## Pull Request Guidelines
+
+1. Create a focused branch from `main`.
+2. Keep changes scoped and explain why they are needed.
+3. Add or update tests when behavior changes.
+4. Update documentation when user-facing behavior, security assumptions, release steps, or build metadata changes.
+5. Do not commit generated build artifacts, local secrets, `.env` files, APK/AAB files, or the local `1/` instruction folder.
+6. Ensure private keys, seed phrases, backup passwords, and QR recovery shares never appear in commits, screenshots, test fixtures, or logs.
+7. Use clear English commit messages.
+
+---
+
+## Localization Guidelines
+
+xKey supports:
+
+`ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`
+
+When editing translations:
+
+- Keep security warnings unambiguous.
+- Preserve placeholders and interpolation keys.
+- Check vanity generator labels, pause/resume states, heat warnings, and save actions across locales.
+- Run locale audits when translation keys change.
+
+---
+
+## Vanity Generator Contributions
+
+Vanity generation is CPU intensive and handles newly generated private keys. Contributions in this area must:
+
+- Keep generated secrets hidden by default.
+- Require explicit user action for reveal/copy.
+- Avoid storing unnecessary secret data.
+- Keep memory usage bounded.
+- Include clear CPU, heat, and battery guidance for long-running scans.
+- Avoid network calls, telemetry, or remote pattern submission.
+
+---
+
+## Release Notes
+
+For release work:
+
+- Update `package.json`, `package-lock.json`, and Android version metadata together.
+- Update `README.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `ARCHITECTURE.md` when relevant.
+- Keep older release details collapsed or summarized so the current release stays easy to read.
+- Use `v*` git tags for GitHub Actions release builds.

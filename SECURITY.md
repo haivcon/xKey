@@ -1,183 +1,138 @@
 # xKey Security Policy
 
-xKey is an offline-first wallet vault for storing wallet addresses, private keys, seed phrases, notes, folders, tags, QR workflows, backups, and manual asset balances. The project is designed as a local encrypted vault, not as a network-connected trading wallet.
+xKey is an offline-first wallet vault for storing wallet addresses, private keys, seed phrases, notes, folders, tags, QR workflows, encrypted backups, Shamir recovery material, local audit history, and manual asset balances.
 
-This document explains the current security model, supported platforms, expected user responsibilities, known limitations, and the long-term hardening direction for the project.
+xKey is a local cold-vault style manager. It is not a network-connected trading wallet, exchange account, cloud wallet, or custodial recovery service.
 
 ---
 
-## 📋 Executive Summary (TL;DR)
+## Executive Summary
 
-> [!TIP]
-> **For standard users:**
-> - **We don't store your keys.** Everything is stored locally on your device, AES-encrypted.
-> - **We don't have servers.** There is no cloud backup unless you manually export and save a `.xkey` file.
-> - **Keep backups safe.** If you lose your device and have no backup, your vault cannot be recovered.
-> - **Beware of malware.** xKey protects against casual snooping but cannot protect you if your OS itself is compromised (e.g., malware with screen recording or root access).
+- xKey stores vault data locally on the user's device.
+- xKey does not run a custody server and does not provide cloud recovery.
+- Sensitive exports such as `.xkey` backups, private keys, seed phrases, and Shamir shares must be protected by the user.
+- Android builds use native platform security where available, including Device Credential and Android Keystore integration.
+- The web fallback cannot provide the same hardware-backed guarantees as Android.
+- xKey cannot recover encrypted vault data without the correct vault key, backup password, or recovery material.
 
 > [!WARNING]
-> **Never share private keys, seed phrases, `.xkey` backup files, backup passwords, or Shamir shares with anyone.** 
+> Never share private keys, seed phrases, `.xkey` backup files, backup passwords, QR recovery shares, or screenshots containing secret material.
 
 ---
 
-## 🛡️ Security Goals
+## Supported Security Scope
 
-xKey aims to provide:
-- Local-only wallet storage with **no server-side custody** and **no account system**.
-- No remote key recovery or background upload of private keys/vault data.
-- Encrypted local storage for wallet records.
-- Android device-level unlock using the system lock screen where available.
-- Portable encrypted backup files controlled by a user-chosen password.
-- Clear fallback behavior when device security changes.
-
-xKey is a **private cold-vault style manager**. It helps users store and organize sensitive wallet data locally. It does not replace careful backup practices, hardware wallets, or secure device hygiene.
-
----
-
-## 🎯 Threat Model
-
-| Included in Protection Scope (In Scope) | Excluded from Protection Scope (Out of Scope) |
+| In Scope | Out of Scope |
 | :--- | :--- |
-| **Casual physical access:** Someone else picking up your unlocked phone. | **Device Compromise:** A rooted or thoroughly compromised device. |
-| **App data inspection:** Attempting to read files without the vault key. | **Advanced Malware:** Screen recording, accessibility abuse, keyboard/clipboard monitoring malware. |
-| **Clipboard exposure:** Mitigated via configurable clipboard auto-clear. | **Malicious OS:** A tampered OS, custom malicious ROM, or malicious keyboard. |
-| **Idle access:** Mitigated via automatic vault lock after inactivity. | **User Error:** A user voluntarily sharing screenshots, QRs, or weak backup passwords. |
-| **Biometric failure:** Safe fallback to Android device credentials. | **Total Data Loss:** Device wipe without any external `.xkey` backups. |
+| Casual access to an unlocked or unattended device. | A fully compromised device, rooted OS, malicious ROM, or malware-controlled environment. |
+| Encrypted local vault storage. | Recovery after the user loses all devices and all backups. |
+| Clipboard exposure reduction through auto-clear flows. | Malware that records the screen, keyboard, accessibility events, or clipboard contents. |
+| Idle locking and explicit reveal/copy controls. | A user voluntarily sharing secret material or screenshots. |
+| Tamper-aware backups and local audit history. | Guaranteeing funds if keys are imported into unsafe wallets or reused elsewhere. |
 
-Users should treat every private key, seed phrase, and sensitive QR code shown by xKey as absolute secret material.
+Users should treat every private key, seed phrase, QR code, and exported backup as high-value secret material.
 
 ---
 
-## 📱 Platform Model
+## Current Release Security Notes: v5.18.1
+
+v5.18.1 includes a documentation and Android metadata refresh for the current vanity generation upgrade.
+
+Security-relevant changes include:
+
+- Vanity private keys and seed phrases remain hidden by default in scan results.
+- Reveal and copy actions require explicit user interaction.
+- Long-running vanity scans include CPU heat and device-health guidance.
+- Users can limit retained secondary matches to reduce memory pressure.
+- Folder routing and bulk-save flows keep generated wallets inside the local vault model.
+- Localization updates improve clarity for warnings, pause/resume actions, and advanced match descriptions.
+- Android metadata is updated to `versionCode 81` and `versionName 5.18.1`.
+
+---
+
+## Platform Model
 
 ### Android
-Android is the preferred secure platform for xKey because it uses native device security.
-- Uses the Android lock screen (Device Credential integration).
-- If the device has a PIN/password/biometric configured, Android authenticates the user.
-- The vault encryption key is protected with **Android Keystore** (AES/GCM/NoPadding) and requires recent user authentication.
-- Google Play and GitHub builds use the unified package `com.haivcon.xkey`. *(Recommendation: use Google Play App Signing for seamless updates from both sources).*
+
+Android is the preferred platform for secure vault usage.
+
+- Android Device Credential can be used for unlock flows.
+- Android Keystore protects key material where supported by the device.
+- The package name is `com.haivcon.xkey`.
+- Removing or changing device security can make hardware-protected keys unavailable. Always keep encrypted backups.
 
 ### Web
-The web version cannot access the same hardware-backed Keystore model.
-- Authentication fallback is handled inside the web app.
-- Security depends heavily on browser storage integrity.
-- **Avoid using the web version on shared, untrusted, or infected devices.**
+
+The web version is useful for portability and inspection but has weaker security boundaries.
+
+- Browser storage is not equivalent to Android Keystore.
+- Shared, infected, or managed browsers should not be used for real funds.
+- Browser extensions, malware, and compromised operating systems can undermine local security.
 
 ---
 
-## 🔑 Vault Key Model
+## Vault and Backup Model
 
-A random vault encryption key is generated to encrypt wallet data.
-- On Android, this key is wrapped by the Android Keystore and unwrapped only after successful system authentication.
-- If Android device security changes (e.g., removing screen lock), Keystore keys may become permanently unavailable.
-- xKey keeps compatibility fallback data to reduce lockout risk, but if recovery is impossible, **the user must restore from a backup or reset the vault.**
-
-> [!CAUTION]
-> xKey cannot recover encrypted vault data without the required vault key or a valid backup. This is an intentional security property.
+- Vault records are stored locally and encrypted before persistence.
+- Sensitive fields such as private keys and seed phrases are treated as secret data.
+- `.xkey` backup files are portable encrypted containers controlled by the user.
+- Backup passwords must be strong, unique, and stored separately.
+- Shamir recovery shares should be stored in separate physical locations.
+- xKey cannot reset, recover, or bypass encryption for lost vaults.
 
 ---
 
-## 🔐 Encryption Model
+## Vanity Wallet Generation Safety
 
-- **Storage:** Wallet records are encrypted before being stored in Capacitor Preferences.
-- **Field-level encryption:** Sensitive fields (private keys, seed phrases) are additionally encrypted using a derived field key from the primary vault key.
-- **Backups:** Portable `.xkey` backups are encrypted with a user-provided password.
+Vanity generation is CPU intensive because it repeatedly creates candidate wallets until matching addresses are found.
 
-*Long-term target envelope format for safer migrations:*
-```json
-{
-  "format": "xkey-vault",
-  "version": 3,
-  "createdAt": "2026-06-17T00:00:00.000Z",
-  "kdf": { "name": "Argon2id or PBKDF2", "salt": "base64", "iterations": 600000 },
-  "cipher": { "name": "AES-256-GCM", "iv": "base64", "tag": "base64" },
-  "payload": "base64"
-}
+Users should:
+
+- Run scans only on trusted devices.
+- Keep the device cool and ventilated.
+- Avoid long scans while charging on hot surfaces.
+- Pause scans if the device becomes hot or sluggish.
+- Use lower reserve limits on low-memory devices.
+- Copy or save generated secrets only when the surrounding environment is private.
+- Back up generated wallets immediately if they will be used for real assets.
+
+The vanity generator improves address discovery convenience. It does not make generated keys safer than other cryptographically random wallet keys.
+
+---
+
+## Reporting a Vulnerability
+
+Do not open public GitHub issues for security vulnerabilities.
+
+Report privately by email:
+
+```text
+security@xlayer.my
 ```
 
----
+Please include:
 
-## 💾 Backup Security
+- Affected version or commit hash.
+- Platform: Android, web, or both.
+- Clear reproduction steps.
+- Expected and actual behavior.
+- Impact assessment.
+- Logs or screenshots with all secrets removed or blurred.
 
-> [!IMPORTANT]
-> **Backup Rules:**
-> 1. Use a strong backup password.
-> 2. Store backups in multiple safe physical/offline locations.
-> 3. Do not store the password beside the backup file.
-> 4. Delete unsafe copies from chat apps, shared folders, or public cloud drives.
-
-### Offline Shamir's Secret Sharing (2-of-3) Backup
-- Ensure the 3 QR parts are stored in physically separate, secure locations.
-- **Never** store 2 parts in the same location (defeats the 2-of-3 threshold).
-- **Never** take photos of the QR sheets and upload them to cloud services (Google Photos, iCloud).
+We will prioritize reports involving secret exposure, backup compromise, authentication bypass, encryption misuse, or unsafe release artifacts.
 
 ---
 
-## 📋 Clipboard & Session Security
+## Secure Development Requirements
 
-### Clipboard Auto-Clear
-xKey writes copied sensitive values to the clipboard and schedules an auto-clear timeout. It only clears the clipboard if it still contains the exact value copied by xKey.
-*Limitation:* Malware or other apps might read the clipboard before the timeout occurs. Avoid copying seeds/private keys unless absolutely necessary.
+Before publishing a release, maintainers should run:
 
-### Auto-Lock
-Auto-lock triggers after configured inactivity. Security-sensitive screens require re-authentication before showing secrets.
+```bash
+npm run lint
+npm run type-check
+npm run test:vanity
+npm run build
+npx cap sync android
+```
 
----
-
-## 📷 QR Code Security
-- **Address QRs** are generally safe to share (always verify network/address).
-- **Private Key / Seed QRs** are highly sensitive. Only show in private environments.
-- Beware of screenshots, screen sharing, and physical camera surveillance.
-
----
-
-## 🏗️ Android Release Hardening
-
-Unified package: `com.haivcon.xkey`
-Release Checklist:
-- Verify package ID, label, and versions.
-- Confirm signing key source & ensure no debug/development files are packaged.
-- Keep `android:debuggable=false` for release builds.
-- Avoid logging private keys, seeds, or decrypted payloads.
-
----
-
-## 🕵️ Security Audits
-
-> [!NOTE]
-> **Audit Status:** This software is provided as-is and has not yet undergone an independent, third-party security audit. Use at your own risk. 
-> 
-> We employ best-effort security practices, but highly recommend doing your own research and managing your risks appropriately.
-
----
-
-## 🚨 Reporting a Vulnerability
-
-We take security issues seriously. Please report security issues privately before opening a public issue.
-
-- **Email:** `security@xlayer.my` *(Preferred)*
-- **GitHub:** [haivcon/xKey](https://github.com/haivcon/xKey)
-- **X/Telegram:** [@haivcon](https://t.me/haivcon)
-
-**SLA & Expectations:**
-- We aim to acknowledge vulnerability reports within **48 hours**.
-- At this time, we do not have an official Bug Bounty program, but we will publicly credit researchers who responsibly disclose vulnerabilities.
-
-**When reporting, please include:**
-- Affected platform (Android APK, Google Play build, or Web).
-- xKey / OS version.
-- Detailed reproduction steps.
-- Whether private keys, backups, or vault keys may be exposed.
-
-> [!WARNING]
-> Please do **not** include real private keys, seed phrases, or backup passwords in your report unless they are test-only dummy data.
-
----
-
-## 🧑‍💻 Secure Development Rules (For Contributors)
-
-- Never commit private keys, real user wallets, signing keys, or API secrets.
-- Never log decrypted wallet data or vault keys.
-- Do not weaken encryption for convenience.
-- Keep destructive actions behind explicit confirmation.
-- Prefer platform security APIs over custom authentication.
+Release tags should use the `v*` format so the GitHub Actions Android build pipeline can run from a clean tag.

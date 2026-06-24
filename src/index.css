@@ -258,6 +258,106 @@ body.keyboard-open .keyboard-scroll-target {
   background-color: rgba(239, 68, 68, 0.12);
 }
 
+/* Create wallet / vanity must follow the selected theme.
+   Some platforms can keep the `dark` class on <html> while `theme-light` is active,
+   so these scoped rules make light theme win over Tailwind `dark:*` utilities. */
+.theme-light .create-wallet-modal-panel {
+  background-color: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+.theme-light .create-wallet-modal-panel > div {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .create-wallet-modal-panel [class*="bg-surface-900"],
+.theme-light .create-wallet-modal-panel [class*="bg-surface-800"],
+.theme-light .create-wallet-modal-panel [class*="bg-surface-700"],
+.theme-light .create-wallet-modal-panel [class*="bg-surface-950"] {
+  background-color: rgba(248, 250, 252, 0.92) !important;
+}
+
+.theme-light .create-wallet-modal-panel [class*="border-surface-800"],
+.theme-light .create-wallet-modal-panel [class*="border-surface-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .create-wallet-modal-panel [class*="text-white"],
+.theme-light .create-wallet-modal-panel [class*="text-surface-100"],
+.theme-light .create-wallet-modal-panel [class*="text-surface-200"],
+.theme-light .create-wallet-modal-panel [class*="text-surface-300"],
+.theme-light .create-wallet-modal-panel [class*="text-surface-400"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.theme-light .create-wallet-modal-panel [class*="text-surface-500"],
+.theme-light .create-wallet-modal-panel [class*="text-surface-600"] {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+.theme-light .vanity-theme-sync section,
+.theme-light .vanity-theme-sync [class*="rounded-xl"][class*="border"] {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #dbeafe !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+.theme-light .vanity-theme-sync section[class*="emerald"],
+.theme-light .vanity-theme-sync [class*="border-emerald"] {
+  background-color: rgba(236, 253, 245, 0.88) !important;
+  border-color: #a7f3d0 !important;
+}
+
+.theme-light .vanity-theme-sync section[class*="cyan"],
+.theme-light .vanity-theme-sync [class*="border-cyan"] {
+  background-color: rgba(236, 254, 255, 0.88) !important;
+  border-color: #a5f3fc !important;
+}
+
+.theme-light .vanity-theme-sync [class*="bg-gradient-to-r"] {
+  background-image: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(236, 254, 255, 0.65), transparent) !important;
+}
+
+.theme-light .vanity-theme-sync code,
+.theme-light .vanity-theme-sync .font-mono {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.theme-light .vanity-theme-sync button[class*="bg-surface-700"],
+.theme-light .vanity-theme-sync button[class*="dark:bg-surface-700"],
+.theme-light .vanity-theme-sync button[class*="bg-surface-800"],
+.theme-light .vanity-theme-sync button[class*="dark:bg-surface-800"],
+.theme-light .vanity-theme-sync button[class*="bg-surface-900"],
+.theme-light .vanity-theme-sync button[class*="dark:bg-surface-900"],
+.theme-light .vanity-theme-sync [class*="bg-surface-700"],
+.theme-light .vanity-theme-sync [class*="dark:bg-surface-700"] {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-light .vanity-theme-sync button:hover {
+  background-color: rgba(226, 232, 240, 0.75) !important;
+}
+
+.theme-light .vanity-theme-sync button[class*="bg-brand-600"],
+.theme-light .vanity-theme-sync button[class*="bg-emerald-600"] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.theme-light .vanity-theme-sync button:disabled {
+  background-color: #e2e8f0 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
 .danger-note-icon,
 .danger-note-body {
   color: #fecaca;

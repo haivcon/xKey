@@ -141,7 +141,7 @@ export default function FolderTabs({
           />
         </div>
       )}
-      <div className={isSidebar ? 'space-y-1' : 'flex overflow-x-auto gap-2 pb-2 mb-4 scrollbar-hide items-center'}>
+      <div className={isSidebar ? 'space-y-1' : 'flex overflow-x-auto gap-2 pb-1 scrollbar-hide items-center'}>
       {creatingFolder && (
         <div className={isSidebar ? 'flex items-center gap-1' : 'flex min-w-[230px] flex-shrink-0 items-center gap-1'}>
           <input
