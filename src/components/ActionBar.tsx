@@ -101,6 +101,7 @@ export default function ActionBar({
     { key: 'balance-asc', label: t('actionBar.balanceLow') },
     { key: 'custom', label: t('actionBar.customOrder') },
     { key: 'address-asc', label: t('actionBar.addressAsc') },
+    { key: 'vanity-score-desc', label: t('actionBar.vanityScore') },
   ];
 
   const closeTools = () => setShowTools(false);

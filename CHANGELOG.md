@@ -1,6 +1,35 @@
-# Changelog
+quá trình chạy ví đẹp phụ sẽ dân đến nóng cpu, có gợi ý thêm chú thích gì cho người dùng hiểu cách thêm tản nhiệt, tác hại của việc chạy lâu, cách khắc phục,...# Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [5.18.0]
+
+### Release Focus
+v5.18.0 brings major enhancements to the Vanity Wallet Generator, greatly improving visibility, control, and pattern discovery during high-speed scanning.
+
+### Vanity UI & Visibility Improvements
+- **Expanded Match Viewer:** Redesigned the vanity scan results to display larger scrollable lists of generated addresses. Addresses now intelligently truncate in the middle (using `...`) so that both the start and the end of the address remain clearly visible on all screen sizes.
+- **Secure Details Toggle:** Added expandable details to every discovered vanity wallet. Users can now click to reveal and copy the full Private Key and Seed Phrase directly from the scanning results, protected by default with hidden placeholders.
+- **Save Actions & Folder Routing:** Discovered vanity wallets can now be saved individually or in bulk, with native support for routing the generated wallets directly into a specific folder inside the vault.
+- **Theme Compatibility:** Fixed multiple light theme contrast issues in the generator layout, metrics dashboard, and status indicators. 
+
+### Advanced Pattern Discovery
+- **New Mathematical Patterns:** The background vanity worker will now proactively save wallets that match advanced mathematical patterns even if they weren't explicitly searched for, including:
+  - **Sảnh tiến / lùi (Sequences):** e.g., `123456` or `654321`
+  - **Lặp hai đầu (Dual-end repetitions):** e.g., `0x111...111`
+  - **Symmetry & Palindromes:** e.g., `0xabc...cba`
+  - **Alternating & Bracket patterns:** e.g., `0xababa` or `0x80...08`
+- **Customizable Reserve Limit:** Users can now manually type in or select exactly how many extra "beautiful" secondary wallets they want to retain in memory during a scan, safely constrained up to 500 wallets.
+
+### Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run test:vanity`
+- `npm run build`
+- `npx cap sync android`
+
+<details>
+<summary>Click to expand previous release history</summary>
 
 ## [5.17.0]
 
@@ -12,12 +41,14 @@ v5.17.0 focuses on **Advanced Vanity Wallet Generation**, significantly improvin
 - **New Patterns Supported:** Added support for full symmetry, forward/backward sequences, dual-end repetitions, and complex nested patterns.
 - **Customizable Saving:** Users can now specify a custom quantity of extra vanity wallets to retain during a generation run.
 - **Performance:** Optimized worker message passing and array allocations during high-speed scans.
+- **Heat Management & CPU Safety:** Added detailed educational warnings explaining why long-running vanity generation causes device heating, its potential effects on battery lifespan, and practical cooling recommendations (e.g., placing the device on a heat-dissipating surface, lowering brightness, or pausing the generator).
 
 ### UI and Accessibility Improvements
-- **Theme Readability:** Fixed light/dark theme contrast issues within the Create Wallet Modal, ensuring text is legible in both modes.
-- **Address Display:** Optimized wallet address truncation for ultra-wide screens, keeping both the start and end of the address visible.
-- **Secure View/Copy:** Added secure toggles to view and copy private keys and seed phrases within the generation results.
-- **Localization:** Fixed missing translation keys for the generator's pause/resume states across all supported languages.
+- **Theme Readability:** Fixed light/dark theme contrast issues within the Create Wallet Modal, ensuring text is legible in both modes, especially for vanity wallet metrics and math steps.
+- **Address Display:** Optimized wallet address truncation for ultra-wide screens, keeping both the start and end of the address visible without cutting it too short. Added expandable views for extra vanity wallets.
+- **Secure View/Copy:** Added secure toggles to view and copy private keys and seed phrases within the vanity generation results.
+- **Tab Consolidation:** Consolidated the 5 separate wallet creation tabs into 3 streamlined primary tabs (`Manual`, `Generate`, `Vanity`), moving `HD Tree` and `Advanced Entropy` inside the `Generate` tab as sub-options for a cleaner UI.
+- **Localization:** Fixed missing translation keys for the generator's pause/resume states and other vanity wallet terms across all supported languages. Added Vietnamese translations for CPU heat warnings and advanced vanity match descriptions.
 
 ### Verification
 - `npm run lint`
@@ -25,9 +56,6 @@ v5.17.0 focuses on **Advanced Vanity Wallet Generation**, significantly improvin
 - `npm run test:vanity`
 - `npm run build`
 - `npx cap sync android`
-
-<details>
-<summary>Click to expand previous release history</summary>
 
 ## [5.12.2]
 

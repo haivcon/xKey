@@ -48,7 +48,7 @@ type GeneratedWallet = WalletModel & {
   hdCoinType?: number;
   hdNetwork?: string;
   hdRootType?: string;
-  vanityMatchType?: 'primary' | 'extra';
+  vanityMatchType?: 'main' | 'primary' | 'extra';
   vanityRepeatSide?: 'head' | 'tail' | 'both';
   vanityRepeatChar?: string;
   vanityRepeatLength?: number;
@@ -691,6 +691,8 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     tags: [...new Set([...vanityTags, 'extra-vanity'])],
     balance: '0.00',
     createdAt: Date.now() + index + 100000,
+    seedPhrase: wallet.seedPhrase || wallet.mnemonic || '',
+    mnemonic: wallet.mnemonic || wallet.seedPhrase || '',
   });
 
   const getVanityScoreTone = (score = 0) => {
@@ -889,7 +891,18 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
           const nextExtras: GeneratedWallet[] = mergedExtras
             .filter((item: GeneratedWallet, index, array) => array.findIndex(other => other.address?.toLowerCase() === item.address?.toLowerCase()) === index)
             .slice(0, vanitySafeExtraLimit)
-            .map((item: GeneratedWallet, index: number) => ({ ...(byAddress.get(item.address?.toLowerCase() || '') || buildVanityExtraWallet(item, index)), ...item, name: `${t('createWallet.vanityExtraWalletName')} ${index + 1}` }));
+            .map((item: GeneratedWallet, index: number) => {
+              const existing = byAddress.get(item.address?.toLowerCase() || '');
+              const base = existing || buildVanityExtraWallet(item, index);
+              return {
+                ...base,
+                ...item,
+                privateKey: item.privateKey || base.privateKey,
+                seedPhrase: item.seedPhrase || item.mnemonic || base.seedPhrase || base.mnemonic || '',
+                mnemonic: item.mnemonic || item.seedPhrase || base.mnemonic || base.seedPhrase || '',
+                name: `${t('createWallet.vanityExtraWalletName')} ${index + 1}`,
+              };
+            });
          const nextAddresses = new Set(nextExtras.map(item => item.address?.toLowerCase()).filter(Boolean));
          const previousAddresses = new Set(previousExtras.map(item => item.address?.toLowerCase()).filter(Boolean));
          previousExtras.forEach(item => {
@@ -951,8 +964,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
             vanityScore: wallet.vanityScore,
             vanityHeadRun: wallet.vanityHeadRun,
             vanityTailRun: wallet.vanityTailRun,
-            vanityPatternType: wallet.vanityPatternType,
-          })),
+             vanityPatternType: wallet.vanityPatternType,
+             privateKey: wallet.privateKey,
+             seedPhrase: wallet.seedPhrase,
+             mnemonic: wallet.mnemonic,
+           })),
        });
      });
   };
@@ -1195,35 +1211,42 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
   return (
     <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-4">
-      <div className="create-wallet-modal-panel flex max-h-[90dvh] flex-col rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-surface-800">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Plus size={18} className="text-brand-400" />
+      <div className="create-wallet-modal-panel flex max-h-[90dvh] flex-col rounded-2xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-surface-200 dark:border-surface-800">
+          <h2 className="text-lg font-bold text-surface-950 dark:text-white flex items-center gap-2">
+            <Plus size={18} className="text-brand-500 dark:text-brand-400" />
             {t('createWallet.title')}
           </h2>
-          <button onClick={closeCreateWalletModal} className="p-2 hover:bg-surface-800 rounded-full transition-colors text-surface-400"><X size={20} /></button>
+          <button onClick={closeCreateWalletModal} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-full transition-colors text-surface-500 dark:text-surface-400"><X size={20} /></button>
         </div>
 
         {/* Tabs */}
-        <div className="grid grid-cols-2 border-b border-surface-800 sm:grid-cols-5">
-          <button onClick={() => setTab('manual')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'manual' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
+        <div className="grid grid-cols-3 border-b border-surface-200 dark:border-surface-800">
+          <button onClick={() => setTab('manual')} className={`flex-1 py-3 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 sm:text-sm sm:gap-2 ${tab === 'manual' ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500 bg-brand-500/10' : 'text-surface-600 hover:text-surface-950 dark:text-surface-400 dark:hover:text-white'}`}>
             <Keyboard size={16} /> {t('createWallet.tabManual')}
           </button>
-          <button onClick={() => setTab('generate')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'generate' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
+          <button onClick={() => setTab('generate')} className={`flex-1 py-3 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 sm:text-sm sm:gap-2 ${['generate', 'hdTree', 'advancedEntropy'].includes(tab) ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500 bg-brand-500/10' : 'text-surface-600 hover:text-surface-950 dark:text-surface-400 dark:hover:text-white'}`}>
             <RefreshCw size={16} /> {t('createWallet.tabGenerate')}
           </button>
-          <button onClick={() => setTab('hdTree')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'hdTree' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
-            <Trees size={16} /> {t('createWallet.tabHdTree')}
-          </button>
-          <button onClick={() => setTab('vanity')} className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'vanity' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
+          <button onClick={() => setTab('vanity')} className={`flex-1 py-3 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 sm:text-sm sm:gap-2 ${tab === 'vanity' ? 'text-brand-600 dark:text-brand-400 border-b-2 border-brand-500 bg-brand-500/10' : 'text-surface-600 hover:text-surface-950 dark:text-surface-400 dark:hover:text-white'}`}>
             <Wallet size={16} /> {t('createWallet.tabVanity')}
-          </button>
-          <button onClick={() => setTab('advancedEntropy')} className={`flex-1 min-w-[7.5rem] py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${tab === 'advancedEntropy' ? 'text-brand-400 border-b-2 border-brand-500 bg-brand-500/5' : 'text-surface-400 hover:text-white'}`}>
-            <Sparkles size={16} /> {t('createWallet.tabAdvancedEntropy')}
           </button>
         </div>
 
         <div className="keyboard-scroll-target p-5 space-y-4 overflow-y-auto flex-1">
+          {['generate', 'hdTree', 'advancedEntropy'].includes(tab) && (
+            <div className="grid grid-cols-3 gap-2 rounded-xl border border-surface-200 bg-surface-50 p-1 dark:border-surface-700 dark:bg-surface-900/60">
+              <button type="button" onClick={() => setTab('generate')} className={`rounded-lg px-2 py-2 text-[11px] font-bold transition-colors sm:text-xs ${tab === 'generate' ? 'bg-brand-600 text-white shadow-sm' : 'text-surface-700 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}>
+                <RefreshCw size={14} className="mx-auto mb-0.5" /> {t('createWallet.tabGenerate')}
+              </button>
+              <button type="button" onClick={() => setTab('hdTree')} className={`rounded-lg px-2 py-2 text-[11px] font-bold transition-colors sm:text-xs ${tab === 'hdTree' ? 'bg-brand-600 text-white shadow-sm' : 'text-surface-700 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}>
+                <Trees size={14} className="mx-auto mb-0.5" /> {t('createWallet.tabHdTree')}
+              </button>
+              <button type="button" onClick={() => setTab('advancedEntropy')} className={`rounded-lg px-2 py-2 text-[11px] font-bold transition-colors sm:text-xs ${tab === 'advancedEntropy' ? 'bg-brand-600 text-white shadow-sm' : 'text-surface-700 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}>
+                <Sparkles size={14} className="mx-auto mb-0.5" /> {t('createWallet.tabAdvancedEntropy')}
+              </button>
+            </div>
+          )}
           {(tab === 'manual' || tab === 'generate') && (
             <section className="rounded-xl border border-surface-700 bg-surface-800/35 p-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1521,12 +1544,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
                       <div>
                         <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.address')}</label>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 bg-surface-800 text-brand-300 p-3 rounded-lg text-sm break-all">{w.address}</code>
-                          <button onClick={() => handleCopy(w.address || '', `addr_${index}`)} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg">
-                            {copiedField === `addr_${index}` ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
-                          </button>
-                        </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-mono text-[13px] bg-blue-100/50 dark:bg-blue-500/20 px-2 rounded truncate max-w-[200px] sm:max-w-[300px]">
+                              {w.address?.slice(0, 8)}...{w.address?.slice(-6)}
+                            </span>
+                            <span className="text-xs text-slate-400 font-mono flex-shrink-0">
+                              {(w as GeneratedWallet).vanityScore !== undefined ? `${t('createWallet.vanityExtraScore', { score: (w as GeneratedWallet).vanityScore })}` : ''}
+                            </span>
+                          </div>
                       </div>
 
                       <div>
@@ -1798,67 +1823,124 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     </span>
                   </label>
                   {vanityCaptureExtras && (
-                    <div className="mt-3 grid gap-3 lg:grid-cols-3">
-                      <div>
+                    <div className="mt-3 space-y-3">
+                      <div className="grid gap-3 lg:grid-cols-3">
+                        <div>
                           <label className="mb-1 block text-xs font-semibold text-cyan-700/80 dark:text-cyan-100/80">{t('createWallet.vanityExtraMinRun')}</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {VANITY_EXTRA_MIN_RUNS.map(count => (
-                            <button
-                              key={count}
-                              type="button"
-                              disabled={vanityGenerating}
-                              onClick={() => setVanityExtraMinRun(count)}
-                              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraMinRun === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-700 dark:text-cyan-100' : 'border-surface-300 bg-white text-surface-700 hover:border-cyan-500/50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300'} disabled:opacity-50`}
-                            >
-                              {t(`createWallet.vanityExtraMinRun_${count}`)}
-                            </button>
-                          ))}
+                          <div className="grid grid-cols-2 gap-2">
+                            {VANITY_EXTRA_MIN_RUNS.map(count => (
+                              <button
+                                key={count}
+                                type="button"
+                                disabled={vanityGenerating}
+                                onClick={() => setVanityExtraMinRun(count)}
+                                className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraMinRun === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-700 dark:text-cyan-100' : 'border-surface-300 bg-white text-surface-700 hover:border-cyan-500/50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300'} disabled:opacity-50`}
+                              >
+                                {t(`createWallet.vanityExtraMinRun_${count}`)}
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      <div>
+                        <div>
                           <label className="mb-1 block text-xs font-semibold text-cyan-700/80 dark:text-cyan-100/80">{t('createWallet.vanityExtraLimit')}</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {VANITY_EXTRA_LIMITS.map(count => (
-                            <button
-                              key={count}
-                              type="button"
-                              disabled={vanityGenerating}
-                              onClick={() => setVanityExtraLimit(count)}
-                              className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraLimit === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-700 dark:text-cyan-100' : 'border-surface-300 bg-white text-surface-700 hover:border-cyan-500/50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300'} disabled:opacity-50`}
-                            >
-                              {count}
-                            </button>
-                          ))}
+                          <div className="grid grid-cols-2 gap-2">
+                            {VANITY_EXTRA_LIMITS.map(count => (
+                              <button
+                                key={count}
+                                type="button"
+                                disabled={vanityGenerating}
+                                onClick={() => setVanityExtraLimit(count)}
+                                className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-colors ${vanitySafeExtraLimit === count ? 'border-cyan-400 bg-cyan-500/20 text-cyan-700 dark:text-cyan-100' : 'border-surface-300 bg-white text-surface-700 hover:border-cyan-500/50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300'} disabled:opacity-50`}
+                              >
+                                {count}
+                              </button>
+                            ))}
+                          </div>
+                          <input
+                            type="number"
+                            min="1"
+                            max="500"
+                            value={vanityExtraLimit}
+                            disabled={vanityGenerating}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              if (raw === '') {
+                                setVanityExtraLimit('');
+                                return;
+                              }
+                              setVanityExtraLimit(Math.max(1, Math.min(500, Number(raw) || 1)));
+                            }}
+                            onBlur={() => setVanityExtraLimit(vanitySafeExtraLimit)}
+                            placeholder={t('common.custom')}
+                            className="mt-2 w-full rounded-lg border border-surface-300 bg-white px-3 py-2 text-xs font-semibold text-surface-950 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900 dark:text-white"
+                          />
                         </div>
-                        <input
-                          type="number"
-                          min="1"
-                          max="500"
-                          value={vanityExtraLimit}
-                          disabled={vanityGenerating}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            if (raw === '') {
-                              setVanityExtraLimit('');
-                              return;
-                            }
-                            setVanityExtraLimit(Math.max(1, Math.min(500, Number(raw) || 1)));
-                          }}
-                          onBlur={() => setVanityExtraLimit(vanitySafeExtraLimit)}
-                          placeholder={t('common.custom')}
-                          className="mt-2 w-full rounded-lg border border-surface-300 bg-white px-3 py-2 text-xs font-semibold text-surface-950 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900 dark:text-white"
-                        />
+                        <div>
+                          <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-cyan-700/80 dark:text-cyan-100/80">
+                            <Folder size={13} /> {t('createWallet.vanityExtraFolder')}
+                          </label>
+                          <InlineSelect
+                            value={vanityExtraFolder}
+                            disabled={vanityGenerating}
+                            onChange={setVanityExtraFolder}
+                            options={vanityExtraFolderOptions}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-cyan-700/80 dark:text-cyan-100/80">
-                          <Folder size={13} /> {t('createWallet.vanityExtraFolder')}
-                        </label>
-                        <InlineSelect
-                          value={vanityExtraFolder}
-                          disabled={vanityGenerating}
-                          onChange={setVanityExtraFolder}
-                          options={vanityExtraFolderOptions}
-                        />
+
+                      <div className="rounded-xl border border-cyan-500/20 bg-white/70 p-3 dark:bg-surface-950/40">
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold text-cyan-800 dark:text-cyan-100">{t('createWallet.vanityExtraFilterTitle')}</p>
+                            <p className="mt-0.5 text-[11px] leading-relaxed text-cyan-700/75 dark:text-cyan-100/65">{t('createWallet.vanityExtraFilterDesc')}</p>
+                          </div>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {VANITY_EXTRA_FILTER_KEYS.map((key) => {
+                            const rule = vanitySafeExtraFilters[key];
+                            const enabled = !!rule.enabled;
+                            return (
+                              <div key={key} className={`rounded-lg border p-2 transition-colors ${enabled ? 'border-cyan-400/40 bg-cyan-500/10' : 'border-surface-300 bg-white/70 dark:border-surface-700 dark:bg-surface-900/70'}`}>
+                                <label className="flex items-start gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={enabled}
+                                    disabled={vanityGenerating}
+                                    onChange={(event) => updateVanityExtraFilter(key, { enabled: event.target.checked })}
+                                    className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-500 disabled:opacity-50"
+                                  />
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block text-xs font-bold text-surface-900 dark:text-white">{t(`createWallet.vanityExtraFilter_${key}`)}</span>
+                                    <span className="mt-0.5 block text-[11px] leading-relaxed text-surface-600 dark:text-surface-400">{t(`createWallet.vanityExtraFilterHint_${key}`)}</span>
+                                  </span>
+                                </label>
+                                {key !== 'lucky' ? (
+                                  <div className="mt-2 flex items-center gap-2 pl-6">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wide text-surface-500">{t('createWallet.vanityExtraFilterMin')}</span>
+                                    <input
+                                      type="number"
+                                      min="3"
+                                      max="12"
+                                      value={rule.minRun || vanitySafeExtraMinRun}
+                                      disabled={vanityGenerating || !enabled}
+                                      onChange={(event) => updateVanityExtraFilter(key, { minRun: Math.max(3, Math.min(12, Number(event.target.value) || vanitySafeExtraMinRun)) })}
+                                      className="w-16 rounded-md border border-surface-300 bg-white px-2 py-1 text-xs font-bold text-surface-950 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-950 dark:text-white"
+                                    />
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={(rule.patterns || []).join(', ')}
+                                    disabled={vanityGenerating || !enabled}
+                                    onChange={(event) => updateVanityExtraFilter(key, { patterns: event.target.value.split(',') })}
+                                    placeholder="888, 666, 168"
+                                    className="mt-2 w-full rounded-md border border-surface-300 bg-white px-2 py-1.5 text-xs font-semibold text-surface-950 placeholder:text-surface-500 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-950 dark:text-white"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1995,7 +2077,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                           return <div key={address || index} className={`flex items-center gap-2 rounded-xl border p-2.5 transition-all ${selected ? 'border-emerald-400/50 bg-emerald-500/20 shadow-sm' : 'border-surface-700 bg-surface-900 hover:border-emerald-500/30'}`}>
                             <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-pressed={selected}>
                               <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${selected ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30' : 'bg-surface-800 text-surface-400'}`}>{index + 1}</span>
-                              <code className="min-w-0 flex-1 truncate text-[13px] tracking-wide text-surface-900 dark:text-white">{renderVanityAddress(address)}</code>
+                              <code className="min-w-0 flex-1 truncate text-[14px] font-bold tracking-wide text-surface-900 dark:text-white">{renderVanityAddress(address)}</code>
                             </button>
                             <button type="button" onClick={() => handleCopy(address, `vanity-found-${index}`)} className="shrink-0 rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-800 hover:text-white active:scale-95" aria-label={t('common.copy')}>
                               {copiedField === `vanity-found-${index}` ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
@@ -2042,7 +2124,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                 <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 flex-1 items-start gap-3 text-left" aria-pressed={selected}>
                                   <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${selected ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/30' : 'bg-surface-800 text-surface-400'}`}>{index + 1}</span>
                                   <span className="min-w-0 flex-1">
-                                    <code className="block break-all text-[13px] tracking-wide leading-relaxed text-surface-900 dark:text-white">{renderVanityExtraAddress(address, wallet)}</code>
+                                    <code className="block break-all text-[14px] font-bold tracking-wide leading-relaxed text-surface-900 dark:text-white">{renderVanityExtraAddress(address, wallet)}</code>
                                     <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-cyan-700/80 dark:text-cyan-100/75 font-medium">
                                       <span>{getVanityExtraLabel(wallet)}</span>
                                       <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-bold shadow-sm ${getVanityScoreTone(score)}`}><Star size={10} />{t('createWallet.vanityExtraScore', { score })}</span>
@@ -2069,14 +2151,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     </section>
                   )}
 
-                  <section className="overflow-hidden rounded-xl border border-surface-700 bg-surface-950 p-3 font-mono text-[11px]">
-                    <div className="mb-2 flex items-center justify-between text-surface-500"><span>{t('createWallet.vanityTerminal')}</span><span>{vanityCandidates.length}/6</span></div>
+                  <section className="overflow-hidden rounded-xl border border-surface-300 dark:border-surface-700 bg-surface-100 dark:bg-surface-950 p-3 font-mono text-[11px]">
+                    <div className="mb-2 flex items-center justify-between text-surface-600 dark:text-surface-500"><span>{t('createWallet.vanityTerminal')}</span><span>{vanityCandidates.length}/6</span></div>
                     <div className="h-28 space-y-1 overflow-hidden">
-                      {vanityCandidates.length === 0 ? <div className="text-surface-600">{t('createWallet.vanityScanning')}</div> : vanityCandidates.map((candidate, index) => (
-                        <div key={`${candidate.address}-${index}`} className={`flex items-center gap-2 ${candidate.matched ? 'text-emerald-300' : 'text-surface-400'}`}>
+                      {vanityCandidates.length === 0 ? <div className="text-surface-500 dark:text-surface-600">{t('createWallet.vanityScanning')}</div> : vanityCandidates.map((candidate, index) => (
+                        <div key={`${candidate.address}-${index}`} className={`flex items-center gap-2 ${candidate.matched ? 'text-emerald-600 dark:text-emerald-300' : 'text-surface-600 dark:text-surface-400'}`}>
                           {candidate.matched ? <Sparkles size={12} className="shrink-0" /> : <Gauge size={12} className="shrink-0" />}
                           <span className="min-w-0 flex-1 truncate">{renderVanityAddress(candidate.address)}</span>
-                          <button type="button" onClick={() => handleCopy(candidate.address, `vanity-candidate-${index}`)} className="shrink-0 p-1 text-surface-500 hover:text-white" aria-label={t('common.copy')}>{copiedField === `vanity-candidate-${index}` ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}</button>
+                          <button type="button" onClick={() => handleCopy(candidate.address, `vanity-candidate-${index}`)} className="shrink-0 p-1 text-surface-500 hover:text-surface-800 dark:hover:text-white" aria-label={t('common.copy')}>{copiedField === `vanity-candidate-${index}` ? <Check size={12} className="text-emerald-500 dark:text-emerald-400" /> : <Copy size={12} />}</button>
                         </div>
                       ))}
                     </div>
@@ -2095,23 +2177,23 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                   </div>
                 </div>
               ) : (
-                <div className="bg-surface-800 rounded-xl overflow-hidden border border-surface-700 shadow-xl">
-                  <div className="p-4 border-b border-surface-700 flex justify-between items-center bg-surface-800/80">
+                <div className="bg-white dark:bg-surface-800 rounded-xl overflow-hidden border border-surface-200 dark:border-surface-700 shadow-xl">
+                  <div className="p-4 border-b border-surface-200 dark:border-surface-700 flex justify-between items-center bg-surface-50 dark:bg-surface-800/80">
                     <div>
-                      <h3 className="font-bold text-white text-sm">{walletName || allVanityWallets[0].name}</h3>
-                      <p className="mt-0.5 text-[11px] font-medium text-emerald-400">
+                      <h3 className="font-bold text-surface-950 dark:text-white text-sm">{walletName || allVanityWallets[0].name}</h3>
+                      <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                         {vanitySavedCount > 0
                           ? t('createWallet.vanitySavedSummary', { count: vanitySavedCount, folder: allVanityWallets[0]?.groupId || VANITY_DEFAULT_FOLDER })
                           : t('createWallet.vanityResultSummary', { primary: generatedWallets.length, extra: vanityExtraWallets.length })}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button onClick={resetVanityResults} className="rounded-lg bg-surface-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-surface-600 flex items-center gap-1.5">
+                      <button onClick={resetVanityResults} className="rounded-lg bg-surface-200 dark:bg-surface-700 px-3 py-1.5 text-xs font-semibold text-surface-800 dark:text-white transition-colors hover:bg-surface-300 dark:hover:bg-surface-600 flex items-center gap-1.5">
                         <RefreshCw size={14} /> {t('authError.retry')}
                       </button>
                     </div>
                   </div>
-                  <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 bg-surface-900/30">
+                  <div className="max-h-[60vh] space-y-3 overflow-y-auto p-4 bg-surface-50/50 dark:bg-surface-900/30">
                     {allVanityWallets.map((wallet, index) => {
                         const address = wallet.address || '';
                         const selected = selectedVanityAddresses.includes(address);
@@ -2130,7 +2212,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-2 min-w-0">
                                     <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-bold ${isExtra ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
-                                      {isExtra ? 'Extra' : 'Primary'}
+                                      {isExtra ? t('createWallet.vanityExtraTypeExtra', { defaultValue: 'Extra' }) : t('createWallet.vanityExtraTypePrimary', { defaultValue: 'Primary' })}
                                     </span>
                                     {saved && <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"><Check size={10} />{t('createWallet.vanityExtraSaved')}</span>}
                                   </div>
@@ -2165,7 +2247,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                               <div className="mt-2 ml-0 space-y-2 rounded-lg bg-white/80 p-3 border border-surface-300/70 shadow-inner dark:ml-8 dark:bg-surface-900/50 dark:border-surface-700/50 sm:ml-8">
                                 <div>
                                   <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><KeyRound size={10} /> Private Key</span>
+                                    <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><KeyRound size={10} /> {t('createWallet.privateKey')}</span>
                                     <button onClick={() => {
                                       const key = `${address}-pk`;
                                       if (!visibleVanitySecrets[key]) {
@@ -2175,17 +2257,17 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                       }
                                       handleCopy(wallet.privateKey || '', `pk_${index}`);
                                     }} className="text-[10px] font-medium text-surface-600 hover:text-surface-950 flex items-center gap-1 transition-colors bg-surface-100 px-2 py-0.5 rounded dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
-                                      {visibleVanitySecrets[`${address}-pk`] ? (copiedField === `pk_${index}` ? <><Check size={12} className="text-emerald-400" /> Copy</> : <><Copy size={12} /> Copy</>) : 'Show'}
+                                      {visibleVanitySecrets[`${address}-pk`] ? (copiedField === `pk_${index}` ? <><Check size={12} className="text-emerald-400" /> {t('common.copy')}</> : <><Copy size={12} /> {t('common.copy')}</>) : t('common.show', { defaultValue: 'Show' })}
                                     </button>
                                   </div>
-                                  <code className="block text-[11px] text-red-700 dark:text-red-300/90 break-all bg-surface-50 dark:bg-surface-950 p-2.5 rounded border border-surface-200 dark:border-surface-800 shadow-inner">
+                                  <code className="block text-[11px] font-mono text-red-600 dark:text-red-300/90 break-all bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 shadow-inner">
                                     {visibleVanitySecrets[`${address}-pk`] ? wallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                                   </code>
                                 </div>
                                 {wallet.mnemonic && (
                                   <div>
                                     <div className="flex items-center justify-between mb-1.5">
-                                      <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><Trees size={10} /> Seed Phrase</span>
+                                      <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><Trees size={10} /> {t('createWallet.seedPhrase')}</span>
                                       <button onClick={() => {
                                         const key = `${address}-mn`;
                                         if (!visibleVanitySecrets[key]) {
@@ -2194,11 +2276,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                           return;
                                         }
                                         handleCopy(wallet.mnemonic || '', `mn_${index}`);
-                                      }} className="text-[10px] font-medium text-surface-600 hover:text-surface-950 flex items-center gap-1 transition-colors bg-surface-100 px-2 py-0.5 rounded dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
-                                        {visibleVanitySecrets[`${address}-mn`] ? (copiedField === `mn_${index}` ? <><Check size={12} className="text-emerald-400" /> Copy</> : <><Copy size={12} /> Copy</>) : 'Show'}
+                                      }} className="text-[10px] font-medium text-surface-600 hover:text-surface-950 flex items-center gap-1 transition-colors bg-surface-200 px-2 py-0.5 rounded dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white font-sans">
+                                        {visibleVanitySecrets[`${address}-mn`] ? (copiedField === `mn_${index}` ? <><Check size={12} className="text-emerald-500 dark:text-emerald-400" /> {t('common.copy')}</> : <><Copy size={12} /> {t('common.copy')}</>) : t('common.show', { defaultValue: 'Show' })}
                                       </button>
                                     </div>
-                                    <div className="bg-surface-50 dark:bg-surface-950 p-2.5 rounded border border-surface-200 dark:border-surface-800 text-[11px] font-medium text-brand-700 dark:text-brand-200 leading-relaxed shadow-inner">
+                                    <div className="bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 text-[11px] font-medium font-sans text-brand-700 dark:text-brand-200 leading-relaxed shadow-inner">
                                       {visibleVanitySecrets[`${address}-mn`] ? wallet.mnemonic : '•••• •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• ••••'}
                                     </div>
                                   </div>
@@ -2210,7 +2292,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     })}
                   </div>
                   {hasSelectedUnsavedVanityWallets && (
-                    <div className="border-t border-surface-700 p-4 bg-surface-800/80">
+                    <div className="border-t border-surface-200 dark:border-surface-700 p-4 bg-surface-50 dark:bg-surface-800/80">
                       <button
                         type="button"
                         disabled={selectedVanityAddresses.length === 0}

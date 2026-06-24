@@ -74,7 +74,6 @@ import type { QrModalData, Wallet } from './types';
 
 const ASSET_UNIT_KEY = 'xkey_asset_unit';
 const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
-const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
 const INTERNAL_TEXT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const HEADER_SLOGAN_LETTERS = Array.from(XKEY_SLOGAN);
 const STARTUP_WATCHDOG_MS = 18000;
@@ -235,13 +234,11 @@ export default function App() {
     let active = true;
     (async () => {
       const messages: string[] = [];
-      const [snapshot, vanitySession, cleaned] = await Promise.all([
+      const [snapshot, cleaned] = await Promise.all([
         Preferences.get({ key: REPLACE_SNAPSHOT_KEY }).then(({ value }) => value).catch(() => ''),
-        Preferences.get({ key: VANITY_SESSION_KEY }).then(({ value }) => value).catch(() => ''),
         cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session'], INTERNAL_TEXT_MAX_AGE_MS),
       ]);
       if (snapshot) messages.push(tRef.current('health.replaceSnapshotPending'));
-      if (vanitySession) messages.push(tRef.current('health.vanitySessionPending'));
       if (externalBackupWaiting) messages.push(tRef.current('health.externalBackupPending'));
       if (cleaned > 0) messages.push(tRef.current('health.cleanedTempFiles', { count: cleaned }));
       if (active) setHealthMessages(messages);
@@ -1033,10 +1030,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                      className="w-auto max-w-[44vw] flex-shrink-0 rounded-2xl border border-surface-200 bg-white px-3 py-2 text-right shadow-sm hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
+                      className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-surface-200 bg-white px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800"
                     >
-                      <span className="block text-[9px] font-semibold uppercase tracking-wider text-surface-500">{t('home.totalAssets')}</span>
-                      <span className="block truncate text-sm font-bold leading-none text-surface-950 dark:text-white">{totalBalanceText}</span>
+                      <span className="block text-[8px] font-semibold uppercase tracking-wider text-surface-600 dark:text-surface-500">{t('home.totalAssets')}</span>
+                      <span className="block truncate text-xs font-bold leading-none text-surface-950 dark:text-white">{totalBalanceText}</span>
                     </button>
                   </div>
                   <ActionBar

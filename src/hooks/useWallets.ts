@@ -190,6 +190,7 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
       case 'balance-desc': return parseAmount(b.balance) - parseAmount(a.balance);
       case 'balance-asc': return parseAmount(a.balance) - parseAmount(b.balance);
       case 'address-asc': return (a.address || '').localeCompare(b.address || '');
+      case 'vanity-score-desc': return ((b.vanityScore || 0) - (a.vanityScore || 0)) || ((b.vanityRepeatLength || 0) - (a.vanityRepeatLength || 0));
       case 'custom': return 0; // preserve array order for manual drag
       default: return 0;
     }

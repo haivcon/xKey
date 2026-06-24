@@ -48,6 +48,14 @@ export interface Wallet {
   lastProofOfKeysAt?: number;
   lastProofOfKeysStatus?: 'passed' | 'failed' | 'skipped';
   lastProofOfKeysMessage?: string;
+  vanityMatchType?: 'main' | 'extra';
+  vanityRepeatSide?: 'head' | 'tail' | 'both';
+  vanityRepeatChar?: string;
+  vanityRepeatLength?: number;
+  vanityScore?: number;
+  vanityHeadRun?: string;
+  vanityTailRun?: string;
+  vanityPatternType?: string;
   /** Raw CSV row data preserved on import */
   _raw?: Record<string, string>;
 }
@@ -77,6 +85,7 @@ export type SortOrder =
   | 'balance-desc'
   | 'balance-asc'
   | 'address-asc'
+  | 'vanity-score-desc'
   | 'custom';
 
 /** Filter options */
