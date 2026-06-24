@@ -16,6 +16,13 @@ import { deleteInternalText, parseInternalTextRef, readInternalText, serializeIn
 import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import type { Wallet as WalletModel } from '../types';
 import AdvancedEntropyPanel from './entropy/AdvancedEntropyPanel';
+import {
+  DEFAULT_VANITY_EXTRA_FILTERS,
+  normalizeVanityExtraFilters,
+  type VanityExtraFilterConfig,
+  type VanityExtraFilterRule,
+  type VanityExtraPatternKey,
+} from '../utils/vanityMatch';
 
 const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 const VANITY_PRESETS = ['000', '111', '123', '888', '999', 'abc', 'def'];
@@ -28,6 +35,7 @@ const VANITY_EXTRA_LIMITS = [10, 25, 50, 100];
 const VANITY_EXTRA_MIN_RUNS = [3, 4, 5, 6];
 const VANITY_SETTINGS_KEY = 'xkey_vanity_settings_v1';
 const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
+const VANITY_EXTRA_FILTER_KEYS: VanityExtraPatternKey[] = ['repeat', 'sequenceUp', 'sequenceDown', 'bothEnds', 'mirror', 'bracket', 'palindrome', 'alternating', 'lucky'];
 
 type SelectOption = { value: string; label: ReactNode };
 type CreateWalletTab = 'manual' | 'generate' | 'hdTree' | 'vanity' | 'advancedEntropy';
@@ -61,6 +69,7 @@ type VanitySettings = {
   captureExtras?: boolean;
   extraMinRun?: number;
   extraLimit?: number;
+  extraFilters?: Partial<Record<VanityExtraPatternKey, Partial<VanityExtraFilterRule>>>;
   extraFolder?: string;
   performanceMode?: VanityPerformanceMode;
 };
@@ -77,6 +86,7 @@ type VanitySessionState = {
   captureExtras: boolean;
   extraMinRun: number;
   extraLimit: number;
+  extraFilters?: Partial<Record<VanityExtraPatternKey, Partial<VanityExtraFilterRule>>>;
   extraFolder: string;
   tags: string[];
   performanceMode: VanityPerformanceMode;
@@ -229,6 +239,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const [vanityCaptureExtras, setVanityCaptureExtras] = useState(true);
   const [vanityExtraMinRun, setVanityExtraMinRun] = useState(4);
   const [vanityExtraLimit, setVanityExtraLimit] = useState<number | string>(50);
+  const [vanityExtraFilters, setVanityExtraFilters] = useState<VanityExtraFilterConfig>(() => normalizeVanityExtraFilters(DEFAULT_VANITY_EXTRA_FILTERS));
   const [vanityExtraFolder, setVanityExtraFolder] = useState(VANITY_EXTRA_DEFAULT_FOLDER);
   const [vanityTagInput, setVanityTagInput] = useState('');
   const [vanityTags, setVanityTags] = useState<string[]>([]);
@@ -277,6 +288,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const vanityCanResume = vanityPaused && vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
   const vanitySafeExtraLimit = Math.max(0, Math.min(500, Number(vanityExtraLimit) || 0));
   const vanitySafeExtraMinRun = Math.max(3, Math.min(6, Number(vanityExtraMinRun) || 4));
+  const vanitySafeExtraFilters = useMemo(() => normalizeVanityExtraFilters(vanityExtraFilters, vanitySafeExtraMinRun), [vanityExtraFilters, vanitySafeExtraMinRun]);
   const liteModeActive = typeof document !== 'undefined' && document.documentElement.classList.contains('lite-mode');
   const vanityBatchSize = liteModeActive
     ? (vanityPerformanceMode === 'eco' ? 20 : vanityPerformanceMode === 'fast' ? 120 : 60)
@@ -319,6 +331,10 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     if (wallet.vanityPatternType === 'sequence-up') return t('createWallet.vanityExtraSequenceUp');
     if (wallet.vanityPatternType === 'sequence-down') return t('createWallet.vanityExtraSequenceDown');
     if (wallet.vanityPatternType === 'mirror') return t('createWallet.vanityExtraMirror');
+    if (wallet.vanityPatternType === 'palindrome') return t('createWallet.vanityExtraPalindrome');
+    if (wallet.vanityPatternType === 'bracket') return t('createWallet.vanityExtraBracket');
+    if (wallet.vanityPatternType === 'lucky') return t('createWallet.vanityExtraLucky');
+    if (wallet.vanityPatternType === 'alternating') return t('createWallet.vanityExtraAlternating');
     if (wallet.vanityRepeatSide === 'both') {
       return t('createWallet.vanityExtraBoth', {
         head: wallet.vanityHeadRun || '-',
@@ -379,6 +395,13 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       <span className={vanitySuffixClean.length ? 'underline decoration-brand-400 decoration-2 underline-offset-2 font-bold' : ''}>{clean.slice(suffixStart)}</span>
     </>;
   };
+  const updateVanityExtraFilter = (key: VanityExtraPatternKey, patch: Partial<VanityExtraFilterRule>) => {
+    setVanityExtraFilters(prev => normalizeVanityExtraFilters({
+      ...prev,
+      [key]: { ...prev[key], ...patch },
+    }, vanitySafeExtraMinRun));
+  };
+
   const mathStepItems = t('createWallet.mathSteps.steps') as unknown as MathStep[];
 
   // Derivation Path
@@ -477,6 +500,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         if (typeof settings.captureExtras === 'boolean') setVanityCaptureExtras(settings.captureExtras);
         if (settings.extraMinRun && VANITY_EXTRA_MIN_RUNS.includes(settings.extraMinRun)) setVanityExtraMinRun(settings.extraMinRun);
         if (settings.extraLimit) setVanityExtraLimit(Math.max(1, Math.min(500, settings.extraLimit)));
+        if (settings.extraFilters) setVanityExtraFilters(normalizeVanityExtraFilters(settings.extraFilters, settings.extraMinRun || 4));
         if (settings.extraFolder) setVanityExtraFolder(settings.extraFolder);
         if (settings.performanceMode === 'eco' || settings.performanceMode === 'balanced' || settings.performanceMode === 'fast') setVanityPerformanceMode(settings.performanceMode);
       })
@@ -504,11 +528,12 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
         captureExtras: vanityCaptureExtras,
         extraMinRun: vanitySafeExtraMinRun,
         extraLimit: vanitySafeExtraLimit,
+        extraFilters: vanitySafeExtraFilters,
         extraFolder: vanityExtraFolder,
         performanceMode: vanityPerformanceMode
       } satisfies VanitySettings)
     }).catch(() => {});
-  }, [vanitySafeTargetCount, vanityTimeLimit, vanityNetwork, vanityFolder, vanityCaptureExtras, vanitySafeExtraMinRun, vanitySafeExtraLimit, vanityExtraFolder, vanityPerformanceMode]);
+  }, [vanitySafeTargetCount, vanityTimeLimit, vanityNetwork, vanityFolder, vanityCaptureExtras, vanitySafeExtraMinRun, vanitySafeExtraLimit, vanitySafeExtraFilters, vanityExtraFolder, vanityPerformanceMode]);
 
   const clearVanitySession = async () => {
     vanitySessionGenerationRef.current += 1;
@@ -538,6 +563,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       captureExtras: vanityCaptureExtras,
       extraMinRun: vanitySafeExtraMinRun,
       extraLimit: vanitySafeExtraLimit,
+      extraFilters: vanitySafeExtraFilters,
       extraFolder: vanityExtraFolder,
       tags: vanityTags,
       performanceMode: vanityPerformanceMode,
@@ -602,6 +628,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
       setVanityCaptureExtras(typeof state.captureExtras === 'boolean' ? state.captureExtras : true);
       setVanityExtraMinRun(VANITY_EXTRA_MIN_RUNS.includes(state.extraMinRun) ? state.extraMinRun : 4);
       setVanityExtraLimit(Math.max(1, Math.min(500, Number(state.extraLimit) || 50)));
+      if (state.extraFilters) setVanityExtraFilters(normalizeVanityExtraFilters(state.extraFilters, state.extraMinRun || 4));
       setVanityExtraFolder(state.extraFolder || VANITY_EXTRA_DEFAULT_FOLDER);
       setVanityTags(Array.isArray(state.tags) ? state.tags : []);
       setVanityPerformanceMode(state.performanceMode === 'eco' || state.performanceMode === 'fast' ? state.performanceMode : 'balanced');
@@ -914,6 +941,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
          captureExtras: vanityCaptureExtras,
          extraMinRun: vanitySafeExtraMinRun,
          extraLimit: vanitySafeExtraLimit,
+         extraFilters: vanitySafeExtraFilters,
           initialExtraCandidates: vanityExtraRef.current.map(wallet => ({
             address: wallet.address,
             vanityMatchType: 'extra' as const,

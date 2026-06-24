@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import type { Wallet } from '../types';
-import { compareVanityExtraMatches, detectExtraVanityMatch, type VanityExtraMatch, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanityMatch';
+import { compareVanityExtraMatches, detectExtraVanityMatch, normalizeVanityExtraFilters, type VanityExtraFilterConfig, type VanityExtraFilterRule, type VanityExtraMatch, type VanityExtraPatternKey, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanityMatch';
 
 let running = false;
 
@@ -15,6 +15,7 @@ type VanityWorkerRequest = {
   captureExtras?: boolean;
   extraMinRun?: number;
   extraLimit?: number;
+  extraFilters?: Partial<Record<VanityExtraPatternKey, Partial<VanityExtraFilterRule>>>;
   initialExtraCandidates?: VanityExtraCandidate[];
 };
 
@@ -127,6 +128,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     captureExtras = false,
     extraMinRun = 4,
     extraLimit = 50,
+    extraFilters,
     initialExtraCandidates = [],
   } = event.data || {};
 
@@ -146,6 +148,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   const safeTargetCount = Math.max(1, Math.min(100, Number(targetCount) || 1));
   const safeExtraMinRun = Math.max(3, Math.min(6, Number(extraMinRun) || 4));
   const safeExtraLimit = Math.max(0, Math.min(500, Number(extraLimit) || 0));
+  const safeExtraFilters: VanityExtraFilterConfig = normalizeVanityExtraFilters(extraFilters, safeExtraMinRun);
   const extraWallets = initialExtraCandidates
     .filter(wallet => !!wallet.address)
     .sort(compareWalletScore)
@@ -164,7 +167,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
       scanned += 1;
 
       const primaryMatch = (!prefix || address.startsWith(`0x${prefix}`)) && (!suffix || address.endsWith(suffix));
-      const extraMatch = captureExtras && safeExtraLimit > 0 ? detectExtraVanityMatch(address, safeExtraMinRun) : null;
+      const extraMatch = captureExtras && safeExtraLimit > 0 ? detectExtraVanityMatch(address, safeExtraFilters) : null;
 
       if (primaryMatch) {
         found += 1;

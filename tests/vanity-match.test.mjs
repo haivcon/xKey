@@ -27,7 +27,7 @@ assert.equal(both?.headRun, '111');
 assert.equal(both?.tailRun, 'aaaa');
 assert.equal(both?.score, 97);
 
-const sequenceUp = detectExtraVanityMatch('0x1234567890abcdef1234567890abcdef12345678', 4);
+const sequenceUp = detectExtraVanityMatch('0x1234567890abcdef1234567890abcdefffffffff', 4);
 assert.equal(sequenceUp?.patternType, 'sequence-up');
 assert.equal(sequenceUp?.side, 'head');
 assert.equal(sequenceUp?.headRun, '123456789');
