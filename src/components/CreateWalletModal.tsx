@@ -203,6 +203,122 @@ function MiddleEllipsisAddress({ address, head = 12, tail = 8 }: { address: stri
   );
 }
 
+type VanityExtraFilterPreviewSegment = {
+  text: string;
+  highlight?: boolean;
+};
+
+type VanityExtraFilterPreview = {
+  before: string;
+  highlight: string;
+  after: string;
+  segments: VanityExtraFilterPreviewSegment[];
+};
+
+const VANITY_PREVIEW_FILL = 'a9c4e2b705d13f86c0a9d4e7b2c5f1089ab3c6d0';
+
+const clampVanityPreviewLength = (value: unknown, fallback = 4) => Math.max(3, Math.min(12, Math.floor(Number(value) || fallback)));
+
+const fitVanityPreviewBody = (body: string) => (body + VANITY_PREVIEW_FILL).slice(0, 40);
+
+const makeVanityPreview = (
+  body: string,
+  highlights: Array<{ start: number; length: number }> | { start: number; length: number },
+): VanityExtraFilterPreview => {
+  const fitted = fitVanityPreviewBody(body.toLowerCase().replace(/[^0-9a-f]/g, ''));
+  const normalized = (Array.isArray(highlights) ? highlights : [highlights])
+    .map(({ start, length }) => ({
+      start: Math.max(0, Math.min(fitted.length, start)),
+      end: Math.max(0, Math.min(fitted.length, start + Math.max(1, length))),
+    }))
+    .filter(({ start, end }) => end > start)
+    .sort((left, right) => left.start - right.start)
+    .reduce<Array<{ start: number; end: number }>>((merged, current) => {
+      const previous = merged[merged.length - 1];
+      if (previous && current.start <= previous.end) {
+        previous.end = Math.max(previous.end, current.end);
+      } else {
+        merged.push({ ...current });
+      }
+      return merged;
+    }, []);
+  const first = normalized[0] || { start: 0, end: 0 };
+  const segments: VanityExtraFilterPreviewSegment[] = [];
+  let cursor = 0;
+
+  normalized.forEach(({ start, end }) => {
+    if (start > cursor) segments.push({ text: fitted.slice(cursor, start) });
+    segments.push({ text: fitted.slice(start, end), highlight: true });
+    cursor = end;
+  });
+  if (cursor < fitted.length) segments.push({ text: fitted.slice(cursor) });
+
+  return {
+    before: `0x${fitted.slice(0, first.start)}`,
+    highlight: fitted.slice(first.start, first.end),
+    after: fitted.slice(first.end),
+    segments: [{ text: '0x' }, ...segments],
+  };
+};
+
+const buildVanityExtraFilterPreview = (key: VanityExtraPatternKey, rule: VanityExtraFilterRule, fallbackMinRun: number): VanityExtraFilterPreview => {
+  const minRun = clampVanityPreviewLength(rule.minRun, fallbackMinRun);
+  const filler = VANITY_PREVIEW_FILL;
+  const firstLucky = (rule.patterns || [])
+    .map(pattern => String(pattern).replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
+    .find(pattern => pattern.length >= 2) || '888';
+
+  switch (key) {
+    case 'repeat': {
+      const pattern = 'f'.repeat(minRun);
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'sequenceUp': {
+      const pattern = '123456789abcdef0'.slice(0, minRun);
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'sequenceDown': {
+      const pattern = 'fedcba9876543210'.slice(0, minRun);
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'bothEnds': {
+      const head = '8'.repeat(minRun);
+      const tail = '1'.repeat(minRun);
+      return makeVanityPreview(`${head}${filler.slice(0, 40 - head.length - tail.length)}${tail}`, [
+        { start: 0, length: head.length },
+        { start: 40 - tail.length, length: tail.length },
+      ]);
+    }
+    case 'mirror': {
+      const head = 'abcde0123456'.slice(0, minRun);
+      const tail = [...head].reverse().join('');
+      return makeVanityPreview(`${head}${filler.slice(0, 40 - head.length - tail.length)}${tail}`, [
+        { start: 0, length: head.length },
+        { start: 40 - tail.length, length: tail.length },
+      ]);
+    }
+    case 'bracket': {
+      const pattern = '123abc456def'.slice(0, minRun);
+      return makeVanityPreview(`${pattern}${filler.slice(0, 40 - pattern.length * 2)}${pattern}`, [
+        { start: 0, length: pattern.length },
+        { start: 40 - pattern.length, length: pattern.length },
+      ]);
+    }
+    case 'palindrome': {
+      const half = 'ab8c9d'.slice(0, Math.ceil(minRun / 2));
+      const pattern = (half + [...half].reverse().join('')).slice(0, minRun);
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'alternating': {
+      const pattern = Array.from({ length: minRun }, (_, index) => (index % 2 === 0 ? 'a' : 'b')).join('');
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'lucky':
+    default:
+      return makeVanityPreview(`${filler.slice(0, 10)}${firstLucky}${filler}`, { start: 10, length: firstLucky.length });
+  }
+};
+
 function InlineSelect({ value, options, onChange, disabled = false, placeholder = '' }: {
   value: string;
   options: SelectOption[];
@@ -396,7 +512,8 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const vanityEtaSeconds = vanitySpeed > 0 ? vanityEstimatedRemainingTries / vanitySpeed : 0;
   const vanityProgressPercentLabel = `${Math.min(99.9999, Math.max(0, vanityCompletionRatio * 100)).toFixed(vanityCompletionRatio < 0.01 ? 4 : 2)}%`;
   const vanityEffectiveThroughput = vanityWorkerCount * vanityBatchSize;
-  const allVanityWallets = useMemo(() => [...generatedWallets, ...vanityExtraWallets], [generatedWallets, vanityExtraWallets]);
+  const randomGeneratedWallets = useMemo(() => generatedWallets.filter(wallet => !wallet.vanityMatchType), [generatedWallets]);
+  const allVanityWallets = useMemo(() => [...generatedWallets.filter(wallet => !!wallet.vanityMatchType), ...vanityExtraWallets], [generatedWallets, vanityExtraWallets]);
   const hasSelectedUnsavedVanityWallets = selectedVanityAddresses.some(address => !vanitySavedRef.current.has(address));
   const compactAddress = (address: string, head = 12, tail = 8) => {
     if (!address) return '';
@@ -482,9 +599,6 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     const body = hasHexPrefix ? address.slice(2) : address;
     if (compact) {
       return <>{compactAddress(address, 12, 8)}</>;
-    }
-    if (wallet.vanityPatternType === 'sequence-up' || wallet.vanityPatternType === 'sequence-down' || wallet.vanityPatternType === 'mirror') {
-      return renderVanityAddress(address, compact);
     }
     const headLength = Math.max(0, wallet.vanityHeadRun?.length || (wallet.vanityRepeatSide === 'head' ? wallet.vanityRepeatLength || 0 : 0));
     const tailLength = Math.max(0, wallet.vanityTailRun?.length || (wallet.vanityRepeatSide === 'tail' ? wallet.vanityRepeatLength || 0 : 0));
@@ -1317,11 +1431,11 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   };
 
   const handleSaveGenerated = async () => {
-    if (generatedWallets.length === 0) return;
+    if (randomGeneratedWallets.length === 0) return;
 
     // Auto-save logic was already mapped. We just map the generatedWallets to standard format.
-    const toSave = generatedWallets.map((w, index) => ({
-      name: (generatedWallets.length === 1 ? walletName : w.name) || 'New Wallet',
+    const toSave = randomGeneratedWallets.map((w, index) => ({
+      name: (randomGeneratedWallets.length === 1 ? walletName : w.name) || 'New Wallet',
       address: w.address,
       privateKey: w.privateKey,
       seedPhrase: w.mnemonic || w.seedPhrase,
@@ -1679,7 +1793,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     {t('common.close')}
                   </button>
                 </div>
-              ) : generatedWallets.length === 0 ? (
+              ) : randomGeneratedWallets.length === 0 ? (
                 <div className="text-center py-6">
                   <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Wallet size={32} className="text-brand-400" />
@@ -1772,35 +1886,40 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                 </div>
               ) : (
                 <div className="space-y-6 pb-20">
-                  {generatedWallets.map((w, index) => (
-                    <div key={index} className="bg-surface-800/50 p-4 rounded-xl border border-surface-700 space-y-4">
-                      {generatedWallets.length === 1 ? (
+                  {randomGeneratedWallets.map((w, index) => (
+                    <div key={index} className="rounded-xl border border-surface-200 bg-white p-4 shadow-sm shadow-surface-900/5 space-y-4 dark:border-surface-700 dark:bg-surface-800/50 dark:shadow-none">
+                      {randomGeneratedWallets.length === 1 ? (
                         <div>
-                          <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.walletName')}</label>
+                          <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">{t('createWallet.walletName')}</label>
                           <input type="text" value={walletName} onChange={(e) => setWalletName(e.target.value)}
-                            className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500" />
+                            className="w-full rounded-lg border border-surface-200 bg-surface-50 px-4 py-3 text-sm font-medium text-surface-950 focus:outline-none focus:border-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-white" />
                         </div>
                       ) : (
-                        <h4 className="text-sm font-medium text-white">{w.name}</h4>
+                        <h4 className="text-sm font-semibold text-surface-950 dark:text-white">{w.name}</h4>
                       )}
 
                       <div>
-                        <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.address')}</label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="font-mono text-[13px] bg-blue-100/50 dark:bg-blue-500/20 px-2 rounded truncate max-w-[200px] sm:max-w-[300px]">
-                              {w.address?.slice(0, 8)}...{w.address?.slice(-6)}
-                            </span>
-                            <span className="text-xs text-slate-400 font-mono flex-shrink-0">
-                              {(w as GeneratedWallet).vanityScore !== undefined ? `${t('createWallet.vanityExtraScore', { score: (w as GeneratedWallet).vanityScore })}` : ''}
-                            </span>
-                          </div>
+                        <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">{t('createWallet.address')}</label>
+                        <div className="mt-1 flex items-start gap-2">
+                          <code className="min-w-0 flex-1 break-all rounded-lg border border-brand-500/15 bg-brand-500/10 px-3 py-2 font-mono text-[12px] font-semibold leading-relaxed text-surface-900 dark:bg-brand-500/15 dark:text-brand-100 sm:text-[13px]">
+                            {w.address}
+                          </code>
+                          <button type="button" onClick={() => handleCopy(w.address || '', `addr_${index}`)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-surface-200 bg-surface-50 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-950 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-white" aria-label={t('common.copy')}>
+                            {copiedField === `addr_${index}` ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                          </button>
+                        </div>
+                        {(w as GeneratedWallet).vanityScore !== undefined && (
+                          <span className="mt-1.5 inline-flex rounded-full border border-amber-400/25 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                            {t('createWallet.vanityExtraScore', { score: (w as GeneratedWallet).vanityScore })}
+                          </span>
+                        )}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.privateKey')}</label>
-                        <div className="flex items-center gap-2">
-                          <code className="flex-1 bg-surface-800 text-red-300 p-3 rounded-lg text-xs break-all font-mono">{w.privateKey}</code>
-                          <button onClick={() => handleCopy(w.privateKey || '', `pk_${index}`)} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg">
+                        <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">{t('createWallet.privateKey')}</label>
+                        <div className="flex items-start gap-2">
+                          <code className="min-w-0 flex-1 break-all rounded-lg border border-red-500/15 bg-red-500/5 p-3 font-mono text-[12px] leading-relaxed text-red-600 dark:bg-surface-800 dark:text-red-300 sm:text-xs">{w.privateKey}</code>
+                          <button onClick={() => handleCopy(w.privateKey || '', `pk_${index}`)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-surface-200 bg-surface-50 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-950 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-white">
                             {copiedField === `pk_${index}` ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                           </button>
                         </div>
@@ -1808,18 +1927,18 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
                       {w.mnemonic && (
                         <div>
-                          <label className="block text-xs font-medium text-surface-400 mb-1">
+                          <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">
                             {w.mnemonic.split(' ').length >= 24 ? t('createWallet.mnemonic24') : t('createWallet.mnemonic12')}
                           </label>
-                          <div className="bg-surface-800 p-3 rounded-lg">
+                          <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800">
                             <div className="grid grid-cols-3 gap-2 mb-2">
                               {w.mnemonic.split(' ').map((word, i) => (
-                                <span key={i} className="text-[10px] text-surface-200 bg-surface-700 px-1 py-1 rounded text-center truncate">
-                                  <span className="text-surface-500 mr-1">{i + 1}.</span>{word}
+                                <span key={i} className="rounded border border-surface-200 bg-white px-1 py-1 text-center font-mono text-[10px] text-surface-800 dark:border-surface-700 dark:bg-surface-700 dark:text-surface-200">
+                                  <span className="mr-1 text-surface-500">{i + 1}.</span>{word}
                                 </span>
                               ))}
                             </div>
-                            <button onClick={() => handleCopy(w.mnemonic || '', `mn_${index}`)} className="text-xs text-surface-400 hover:text-brand-400 flex items-center gap-1">
+                            <button onClick={() => handleCopy(w.mnemonic || '', `mn_${index}`)} className="flex items-center gap-1 text-xs font-semibold text-surface-500 hover:text-brand-500 dark:text-surface-400 dark:hover:text-brand-400">
                               {copiedField === `mn_${index}` ? <><Check size={12} className="text-green-400" /> {t('common.copied')}</> : <><Copy size={12} /> {t('createWallet.copyMnemonic')}</>}
                             </button>
                           </div>
@@ -1828,7 +1947,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                     </div>
                   ))}
 
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400">
+                  <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs font-medium text-red-600 dark:text-red-400">
                     ⚠️ <strong>{t('createWallet.backupWarning')}</strong>
                   </div>
 
@@ -1989,16 +2108,16 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                         </div>
                       </div>
 
-                      <div>
-                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">
+                      <div className="rounded-xl border border-surface-200/80 bg-white/60 p-2 dark:border-surface-700/80 dark:bg-surface-900/60">
+                        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-surface-500 dark:text-surface-400">
                             {t('createWallet.vanityPresets')}
                           </p>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => setVanityPresetsExpanded(prev => !prev)}
-                              className="rounded-full border border-surface-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-surface-600 transition-colors hover:border-brand-500 hover:text-brand-600 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:border-brand-400 dark:hover:text-brand-300"
+                              className="rounded-full border border-surface-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-surface-600 transition-colors hover:border-brand-500 hover:text-brand-600 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300 dark:hover:border-brand-400 dark:hover:text-brand-300"
                             >
                               {vanityPresetsExpanded ? t('common.showLess') : t('common.showMore', { count: vanityHiddenPresetCount })}
                             </button>
@@ -2010,7 +2129,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                   setVanityPrefix('');
                                   setVanitySuffix('');
                                 }}
-                                className="rounded-full border border-surface-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-surface-600 transition-colors hover:border-surface-300 hover:text-surface-950 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500 dark:hover:text-white"
+                                className="rounded-full border border-surface-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-surface-600 transition-colors hover:border-surface-300 hover:text-surface-950 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500 dark:hover:text-white"
                               >
                                 {t('createWallet.clearPattern')}
                               </button>
@@ -2018,24 +2137,21 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                           </div>
                         </div>
 
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="space-y-1">
                           {visibleVanityPresetGroups.map((group) => (
-                            <div
-                              key={group.key}
-                              className="min-w-0 rounded-xl border border-surface-200/80 bg-white/70 p-2.5 dark:border-surface-700/80 dark:bg-surface-900/70"
-                            >
-                              <div className="mb-2 flex min-w-0 items-center gap-1.5">
+                            <div key={group.key} className="flex min-w-0 items-center gap-1.5">
+                              <div className="flex w-20 shrink-0 items-center gap-1 overflow-hidden sm:w-24">
                                 <span
                                   aria-hidden="true"
-                                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-xs dark:bg-brand-500/15"
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-brand-500/10 text-[10px] dark:bg-brand-500/15"
                                 >
                                   {group.icon}
                                 </span>
-                                <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-surface-600 dark:text-surface-300">
+                                <span className="min-w-0 truncate text-[9px] font-bold uppercase tracking-wide text-surface-600 dark:text-surface-300">
                                   {t(`createWallet.${group.labelKey}`)}
                                 </span>
                               </div>
-                              <div className="grid grid-cols-3 gap-1.5">
+                              <div className="flex min-w-0 flex-1 flex-wrap gap-1">
                                 {group.items.map((preset) => {
                                   const active = vanitySuffixClean === preset.toLowerCase();
                                   return (
@@ -2044,7 +2160,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                       type="button"
                                       disabled={vanityGenerating}
                                       onClick={() => applyVanitySuffixPattern(preset)}
-                                      className={`min-w-0 rounded-lg border px-2 py-1.5 font-mono text-[11px] font-bold transition-colors disabled:opacity-50 ${
+                                      className={`min-w-[3.25rem] rounded-md border px-2 py-1 font-mono text-[10px] font-bold leading-none transition-colors disabled:opacity-50 ${
                                         active
                                           ? 'border-brand-500 bg-brand-500/15 text-brand-700 shadow-sm shadow-brand-500/10 dark:text-brand-200'
                                           : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-brand-500 hover:text-brand-600 dark:border-surface-700 dark:bg-surface-950/50 dark:text-surface-200 dark:hover:text-brand-300'
@@ -2059,46 +2175,44 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                           ))}
                         </div>
 
-                        <div className="mt-3 rounded-xl border border-surface-200/80 bg-white/70 p-2.5 dark:border-surface-700/80 dark:bg-surface-900/70">
-                          <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-surface-600 dark:text-surface-300">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-surface-200/70 pt-2 dark:border-surface-700/70">
+                          <label className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-surface-600 dark:text-surface-300">
                             {t('createWallet.vanityCustomPattern')}
                           </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={vanityCustomPattern}
-                              disabled={vanityGenerating}
-                              onChange={(e) => setVanityCustomPattern(e.target.value.replace(/\s/g, '').slice(0, 12))}
-                              placeholder="e.g. babe"
-                              className={`min-w-0 flex-1 rounded-lg border bg-surface-50 px-3 py-2 font-mono text-xs font-semibold text-surface-950 focus:outline-none disabled:opacity-50 dark:bg-surface-950/50 dark:text-white ${
-                                vanityCustomPattern && !VANITY_HEX_PATTERN.test(vanityCustomPattern)
-                                  ? 'border-red-500/60 focus:border-red-400'
-                                  : 'border-surface-200 focus:border-brand-500 dark:border-surface-700'
-                              }`}
-                            />
-                            <button
-                              type="button"
-                              disabled={vanityGenerating || !vanityCustomPattern || !VANITY_HEX_PATTERN.test(vanityCustomPattern)}
-                              onClick={() => applyVanitySuffixPattern(vanityCustomPattern)}
-                              className="shrink-0 rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-200"
-                            >
-                              {t('createWallet.vanityApplyCustom')}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={vanityGenerating || !vanityCustomPattern}
-                              onClick={() => {
-                                const appliedCustomPattern = vanityCustomPattern.trim().toLowerCase();
-                                setVanityCustomPattern('');
-                                if (vanitySuffixClean === appliedCustomPattern) setVanitySuffix('');
-                              }}
-                              title={t('common.delete')}
-                              aria-label={t('common.delete')}
-                              className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-300"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
+                          <input
+                            type="text"
+                            value={vanityCustomPattern}
+                            disabled={vanityGenerating}
+                            onChange={(e) => setVanityCustomPattern(e.target.value.replace(/\s/g, '').slice(0, 12))}
+                            placeholder="e.g. babe"
+                            className={`min-w-[7rem] flex-1 rounded-md border bg-surface-50 px-2 py-1.5 font-mono text-[11px] font-semibold text-surface-950 focus:outline-none disabled:opacity-50 dark:bg-surface-950/50 dark:text-white ${
+                              vanityCustomPattern && !VANITY_HEX_PATTERN.test(vanityCustomPattern)
+                                ? 'border-red-500/60 focus:border-red-400'
+                                : 'border-surface-200 focus:border-brand-500 dark:border-surface-700'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            disabled={vanityGenerating || !vanityCustomPattern || !VANITY_HEX_PATTERN.test(vanityCustomPattern)}
+                            onClick={() => applyVanitySuffixPattern(vanityCustomPattern)}
+                            className="shrink-0 rounded-md border border-brand-500/40 bg-brand-500/10 px-2 py-1.5 text-[10px] font-bold text-brand-700 transition-colors hover:bg-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-200"
+                          >
+                            {t('createWallet.vanityApplyCustom')}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={vanityGenerating || !vanityCustomPattern}
+                            onClick={() => {
+                              const appliedCustomPattern = vanityCustomPattern.trim().toLowerCase();
+                              setVanityCustomPattern('');
+                              if (vanitySuffixClean === appliedCustomPattern) setVanitySuffix('');
+                            }}
+                            title={t('common.delete')}
+                            aria-label={t('common.delete')}
+                            className="shrink-0 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-[10px] font-bold text-red-600 transition-colors hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-300"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </div>
                       </div>
 
@@ -2154,50 +2268,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                             </p>
                           )}
                         </div>
-                      ) : (
-                        <div className="rounded-xl border border-brand-500/20 bg-brand-500/5 p-4 dark:border-brand-400/20 dark:bg-brand-500/10">
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-300">
-                              <Sparkles size={20} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-sm font-bold text-surface-950 dark:text-white">{t('createWallet.vanityTitle')}</h4>
-                              <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-400">
-                                {t('createWallet.vanityDescription')}
-                              </p>
-                              <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                                <button
-                                  type="button"
-                                  disabled={vanityGenerating}
-                                  onClick={() => setVanitySuffix('888')}
-                                  className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-left transition-colors hover:border-brand-500 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900"
-                                >
-                                  <span className="block text-[10px] font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityPresetLucky')}</span>
-                                  <span className="font-mono text-sm font-extrabold text-surface-950 dark:text-white">...888</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={vanityGenerating}
-                                  onClick={() => setVanitySuffix('abc')}
-                                  className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-left transition-colors hover:border-brand-500 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900"
-                                >
-                                  <span className="block text-[10px] font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityPresetEasy')}</span>
-                                  <span className="font-mono text-sm font-extrabold text-surface-950 dark:text-white">...abc</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={vanityGenerating}
-                                  onClick={() => setVanitySuffix('0000')}
-                                  className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-left transition-colors hover:border-brand-500 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900"
-                                >
-                                  <span className="block text-[10px] font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityPresetPremium')}</span>
-                                  <span className="font-mono text-sm font-extrabold text-surface-950 dark:text-white">...0000</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   )}
                 </section>
@@ -2586,6 +2657,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                           {VANITY_EXTRA_FILTER_KEYS.map((key) => {
                             const rule = vanitySafeExtraFilters[key];
                             const enabled = !!rule.enabled;
+                            const preview = buildVanityExtraFilterPreview(key, rule, rule.minRun || vanitySafeExtraMinRun);
                             return (
                               <div
                                 key={key}
@@ -2618,6 +2690,17 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                     <p className="truncate text-xs font-bold text-surface-950 dark:text-white">{t(`createWallet.vanityExtraFilter_${key}`)}</p>
                                     <p className="mt-0.5 line-clamp-2 text-[10px] leading-relaxed text-surface-600 dark:text-surface-400">{t(`createWallet.vanityExtraFilterHint_${key}`)}</p>
                                   </div>
+                                </div>
+
+                                <div className="mt-2 rounded-lg border border-cyan-400/20 bg-white/75 px-2 py-1.5 font-mono text-[10px] font-semibold leading-relaxed text-surface-600 shadow-inner dark:border-cyan-400/15 dark:bg-surface-950/70 dark:text-surface-300">
+                                  <span className="mb-1 block font-sans text-[9px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{t('createWallet.vanityExtraFilterPreview')}</span>
+                                  <span className="break-all">
+                                    {preview.segments.map((segment, segmentIndex) => segment.highlight ? (
+                                      <mark key={`${key}-preview-${segmentIndex}`} className="rounded bg-amber-300/80 px-0.5 font-black text-amber-950 dark:bg-amber-400/80">{segment.text}</mark>
+                                    ) : (
+                                      <span key={`${key}-preview-${segmentIndex}`}>{segment.text}</span>
+                                    ))}
+                                  </span>
                                 </div>
 
                                 {key !== 'lucky' ? (
@@ -2846,7 +2929,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                 <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 items-start gap-2 overflow-hidden text-left" aria-pressed={selected}>
                                 <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${selected ? 'bg-emerald-500 text-white shadow shadow-emerald-500/25' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>{index + 1}</span>
                                   <span className="block min-w-0 overflow-hidden">
-                                    <code className="block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold leading-snug tracking-tight text-surface-950 dark:text-white sm:text-[12px]">{renderVanityAddress(address, true)}</code>
+                                    <code className="block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold leading-snug tracking-tight text-surface-950 dark:text-white sm:text-[12px]">{renderVanityAddress(address)}</code>
                                   <span className="mt-1 flex flex-wrap items-center gap-1 text-[9px] font-semibold text-emerald-700/80 dark:text-emerald-100/75">
                                     <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-1.5 py-0.5">{t('createWallet.vanityExtraTypePrimary')}</span>
                                     {saved && <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-700 shadow-sm dark:text-emerald-200">{t('createWallet.vanityExtraSaved')}</span>}
@@ -2912,7 +2995,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                 <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 items-start gap-2 overflow-hidden text-left" aria-pressed={selected}>
                                   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${selected ? 'bg-cyan-500 text-white shadow shadow-cyan-500/25' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>{index + 1}</span>
                                   <span className="block min-w-0 overflow-hidden">
-                                    <code className="block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold leading-snug tracking-tight text-surface-950 dark:text-white sm:text-[12px]">{renderVanityExtraAddress(address, wallet, true)}</code>
+                                    <code className="block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold leading-snug tracking-tight text-surface-950 dark:text-white sm:text-[12px]">{renderVanityExtraAddress(address, wallet)}</code>
                                     <span className="mt-1 flex flex-wrap items-center gap-1 text-[9px] font-semibold text-cyan-700/80 dark:text-cyan-100/75">
                                       <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-1.5 py-0.5">{getVanityExtraLabel(wallet)}</span>
                                       <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold shadow-sm ${getVanityScoreTone(score)}`}>{t('createWallet.vanityExtraScore', { score })}</span>
@@ -2956,7 +3039,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {vanityPaused ? (
                       <>
-                        <button onClick={() => setVanityPaused(false)} className="inline-flex items-center gap-2 rounded-lg border border-surface-300 bg-white px-4 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" title="Quay lại" aria-label="Quay lại"><span aria-hidden="true">←</span>Quay lại</button>
+                        <button onClick={() => setVanityPaused(false)} className="inline-flex items-center gap-2 rounded-lg border border-surface-300 bg-white px-4 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" title={t('common.back')} aria-label={t('common.back')}><span aria-hidden="true">←</span>{t('common.back')}</button>
                         <button onClick={() => startVanity(true)} disabled={!vanityCanResume} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-surface-700 disabled:text-surface-400" title={t('createWallet.vanityResume')} aria-label={t('createWallet.vanityResume')}><Play size={14} />{t('createWallet.vanityResume')}</button>
                       </>
                     ) : <button onClick={() => { void pauseVanity(); }} className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-300" title={t('createWallet.vanityPause')} aria-label={t('createWallet.vanityPause')}><Pause size={14} />{t('createWallet.vanityPause')}</button>}
@@ -3018,7 +3101,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
                                 </div>
 
                                 <code className="mt-1 block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold tracking-wide text-surface-950 dark:text-white sm:text-[12px]">
-                                  {isExtra ? renderVanityExtraAddress(address, wallet, true) : renderVanityAddress(address, true)}
+                                  {isExtra ? renderVanityExtraAddress(address, wallet) : renderVanityAddress(address)}
                                 </code>
 
                                 {isExtra && (
@@ -3097,7 +3180,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
 
         </div>
 
-        {(tab === 'manual' || (tab === 'generate' && generatedWallets.length > 0 && !bulkResult)) && (
+        {(tab === 'manual' || (tab === 'generate' && randomGeneratedWallets.length > 0 && !bulkResult)) && (
           <div className="p-4 border-t border-surface-800 bg-surface-900 sticky bottom-0 rounded-b-2xl">
             <button onClick={tab === 'manual' ? handleSaveManual : handleSaveGenerated}
               className="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 rounded-lg transition-all active:scale-[0.98]">

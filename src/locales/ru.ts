@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Безопасность устройства изменилась, и xKey не может открыть сохраненный ключ. Восстановите резервную копию .xkey или сбросьте хранилище, если копии нет."
   },
   "common": {
+    "back": "Назад",
     "cancel": "Отмена",
     "save": "Сохранить",
     "delete": "Удалить",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Сохранено",
     "vanityExtraTypePrimary": "Основной",
+    "vanityExtraTypeExtra": "Доп.",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Дополнительный vanity-кошелек",
     "vanityBackupConfirmTitle": "Я сохранил резервную копию выбранных vanity-кошельков",
     "vanityBackupConfirmDesc": "Приватные ключи/seed-фразы отображаются только здесь. Подтвердите, что вы безопасно сохранили их перед добавлением этих кошельков в хранилище.",

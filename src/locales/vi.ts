@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Bảo mật thiết bị đã thay đổi và xKey không mở được khóa đã lưu. Hãy khôi phục từ bản sao lưu .xkey hoặc đặt lại kho nếu không còn bản sao lưu."
   },
   "common": {
+    "back": "Quay lại",
     "enabled": "Đã bật",
     "disabled": "Đã tắt",
     "save": "Lưu",
@@ -845,6 +846,8 @@ export default {
     "vanityToggleDetails": "Ẩn/hiện chi tiết",
     "vanityExtraSaved": "Đã lưu",
     "vanityExtraTypePrimary": "Chính",
+    "vanityExtraTypeExtra": "Phụ",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Ví đẹp phụ",
     "vanityBackupConfirmTitle": "Tôi đã sao lưu các ví đẹp đã chọn",
     "vanityBackupConfirmDesc": "Khóa riêng/cụm từ khôi phục chỉ hiển thị tại đây. Hãy xác nhận bạn đã lưu an toàn trước khi thêm các ví này vào kho.",

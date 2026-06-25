@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "端末のセキュリティが変更され、保存済みキーを開けません。.xkey バックアップを復元するか、バックアップがない場合は保管庫をリセットしてください。"
   },
   "common": {
+    "back": "戻る",
     "cancel": "キャンセル",
     "save": "保存",
     "delete": "削除",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "保存済み",
     "vanityExtraTypePrimary": "メイン",
+    "vanityExtraTypeExtra": "追加",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "追加バニティウォレット",
     "vanityBackupConfirmTitle": "選択したバニティウォレットをバックアップしました",
     "vanityBackupConfirmDesc": "秘密鍵/シードフレーズはここでのみ表示されます。これらのウォレットを保管庫に追加する前に、安全に保存したことを確認してください。",

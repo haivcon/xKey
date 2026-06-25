@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "ความปลอดภัยของอุปกรณ์เปลี่ยนไป และ xKey เปิดกุญแจที่บันทึกไว้ไม่ได้ ให้กู้คืนไฟล์สำรอง .xkey หรือรีเซ็ตคลังหากไม่มีไฟล์สำรอง"
   },
   "common": {
+    "back": "ย้อนกลับ",
     "cancel": "ยกเลิก",
     "save": "บันทึก",
     "delete": "ลบ",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "บันทึกแล้ว",
     "vanityExtraTypePrimary": "หลัก",
+    "vanityExtraTypeExtra": "เพิ่มเติม",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "กระเป๋า Vanity เพิ่มเติม",
     "vanityBackupConfirmTitle": "ฉันได้สำรองกระเป๋า Vanity ที่เลือกแล้ว",
     "vanityBackupConfirmDesc": "คีย์ส่วนตัว/วลีกู้คืนจะแสดงเฉพาะที่นี่เท่านั้น โปรดยืนยันว่าคุณบันทึกไว้อย่างปลอดภัยก่อนเพิ่มกระเป๋าเหล่านี้ลงในคลัง",

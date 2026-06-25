@@ -28,6 +28,8 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const derivationPath = `m/83696968'/39'/0'/${words}'/${index}'`;
+
   const handleDerive = () => {
     setError(null);
     if (!masterKey.trim()) {
@@ -65,7 +67,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3 text-blue-400">
+      <div className="rounded-xl border border-brand-500/20 bg-brand-500/5 p-4 flex gap-3 text-brand-600 dark:text-brand-300">
         <Info className="w-5 h-5 shrink-0 mt-0.5" />
         <div className="text-sm">
           <p className="font-medium mb-1">{t('createWallet.entropy.bip85Title')}</p>
@@ -75,17 +77,17 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         </div>
       </div>
 
-      <div className="space-y-4 bg-[#1a1b1e] rounded-xl p-4 border border-white/5">
+      <div className="space-y-4 rounded-xl border border-surface-200 bg-white/80 p-4 dark:border-surface-700 dark:bg-surface-900/80">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-surface-700 dark:text-surface-300">
             {t('createWallet.entropy.bip85InputLabel')}
           </label>
           <div className="relative">
             <textarea
               value={masterKey}
               onChange={(e) => setMasterKey(e.target.value)}
-              className={`w-full bg-[#141517] border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm ${
-                error ? 'border-red-500/50' : 'border-white/10'
+              className={`w-full rounded-xl border bg-surface-50 px-4 py-3 font-mono text-sm text-surface-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-surface-950 dark:text-white dark:placeholder:text-surface-500 resize-none ${
+                error ? 'border-red-500/50' : 'border-surface-200 dark:border-surface-700'
               }`}
               rows={3}
               placeholder={t('createWallet.entropy.bip85Placeholder')}
@@ -96,12 +98,12 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
             <button
               type="button"
               onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-3 p-1.5 text-gray-400 hover:text-white bg-[#141517] rounded-md transition-colors"
+              className="absolute right-3 top-3 rounded-md bg-surface-100 p-1.5 text-surface-500 transition-colors hover:text-surface-950 dark:bg-surface-950 dark:text-surface-400 dark:hover:text-white"
             >
               {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-surface-500">
           {t('createWallet.entropy.bip85MasterWarning')}
         </p>
           {error && (
@@ -114,10 +116,10 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-surface-500 mb-2">
               {t('createWallet.entropy.wordCount')}
             </label>
-            <div className="flex bg-[#141517] rounded-lg p-1 border border-white/5">
+            <div className="flex rounded-lg border border-surface-200 bg-surface-100 p-1 dark:border-surface-700 dark:bg-surface-950">
               {[12, 24].map((count) => (
                 <button
                   key={count}
@@ -125,8 +127,8 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
                   onClick={() => setWords(count as 12 | 24)}
                   className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     words === count
-                      ? 'bg-[#2a2b2e] text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-300'
+                      ? 'bg-brand-500 text-white shadow-sm'
+                      : 'text-surface-500 hover:text-surface-900 dark:hover:text-surface-200'
                   }`}
                 >
                   {count}
@@ -136,12 +138,12 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-surface-500 mb-2">
               {t('createWallet.entropy.index')}
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Settings2 className="w-4 h-4 text-gray-500" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Settings2 className="h-4 w-4 text-surface-500 dark:text-surface-400" />
               </div>
               <input
                 type="number"
@@ -154,17 +156,20 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
                   const nextIndex = Number.isFinite(parsed) ? parsed : 0;
                   setIndex(Math.min(2147483647, Math.max(0, nextIndex)));
                 }}
-                className="w-full bg-[#141517] border border-white/5 rounded-lg pl-9 pr-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                className="w-full rounded-lg border border-surface-200 bg-surface-50 py-2 pl-9 pr-4 font-mono text-surface-950 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-surface-700 dark:bg-surface-950 dark:text-white"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-black/20 rounded-lg p-3 border border-white/5">
-          <div className="text-xs text-gray-500 mb-1">{t('createWallet.entropy.derivationPath')}</div>
-          <div className="font-mono text-sm text-gray-400 break-all">
-            m/83696968'/39'/0'/{words}'/{index}'
-          </div>
+        <div className="rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 shadow-inner shadow-brand-900/5 dark:border-brand-400/25 dark:bg-brand-500/10 dark:shadow-none">
+          <div className="mb-1.5 text-xs font-semibold text-surface-700 dark:text-surface-200">{t('createWallet.entropy.derivationPath')}</div>
+          <output
+            aria-live="polite"
+            className="block min-h-[2.25rem] w-full select-all break-all rounded-md border border-brand-500/20 bg-white px-2.5 py-2 font-mono text-sm font-bold leading-relaxed text-surface-950 shadow-sm dark:border-brand-400/25 dark:bg-surface-950 dark:text-white"
+          >
+            {derivationPath}
+          </output>
         </div>
       </div>
 
@@ -172,7 +177,7 @@ export function BIP85DerivationPanel({ onDerivedMnemonic }: BIP85DerivationPanel
         type="button"
         onClick={handleDerive}
         disabled={isValidating || !masterKey.trim()}
-        className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 font-semibold text-white shadow-sm shadow-brand-500/20 transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
       >
         {isValidating ? (
           <>

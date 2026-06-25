@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Keamanan perangkat berubah dan xKey tidak dapat membuka kunci tersimpan. Pulihkan cadangan .xkey atau reset vault jika tidak ada cadangan."
   },
   "common": {
+    "back": "Kembali",
     "cancel": "Batal",
     "save": "Simpan",
     "delete": "Hapus",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Tersimpan",
     "vanityExtraTypePrimary": "Utama",
+    "vanityExtraTypeExtra": "Ekstra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Dompet vanity tambahan",
     "vanityBackupConfirmTitle": "Saya telah mencadangkan dompet vanity yang dipilih",
     "vanityBackupConfirmDesc": "Private key/frasa seed hanya ditampilkan di sini. Konfirmasi bahwa Anda sudah menyimpannya dengan aman sebelum menambahkan dompet ini ke vault.",

@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Cihaz güvenliği değişti ve xKey kayıtlı anahtarı açamıyor. Bir .xkey yedeğini geri yükleyin veya yedeğiniz yoksa kasayı sıfırlayın."
   },
   "common": {
+    "back": "Geri",
     "cancel": "İptal",
     "save": "Kaydet",
     "delete": "Sil",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Kaydedildi",
     "vanityExtraTypePrimary": "Ana",
+    "vanityExtraTypeExtra": "Ek",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Ek vanity cüzdanı",
     "vanityBackupConfirmTitle": "Seçili vanity cüzdanlarını yedekledim",
     "vanityBackupConfirmDesc": "Özel anahtarlar/kurtarma ifadeleri yalnızca burada gösterilir. Bu cüzdanları kasaya eklemeden önce güvenli şekilde kaydettiğinizi onaylayın.",

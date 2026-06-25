@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "设备安全设置已更改，xKey 无法打开已保存的密钥。请恢复 .xkey 备份；如果没有备份，请重置保险库。"
   },
   "common": {
+    "back": "返回",
     "cancel": "取消",
     "save": "保存",
     "delete": "删除",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "展开/收起详情",
     "vanityExtraSaved": "已保存",
     "vanityExtraTypePrimary": "主要",
+    "vanityExtraTypeExtra": "额外",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "额外靓号钱包",
     "vanityBackupConfirmTitle": "我已备份所选靓号钱包",
     "vanityBackupConfirmDesc": "私钥/助记词只会在此处显示。请确认已安全保存后再将这些钱包添加到保险库。",

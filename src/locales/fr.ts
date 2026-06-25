@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "La sécurité de l’appareil a changé et xKey ne peut pas ouvrir la clé enregistrée. Restaurez une sauvegarde .xkey ou réinitialisez le coffre si vous n’avez plus de sauvegarde."
   },
   "common": {
+    "back": "Retour",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "delete": "Supprimer",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Enregistré",
     "vanityExtraTypePrimary": "Principal",
+    "vanityExtraTypeExtra": "Extra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Portefeuille vanity supplémentaire",
     "vanityBackupConfirmTitle": "J’ai sauvegardé les portefeuilles vanity sélectionnés",
     "vanityBackupConfirmDesc": "Les clés privées/phrases de récupération ne sont affichées qu’ici. Confirmez les avoir enregistrées en sécurité avant d’ajouter ces portefeuilles au coffre.",

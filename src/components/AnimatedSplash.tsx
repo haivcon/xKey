@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Key } from 'lucide-react';
 import { XKEY_SLOGAN } from '../utils/branding';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LETTER_DELAY = 250;   // ms between each letter
 const HOLD_DURATION = 800;  // ms to hold after all visible
@@ -9,14 +10,17 @@ const FADE_DURATION = 500;  // ms for fade-out
 type AnimatedSplashProps = {
   onFinish: () => void;
   status?: string;
+  version?: string;
 };
 
-export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps) {
+export default function AnimatedSplash({ onFinish, status, version }: AnimatedSplashProps) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [fading, setFading] = useState(false);
+  const { theme } = useTheme();
 
   const brandText = 'xKey';
   const letters = useMemo(() => Array.from(brandText), [brandText]);
+  const logoSrc = '/logo.png';
 
   useEffect(() => {
     const total = letters.length;
@@ -60,9 +64,9 @@ export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps
           transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.5)',
           transition: 'opacity 0.3s ease-out, transform 0.3s ease-out, text-shadow 0.4s ease-out',
           textShadow: isJustAppeared
-            ? '0 0 30px rgba(99, 102, 241, 1), 0 0 60px rgba(99, 102, 241, 0.6), 0 0 100px rgba(99, 102, 241, 0.3)'
+            ? 'var(--splash-letter-shadow-strong)'
             : isVisible
-              ? '0 0 10px rgba(99, 102, 241, 0.4), 0 0 20px rgba(99, 102, 241, 0.2)'
+              ? 'var(--splash-letter-shadow-soft)'
               : 'none',
         }}
       >
@@ -75,7 +79,7 @@ export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps
 
   return (
     <div
-      className="animated-splash"
+      className={`animated-splash animated-splash-${theme}`}
       style={{
         opacity: fading ? 0 : 1,
         transition: `opacity ${FADE_DURATION}ms ease-in-out`,
@@ -85,7 +89,7 @@ export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps
       <div className="splash-glow" />
 
       <div className="splash-brand-stack">
-        <img src="/logo.png" alt="" className="splash-logo" />
+        <img src={logoSrc} alt="" className="splash-logo" />
         <div className="splash-text">
           {letters.map((ch, i) => renderChar(ch, i))}
         </div>
@@ -95,24 +99,31 @@ export default function AnimatedSplash({ onFinish, status }: AnimatedSplashProps
         >
           <span>NOT YOUR </span><strong>KEY</strong><span>, NOT YOUR CRYPTO</span>
         </div>
-        <div 
+        <div
           className="splash-key-icon"
           style={{
             opacity: badgeVisible ? 1 : 0,
             transform: badgeVisible ? 'translateY(0)' : 'translateY(10px)',
             transition: 'all 0.5s ease-out',
-            marginTop: '1rem',
-            color: '#6366f1',
-            filter: 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.8))'
           }}
         >
           <Key size={32} />
         </div>
-        {status && (
-          <div className="splash-status">
-            {status}
+        <div className={`splash-status-wrap ${badgeVisible ? 'is-visible' : ''}`}>
+          <div className="splash-status" aria-live="polite">
+            {status && (
+              <>
+                <span>{status}</span>
+                <span className="splash-status-dots" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </>
+            )}
           </div>
-        )}
+          {version && <div className="splash-version">v{version}</div>}
+        </div>
       </div>
     </div>
   );

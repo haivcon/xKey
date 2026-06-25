@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "تم تغيير أمان الجهاز ولا يستطيع xKey فتح المفتاح المخزن. استعد نسخة .xkey الاحتياطية أو أعد ضبط الخزنة إذا لم تعد تملك نسخة احتياطية."
   },
   "common": {
+    "back": "رجوع",
     "cancel": "إلغاء",
     "save": "حفظ",
     "delete": "حذف",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "تم الحفظ",
     "vanityExtraTypePrimary": "رئيسي",
+    "vanityExtraTypeExtra": "إضافي",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "محفظة الغرور اضافية",
     "vanityBackupConfirmTitle": "لقد نسخت محافظ العناوين المميزة المحددة احتياطيًا",
     "vanityBackupConfirmDesc": "تظهر المفاتيح الخاصة/عبارات الاسترداد هنا فقط. أكّد أنك حفظتها بأمان قبل إضافة هذه المحافظ إلى الخزنة.",

@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "A segurança do dispositivo mudou e o xKey não consegue abrir a chave salva. Restaure um backup .xkey ou redefina o cofre se não tiver backup."
   },
   "common": {
+    "back": "Voltar",
     "cancel": "Cancelar",
     "save": "Salvar",
     "delete": "Excluir",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Salvo",
     "vanityExtraTypePrimary": "Principal",
+    "vanityExtraTypeExtra": "Extra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Carteira vanity extra",
     "vanityBackupConfirmTitle": "Fiz backup das carteiras vanity selecionadas",
     "vanityBackupConfirmDesc": "Chaves privadas/frases-semente são exibidas apenas aqui. Confirme que você as salvou com segurança antes de adicionar estas carteiras ao cofre.",

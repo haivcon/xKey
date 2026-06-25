@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "기기 보안이 변경되어 xKey가 저장된 키를 열 수 없습니다. .xkey 백업을 복원하거나 백업이 없으면 보관함을 초기화하세요."
   },
   "common": {
+    "back": "뒤로",
     "cancel": "취소",
     "save": "저장",
     "delete": "삭제",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "저장됨",
     "vanityExtraTypePrimary": "기본",
+    "vanityExtraTypeExtra": "추가",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "추가 베니티 지갑",
     "vanityBackupConfirmTitle": "선택한 베니티 지갑을 백업했습니다",
     "vanityBackupConfirmDesc": "개인 키/시드 문구는 여기에서만 표시됩니다. 이 지갑을 금고에 추가하기 전에 안전하게 저장했는지 확인하세요.",

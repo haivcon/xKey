@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "डिवाइस सुरक्षा बदल गई है और xKey सहेजी गई कुंजी नहीं खोल सकता। .xkey बैकअप पुनर्स्थापित करें या बैकअप न हो तो वॉल्ट रीसेट करें।"
   },
   "common": {
+    "back": "वापस",
     "cancel": "रद्द करें",
     "save": "सहेजें",
     "delete": "हटाएं",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "सहेजा गया",
     "vanityExtraTypePrimary": "मुख्य",
+    "vanityExtraTypeExtra": "अतिरिक्त",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "अतिरिक्त वैनिटी वॉलेट",
     "vanityBackupConfirmTitle": "मैंने चुने गए वैनिटी वॉलेट का बैकअप ले लिया है",
     "vanityBackupConfirmDesc": "निजी कुंजियाँ/सीड वाक्यांश केवल यहाँ दिखाए जाते हैं। इन वॉलेट को वॉल्ट में जोड़ने से पहले पुष्टि करें कि आपने इन्हें सुरक्षित रूप से सहेज लिया है।",

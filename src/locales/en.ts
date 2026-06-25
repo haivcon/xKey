@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Device security changed and xKey cannot open the stored key. Restore a .xkey backup or reset the vault if you no longer have a backup."
   },
   "common": {
+    "back": "Back",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "save": "Save",
@@ -845,6 +846,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Saved",
     "vanityExtraTypePrimary": "Main",
+    "vanityExtraTypeExtra": "Extra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Extra vanity wallet",
     "vanityBackupConfirmTitle": "I have backed up the selected vanity wallets",
     "vanityBackupConfirmDesc": "Private keys/seed phrases are shown only here. Confirm you saved them safely before adding these wallets to the vault.",

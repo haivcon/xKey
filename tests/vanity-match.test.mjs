@@ -43,6 +43,63 @@ assert.equal(mirror?.side, 'both');
 assert.equal(mirror?.headRun, 'abc1');
 assert.equal(mirror?.tailRun, '1cba');
 
+const palindromeOnly = detectExtraVanityMatch('0xabccba1234567890abcdef1234567890abcdef12', {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: true, minRun: 6 },
+  bracket: { enabled: false },
+  lucky: { enabled: false },
+  alternating: { enabled: false },
+});
+assert.equal(palindromeOnly?.patternType, 'palindrome');
+assert.equal(palindromeOnly?.headRun, 'abccba');
+
+const bracketOnly = detectExtraVanityMatch('0xabc1234567890abcdef1234567890abcdefabc', {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: false },
+  bracket: { enabled: true, minRun: 3 },
+  lucky: { enabled: false },
+  alternating: { enabled: false },
+});
+assert.equal(bracketOnly?.patternType, 'bracket');
+assert.equal(bracketOnly?.headRun, 'abc');
+assert.equal(bracketOnly?.tailRun, 'abc');
+
+const luckyOnly = detectExtraVanityMatch('0x1234567890abcdef168abcdef1234567890abcd', {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: false },
+  bracket: { enabled: false },
+  lucky: { enabled: true, patterns: ['168'] },
+  alternating: { enabled: false },
+});
+assert.equal(luckyOnly?.patternType, 'lucky');
+assert.equal(luckyOnly?.headRun, '168');
+
+const alternatingOnly = detectExtraVanityMatch('0xababab1234567890abcdef1234567890abcdef12', {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: false },
+  bracket: { enabled: false },
+  lucky: { enabled: false },
+  alternating: { enabled: true, minRun: 6 },
+});
+assert.equal(alternatingOnly?.patternType, 'alternating');
+assert.equal(alternatingOnly?.headRun, 'ababab');
+
 assert.equal(detectExtraVanityMatch('0x12abce81234567890abcdef1234567890abcdee', 3), null);
 
 const ranked = [head, tail, both].filter(Boolean).sort(compareVanityExtraMatches);

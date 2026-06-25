@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "La seguridad del dispositivo cambió y xKey no puede abrir la clave guardada. Restaura una copia .xkey o restablece la bóveda si ya no tienes copia."
   },
   "common": {
+    "back": "Volver",
     "cancel": "Cancelar",
     "save": "Guardar",
     "delete": "Eliminar",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Guardada",
     "vanityExtraTypePrimary": "Principal",
+    "vanityExtraTypeExtra": "Extra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Cartera de tocador adicional",
     "vanityBackupConfirmTitle": "He respaldado las billeteras vanity seleccionadas",
     "vanityBackupConfirmDesc": "Las claves privadas/frases semilla solo se muestran aquí. Confirma que las guardaste de forma segura antes de añadir estas billeteras a la bóveda.",

@@ -810,21 +810,41 @@ html {
 
 /* ── Animated Splash Screen ── */
 .animated-splash {
+  --splash-bg: var(--color-surface-950, #020617);
+  --splash-panel: color-mix(in srgb, var(--color-surface-900, #0f172a) 52%, transparent);
+  --splash-text: var(--color-surface-50, #f8fafc);
+  --splash-muted: var(--color-surface-300, #cbd5e1);
+  --splash-accent: var(--color-brand-500, #6366f1);
+  --splash-accent-2: var(--color-emerald-400, #34d399);
+  --splash-letter-shadow-strong: 0 0 30px color-mix(in srgb, var(--splash-accent) 90%, transparent), 0 0 64px color-mix(in srgb, var(--splash-accent) 50%, transparent);
+  --splash-letter-shadow-soft: 0 0 12px color-mix(in srgb, var(--splash-accent) 42%, transparent), 0 0 24px color-mix(in srgb, var(--splash-accent) 20%, transparent);
   position: fixed;
   inset: 0;
   z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000000;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--splash-accent) 20%, transparent), transparent 34%),
+    radial-gradient(circle at 50% 65%, color-mix(in srgb, var(--splash-accent-2) 10%, transparent), transparent 30%),
+    var(--splash-bg);
+}
+
+.animated-splash-light {
+  --splash-bg: var(--color-surface-50, #f8fafc);
+  --splash-panel: color-mix(in srgb, var(--color-surface-100, #f1f5f9) 72%, transparent);
+  --splash-text: var(--color-surface-950, #020617);
+  --splash-muted: var(--color-surface-600, #475569);
 }
 
 .splash-glow {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: min(76vw, 380px);
+  height: min(76vw, 380px);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--splash-accent) 18%, transparent) 0%, transparent 70%);
+  filter: blur(2px);
   pointer-events: none;
 }
 
@@ -839,9 +859,9 @@ html {
 
 .splash-letter {
   font-size: clamp(36px, 10vw, 56px);
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0;
+  font-weight: 800;
+  color: var(--splash-text);
+  letter-spacing: -0.035em;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -852,7 +872,7 @@ html {
 
 .splash-slogan {
   max-width: min(86vw, 420px);
-  color: rgba(226, 232, 240, 0.84);
+  color: color-mix(in srgb, var(--splash-muted) 82%, transparent);
   font-size: clamp(11px, 2.6vw, 13px);
   font-weight: 800;
   line-height: 1.45;
@@ -864,8 +884,8 @@ html {
 }
 
 .splash-slogan strong {
-  color: #34d399;
-  text-shadow: 0 0 18px rgba(52, 211, 153, 0.55);
+  color: var(--splash-accent-2);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--splash-accent-2) 55%, transparent);
 }
 
 .splash-slogan.is-visible {
@@ -968,18 +988,86 @@ html {
   height: clamp(64px, 16vw, 92px);
   border-radius: 22px;
   object-fit: cover;
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.38), 0 16px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--splash-accent) 36%, transparent), 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.splash-key-icon {
+  margin-top: 0.65rem;
+  color: var(--splash-accent);
+  filter: drop-shadow(0 0 15px color-mix(in srgb, var(--splash-accent) 75%, transparent));
+}
+
+.splash-status-wrap {
+  display: flex;
+  min-height: 2.45rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+
+.splash-status-wrap.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .splash-status {
+  display: inline-flex;
   min-height: 1rem;
   max-width: min(80vw, 22rem);
-  color: rgba(209, 213, 219, 0.78);
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  color: color-mix(in srgb, var(--splash-muted) 88%, transparent);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
   text-align: center;
   letter-spacing: 0.02em;
+}
+
+.splash-status-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.16rem;
+}
+
+.splash-status-dots span {
+  width: 0.22rem;
+  height: 0.22rem;
+  border-radius: 999px;
+  background: var(--splash-accent);
+  animation: splash-status-dot 1.05s ease-in-out infinite;
+}
+
+.splash-status-dots span:nth-child(2) {
+  animation-delay: 140ms;
+}
+
+.splash-status-dots span:nth-child(3) {
+  animation-delay: 280ms;
+}
+
+.splash-version {
+  color: color-mix(in srgb, var(--splash-muted) 54%, transparent);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+@keyframes splash-status-dot {
+  0%, 80%, 100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 
 .splash-channel-badge {

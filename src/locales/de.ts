@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Die Gerätesicherheit wurde geändert und xKey kann den gespeicherten Schlüssel nicht öffnen. Stelle ein .xkey-Backup wieder her oder setze den Tresor zurück, wenn du kein Backup mehr hast."
   },
   "common": {
+    "back": "Zurück",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "delete": "Löschen",
@@ -842,6 +843,8 @@ export default {
     "vanityToggleDetails": "Toggle details",
     "vanityExtraSaved": "Gespeichert",
     "vanityExtraTypePrimary": "Primär",
+    "vanityExtraTypeExtra": "Extra",
+    "vanityExtraFilterPreview": "Preview",
     "vanityExtraWalletName": "Zusätzliche Kosmetiktasche",
     "vanityBackupConfirmTitle": "Ich habe die ausgewählten Vanity-Wallets gesichert",
     "vanityBackupConfirmDesc": "Private Schlüssel/Seed-Phrasen werden nur hier angezeigt. Bestätige, dass du sie sicher gespeichert hast, bevor du diese Wallets zum Tresor hinzufügst.",

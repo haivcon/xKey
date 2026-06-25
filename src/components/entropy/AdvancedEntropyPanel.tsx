@@ -57,26 +57,26 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
 
   if (entropyData && seedPhrase && address) {
     return (
-      <div className="space-y-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
-        <div className="flex items-center gap-2 text-emerald-400 mb-2">
+      <div className="space-y-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-center">
+        <div className="flex items-center justify-center gap-2 text-emerald-500 dark:text-emerald-400 mb-2">
           <Check size={20} />
           <h3 className="font-bold">{t('createWallet.entropy.generatedSuccess')}</h3>
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-emerald-500/80 mb-1">{t('createWallet.address')}</label>
-          <code className="block bg-surface-900 border border-emerald-500/20 p-2.5 rounded-lg text-sm text-emerald-300 break-all font-mono">
+          <label className="block text-xs font-medium text-emerald-600 dark:text-emerald-400/80 mb-1">{t('createWallet.address')}</label>
+          <code className="block rounded-lg border border-emerald-500/20 bg-white/80 p-2.5 font-mono text-sm text-emerald-700 break-all dark:bg-surface-950 dark:text-emerald-300">
             {address}
           </code>
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-emerald-500/80 mb-1">{t('createWallet.seedPhrase')}</label>
-          <div className="bg-surface-900 border border-emerald-500/20 p-3 rounded-lg">
+          <label className="block text-xs font-medium text-emerald-600 dark:text-emerald-400/80 mb-1">{t('createWallet.seedPhrase')}</label>
+          <div className="rounded-lg border border-emerald-500/20 bg-white/80 p-3 dark:bg-surface-950">
             <div className="grid grid-cols-3 gap-2">
               {seedPhrase.split(' ').map((word, i) => (
-                <span key={i} className="text-[10px] text-surface-200 bg-surface-800 px-1 py-1 rounded text-center truncate">
-                  <span className="text-emerald-500/50 mr-1">{i + 1}.</span>{word}
+                <span key={i} className="rounded bg-emerald-500/10 px-1 py-1 text-center text-[10px] text-surface-800 truncate dark:text-surface-200">
+                  <span className="text-emerald-600/70 dark:text-emerald-400/60 mr-1">{i + 1}.</span>{word}
                 </span>
               ))}
             </div>
@@ -86,7 +86,7 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
         <div className="flex gap-3 pt-2">
           <button
             onClick={reset}
-            className="flex-1 py-2.5 rounded-lg border border-surface-600 bg-surface-800 text-sm font-semibold text-white hover:bg-surface-700 transition-colors"
+            className="flex-1 rounded-lg border border-surface-200 bg-white py-2.5 text-sm font-semibold text-surface-800 transition-colors hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:hover:bg-surface-700"
           >
             {t('common.reset')}
           </button>
@@ -103,11 +103,11 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-1 bg-surface-800/50 p-1 rounded-xl">
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-surface-100 p-1 dark:bg-surface-800/50">
         <button
           onClick={() => setSource('fingerprint')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-            source === 'fingerprint' ? 'bg-brand-500/20 text-brand-300 shadow-sm' : 'text-surface-400 hover:text-white'
+            source === 'fingerprint' ? 'bg-brand-500 text-white shadow-sm' : 'text-surface-500 hover:text-surface-900 dark:text-surface-400 dark:hover:text-white'
           }`}
         >
           <Fingerprint size={16} />
@@ -116,7 +116,7 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
         <button
           onClick={() => setSource('dice')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-            source === 'dice' ? 'bg-brand-500/20 text-brand-300 shadow-sm' : 'text-surface-400 hover:text-white'
+            source === 'dice' ? 'bg-brand-500 text-white shadow-sm' : 'text-surface-500 hover:text-surface-900 dark:text-surface-400 dark:hover:text-white'
           }`}
         >
           <Dices size={16} />
@@ -125,7 +125,7 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
         <button
           onClick={() => setSource('bip85')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-            source === 'bip85' ? 'bg-brand-500/20 text-brand-300 shadow-sm' : 'text-surface-400 hover:text-white'
+            source === 'bip85' ? 'bg-brand-500 text-white shadow-sm' : 'text-surface-500 hover:text-surface-900 dark:text-surface-400 dark:hover:text-white'
           }`}
         >
           <Share2 size={16} />
@@ -133,7 +133,7 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
         </button>
       </div>
 
-      <div className="relative bg-surface-900 border border-surface-700 rounded-xl p-4">
+      <div className="relative rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-900">
         {source === 'fingerprint' && (
           <EntropyCanvas onComplete={handleEntropyComplete} />
         )}

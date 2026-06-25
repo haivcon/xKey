@@ -182,14 +182,14 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    const statusByStep = {
-      crypto: t('integrity.cryptoChecking'),
-      app: t('integrity.appChecking'),
-      done: t('integrity.ready'),
-    };
 
     if (!integrityCheckRef.current) {
       integrityCheckRef.current = runRuntimeIntegrityChecks((step) => {
+        const statusByStep = {
+          crypto: tRef.current('integrity.cryptoChecking'),
+          app: tRef.current('integrity.appChecking'),
+          done: tRef.current('integrity.ready'),
+        };
         setIntegrityStatus(statusByStep[step] || '');
       });
     }
@@ -1412,7 +1412,7 @@ export default function App() {
 
   return (
     <>
-      {showSplash && <AnimatedSplash onFinish={() => setSplashAnimationDone(true)} status={integrityStatus} />}
+      {showSplash && <AnimatedSplash onFinish={() => setSplashAnimationDone(true)} status={integrityStatus} version={appVersion.version} />}
       <div style={{ display: (needsPinAuth && !vaultLoading) ? 'none' : 'block' }}>
         {mainContent}
       </div>

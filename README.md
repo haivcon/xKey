@@ -18,19 +18,16 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.19.0
+## Current Release: v5.20.0
 
-v5.19.0 introduces a comprehensive UI/UX overhaul of the Vanity Wallet generation process, transforming it into a structured, step-by-step professional wizard while retaining the original expandable architecture.
+v5.20.0 introduces UI refinements for the splash screen experience, ensuring correct theme-based logo loading during application boot and fixing asset resolving issues for Vite production builds.
 
 ### Main Upgrades
 
-- **Vanity Wallet UI Redesign:** Reorganized the Vanity Wallet creation modal into a 5-step intuitive workflow (Key Source, Pattern, Storage, Performance, and Secondary Wallets).
-- **Visual Enhancements:** Introduced unified status badges (e.g., Easy, FAST, ON) for quick configuration checks, improved accordion headers with softer borders and gradients.
-- **Progress Tracking:** Added a visual progress indicator inside the modal to guide users through the setup process.
-- **Improved Call-to-Action:** Elevated the primary action button for starting the vanity search with prominent styling and explicit action text.
-- **Code Optimization:** Applied structural UI changes in `CreateWalletModal.tsx` and visual refinements in `App.tsx` and `index.css`.
-- **Android release metadata:** Android version metadata is updated to `versionCode 83` and `versionName 5.19.0`.
-- **Release documentation refresh:** README, changelog, security, contributing, code of conduct, architecture, and git ignore rules were updated for the current release while older release notes are collapsed.
+- **Splash Screen Fix:** Fixed an issue where the light theme logo would fail to load on the initial boot sequence ("Integrity checks passed") because it attempted to load a non-existent `logo-dark.png` asset.
+- **Vite Asset Resolution:** Unified the splash screen logo to always resolve `/logo.png`, allowing the CSS-driven dynamic theme styling (glow, shadow, text color) to correctly adjust to the user's system preferences.
+- **Android release metadata:** Android version metadata is updated to `versionCode 84` and `versionName 5.20.0`.
+- **Release documentation refresh:** README, changelog, and project versioning were updated for the current release while older release notes are collapsed.
 
 ### Verification for This Release
 
@@ -111,6 +108,12 @@ Android release builds are triggered by GitHub tags matching `v*`.
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+### v5.19.0
+
+- Vanity Wallet UI Redesign with a 5-step intuitive workflow.
+- Introduced unified status badges and a visual progress indicator.
+- Code optimizations in `CreateWalletModal.tsx`, `App.tsx`, and `index.css`.
 
 ### v5.18.2
 
