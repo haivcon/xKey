@@ -18,21 +18,18 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.18.1
+## Current Release: v5.19.0
 
-v5.18.1 is a release metadata, Android build, and documentation refresh for the current advanced vanity-wallet generation upgrade. It keeps the v5.18 feature set focused on safer long-running scans, better visibility of generated addresses, secure reveal/copy flows, and clearer multilingual guidance.
+v5.19.0 introduces a comprehensive UI/UX overhaul of the Vanity Wallet generation process, transforming it into a structured, step-by-step professional wizard while retaining the original expandable architecture.
 
 ### Main Upgrades
 
-- **Advanced vanity match discovery:** The vanity worker can retain extra high-value addresses that match mathematical patterns such as forward and reverse sequences, dual-end repetitions, symmetry, palindromes, alternating patterns, and bracket-style matches.
-- **Larger match viewer:** Generated vanity addresses are shown in expanded scrollable lists with middle truncation so both the prefix and suffix remain visible on narrow and wide screens.
-- **Secure result details:** Private keys and seed phrases in vanity results remain hidden by default and require an explicit reveal action before copy operations.
-- **Individual and bulk save actions:** Users can save discovered vanity wallets one by one or in bulk and route them directly into a selected vault folder.
-- **Configurable secondary wallet reserve:** Users can choose how many extra beautiful secondary matches should be retained during a scan, with safe limits to protect memory usage.
-- **CPU and heat safety guidance:** The UI now explains why long-running vanity generation can heat the device, affect battery health, and require cooling breaks or reduced workload.
-- **Theme and layout improvements:** Light/dark contrast, generator metrics, status indicators, address display, and responsive spacing were refined.
-- **Localization refresh:** Vanity, pause/resume, folder routing, heat warning, and advanced match descriptions were synchronized across supported locales.
-- **Android release metadata:** Android version metadata is updated to `versionCode 81` and `versionName 5.18.1`.
+- **Vanity Wallet UI Redesign:** Reorganized the Vanity Wallet creation modal into a 5-step intuitive workflow (Key Source, Pattern, Storage, Performance, and Secondary Wallets).
+- **Visual Enhancements:** Introduced unified status badges (e.g., Easy, FAST, ON) for quick configuration checks, improved accordion headers with softer borders and gradients.
+- **Progress Tracking:** Added a visual progress indicator inside the modal to guide users through the setup process.
+- **Improved Call-to-Action:** Elevated the primary action button for starting the vanity search with prominent styling and explicit action text.
+- **Code Optimization:** Applied structural UI changes in `CreateWalletModal.tsx` and visual refinements in `App.tsx` and `index.css`.
+- **Android release metadata:** Android version metadata is updated to `versionCode 83` and `versionName 5.19.0`.
 - **Release documentation refresh:** README, changelog, security, contributing, code of conduct, architecture, and git ignore rules were updated for the current release while older release notes are collapsed.
 
 ### Verification for This Release
@@ -115,14 +112,27 @@ Android release builds are triggered by GitHub tags matching `v*`.
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
 
+### v5.18.2
+
+- Wider screen UI scaling.
+- Theme application fixes and Tailwind v4 custom variants.
+- Vanity Preset Groups with icons.
+- Expanded Vanity Settings.
+- Vanity Performance Refinements.
+
+### v5.18.1
+
+- Refreshed Android release metadata, documentation, and publish notes for the advanced vanity-wallet generation upgrade.
+- Emphasized safer long-running scans, improved visibility for generated addresses, explicit secure reveal/copy actions.
+
 ### v5.18.0
 
-- Introduced expanded vanity result visibility.
-- Added secure reveal/copy details for generated private keys and seed phrases.
-- Added individual/bulk save actions and folder routing.
-- Added advanced mathematical vanity match discovery.
-- Added configurable reserve limits for extra beautiful wallet matches.
-- Improved light/dark theme compatibility.
+- Expanded vanity result viewer with better address visibility.
+- Added hidden-by-default private key and seed phrase details for generated vanity wallets.
+- Added individual and bulk save actions with folder routing.
+- Added advanced mathematical pattern discovery for beautiful secondary matches.
+- Added configurable reserve limits for retained secondary matches.
+- Improved light/dark theme compatibility in vanity generator views.
 
 ### v5.17.x and older
 

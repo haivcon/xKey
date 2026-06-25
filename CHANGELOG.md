@@ -2,22 +2,21 @@
 
 All notable changes to this project are documented here.
 
-## [5.18.2] - Current Release
+## [5.19.0] - Current Release
 
 ### Release Focus
 
-v5.18.2 includes significant UI layout improvements for wider screens, theme application fixes, and additional vanity preset groups with icons. 
+v5.19.0 introduces a comprehensive UI/UX overhaul of the Vanity Wallet generation process, transforming it into a structured, step-by-step professional wizard while retaining the original expandable architecture.
 
 ### Upgraded Features
 
-- **Wider screen UI scaling:** Increased maximum widths for the Dashboard View and Create Wallet Modal to better utilize ultra-wide screens (up to 140rem max-width).
-- **Theme application fixes:** The `ThemeContext` now properly applies dark mode themes ('dark', 'theme-dark', 'theme-amoled') and removes old legacy classes. A Tailwind v4 custom variant (`@custom-variant dark`) was added to `src/index.css` to properly support dark mode utilities.
-- **Vanity Preset Groups:** The vanity generation presets now include distinct icons and utilize localized keys for labels. Custom pattern inputs were added.
-- **Expanded Vanity Settings:** Expanded options for creating vanity wallets, including support for adding arrays of custom patterns.
-- **Vanity Performance Refinements:** Calculation for estimated time to discover vanity addresses has been improved by factoring in generation mode overhead (`privateKey` vs `mnemonic` 12/24 words).
-- **UI Tweaks:** Minor visual improvements such as using `surface-50` for light overlays instead of `white` in dark mode elements within the Create Wallet Modal.
-- **Translation updates:** Extensive sync and expansion of UI translation keys across 15+ locales (ar, de, en, es, fr, hi, id, ja, ko, pt, ru, th, tr, vi, zh).
-- **Android release metadata:** Updated Android app metadata to `versionCode 82` and `versionName 5.18.2`.
+- **Vanity Wallet UI Redesign:** Reorganized the Vanity Wallet creation modal into a 5-step intuitive workflow (Key Source, Pattern, Storage, Performance, and Secondary Wallets).
+- **Visual Enhancements:** Introduced unified status badges (e.g., Easy, FAST, ON) for quick configuration checks, improved accordion headers with softer borders and gradients.
+- **Progress Tracking:** Added a visual progress indicator inside the modal to guide users through the setup process.
+- **Improved Call-to-Action:** Elevated the primary action button for starting the vanity search with prominent styling and explicit action text.
+- **Code Optimization:** Applied structural UI changes in `CreateWalletModal.tsx` and visual refinements in `App.tsx` and `index.css`.
+- **Android & App Metadata:** Updated version to `5.19.0` (versionCode 83).
+- **Documentation:** Minimized older documentation sections and highlighted the new vanity design flow across all project specs.
 
 ### Verification
 
@@ -27,13 +26,18 @@ v5.18.2 includes significant UI layout improvements for wider screens, theme app
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
 
-## [5.18.1]
+## [5.18.2]
+- Wider screen UI scaling.
+- Theme application fixes and Tailwind v4 custom variants.
+- Vanity Preset Groups with icons.
+- Expanded Vanity Settings.
+- Vanity Performance Refinements.
 
+## [5.18.1]
 - Refreshed Android release metadata, documentation, and publish notes for the advanced vanity-wallet generation upgrade.
 - Emphasized safer long-running scans, improved visibility for generated addresses, explicit secure reveal/copy actions.
 
 ## [5.18.0]
-
 - Expanded vanity result viewer with better address visibility.
 - Added hidden-by-default private key and seed phrase details for generated vanity wallets.
 - Added individual and bulk save actions with folder routing.
@@ -42,7 +46,6 @@ v5.18.2 includes significant UI layout improvements for wider screens, theme app
 - Improved light/dark theme compatibility in vanity generator views.
 
 ## [5.17.x and older]
-
 - Improved startup integrity checks, timeout behavior, and signed asset verification.
 - Hardened encrypted `.xkey` backups with metadata, tamper detection, and recovery footer handling.
 - Added Shamir Secret Sharing QR recovery and Reed-Solomon resilience.

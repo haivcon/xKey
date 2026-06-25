@@ -65,8 +65,11 @@ xKey does not use a traditional hosted account model.
 
 The vanity generator runs as an offline CPU-bound workflow.
 
-### Current v5.18.1 behavior
+### Current v5.19.0 behavior
 
+- Organized into a professional 5-step UI wizard while retaining the expandable structure.
+- Features unified visual status badges for quick configuration verification.
+- Implements progressive UI state tracking for better user orientation.
 - Scans for user-provided vanity targets.
 - Keeps additional mathematically interesting secondary matches.
 - Detects patterns such as forward/reverse sequences, dual-end repetitions, symmetry, palindromes, alternating groups, and bracket-style endings.
@@ -102,11 +105,11 @@ xKey development should preserve these constraints:
 
 ## 7. Android Build Metadata
 
-For v5.18.1:
+For v5.19.0:
 
-- `package.json` version: `5.18.1`
-- Android `versionName`: `5.18.1`
-- Android `versionCode`: `81`
+- `package.json` version: `5.19.0`
+- Android `versionName`: `5.19.0`
+- Android `versionCode`: `83`
 - Android package: `com.haivcon.xkey`
 
 The top-level Android Gradle configuration keeps shared repository and plugin configuration, while `android/app/build.gradle` owns application version metadata and release build settings.
@@ -133,7 +136,7 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v5.18.1`.
+5. Create an annotated tag such as `v5.19.0`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 

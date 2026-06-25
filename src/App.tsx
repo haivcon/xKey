@@ -806,16 +806,16 @@ export default function App() {
       <div className={`app-scaled-icons min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
 
         {/* Header */}
-        <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
+        <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-[clamp(0.625rem,3vw,1rem)] py-[clamp(0.625rem,2.6vw,1rem)] shadow-xl">
           <div className="max-w-[140rem] mx-auto w-full">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
-              <div className="flex min-w-0 items-baseline gap-1">
-                <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 leading-tight">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-[clamp(0.25rem,1.8vw,0.5rem)]">
+            <div className="flex min-w-0 items-center gap-[clamp(0.25rem,1.5vw,0.5rem)]">
+              <img src="/logo.png" alt="xKey" className="home-header-logo rounded-lg logo-animated" />
+              <div className="flex min-w-0 items-baseline gap-[clamp(0.125rem,0.8vw,0.25rem)]">
+                <h1 className="home-header-title font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 leading-tight">
                   xKey
                 </h1>
-                <span className="shrink-0 text-[5px] font-semibold leading-none text-surface-400">
+                <span className="home-header-version shrink-0 font-semibold leading-none text-surface-400">
                   {appVersion.version}
                 </span>
               </div>

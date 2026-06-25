@@ -34,19 +34,16 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.18.1
+## Current Release Security Notes: v5.19.0
 
-v5.18.1 includes a documentation and Android metadata refresh for the current vanity generation upgrade.
+v5.19.0 introduces a UI/UX overhaul of the Vanity Wallet generation process.
 
 Security-relevant changes include:
 
-- Vanity private keys and seed phrases remain hidden by default in scan results.
-- Reveal and copy actions require explicit user interaction.
-- Long-running vanity scans include CPU heat and device-health guidance.
-- Users can limit retained secondary matches to reduce memory pressure.
-- Folder routing and bulk-save flows keep generated wallets inside the local vault model.
-- Localization updates improve clarity for warnings, pause/resume actions, and advanced match descriptions.
-- Android metadata is updated to `versionCode 81` and `versionName 5.18.1`.
+- **Structured Configuration:** The vanity generator uses a 5-step workflow with clear status badges, ensuring users configure security options properly before starting a scan.
+- **Improved Warnings:** Heat, CPU, and performance warnings are grouped clearly in a dedicated step, reducing the risk of accidental device overheating.
+- **Code Optimization:** Improved component rendering for safer and more stable UI states during intensive scans.
+- Android metadata is updated to `versionCode 83` and `versionName 5.19.0`.
 
 ---
 
