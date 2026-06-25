@@ -2,7 +2,6 @@ import { useState, useCallback, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Preferences } from '@capacitor/preferences';
-import Papa from 'papaparse';
 import { saveWallets } from '../utils/storage';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
@@ -11,8 +10,9 @@ import { saveTextFile } from '../utils/fileSaver';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
 import { withTimeout } from '../utils/asyncTimeout';
 import type { Wallet } from '../types';
+import { decodeBase64Text, dedupeWallets, detectImportFormat, getImportFolderName, parseCsvWallets, parseJsonWallets, parseTextWallets } from '../features/import/fileImportParsers';
 
-type BackupPreview = {
+export type BackupPreview = {
   fileName?: string;
   openedFromExternal?: boolean;
   integrity?: string;
@@ -22,7 +22,7 @@ type BackupPreview = {
   };
   [key: string]: unknown;
 };
-type BackupImportAnalysis = { total: number; newWallets: number; duplicates: number; changed: number; missingSensitive: number; sensitive: number };
+export type BackupImportAnalysis = { total: number; newWallets: number; duplicates: number; changed: number; missingSensitive: number; sensitive: number };
 type BackupImportMode = 'merge' | 'replace';
 const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
 const FILE_IMPORT_TIMEOUT_MS = 15000;
@@ -94,15 +94,7 @@ export default function useFileImport(
 
   // Shared import helper: dedup + persist + toast
   const importWallets = useCallback(async (newData: Wallet[], folderName: string) => {
-    const existingAddrs = new Set(wallets.map(w => w.address?.toLowerCase()).filter(Boolean));
-    const uniqueNew = newData.filter(w => {
-      if (!w.address) return true;
-      const lower = w.address.toLowerCase();
-      if (existingAddrs.has(lower)) return false;
-      existingAddrs.add(lower);
-      return true;
-    });
-    const skippedCount = newData.length - uniqueNew.length;
+    const { uniqueWallets: uniqueNew, skippedCount } = dedupeWallets(wallets, newData);
     const updated = [...wallets, ...uniqueNew];
     setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
@@ -147,103 +139,40 @@ export default function useFileImport(
           return;
         }
 
-        // Handle CSV File
+        setFileOperationKey('fileStatus.parsing');
+
         let rawString = '';
         try {
-          setFileOperationKey('fileStatus.parsing');
-          const binString = atob(fileData);
-          const bytes = new Uint8Array(binString.length);
-          for (let i = 0; i < binString.length; i++) {
-            bytes[i] = binString.charCodeAt(i);
-          }
-          rawString = new TextDecoder().decode(bytes);
+          rawString = decodeBase64Text(fileData);
         } catch {
           showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
-          setLoading(false);
-          setFileOperationKey('');
           return;
         }
 
         const fileName = file.name || 'Imported';
-        const preferredFolder = String(targetFolderName || '').trim();
-        const folderName = preferredFolder || fileName.replace(/\.(csv|json|txt)$/i, '');
+        const folderName = getImportFolderName(fileName, targetFolderName);
+        const format = detectImportFormat(fileName, rawString);
 
-        // --- Detect format ---
-        const trimmed = rawString.trim();
+        try {
+          const normalizedData = format === 'json'
+            ? parseJsonWallets(rawString, folderName)
+            : format === 'text'
+              ? parseTextWallets(rawString, folderName)
+              : await parseCsvWallets(rawString, folderName);
 
-        // JSON format: array of wallet objects
-        if ((fileName.toLowerCase().endsWith('.json') || trimmed.startsWith('[')) && trimmed.startsWith('[')) {
-          try {
-            const jsonData = JSON.parse(trimmed) as Array<Record<string, unknown>>;
-            if (!Array.isArray(jsonData)) throw new Error('Expected JSON array');
-            const normalized: Wallet[] = jsonData.map(row => ({
-              name: String(row.name || row.Name || ''),
-              address: String(row.address || row.Address || row.wallet || ''),
-              privateKey: String(row.privateKey || row.private_key || row.pk || ''),
-              seedPhrase: String(row.seedPhrase || row.seed_phrase || row.seed || row.mnemonic || ''),
-              balance: String(row.balance || row.Balance || ''),
-              network: String(row.network || row.Network || 'ETH'),
-              notes: String(row.notes || row.Notes || ''),
-              tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
-              groupId: folderName,
-              createdAt: Number(row.createdAt || Date.now()),
-            }));
-            await importWallets(normalized, folderName);
-          } catch (err: unknown) {
+          await importWallets(normalizedData, folderName);
+        } catch (err: unknown) {
+          if (format === 'json') {
             showToast(`${t('common.jsonParseError')}: ${err instanceof Error ? err.message : String(err)}`, 'error');
+          } else if (format === 'csv') {
+            showToast(`${t('common.csvParseError')}: ${err instanceof Error ? err.message : String(err)}`, 'error');
+          } else {
+            showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
           }
+        } finally {
           setLoading(false);
           setFileOperationKey('');
-          return;
         }
-
-        // Plain text: one address per line
-        if (fileName.toLowerCase().endsWith('.txt') || (!trimmed.includes(',') && trimmed.split('\n').length > 1)) {
-          const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-          const normalized: Wallet[] = lines.map((line, i) => ({
-            name: `Wallet ${i + 1}`,
-            address: line,
-            groupId: folderName,
-            createdAt: Date.now(),
-            network: 'ETH',
-          }));
-          await importWallets(normalized, folderName);
-          setLoading(false);
-          setFileOperationKey('');
-          return;
-        }
-
-        // CSV format (default)
-        Papa.parse(rawString, {
-          header: true,
-          skipEmptyLines: true,
-          complete: async (results: Papa.ParseResult<Record<string, unknown>>) => {
-            const { data } = results;
-
-            const normalizedData: Wallet[] = data.map(row => {
-              const normalizedRow: Wallet = { _raw: Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? '')])), groupId: folderName, createdAt: Date.now() };
-              for (const [key, value] of Object.entries(row)) {
-                const lowerKey = key.toLowerCase().trim();
-                const stringValue = String(value ?? '');
-                if (lowerKey.includes('name')) normalizedRow.name = stringValue;
-                else if (lowerKey.includes('address')) normalizedRow.address = stringValue;
-                else if (lowerKey.includes('private') || lowerKey === 'pk') normalizedRow.privateKey = stringValue;
-                else if (lowerKey.includes('seed') || lowerKey.includes('phrase')) normalizedRow.seedPhrase = stringValue;
-                else if (lowerKey.includes('balance') || lowerKey.includes('amount')) normalizedRow.balance = stringValue;
-              }
-              return normalizedRow;
-            });
-
-            await importWallets(normalizedData, folderName);
-            setLoading(false);
-            setFileOperationKey('');
-          },
-          error: (err: Error) => {
-            showToast(`${t('common.csvParseError')}: ${err.message}`, 'error');
-            setLoading(false);
-            setFileOperationKey('');
-          }
-        });
       }
     } catch (error: unknown) {
       console.error('FilePicker Error:', error);
@@ -315,16 +244,7 @@ export default function useFileImport(
         FILE_IMPORT_TIMEOUT_MS,
         () => new Error(t('restore.wrongPassword')),
       );
-      // Dedup
-      const existingAddrs = new Set(wallets.map(w => w.address?.toLowerCase()).filter(Boolean));
-      const uniqueBackup = backup.wallets.filter(w => {
-        if (!w.address) return true;
-        const lower = w.address.toLowerCase();
-        if (existingAddrs.has(lower)) return false;
-        existingAddrs.add(lower);
-        return true;
-      });
-      const skipped = backup.wallets.length - uniqueBackup.length;
+      const { uniqueWallets: uniqueBackup, skippedCount: skipped } = dedupeWallets(wallets, backup.wallets);
 
       let sensitiveUpdated = 0;
       if (backupImportMode === 'replace') {

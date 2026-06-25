@@ -61,11 +61,33 @@ xKey does not use a traditional hosted account model.
 
 ---
 
-## 5. Vanity Wallet Generator
+## 5. Source Organization
+
+The React source is organized around clear application boundaries:
+
+- `src/App.tsx` owns the top-level vault shell and app-wide orchestration only.
+- `src/app/` contains app-level constants and shared value formatters.
+- `src/components/` contains reusable UI components and feature modules.
+- `src/components/create-wallet/` contains the create-wallet feature module:
+  - `index.tsx` is the feature container and UI composition entry point.
+  - `types.ts` contains feature-local models and prop contracts.
+  - `constants.ts` contains create-wallet and vanity generation constants.
+  - `formatters.ts` contains display formatting helpers.
+  - `vanityPreview.ts` contains deterministic vanity filter preview builders.
+- `src/contexts/` contains cross-cutting React contexts.
+- `src/hooks/` contains reusable React hooks.
+- `src/utils/` contains storage, backup, crypto, validation, and domain utilities.
+- `src/workers/` contains CPU-heavy worker entry points.
+
+Large files should be split by stable responsibility before adding new features. Prefer extracting pure helpers, feature constants, types, hooks, and leaf UI components first; keep storage/crypto behavior covered by type-checks and focused tests after each move.
+
+---
+
+## 6. Vanity Wallet Generator
 
 The vanity generator runs as an offline CPU-bound workflow.
 
-### Current v5.19.0 behavior
+### Current behavior
 
 - Organized into a professional 5-step UI wizard while retaining the expandable structure.
 - Features unified visual status badges for quick configuration verification.
@@ -89,7 +111,7 @@ The vanity generator runs as an offline CPU-bound workflow.
 
 ---
 
-## 6. Offline-First Constraints
+## 7. Offline-First Constraints
 
 xKey development should preserve these constraints:
 
@@ -103,12 +125,12 @@ xKey development should preserve these constraints:
 
 ---
 
-## 7. Android Build Metadata
+## 8. Android Build Metadata
 
-For v5.19.0:
+For v5.20.0:
 
-- `package.json` version: `5.19.0`
-- Android `versionName`: `5.19.0`
+- `package.json` version: `5.20.0`
+- Android `versionName`: `5.20.0`
 - Android `versionCode`: `83`
 - Android package: `com.haivcon.xkey`
 
@@ -116,7 +138,7 @@ The top-level Android Gradle configuration keeps shared repository and plugin co
 
 ---
 
-## 8. Build and Release Pipeline
+## 9. Build and Release Pipeline
 
 Release builds are intended to be triggered by git tags matching `v*`.
 
@@ -136,13 +158,13 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v5.19.0`.
+5. Create an annotated tag such as `v5.20.0`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 
 ---
 
-## 9. Repository Hygiene
+## 10. Repository Hygiene
 
 The repository should exclude:
 
