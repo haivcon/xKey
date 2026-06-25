@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-surface-950: #0a0c10;
   --color-surface-900: #0f1115;
@@ -59,20 +61,27 @@ body {
 }
 
 .create-wallet-modal-panel {
-  width: min(96dvw, 980px);
-  max-width: calc(100dvw - 0.75rem);
+  width: min(98dvw, 980px);
+  max-width: calc(100dvw - 0.5rem);
 }
 
 @media (min-width: 768px) {
   .create-wallet-modal-panel {
-    width: min(94dvw, 1080px);
-    max-width: calc(100dvw - 1.5rem);
+    width: min(98dvw, 1180px);
+    max-width: calc(100dvw - 0.75rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .create-wallet-modal-panel {
+    width: min(97dvw, 1320px);
+    max-width: calc(100dvw - 1rem);
   }
 }
 
 @media (min-width: 1280px) {
   .create-wallet-modal-panel {
-    width: min(72rem, calc(100dvw - 4rem));
+    width: min(88rem, calc(100dvw - 2rem));
   }
 }
 
@@ -298,65 +307,6 @@ body.keyboard-open .keyboard-scroll-target {
   -webkit-text-fill-color: #475569 !important;
 }
 
-.theme-light .vanity-theme-sync section,
-.theme-light .vanity-theme-sync [class*="rounded-xl"][class*="border"] {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: #dbeafe !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
-}
-
-.theme-light .vanity-theme-sync section[class*="emerald"],
-.theme-light .vanity-theme-sync [class*="border-emerald"] {
-  background-color: rgba(236, 253, 245, 0.88) !important;
-  border-color: #a7f3d0 !important;
-}
-
-.theme-light .vanity-theme-sync section[class*="cyan"],
-.theme-light .vanity-theme-sync [class*="border-cyan"] {
-  background-color: rgba(236, 254, 255, 0.88) !important;
-  border-color: #a5f3fc !important;
-}
-
-.theme-light .vanity-theme-sync [class*="bg-gradient-to-r"] {
-  background-image: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(236, 254, 255, 0.65), transparent) !important;
-}
-
-.theme-light .vanity-theme-sync code,
-.theme-light .vanity-theme-sync .font-mono {
-  color: #0f172a !important;
-  -webkit-text-fill-color: #0f172a !important;
-}
-
-.theme-light .vanity-theme-sync button[class*="bg-surface-700"],
-.theme-light .vanity-theme-sync button[class*="dark:bg-surface-700"],
-.theme-light .vanity-theme-sync button[class*="bg-surface-800"],
-.theme-light .vanity-theme-sync button[class*="dark:bg-surface-800"],
-.theme-light .vanity-theme-sync button[class*="bg-surface-900"],
-.theme-light .vanity-theme-sync button[class*="dark:bg-surface-900"],
-.theme-light .vanity-theme-sync [class*="bg-surface-700"],
-.theme-light .vanity-theme-sync [class*="dark:bg-surface-700"] {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
-  -webkit-text-fill-color: #334155 !important;
-  border-color: #cbd5e1 !important;
-}
-
-.theme-light .vanity-theme-sync button:hover {
-  background-color: rgba(226, 232, 240, 0.75) !important;
-}
-
-.theme-light .vanity-theme-sync button[class*="bg-brand-600"],
-.theme-light .vanity-theme-sync button[class*="bg-emerald-600"] {
-  background-color: #0284c7 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.theme-light .vanity-theme-sync button:disabled {
-  background-color: #e2e8f0 !important;
-  color: #64748b !important;
-  -webkit-text-fill-color: #64748b !important;
-}
 
 .danger-note-icon,
 .danger-note-body {

@@ -43,10 +43,20 @@ const isWalletDensity = (value: unknown): value is WalletDensity => (
 );
 
 const applyThemeClass = (theme: ThemeMode) => {
-  const cl = document.documentElement.classList;
-  cl.remove('theme-light', 'theme-amoled');
-  if (theme === 'light') cl.add('theme-light');
-  else if (theme === 'amoled') cl.add('theme-amoled');
+  const themeClasses = ['dark', 'theme-light', 'theme-dark', 'theme-amoled'];
+  const roots = [document.documentElement, document.body].filter(Boolean);
+
+  roots.forEach(root => {
+    const cl = root.classList;
+    cl.remove(...themeClasses);
+    root.dataset.theme = theme;
+
+    if (theme === 'light') {
+      cl.add('theme-light');
+    } else {
+      cl.add('dark', theme === 'amoled' ? 'theme-amoled' : 'theme-dark');
+    }
+  });
 };
 
 const normalizeDisplayScale = (value: number | string | null | undefined): number => {
@@ -66,6 +76,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [brandReminders, setBrandRemindersState] = useState(true);
 
   useEffect(() => {
+    applyThemeClass('dark');
     applyDisplayScale(DEFAULT_DISPLAY_SCALE);
 
     Preferences.get({ key: THEME_KEY }).then(({ value }) => {

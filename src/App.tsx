@@ -807,7 +807,7 @@ export default function App() {
 
         {/* Header */}
         <header ref={homeHeaderRef} className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-4 py-4 shadow-xl">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[140rem] mx-auto w-full">
           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <img src="/logo.png" alt="xKey" className="w-9 h-9 rounded-lg logo-animated" />
@@ -860,7 +860,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="p-4 max-w-7xl mx-auto pb-20">
+        <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
           {externalBackupWaiting && (
             <div className="mb-3 rounded-lg border border-sky-400/25 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-100">
               {t('restore.externalWaiting')}

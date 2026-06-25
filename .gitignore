@@ -79,4 +79,4 @@ android/**/*.iml
 *.idsig
 *.sha1
 *.sha256
-*.sha512
+*.sha5121/ 

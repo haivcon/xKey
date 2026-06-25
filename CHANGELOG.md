@@ -2,35 +2,35 @@
 
 All notable changes to this project are documented here.
 
-## [5.18.1] - Current Release
+## [5.18.2] - Current Release
 
 ### Release Focus
 
-v5.18.1 refreshes the Android release metadata, documentation, and publish notes for the current advanced vanity-wallet generation upgrade. The release emphasizes safer long-running scans, improved visibility for generated addresses, explicit secure reveal/copy actions, better folder routing, and multilingual guidance.
+v5.18.2 includes significant UI layout improvements for wider screens, theme application fixes, and additional vanity preset groups with icons. 
 
 ### Upgraded Features
 
-- **Advanced vanity match discovery:** The vanity worker now keeps additional high-value matches based on mathematical address patterns, including forward sequences, reverse sequences, dual-end repetitions, symmetry, palindromes, alternating patterns, and bracket-style endings.
-- **Expanded result visibility:** Vanity scan results now use larger scrollable lists and middle truncation so both the beginning and ending of each address remain visible.
-- **Secure details workflow:** Private keys and seed phrases in generated results stay hidden until the user explicitly reveals them, reducing accidental exposure during scans.
-- **Save and folder routing:** Users can save individual vanity results or bulk-save selected results directly into a target vault folder.
-- **Custom secondary reserve:** The generator can retain a user-selected number of extra beautiful secondary wallets with limits that protect memory usage.
-- **CPU and heat guidance:** User-facing guidance explains why long vanity scans heat CPUs, how heat can affect battery/device health, and how to reduce risk with cooling breaks, lower workload, and better ventilation.
-- **Theme and responsive layout improvements:** Generator metrics, status indicators, address rows, and action areas were refined for light/dark readability and mobile layout stability.
-- **Localization sync:** Vanity generator labels, heat warnings, advanced pattern descriptions, pause/resume actions, and save controls were synchronized across supported locales.
-- **Android release metadata:** Updated Android app metadata to `versionCode 81` and `versionName 5.18.1`.
-- **Documentation refresh:** Updated README, Security Policy, Contributing Guide, Code of Conduct, Architecture Overview, Changelog, and ignore rules with current release information.
+- **Wider screen UI scaling:** Increased maximum widths for the Dashboard View and Create Wallet Modal to better utilize ultra-wide screens (up to 140rem max-width).
+- **Theme application fixes:** The `ThemeContext` now properly applies dark mode themes ('dark', 'theme-dark', 'theme-amoled') and removes old legacy classes. A Tailwind v4 custom variant (`@custom-variant dark`) was added to `src/index.css` to properly support dark mode utilities.
+- **Vanity Preset Groups:** The vanity generation presets now include distinct icons and utilize localized keys for labels. Custom pattern inputs were added.
+- **Expanded Vanity Settings:** Expanded options for creating vanity wallets, including support for adding arrays of custom patterns.
+- **Vanity Performance Refinements:** Calculation for estimated time to discover vanity addresses has been improved by factoring in generation mode overhead (`privateKey` vs `mnemonic` 12/24 words).
+- **UI Tweaks:** Minor visual improvements such as using `surface-50` for light overlays instead of `white` in dark mode elements within the Create Wallet Modal.
+- **Translation updates:** Extensive sync and expansion of UI translation keys across 15+ locales (ar, de, en, es, fr, hi, id, ja, ko, pt, ru, th, tr, vi, zh).
+- **Android release metadata:** Updated Android app metadata to `versionCode 82` and `versionName 5.18.2`.
 
 ### Verification
 
-- `npm run lint`
-- `npm run type-check`
-- `npm run test:vanity`
 - `npm run build`
 - `npx cap sync android`
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+## [5.18.1]
+
+- Refreshed Android release metadata, documentation, and publish notes for the advanced vanity-wallet generation upgrade.
+- Emphasized safer long-running scans, improved visibility for generated addresses, explicit secure reveal/copy actions.
 
 ## [5.18.0]
 

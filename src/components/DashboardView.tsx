@@ -74,7 +74,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
 
     return (
         <div className="app-scaled-icons min-h-screen bg-surface-900 text-surface-50 p-4 pb-10">
-            <header className="max-w-7xl mx-auto flex items-center justify-between mb-6 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
+            <header className="max-w-[140rem] w-full mx-auto flex items-center justify-between mb-6 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
                 <button onClick={onBack} className="btn-icon-glow p-2 rounded-full hover:bg-surface-800 transition-colors">
                     <ArrowLeft size={24} className="text-surface-300" />
                 </button>
@@ -84,7 +84,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                 <div className="w-10"></div>
             </header>
 
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-[140rem] w-full mx-auto space-y-6">
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">

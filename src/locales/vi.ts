@@ -122,8 +122,10 @@ export default {
     "unrecoverableBody": "Bảo mật thiết bị đã thay đổi và xKey không mở được khóa đã lưu. Hãy khôi phục từ bản sao lưu .xkey hoặc đặt lại kho nếu không còn bản sao lưu."
   },
   "common": {
-    "cancel": "Hủy",
+    "enabled": "Đã bật",
+    "disabled": "Đã tắt",
     "save": "Lưu",
+    "cancel": "Hủy",
     "delete": "Xóa",
     "close": "Đóng",
     "confirm": "Xác nhận",
@@ -672,6 +674,9 @@ export default {
     "startVanity": "Bắt đầu tạo",
     "stopVanity": "Dừng tạo",
     "vanityStatus": "Đã quét: {{scanned}} | Tốc độ: {{speed}} ví/s | Thời gian: {{time}}s",
+    "vanitySourceMnemonic": "Mnemonic nguồn",
+    "vanityBothWarning": "Chỉ định cả đầu và cuối có thể mất rất nhiều thời gian.",
+    "vanityLengthWarning": "Mẫu ví đẹp dài hơn 5-6 ký tự có thể mất nhiều năm trên thiết bị tiêu chuẩn.",
     "vanityWarning": "Nên chọn mẫu 2–4 ký tự để thời gian tìm hợp lý.",
     "vanityTitle": "Tạo ví đẹp",
     "vanitySubtitle": "Ví đẹp sẽ thử nhiều khóa cục bộ trên thiết bị để tìm địa chỉ khớp mẫu bạn chọn. Mẫu càng dài, thời gian tìm càng lâu.",
@@ -683,6 +688,14 @@ export default {
     "vanityPrefixHint": "Nằm sau 0x. Chỉ hợp lệ với 0-9 và a-f.",
     "vanitySuffixHint": "Nằm cuối địa chỉ. Chỉ hợp lệ với 0-9 và a-f.",
     "vanityPresets": "Mẫu nhanh",
+    "vanityPresetLucky": "May mắn",
+    "vanityPresetEasy": "Dễ nhớ",
+    "vanityPresetPremium": "Cao cấp",
+    "vanityPresetSymmetry": "Đối xứng",
+    "vanityPresetCrypto": "Crypto",
+    "vanityDescription": "Thử các mẫu phổ biến này để tạo địa chỉ ví đẹp.",
+    "vanityCustomPattern": "Mau tu chon",
+    "vanityApplyCustom": "Ap dung",
     "clearPattern": "Xóa mẫu",
     "vanityExpected": "Số lần thử ước tính",
     "vanityEstimated": "Thời gian ước tính",
@@ -948,7 +961,8 @@ export default {
     "bulkGenerating": "Đang tạo {count} ví...",
     "bulkSuccess": "Đã tạo thành công {count} ví",
     "bulkSize": "Dung lượng dữ liệu ước tính",
-    "bulkStorage": "Dung lượng thiết bị khả dụng"
+    "bulkStorage": "Dung lượng thiết bị khả dụng",
+    "vanitySourcePrivateKey": "Khóa riêng nguồn"
   },
   "walletCard": {
     "unnamed": "Ví chưa đặt tên",

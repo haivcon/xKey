@@ -53,7 +53,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }: Set
 
     return (
         <div className={`app-scaled-icons min-h-screen bg-surface-900 text-surface-50 p-4 transition-all duration-300 ${isKeyboardVisible ? 'pb-96' : 'pb-10'}`}>
-            <header className="max-w-7xl mx-auto flex items-center justify-between mb-8 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
+            <header className="max-w-[140rem] w-full mx-auto flex items-center justify-between mb-8 sticky top-0 bg-surface-900/80 backdrop-blur-md py-4 z-10">
                 <button onClick={onBack} className="btn-icon-glow p-2 rounded-full hover:bg-surface-800 transition-colors">
                     <ArrowLeft size={24} className="text-surface-300" />
                 </button>
@@ -76,7 +76,7 @@ export default function SettingsScreen({ aesKey, onBack, onWipe, onImport }: Set
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto lg:grid lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
+            <div className="max-w-[140rem] w-full mx-auto lg:grid lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
                 <aside className="hidden lg:block">
                     <div className="sticky top-[calc(4.5rem+1rem)] space-y-3">
                     <div className="glass-card p-3">
