@@ -12,6 +12,7 @@
     "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:vanity": "tsx tests/vanity-match.test.mjs",
     "test:key-health": "tsx tests/key-health.test.mjs",
+    "test:backup-import": "tsx tests/backup-import-analysis.test.mjs",
     "test:adb-open": "node tests/adb-open-xkey.mjs",
     "audit:report": "node scripts/audit-report.mjs",
     "locale:audit": "node scripts/locale-audit.mjs",

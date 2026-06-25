@@ -45,7 +45,6 @@ import {
   persistFallbackEncryptionKey,
   persistBiometricEncryptionKey,
 } from './utils/storage';
-import { exportPortableBackup } from './utils/backupUtils';
 import { hapticTap, hapticSuccess, initFeedbackSettings } from './utils/haptics';
 import useAutoLock from './hooks/useAutoLock';
 import useAutoBackup from './hooks/useAutoBackup';
@@ -62,6 +61,8 @@ import useBackupVerificationReport from './hooks/useBackupVerificationReport';
 import useExternalBackupOpen from './hooks/useExternalBackupOpen';
 import useAssetBalanceSettings from './hooks/useAssetBalanceSettings';
 import useStartupIntegrity from './hooks/useStartupIntegrity';
+import useBackupExport from './hooks/useBackupExport';
+import useFolderEditing from './hooks/useFolderEditing';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
@@ -88,12 +89,7 @@ export default function App() {
   const [qrModalData, setQrModalData] = useState<QrModalData>({ isOpen: false, data: '', title: '', subtitle: '' });
   const [showExportCSV, setShowExportCSV] = useState(false);
   const [exportWalletsOverride, setExportWalletsOverride] = useState<Wallet[] | null>(null);
-  const [showBackupExport, setShowBackupExport] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
-  const [backupPassword, setBackupPassword] = useState('');
-  const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
-  const [backupFileName, setBackupFileName] = useState('');
-  const [backupExporting, setBackupExporting] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [showBulkNetworkModal, setShowBulkNetworkModal] = useState(false);
@@ -117,12 +113,6 @@ export default function App() {
   const [needsPinAuth, setNeedsPinAuth] = useState(false);
   const [healthMessages, setHealthMessages] = useState<string[]>([]);
   const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
-
-  // Folder editing
-  const [editingFolder, setEditingFolder] = useState<string | null>(null);
-  const [editFolderName, setEditFolderName] = useState('');
-  const [creatingFolder, setCreatingFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
 
   const t = useT();
   const tRef = useRef(t);
@@ -162,6 +152,20 @@ export default function App() {
   const keyHealthSummary = useMemo(() => summarizeKeyHealth(wallets), [wallets]);
   const showProofOfKeysReminder = shouldShowProofOfKeysReminder();
   const keyHealthAttentionCount = keyHealthSummary.attentionCount + (showProofOfKeysReminder ? 1 : 0);
+
+  const {
+    showBackupExport,
+    setShowBackupExport,
+    backupPassword,
+    setBackupPassword,
+    backupPasswordConfirm,
+    setBackupPasswordConfirm,
+    backupFileName,
+    setBackupFileName,
+    backupExporting,
+    closeBackupExport,
+    handleExportBackup,
+  } = useBackupExport({ aesKey, isDecoyMode, showToast, t });
 
   const {
     assetUnit,
@@ -252,25 +256,18 @@ export default function App() {
     await saveWallets(updated, aesKey, isDecoyMode);
   }, [aesKey, wallets, getWalletIdentity, setWallets, isDecoyMode]);
 
-  const startCreateFolder = useCallback(() => {
-    setEditingFolder(null);
-    setNewFolderName('');
-    setCreatingFolder(true);
-  }, []);
-
-  const finishCreateFolder = useCallback(async (name: string) => {
-    const trimmed = String(name || '').trim();
-    if (!trimmed) {
-      setCreatingFolder(false);
-      setNewFolderName('');
-      return;
-    }
-    const created = await handleCreateFolder(trimmed);
-    if (created) {
-      setCreatingFolder(false);
-      setNewFolderName('');
-    }
-  }, [handleCreateFolder]);
+  const {
+    editingFolder,
+    editFolderName,
+    setEditFolderName,
+    creatingFolder,
+    newFolderName,
+    setNewFolderName,
+    startCreateFolder,
+    finishCreateFolder,
+    startEditFolder,
+    finishEditFolder,
+  } = useFolderEditing(handleCreateFolder);
 
   useHomeHeaderHeight(homeHeaderRef, location.pathname === '/');
 
@@ -458,44 +455,9 @@ export default function App() {
     setNeedsPinAuth(true);
   };
 
-  const closeBackupExport = () => {
-    setShowBackupExport(false);
-    setBackupPassword('');
-    setBackupPasswordConfirm('');
-    setBackupFileName('');
-  };
-
   const handleVerifyBackupOnly = useCallback(() => {
     verifyBackupOnly(dismissPasswordPrompt);
   }, [dismissPasswordPrompt, verifyBackupOnly]);
-
-  const handleExportBackup = async () => {
-    if (!backupPassword || backupPassword.length < 6) {
-      showToast?.(t('settings.passwordMinError'), 'warning');
-      return;
-    }
-    if (backupPassword !== backupPasswordConfirm) {
-      showToast?.(t('settings.passwordMismatch'), 'error');
-      return;
-    }
-
-    setBackupExporting(true);
-    try {
-      const currentWallets = await loadWallets(aesKey, isDecoyMode);
-      const success = await exportPortableBackup(currentWallets || [], null, backupPassword, backupFileName);
-      if (success) {
-        hapticSuccess();
-        showToast?.(t('settings.exportSuccess'), 'success');
-        closeBackupExport();
-      } else {
-        showToast?.(t('settings.exportFailed'), 'error');
-      }
-    } catch {
-      showToast?.(t('settings.exportError'), 'error');
-    } finally {
-      setBackupExporting(false);
-    }
-  };
 
   const openExportCSV = async (walletsOverride: Wallet[] | null = null) => {
     const { value } = await Preferences.get({ key: SENSITIVE_EXPORT_LOCK_KEY });
@@ -627,9 +589,9 @@ export default function App() {
                     creatingFolder={creatingFolder}
                     newFolderName={newFolderName}
                     onSelectFolder={(f) => { setActiveFolder(f); }}
-                    onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                    onStartEdit={startEditFolder}
                     onEditChange={setEditFolderName}
-                    onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                    onFinishEdit={(oldName, newName) => finishEditFolder(oldName, newName, handleRenameFolder)}
                     onDeleteFolder={handleDeleteFolder}
                     onRemoveFolderOnly={handleRemoveFolderOnly}
                     onTogglePinFolder={handleToggleFolderPin}
@@ -706,9 +668,9 @@ export default function App() {
                       defaultFolder={defaultFolder}
                       creatingFolder={creatingFolder} newFolderName={newFolderName}
                       onSelectFolder={(f) => { setActiveFolder(f); }}
-                      onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                      onStartEdit={startEditFolder}
                       onEditChange={setEditFolderName}
-                      onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                      onFinishEdit={(oldName, newName) => finishEditFolder(oldName, newName, handleRenameFolder)}
                       onDeleteFolder={handleDeleteFolder}
                       onRemoveFolderOnly={handleRemoveFolderOnly}
                       onTogglePinFolder={handleToggleFolderPin}
@@ -736,9 +698,9 @@ export default function App() {
                         defaultFolder={defaultFolder}
                         creatingFolder={creatingFolder} newFolderName={newFolderName}
                         onSelectFolder={(f) => { setActiveFolder(f); }}
-                        onStartEdit={(f) => { setEditingFolder(f); setEditFolderName(f); }}
+                        onStartEdit={startEditFolder}
                         onEditChange={setEditFolderName}
-                        onFinishEdit={(oldName, newName) => { handleRenameFolder(oldName, newName); setEditingFolder(null); }}
+                        onFinishEdit={(oldName, newName) => finishEditFolder(oldName, newName, handleRenameFolder)}
                         onDeleteFolder={handleDeleteFolder}
                         onRemoveFolderOnly={handleRemoveFolderOnly}
                         onTogglePinFolder={handleToggleFolderPin}

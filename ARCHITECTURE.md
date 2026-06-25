@@ -66,8 +66,9 @@ xKey does not use a traditional hosted account model.
 The React source is organized around clear application boundaries:
 
 - `src/App.tsx` owns the top-level vault shell and app-wide orchestration only.
-- `src/app/` contains app-level constants and shared value formatters.
-- `src/components/` contains reusable UI components and feature modules.
+- `src/app/` contains app-level constants, shared value formatters, and app-wide TypeScript contracts.
+- `src/components/` contains reusable UI components and feature UI modules.
+- `src/components/backup-import/` contains backup import modal UI; import analysis/pure logic stays outside UI.
 - `src/components/create-wallet/` contains the create-wallet feature module:
   - `index.tsx` is the feature container and UI composition entry point.
   - `types.ts` contains feature-local models and prop contracts.
@@ -75,11 +76,17 @@ The React source is organized around clear application boundaries:
   - `formatters.ts` contains display formatting helpers.
   - `vanityPreview.ts` contains deterministic vanity filter preview builders.
 - `src/contexts/` contains cross-cutting React contexts.
-- `src/hooks/` contains reusable React hooks.
+- `src/features/` contains feature-domain logic that should be testable without React:
+  - `src/features/import/fileImportParsers.ts` contains CSV/JSON/text import parsing and normalization.
+  - `src/features/import/backupImportAnalysis.ts` contains backup import fingerprinting and preview analysis.
+- `src/hooks/` contains reusable React hooks and extracted orchestration hooks:
+  - `useBackupExport` owns backup export confirmation, modal state, and backup verification trigger handoff.
+  - `useFolderEditing` owns folder edit modal state and folder delete cleanup.
+  - `useFileImport` owns file picker/external-open orchestration, while parsing/analysis helpers live under `src/features/import/`.
 - `src/utils/` contains storage, backup, crypto, validation, and domain utilities.
 - `src/workers/` contains CPU-heavy worker entry points.
 
-Large files should be split by stable responsibility before adding new features. Prefer extracting pure helpers, feature constants, types, hooks, and leaf UI components first; keep storage/crypto behavior covered by type-checks and focused tests after each move.
+Large files should be split by stable responsibility before adding new features. Prefer extracting pure helpers, feature constants, types, hooks, and leaf UI components first; keep storage/crypto behavior covered by type-checks and focused tests after each move. Pure feature helpers should have focused tests under `tests/` and package scripts when they protect import/export, recovery, key-health, or vanity logic.
 
 ---
 
@@ -148,6 +155,8 @@ Recommended release verification:
 npm run lint
 npm run type-check
 npm run test:vanity
+npm run test:key-health
+npm run test:backup-import
 npm run build
 npx cap sync android
 ```

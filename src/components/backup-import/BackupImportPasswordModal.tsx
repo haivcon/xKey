@@ -2,7 +2,8 @@ import { Copy, Settings, ShieldAlert } from 'lucide-react';
 import BrandSlogan from '../BrandSlogan';
 import PasswordInput from '../PasswordInput';
 import { asNumber, asText } from '../../app/valueFormatters';
-import type { BackupImportAnalysis, BackupPreview } from '../../hooks/useFileImport';
+import type { BackupImportAnalysis } from '../../features/import/backupImportAnalysis';
+import type { BackupPreview } from '../../hooks/useFileImport';
 import type { TranslationFn } from '../../contexts/LanguageContext';
 
 type BackupImportMode = 'merge' | 'replace';

@@ -10,6 +10,7 @@ import { saveTextFile } from '../utils/fileSaver';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
 import { withTimeout } from '../utils/asyncTimeout';
 import type { Wallet } from '../types';
+import { analyzeBackupImport, type BackupImportAnalysis } from '../features/import/backupImportAnalysis';
 import { decodeBase64Text, dedupeWallets, detectImportFormat, getImportFolderName, parseCsvWallets, parseJsonWallets, parseTextWallets } from '../features/import/fileImportParsers';
 
 export type BackupPreview = {
@@ -22,7 +23,6 @@ export type BackupPreview = {
   };
   [key: string]: unknown;
 };
-export type BackupImportAnalysis = { total: number; newWallets: number; duplicates: number; changed: number; missingSensitive: number; sensitive: number };
 type BackupImportMode = 'merge' | 'replace';
 const REPLACE_SNAPSHOT_KEY = 'xkey_replace_snapshot_v1';
 const FILE_IMPORT_TIMEOUT_MS = 15000;
@@ -333,28 +333,14 @@ export default function useFileImport(
         FILE_IMPORT_TIMEOUT_MS,
         () => new Error(t('restore.wrongPassword')),
       );
-      const fingerprint = (wallet: Wallet) => JSON.stringify({
-        name: wallet.name || '',
-        address: (wallet.address || '').toLowerCase(),
-        privateKey: wallet.privateKey || '',
-        seedPhrase: wallet.seedPhrase || '',
-        balance: wallet.balance || '',
-        network: wallet.network || '',
-        notes: wallet.notes || '',
-        groupId: wallet.groupId || '',
-        tags: Array.isArray(wallet.tags) ? [...wallet.tags].sort() : [],
+      const analysis = analyzeBackupImport(wallets, backup.wallets);
+      setBackupAnalysis(analysis);
+      await appendAuditLog('backup.decrypted_previewed', {
+        walletCount: backup.wallets.length,
+        duplicates: analysis.duplicates,
+        changed: analysis.changed,
+        missingSensitive: analysis.missingSensitive,
       });
-      const existing = new Map(wallets.map(wallet => [wallet.address?.toLowerCase(), fingerprint(wallet)]).filter(([address]) => Boolean(address)) as [string, string][]);
-      const duplicates = backup.wallets.filter(wallet => !!wallet.address && existing.has(wallet.address.toLowerCase())).length;
-      const changed = backup.wallets.filter(wallet => {
-        if (!wallet.address) return false;
-        const current = existing.get(wallet.address.toLowerCase());
-        return Boolean(current && current !== fingerprint(wallet));
-      }).length;
-      const missingSensitive = backup.wallets.filter(wallet => !wallet.privateKey && !wallet.seedPhrase).length;
-      const sensitive = backup.wallets.filter(wallet => !!wallet.privateKey || !!wallet.seedPhrase).length;
-      setBackupAnalysis({ total: backup.wallets.length, duplicates, changed, missingSensitive, newWallets: backup.wallets.length - duplicates, sensitive });
-      await appendAuditLog('backup.decrypted_previewed', { walletCount: backup.wallets.length, duplicates, changed, missingSensitive });
     } catch {
       showToast({ key: 'restore.wrongPassword', category: 'backup' }, 'error');
     } finally {
