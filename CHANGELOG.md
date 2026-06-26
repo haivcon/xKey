@@ -2,20 +2,25 @@
 
 All notable changes to this project are documented here.
 
-## [5.21.0] - Current Release
+## [5.21.1] - Current Release
 
 ### Release Focus
 
-v5.21.0 introduces UI enhancements in the Duplicate Detector, refining the visual presentation of tags for improved readability and a more professional layout.
+v5.21.1 resolves a responsive UI issue where compacted vanity addresses failed to accurately resize according to their container width.
 
 ### Upgraded Features
 
-- **Duplicate Detector UI Enhancement:** Redesigned the folder location tag in the Duplicate Detector with a new "tech blue" color scheme, making it stand out more clearly and look more professional.
-- **Improved Alignment:** Repositioned the folder tags to right-align properly within the list items, creating a cleaner and more organized layout alongside the duplicate count indicators.
-- **App Version Bump:** Bumped app version to `5.21.0` (Android versionCode 85) to propagate these UI/UX corrections.
+- **Vanity Address Responsive Scaling:** Restored accurate, real-time container-width measurement for dynamically generated `HighlightedCompactAddress` components. Vanity addresses with colored prefixes and suffixes now gracefully collapse with middle-ellipses without breaking layout constraints.
+- **Fixed Width Calculation Logic:** Replaced the static, absolute character count truncation method with a dynamically resizing layout approach, incorporating `ResizeObserver` for robust viewport changes.
+- **App Version Bump:** Bumped app version to `5.21.1` (Android versionCode 86).
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+## [5.21.0]
+- Duplicate Detector UI Enhancement: Redesigned the folder location tag with a new "tech blue" color scheme.
+- Improved Alignment: Repositioned folder tags to right-align properly within list items.
+- App Version Bump: Bumped app version to `5.21.0` (Android versionCode 85).
 
 ## [5.20.0]
 - Splash Screen Fix: Fixed an issue where the light theme logo would fail to load on the initial boot sequence.

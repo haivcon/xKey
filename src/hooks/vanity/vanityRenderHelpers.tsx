@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MiddleEllipsisAddress } from '../../components/create-wallet/components';
 import type { GeneratedWallet } from '../../components/create-wallet/types';
 
@@ -8,10 +8,19 @@ export const compactVanityAddress = (address: string, head = 12, tail = 8): Reac
   return <MiddleEllipsisAddress address={clean} head={head} tail={tail} />;
 };
 
-const renderHighlightedCompactAddress = ({
+type CompactVanityAddressOptions = {
+  head?: number;
+  tail?: number;
+  minHead?: number;
+  minTail?: number;
+};
+
+function HighlightedCompactAddress({
   address,
   head = 12,
   tail = 8,
+  minHead = 6,
+  minTail = 6,
   headHighlightLength = 0,
   tailHighlightLength = 0,
   highlightClassName,
@@ -19,20 +28,79 @@ const renderHighlightedCompactAddress = ({
   address: string;
   head?: number;
   tail?: number;
+  minHead?: number;
+  minTail?: number;
   headHighlightLength?: number;
   tailHighlightLength?: number;
   highlightClassName: string;
-}): ReactNode => {
-  if (!address) return '';
+}) {
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
   const clean = address.startsWith('0x') || address.startsWith('0X') ? address : `0x${address}`;
   const hasHexPrefix = clean.startsWith('0x') || clean.startsWith('0X');
   const prefix = hasHexPrefix ? clean.slice(0, 2) : '';
-  const body = hasHexPrefix ? clean.slice(2) : clean;
-  const headBodyLength = Math.min(Math.max(0, head - prefix.length), body.length);
-  const tailBodyLength = Math.min(Math.max(0, tail), Math.max(0, body.length - headBodyLength));
-  const headBody = body.slice(0, headBodyLength);
-  const tailBody = tailBodyLength ? body.slice(-tailBodyLength) : '';
-  const hiddenLength = body.length - headBodyLength - tailBodyLength;
+  const [displayParts, setDisplayParts] = useState(() => ({
+    headLength: clean.length,
+    tailLength: 0,
+    compacted: false,
+  }));
+
+  useEffect(() => {
+    const updateDisplay = () => {
+      const container = containerRef.current;
+      const measure = measureRef.current;
+      if (!container || !measure || !clean) {
+        setDisplayParts({ headLength: clean.length, tailLength: 0, compacted: false });
+        return;
+      }
+
+      measure.textContent = clean;
+      const availableWidth = container.clientWidth;
+      const fullWidth = measure.scrollWidth;
+      if (!availableWidth || fullWidth <= availableWidth) {
+        setDisplayParts({ headLength: clean.length, tailLength: 0, compacted: false });
+        return;
+      }
+
+      const normalizedWidth = Math.max(0, availableWidth - 4);
+      measure.textContent = '0'.repeat(Math.max(clean.length, 42));
+      const charWidth = Math.max(1, measure.scrollWidth / Math.max(clean.length, 42));
+      const availableChars = Math.max(minHead + minTail + 3, Math.floor(normalizedWidth / charWidth));
+
+      const maxVisibleChars = Math.max(minHead + minTail, availableChars - 3);
+      const preferredHead = Math.min(head, Math.max(minHead, Math.ceil(maxVisibleChars * 0.56)));
+      let nextHead = Math.min(preferredHead, maxVisibleChars - minTail);
+      let nextTail = Math.min(tail, maxVisibleChars - nextHead);
+
+      if (nextTail < minTail) {
+        nextTail = Math.min(minTail, maxVisibleChars - minHead);
+        nextHead = Math.max(minHead, maxVisibleChars - nextTail);
+      }
+
+      while (nextHead + nextTail + 3 > availableChars && nextHead > minHead) nextHead -= 1;
+      while (nextHead + nextTail + 3 > availableChars && nextTail > minTail) nextTail -= 1;
+
+      setDisplayParts({ headLength: nextHead, tailLength: nextTail, compacted: true });
+    };
+
+    updateDisplay();
+
+    const observer = typeof ResizeObserver !== 'undefined' && containerRef.current
+      ? new ResizeObserver(updateDisplay)
+      : null;
+    if (observer && containerRef.current) observer.observe(containerRef.current);
+    window.addEventListener('resize', updateDisplay);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateDisplay);
+    };
+  }, [clean, head, tail, minHead, minTail]);
+
+  const visibleHead = displayParts.compacted ? clean.slice(0, displayParts.headLength) : clean;
+  const visibleTail = displayParts.compacted && displayParts.tailLength ? clean.slice(-displayParts.tailLength) : '';
+  const headBodyOffset = prefix.length;
+  const headBody = visibleHead.slice(headBodyOffset);
+  const tailBody = visibleTail;
 
   const renderHead = () => {
     const highlightLength = Math.min(headHighlightLength, headBody.length);
@@ -57,20 +125,41 @@ const renderHighlightedCompactAddress = ({
   };
 
   return (
-    <span className="block min-w-0 max-w-full overflow-hidden whitespace-nowrap">
-      <span>{prefix}</span>
-      {renderHead()}
-      {hiddenLength > 0 ? <span className="mx-0.5 opacity-80">...</span> : null}
-      {renderTail()}
+    <span ref={containerRef} className="relative block min-w-0 max-w-full overflow-hidden whitespace-nowrap" title={clean}>
+      <span className="block min-w-0 overflow-visible whitespace-nowrap">
+        <span>{prefix}</span>
+        {renderHead()}
+        {displayParts.compacted ? <span className="mx-0.5 opacity-80">...</span> : null}
+        {renderTail()}
+      </span>
+      <span ref={measureRef} className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap font-mono" aria-hidden="true" />
     </span>
   );
+}
+
+const renderHighlightedCompactAddress = (props: {
+  address: string;
+  head?: number;
+  tail?: number;
+  minHead?: number;
+  minTail?: number;
+  headHighlightLength?: number;
+  tailHighlightLength?: number;
+  highlightClassName: string;
+}): ReactNode => {
+  if (!props.address) return '';
+  return <HighlightedCompactAddress {...props} />;
 };
 
 export const createVanityAddressRenderer = (
   vanityPrefixClean: string,
   vanitySuffixClean: string
 ) => {
-  const renderVanityAddress = (address: string, compact = false): ReactNode => {
+  const renderVanityAddress = (
+    address: string,
+    compact = false,
+    compactOptions: CompactVanityAddressOptions = {}
+  ): ReactNode => {
     const hasHexPrefix = address.startsWith('0x') || address.startsWith('0X');
     const prefix = hasHexPrefix ? address.slice(0, 2) : '';
     const body = hasHexPrefix ? address.slice(2) : address;
@@ -81,8 +170,10 @@ export const createVanityAddressRenderer = (
     if (compact) {
       return renderHighlightedCompactAddress({
         address,
-        head: 14,
-        tail: 10,
+        head: compactOptions.head ?? 14,
+        tail: compactOptions.tail ?? 10,
+        minHead: compactOptions.minHead ?? 6,
+        minTail: compactOptions.minTail ?? 6,
         headHighlightLength: prefixEnd,
         tailHighlightLength: vanitySuffixClean.length,
         highlightClassName,
@@ -110,7 +201,8 @@ export const createVanityAddressRenderer = (
   const renderVanityExtraAddress = (
     address: string,
     wallet: GeneratedWallet,
-    compact = false
+    compact = false,
+    compactOptions: CompactVanityAddressOptions = {}
   ): ReactNode => {
     const hasHexPrefix = address.startsWith('0x') || address.startsWith('0X');
     const prefix = hasHexPrefix ? address.slice(0, 2) : '';
@@ -127,13 +219,15 @@ export const createVanityAddressRenderer = (
     );
     const highlightClassName = 'rounded bg-cyan-500/20 px-1 py-0.5 font-extrabold text-cyan-700 ring-1 ring-cyan-400/30 dark:text-cyan-200';
 
-    if (!headLength && !tailLength) return renderVanityAddress(address, compact);
+    if (!headLength && !tailLength) return renderVanityAddress(address, compact, compactOptions);
 
     if (compact) {
       return renderHighlightedCompactAddress({
         address,
-        head: 14,
-        tail: 10,
+        head: compactOptions.head ?? 14,
+        tail: compactOptions.tail ?? 10,
+        minHead: compactOptions.minHead ?? 6,
+        minTail: compactOptions.minTail ?? 6,
         headHighlightLength: headLength,
         tailHighlightLength: tailLength,
         highlightClassName,
