@@ -1,4 +1,5 @@
-import { Copy, Settings, ShieldAlert } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Copy, Fingerprint, FolderOpen, Globe2, Hash, KeyRound, MonitorSmartphone, Package, PlusCircle, RefreshCw, Settings, ShieldAlert, ShieldCheck, ShieldX, Wallet, Wrench } from 'lucide-react';
 import BrandSlogan from '../shared/BrandSlogan';
 import PasswordInput from '../shared/PasswordInput';
 import { asNumber, asText } from '../../app/valueFormatters';
@@ -7,6 +8,108 @@ import type { BackupPreview } from '../../hooks/useFileImport';
 import type { TranslationFn } from '../../contexts/LanguageContext';
 
 type BackupImportMode = 'merge' | 'replace';
+
+const focusableSelector = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+type PreviewValueBlockProps = {
+  label: string;
+  value: string;
+  icon: typeof Fingerprint;
+  expanded: boolean;
+  onToggle: () => void;
+  onCopy: () => void;
+  t: TranslationFn;
+};
+
+function PreviewValueBlock({ label, value, icon: Icon, expanded, onToggle, onCopy, t }: PreviewValueBlockProps) {
+  return (
+    <div className="rounded-xl border border-emerald-500/20 bg-black/10 p-2.5 shadow-inner shadow-black/5">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="inline-flex min-w-0 items-center gap-1.5 font-semibold">
+          <Icon size={14} aria-hidden="true" />
+          <span>{label}</span>
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-label={`${expanded ? t('common.hide') : t('common.show')} ${label}`}
+            onClick={onToggle}
+            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+          >
+            {expanded ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
+            {expanded ? t('common.hide') : t('common.show')}
+          </button>
+          <button
+            type="button"
+            aria-label={`${t('common.copy')} ${label}`}
+            onClick={onCopy}
+            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+          >
+            <Copy size={12} aria-hidden="true" />{t('common.copy')}
+          </button>
+        </span>
+      </div>
+      <code className={`block rounded-lg bg-black/10 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-emerald-50 sm:text-[11px] ${expanded ? 'break-all' : 'truncate whitespace-nowrap'}`}>
+        {value || '-'}
+      </code>
+    </div>
+  );
+}
+
+function getIntegrityPresentation(integrity?: string, status?: unknown) {
+  if (status === 'tampered') {
+    return {
+      icon: ShieldX,
+      badgeClass: 'bg-red-500/20 text-red-100 ring-1 ring-red-400/40',
+      haloClass: 'bg-red-500/10',
+      iconClass: 'text-red-400',
+      labelKey: 'restore.status_tampered',
+    };
+  }
+
+  switch (integrity) {
+    case 'verified':
+      return {
+        icon: ShieldCheck,
+        badgeClass: 'bg-emerald-500/20 text-emerald-50 ring-1 ring-emerald-300/40',
+        haloClass: 'bg-emerald-500/10',
+        iconClass: 'text-emerald-400',
+        labelKey: 'restore.integrity_verified',
+      };
+    case 'repaired':
+      return {
+        icon: Wrench,
+        badgeClass: 'bg-amber-500/20 text-amber-50 ring-1 ring-amber-300/40',
+        haloClass: 'bg-amber-500/10',
+        iconClass: 'text-amber-400',
+        labelKey: 'restore.integrity_repaired',
+      };
+    case 'modified':
+      return {
+        icon: AlertTriangle,
+        badgeClass: 'bg-orange-500/20 text-orange-50 ring-1 ring-orange-300/40',
+        haloClass: 'bg-orange-500/10',
+        iconClass: 'text-orange-400',
+        labelKey: 'restore.integrity_modified',
+      };
+    default:
+      return {
+        icon: ShieldAlert,
+        badgeClass: 'bg-surface-500/20 text-surface-100 ring-1 ring-surface-300/30',
+        haloClass: 'bg-emerald-500/10',
+        iconClass: 'text-emerald-400',
+        labelKey: `restore.integrity_${integrity || 'unknown'}`,
+      };
+  }
+}
 
 type BackupImportPasswordModalProps = {
   loading: boolean;
@@ -57,8 +160,73 @@ export default function BackupImportPasswordModal({
   onHapticTap,
   onHapticSuccess,
 }: BackupImportPasswordModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [backupIdExpanded, setBackupIdExpanded] = useState(false);
+  const [fileHashExpanded, setFileHashExpanded] = useState(false);
   const backupId = asText(backupPreview?.backupId) || asText(backupPreview?.metadata?.backupId);
   const fileHash = asText(backupPreview?.containerHash) || asText(backupPreview?.metadata?.containerHash);
+  const metadata = backupPreview?.metadata;
+  const integrity = asText(backupPreview?.integrity) || 'unknown';
+  const integrityPresentation = getIntegrityPresentation(integrity, backupPreview?.status);
+  const IntegrityIcon = integrityPresentation.icon;
+  const createdAtText = asText(metadata?.createdAt) ? new Date(asText(metadata?.createdAt)).toLocaleString() : '';
+  const metadataItems = metadata
+    ? [
+      { label: t('restore.createdAt'), value: createdAtText, icon: CalendarDays },
+      { label: t('restore.createdOn'), value: asText(metadata.platform), icon: MonitorSmartphone },
+      { label: t('restore.walletCount'), value: asText(metadata.walletCount), icon: Wallet },
+      { label: t('restore.folderCount'), value: asText(metadata.folderCount), icon: FolderOpen },
+      { label: t('restore.networkCount'), value: asText(metadata.networkCount), icon: Globe2 },
+      { label: t('restore.source'), value: asText(metadata.source), icon: Package },
+    ]
+    : [];
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+
+    const focusableElements = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
+    const firstFocusable = focusableElements[0];
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    firstFocusable?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onHapticTap();
+        onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const elements = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
+      if (elements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onCancel, onHapticTap]);
 
   const handleEnter = async () => {
     if (backupImportMode === 'replace' && !backupAnalysis) {
@@ -76,20 +244,21 @@ export default function BackupImportPasswordModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={() => { onHapticTap(); onCancel(); }}
+    >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="restore-backup-title"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-full sm:p-6"
+        className="restore-backup-modal max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-full sm:p-6"
       >
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
-          backupPreview?.status === 'tampered' ? 'bg-red-500/10' : backupPreview?.integrity === 'repaired' ? 'bg-amber-500/10' : 'bg-emerald-500/10'
-        }`}>
-          <ShieldAlert size={22} className={
-            backupPreview?.status === 'tampered' ? 'text-red-400' : backupPreview?.integrity === 'repaired' ? 'text-amber-400' : 'text-emerald-400'
-          } />
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${integrityPresentation.haloClass}`}>
+          <IntegrityIcon size={22} className={integrityPresentation.iconClass} />
         </div>
         <h3 id="restore-backup-title" className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
         <p className="text-surface-400 text-sm text-center mb-4">{t('restore.desc')}</p>
@@ -105,7 +274,10 @@ export default function BackupImportPasswordModal({
           }`}>
             <div className="mb-2 flex items-center justify-between gap-3">
               <span className="font-semibold">{backupPreview.fileName || t('restore.backupFile')}</span>
-              <span className="rounded-full bg-black/20 px-2 py-0.5 font-semibold uppercase">{t(`restore.integrity_${asText(backupPreview.integrity)}`)}</span>
+              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-semibold uppercase ${integrityPresentation.badgeClass}`}>
+                <IntegrityIcon size={12} aria-hidden="true" />
+                {t(integrityPresentation.labelKey)}
+              </span>
             </div>
             {backupPreview.openedFromExternal && (
               <div className="mb-2 rounded-lg border border-sky-400/25 bg-sky-400/10 px-2.5 py-2 text-sky-100">
@@ -114,39 +286,40 @@ export default function BackupImportPasswordModal({
               </div>
             )}
             {backupPreview.metadata ? (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-surface-200">
-                <span>{t('restore.createdAt')}</span><span className="text-right">{asText(backupPreview.metadata.createdAt) ? new Date(asText(backupPreview.metadata.createdAt)).toLocaleString() : ''}</span>
-                <span>{t('restore.createdOn')}</span><span className="text-right">{asText(backupPreview.metadata.platform)}</span>
-                <span>{t('restore.walletCount')}</span><span className="text-right">{asText(backupPreview.metadata.walletCount)}</span>
-                <span>{t('restore.folderCount')}</span><span className="text-right">{asText(backupPreview.metadata.folderCount)}</span>
-                <span>{t('restore.networkCount')}</span><span className="text-right">{asText(backupPreview.metadata.networkCount)}</span>
-                <span>{t('restore.source')}</span><span className="text-right truncate">{asText(backupPreview.metadata.source)}</span>
-                <div className="col-span-2 mt-1 rounded-lg border border-emerald-500/15 bg-black/10 p-2">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="font-semibold">{t('restore.backupId')}</span>
-                    <button
-                      type="button"
-                      onClick={() => onCopyPreviewValue('backupId', backupId)}
-                      className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold hover:bg-black/30"
-                    >
-                      <Copy size={12} />{t('common.copy')}
-                    </button>
-                  </div>
-                  <code className="block break-all font-mono text-[11px] leading-relaxed text-emerald-50">{backupId || '-'}</code>
+              <div className="space-y-2 text-surface-200">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {metadataItems.map(({ label, value, icon: Icon }) => (
+                    <div key={label} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-2.5 py-2">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/15 text-emerald-200">
+                        <Icon size={14} aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wide text-surface-400">{label}</span>
+                        <span className="block truncate text-[11px] font-semibold text-surface-100">{value || '-'}</span>
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="col-span-2 rounded-lg border border-emerald-500/15 bg-black/10 p-2">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="font-semibold">{t('restore.containerHash')}</span>
-                    <button
-                      type="button"
-                      onClick={() => onCopyPreviewValue('containerHash', fileHash)}
-                      className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold hover:bg-black/30"
-                    >
-                      <Copy size={12} />{t('common.copy')}
-                    </button>
-                  </div>
-                  <code className="block break-all font-mono text-[11px] leading-relaxed text-emerald-50">{fileHash || '-'}</code>
-                </div>
+
+                <PreviewValueBlock
+                  label={t('restore.backupId')}
+                  value={backupId}
+                  icon={Fingerprint}
+                  expanded={backupIdExpanded}
+                  onToggle={() => setBackupIdExpanded((expanded) => !expanded)}
+                  onCopy={() => onCopyPreviewValue('backupId', backupId)}
+                  t={t}
+                />
+
+                <PreviewValueBlock
+                  label={t('restore.containerHash')}
+                  value={fileHash}
+                  icon={Hash}
+                  expanded={fileHashExpanded}
+                  onToggle={() => setFileHashExpanded((expanded) => !expanded)}
+                  onCopy={() => onCopyPreviewValue('containerHash', fileHash)}
+                  t={t}
+                />
               </div>
             ) : (
               <p className="leading-relaxed">{backupPreview.messageKey ? t(asText(backupPreview.messageKey)) : asText(backupPreview.message)}</p>
@@ -178,7 +351,28 @@ export default function BackupImportPasswordModal({
 
         {backupAnalysis && (
           <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200">
-            <p>{t('restore.previewSummary', backupAnalysis)}</p>
+            <div className="mb-3">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-200">{t('restore.confirmSummaryTitle')}</div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {[
+                  { key: 'newWallets', label: t('restore.confirmNewWallets'), value: backupAnalysis.newWallets, icon: PlusCircle, className: 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20' },
+                  { key: 'duplicates', label: t('restore.confirmDuplicates'), value: Math.max(0, backupAnalysis.duplicates - backupAnalysis.changed), icon: Copy, className: 'text-sky-200 bg-sky-500/10 border-sky-500/20' },
+                  { key: 'changed', label: t('restore.confirmChanged'), value: backupAnalysis.changed, icon: RefreshCw, className: 'text-amber-100 bg-amber-500/10 border-amber-500/20' },
+                  { key: 'missingSensitive', label: t('restore.confirmMissingSensitive'), value: backupAnalysis.missingSensitive, icon: AlertTriangle, className: 'text-red-100 bg-red-500/10 border-red-500/20' },
+                  { key: 'sensitive', label: t('restore.confirmSensitive'), value: backupAnalysis.sensitive, icon: KeyRound, className: 'text-brand-100 bg-brand-500/10 border-brand-500/20 sm:col-span-2' },
+                ].map(({ key, label, value, icon: Icon, className }) => (
+                  <div key={key} className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 ${className}`}>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/15">
+                      <Icon size={14} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-80">{label}</span>
+                      <span className="block text-sm font-bold">{value}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button onClick={() => onImportModeChange('merge')} className={`min-h-20 rounded-lg border px-3 py-2 text-left transition-colors ${backupImportMode === 'merge' ? 'border-brand-400 bg-brand-500/15 text-brand-100' : 'border-surface-700 text-surface-300 hover:border-surface-500'}`}>
                 <span className="block font-semibold">{t('restore.merge')}</span>
@@ -208,8 +402,8 @@ export default function BackupImportPasswordModal({
         )}
 
         {(loading || fileOperationKey) && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-100">
-            <Settings size={14} className={loading ? 'animate-spin' : ''} />
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-brand-500/20 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-100" role="status">
+            <Settings size={14} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
             {t(fileOperationKey || 'fileStatus.processing')}
           </div>
         )}

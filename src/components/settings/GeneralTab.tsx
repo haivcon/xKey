@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -22,6 +22,10 @@ const THEME_OPTIONS = [
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 const DISPLAY_SCALE_PRESETS = [50, 75, 100, 125, 150, 200];
+const MIN_TARGET_DPI = 160;
+const MAX_TARGET_DPI = 960;
+const DEFAULT_TARGET_DPI = 480;
+const TARGET_DPI_PRESETS = [320, 420, 480, 560, 640];
 const DENSITY_OPTIONS = [
   { key: 'comfortable', label: 'settings.walletDensityComfortable' },
   { key: 'compact', label: 'settings.walletDensityCompact' },
@@ -34,6 +38,12 @@ const clampDisplayScale = (value: number | string) => {
   return Math.min(MAX_DISPLAY_SCALE, Math.max(MIN_DISPLAY_SCALE, parsed));
 };
 
+const clampTargetDpi = (value: number | string) => {
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_TARGET_DPI;
+  return Math.min(MAX_TARGET_DPI, Math.max(MIN_TARGET_DPI, parsed));
+};
+
 type ThemeMode = 'dark' | 'light' | 'amoled';
 type SettingsSection = 'theme' | 'scale' | 'density' | 'feedback';
 type FeedbackType = 'sound' | 'vibration';
@@ -42,17 +52,20 @@ export default function GeneralTab() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [draftScale, setDraftScale] = useState<number | null>(null);
   const [scaleInput, setScaleInput] = useState('');
+  const [dpiInput, setDpiInput] = useState('');
   const [isScaleInputFocused, setIsScaleInputFocused] = useState(false);
+  const [isDpiInputFocused, setIsDpiInputFocused] = useState(false);
   const [feedbackSettings, setFeedbackSettings] = useState(() => getFeedbackSettings());
   const [expandedSection, setExpandedSection] = useState<SettingsSection | null>(null);
   const scaleConfirmingRef = useRef(false);
+  const dpiConfirmingRef = useRef(false);
 
   const toggleSection = (section: SettingsSection) => {
     hapticTap();
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores } = useTheme();
   const t = useT();
   const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
@@ -60,6 +73,9 @@ export default function GeneralTab() {
   const { isLiteMode, toggleLiteMode } = useLiteMode();
   const visibleScale = draftScale ?? displayScale;
   const scaleProgress = ((visibleScale - MIN_DISPLAY_SCALE) / (MAX_DISPLAY_SCALE - MIN_DISPLAY_SCALE)) * 100;
+  const visibleDpi = clampTargetDpi(isDpiInputFocused && dpiInput ? dpiInput : targetDpi);
+  const dpiProgress = ((visibleDpi - MIN_TARGET_DPI) / (MAX_TARGET_DPI - MIN_TARGET_DPI)) * 100;
+  const dpiScaleRatio = effectiveDisplayScale / 100;
 
   useEffect(() => {
     setDraftScale(displayScale);
@@ -69,6 +85,10 @@ export default function GeneralTab() {
   useEffect(() => {
     if (!isScaleInputFocused) setScaleInput(String(visibleScale));
   }, [visibleScale, isScaleInputFocused]);
+
+  useEffect(() => {
+    if (!isDpiInputFocused) setDpiInput(String(targetDpi));
+  }, [targetDpi, isDpiInputFocused]);
 
   const requestScaleChange = async (value: number | string) => {
     const nextScale = clampDisplayScale(value);
@@ -114,6 +134,64 @@ export default function GeneralTab() {
 
   const commitScaleDraft = (value: number | string = visibleScale) => {
     requestScaleChange(value);
+  };
+
+  const requestDpiModeChange = async (enabled: boolean) => {
+    if (enabled === dpiMode) return;
+
+    const ok = await showConfirm(
+      t(enabled ? 'settings.dpiModeEnableConfirmMessage' : 'settings.dpiModeDisableConfirmMessage', { dpi: targetDpi, deviceDpi, scale: effectiveDisplayScale }),
+      {
+        title: t('settings.dpiModeConfirmTitle'),
+        confirmText: t(enabled ? 'settings.enableDpiMode' : 'settings.disableDpiMode'),
+        cancelText: t('common.cancel')
+      }
+    );
+
+    if (ok) {
+      setDpiMode(enabled);
+      hapticSuccess();
+    }
+  };
+
+  const requestDpiChange = async (value: number | string) => {
+    const nextDpi = clampTargetDpi(value);
+    setDpiInput(String(nextDpi));
+
+    if (nextDpi === targetDpi) return;
+    if (dpiConfirmingRef.current) return;
+
+    dpiConfirmingRef.current = true;
+    const nextScale = Math.round((nextDpi / Math.max(deviceDpi, 1)) * 100);
+    const ok = await showConfirm(
+      t('settings.dpiConfirmMessage', { from: targetDpi, to: nextDpi, deviceDpi, scale: nextScale }),
+      {
+        title: t('settings.dpiConfirmTitle'),
+        confirmText: t('settings.applyDpi'),
+        cancelText: t('common.cancel')
+      }
+    );
+    dpiConfirmingRef.current = false;
+
+    if (ok) {
+      setTargetDpi(nextDpi);
+      hapticSuccess();
+      return;
+    }
+
+    setDpiInput(String(targetDpi));
+  };
+
+  const commitDpiInput = () => {
+    if (dpiInput.trim() === '') {
+      setDpiInput(String(targetDpi));
+      setIsDpiInputFocused(false);
+      return;
+    }
+
+    const nextDpi = clampTargetDpi(dpiInput);
+    setIsDpiInputFocused(false);
+    requestDpiChange(nextDpi);
   };
 
   const toggleFeedback = async (type: FeedbackType) => {
@@ -278,7 +356,7 @@ export default function GeneralTab() {
             </div>
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
-              <p className="text-xs text-surface-400">{displayScale}%</p>
+              <p className="text-xs text-surface-400">{dpiMode ? `${targetDpi} DPI · ${effectiveDisplayScale}%` : `${displayScale}%`}</p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
@@ -287,6 +365,125 @@ export default function GeneralTab() {
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
             <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.displayScaleDesc')}</p>
+
+            <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10">
+                    <SlidersHorizontal size={18} className="text-cyan-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white">{t('settings.dpiMode')}</p>
+                    <p className="text-xs leading-relaxed text-surface-400">{t('settings.dpiModeDesc')}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { hapticTap(); requestDpiModeChange(!dpiMode); }}
+                  className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${dpiMode ? 'bg-cyan-500' : 'bg-surface-600'}`}
+                  aria-pressed={dpiMode}
+                >
+                  <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${dpiMode ? 'translate-x-7' : 'translate-x-1'}`} />
+                </button>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
+                  <p className="mt-1 text-sm font-bold text-white">{deviceDpi}</p>
+                </div>
+                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
+                  <p className="mt-1 text-sm font-bold text-cyan-200">{targetDpi}</p>
+                </div>
+                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
+                  <p className="mt-1 text-sm font-bold text-brand-300">×{dpiScaleRatio.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+
+            {dpiMode ? (
+              <>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
+                  {TARGET_DPI_PRESETS.map(dpi => {
+                    const active = targetDpi === dpi;
+                    return (
+                      <button
+                        key={dpi}
+                        type="button"
+                        onClick={() => { hapticTap(); requestDpiChange(dpi); }}
+                        className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
+                          active
+                            ? 'border-cyan-500/50 bg-cyan-500/15 text-white shadow-sm shadow-cyan-500/10'
+                            : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                        }`}
+                      >
+                        {dpi}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label className="text-xs font-medium text-surface-400">
+                    {t('settings.targetDpiCustom')}
+                  </label>
+                  <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-cyan-300">
+                    {MIN_TARGET_DPI}-{MAX_TARGET_DPI} DPI
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
+                  <div className="grid grid-cols-[1fr_6rem] items-center gap-3">
+                    <input
+                      type="range"
+                      min={MIN_TARGET_DPI}
+                      max={MAX_TARGET_DPI}
+                      step="20"
+                      value={visibleDpi}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        setDpiInput(String(clampTargetDpi(e.target.value)));
+                      }}
+                      onPointerUp={(e: PointerEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                      onTouchEnd={(e: TouchEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                      onBlur={(e: FocusEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                      style={{ '--scale-progress': `${dpiProgress}%` } as CSSProperties}
+                      className="scale-range"
+                    />
+                    <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-cyan-500/60 focus-within:ring-2 focus-within:ring-cyan-500/15">
+                      <input
+                        type="number"
+                        min={MIN_TARGET_DPI}
+                        max={MAX_TARGET_DPI}
+                        step="20"
+                        inputMode="numeric"
+                        value={dpiInput}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDpiInput(e.target.value)}
+                        onFocus={() => {
+                          setIsDpiInputFocused(true);
+                          setDpiInput(String(targetDpi));
+                        }}
+                        onBlur={commitDpiInput}
+                        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                          if (e.key === 'Escape') {
+                            setDpiInput(String(targetDpi));
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        className="w-14 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
+                      />
+                      <span className="text-xs font-semibold text-surface-400">DPI</span>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-xs leading-relaxed text-surface-400">
+                    {t('settings.dpiCalculatedScale', { dpi: targetDpi, deviceDpi, scale: effectiveDisplayScale })}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
               {DISPLAY_SCALE_PRESETS.map(scale => {
                 const active = displayScale === scale;
@@ -373,6 +570,8 @@ export default function GeneralTab() {
                 <div />
               </div>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>

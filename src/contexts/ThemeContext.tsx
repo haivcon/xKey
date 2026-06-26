@@ -10,6 +10,12 @@ type ThemeContextValue = {
   toggleTheme: () => void;
   displayScale: number;
   setDisplayScale: (next: number | string | null | undefined) => void;
+  dpiMode: boolean;
+  setDpiMode: (next: boolean) => void;
+  targetDpi: number;
+  setTargetDpi: (next: number | string | null | undefined) => void;
+  deviceDpi: number;
+  effectiveDisplayScale: number;
   walletDensity: WalletDensity;
   setWalletDensity: (next: string | null | undefined) => void;
   brandReminders: boolean;
@@ -21,12 +27,18 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const THEME_KEY = 'xkey_theme';
 const DISPLAY_SCALE_KEY = 'xkey_display_scale';
+const DPI_MODE_KEY = 'xkey_dpi_mode';
+const TARGET_DPI_KEY = 'xkey_target_dpi';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
 const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
 const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
 const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
+const DEFAULT_TARGET_DPI = 480;
+const MIN_TARGET_DPI = 160;
+const MAX_TARGET_DPI = 960;
+const BASELINE_DPI = 160;
 
 const THEME_MODES: ThemeMode[] = ['dark', 'light', 'amoled'];
 const WALLET_DENSITIES: WalletDensity[] = ['comfortable', 'compact', 'ultra'];
@@ -68,6 +80,23 @@ const normalizeDisplayScale = (value: number | string | null | undefined): numbe
   return Math.min(MAX_DISPLAY_SCALE, Math.max(MIN_DISPLAY_SCALE, parsed));
 };
 
+const getDeviceDpi = (): number => {
+  if (typeof window === 'undefined') return DEFAULT_TARGET_DPI;
+  const ratio = Number(window.devicePixelRatio);
+  return Math.round((Number.isFinite(ratio) && ratio > 0 ? ratio : 3) * BASELINE_DPI);
+};
+
+const normalizeTargetDpi = (value: number | string | null | undefined): number => {
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_TARGET_DPI;
+  return Math.min(MAX_TARGET_DPI, Math.max(MIN_TARGET_DPI, parsed));
+};
+
+const calculateDpiScale = (targetDpi: number, deviceDpi: number): number => {
+  const safeDeviceDpi = Number.isFinite(deviceDpi) && deviceDpi > 0 ? deviceDpi : DEFAULT_TARGET_DPI;
+  return normalizeDisplayScale(Math.round((targetDpi / safeDeviceDpi) * 100));
+};
+
 const applyDisplayScale = (scale: number) => {
   document.documentElement.style.setProperty('--app-display-scale', String(scale / 100));
 };
@@ -75,6 +104,9 @@ const applyDisplayScale = (scale: number) => {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [displayScale, setDisplayScaleState] = useState(DEFAULT_DISPLAY_SCALE);
+  const [dpiMode, setDpiModeState] = useState(false);
+  const [targetDpi, setTargetDpiState] = useState(DEFAULT_TARGET_DPI);
+  const [deviceDpi, setDeviceDpi] = useState(() => getDeviceDpi());
   const [walletDensity, setWalletDensityState] = useState<WalletDensity>('comfortable');
   const [brandReminders, setBrandRemindersState] = useState(true);
   const [showWalletScores, setShowWalletScoresState] = useState(false);
@@ -90,10 +122,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     }).catch(() => {});
 
-    Preferences.get({ key: DISPLAY_SCALE_KEY }).then(({ value }) => {
-      const nextScale = normalizeDisplayScale(value);
+    Promise.all([
+      Preferences.get({ key: DISPLAY_SCALE_KEY }),
+      Preferences.get({ key: DPI_MODE_KEY }),
+      Preferences.get({ key: TARGET_DPI_KEY })
+    ]).then(([scaleResult, dpiModeResult, targetDpiResult]) => {
+      const nextScale = normalizeDisplayScale(scaleResult.value);
+      const nextDpiMode = dpiModeResult.value === 'true';
+      const nextTargetDpi = normalizeTargetDpi(targetDpiResult.value);
+      const nextDeviceDpi = getDeviceDpi();
+
       setDisplayScaleState(nextScale);
-      applyDisplayScale(nextScale);
+      setDpiModeState(nextDpiMode);
+      setTargetDpiState(nextTargetDpi);
+      setDeviceDpi(nextDeviceDpi);
+      applyDisplayScale(nextDpiMode ? calculateDpiScale(nextTargetDpi, nextDeviceDpi) : nextScale);
     }).catch(() => {});
 
     Preferences.get({ key: WALLET_DENSITY_KEY }).then(({ value }) => {
@@ -122,9 +165,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setDisplayScale = useCallback((next: number | string | null | undefined) => {
     const nextScale = normalizeDisplayScale(next);
     setDisplayScaleState(nextScale);
-    applyDisplayScale(nextScale);
+    if (!dpiMode) applyDisplayScale(nextScale);
     Preferences.set({ key: DISPLAY_SCALE_KEY, value: String(nextScale) }).catch(() => {});
-  }, []);
+  }, [dpiMode]);
+
+  const setDpiMode = useCallback((next: boolean) => {
+    const nextDeviceDpi = getDeviceDpi();
+    setDeviceDpi(nextDeviceDpi);
+    setDpiModeState(next);
+    applyDisplayScale(next ? calculateDpiScale(targetDpi, nextDeviceDpi) : displayScale);
+    Preferences.set({ key: DPI_MODE_KEY, value: String(next) }).catch(() => {});
+  }, [displayScale, targetDpi]);
+
+  const setTargetDpi = useCallback((next: number | string | null | undefined) => {
+    const nextTargetDpi = normalizeTargetDpi(next);
+    const nextDeviceDpi = getDeviceDpi();
+    setTargetDpiState(nextTargetDpi);
+    setDeviceDpi(nextDeviceDpi);
+    if (dpiMode) applyDisplayScale(calculateDpiScale(nextTargetDpi, nextDeviceDpi));
+    Preferences.set({ key: TARGET_DPI_KEY, value: String(nextTargetDpi) }).catch(() => {});
+  }, [dpiMode]);
 
   const setWalletDensity = useCallback((next: string | null | undefined) => {
     const normalized: WalletDensity = isWalletDensity(next) ? next : 'comfortable';
@@ -152,8 +212,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const effectiveDisplayScale = dpiMode ? calculateDpiScale(targetDpi, deviceDpi) : displayScale;
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores }}>
       {children}
     </ThemeContext.Provider>
   );

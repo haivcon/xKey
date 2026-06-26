@@ -373,12 +373,14 @@ body.keyboard-open .keyboard-scroll-target {
   color: #0f172a !important;
 }
 
+.theme-light .text-surface-400,
 .theme-light .text-surface-300,
 .theme-light .text-surface-200 {
   color: #334155 !important;
 }
 
 /* Keep status content readable on light backgrounds. */
+.theme-light .text-emerald-50,
 .theme-light .text-emerald-100,
 .theme-light .text-emerald-200,
 .theme-light .text-emerald-300,
@@ -397,10 +399,69 @@ body.keyboard-open .keyboard-scroll-target {
   -webkit-text-fill-color: #075985 !important;
 }
 
+.theme-light .text-brand-100,
+.theme-light .text-brand-200,
+.theme-light .text-brand-300,
+.theme-light .text-brand-400,
+.theme-light .text-brand-500 {
+  color: #0369a1 !important;
+  -webkit-text-fill-color: #0369a1 !important;
+}
+
+.theme-light .text-amber-100,
+.theme-light .text-amber-200,
+.theme-light .text-amber-300,
+.theme-light .text-amber-400,
+.theme-light .text-amber-500 {
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+}
+
 /* Tailwind opacity utilities use class names such as text-yellow-300/80.
    Prefix matching keeps those status messages readable too. */
-.theme-light [class*="text-emerald-"],
+.theme-light [class*="text-emerald-"] {
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
 .theme-light [class*="text-sky-"] {
+  color: #075985 !important;
+  -webkit-text-fill-color: #075985 !important;
+}
+
+.theme-light [class*="text-brand-"] {
+  color: #0369a1 !important;
+  -webkit-text-fill-color: #0369a1 !important;
+}
+
+.theme-light [class*="text-amber-"] {
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+}
+
+.theme-light .restore-backup-modal {
+  background-color: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+.theme-light .restore-backup-modal [class*="bg-surface-900"],
+.theme-light .restore-backup-modal [class*="bg-surface-800"],
+.theme-light .restore-backup-modal [class*="bg-surface-700"] {
+  background-color: rgba(248, 250, 252, 0.94) !important;
+}
+
+.theme-light .restore-backup-modal [class*="border-surface-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .restore-backup-modal [class*="bg-black/10"],
+.theme-light .restore-backup-modal [class*="bg-black/15"],
+.theme-light .restore-backup-modal [class*="bg-black/20"] {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.theme-light .restore-backup-modal code {
   color: #047857 !important;
   -webkit-text-fill-color: #047857 !important;
 }

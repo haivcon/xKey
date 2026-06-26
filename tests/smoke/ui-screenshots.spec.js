@@ -24,6 +24,10 @@ for (const themeClass of ['', 'theme-light']) {
         path: path.join(screenshotDir, `${themeClass || 'dark'}-${name}.png`),
         fullPage: true,
       });
+      await expect(page).toHaveScreenshot(`${themeClass || 'dark'}-${name}.png`, {
+        fullPage: true,
+        maxDiffPixelRatio: 0.04,
+      });
     });
   }
 }
