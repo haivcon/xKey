@@ -54,13 +54,12 @@ import useBackupExport from './hooks/useBackupExport';
 import useFolderEditing from './hooks/useFolderEditing';
 import useKeyHealthFlow from './hooks/useKeyHealthFlow';
 import useVaultAuth from './hooks/useVaultAuth';
+import useAppHealthMessages from './hooks/useAppHealthMessages';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
 import { useTheme } from './contexts/ThemeContext';
 import { appendAuditLog } from './utils/auditLog';
-import { cleanupInternalTextFiles } from './utils/internalTextStore';
-import { INTERNAL_TEXT_MAX_AGE_MS, REPLACE_SNAPSHOT_KEY } from './app/constants';
 import type { WalletSaveInput } from './app/types';
 import type { QrModalData, Wallet } from './types';
 
@@ -92,8 +91,6 @@ export default function App() {
   useEffect(() => {
     initFeedbackSettings();
   }, []);
-
-  const [healthMessages, setHealthMessages] = useState<string[]>([]);
 
   const t = useT();
   const tRef = useRef(t);
@@ -259,25 +256,7 @@ export default function App() {
   } = useBackupVerificationReport({ backupPreview, t, showToast });
 
   const externalBackupWaiting = useExternalBackupOpen(aesKey, handleExternalBackupFile);
-
-  useEffect(() => {
-    if (!aesKey) return;
-    let active = true;
-    (async () => {
-      const messages: string[] = [];
-      const [snapshot, cleaned] = await Promise.all([
-        Preferences.get({ key: REPLACE_SNAPSHOT_KEY }).then(({ value }) => value).catch(() => ''),
-        cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session'], INTERNAL_TEXT_MAX_AGE_MS),
-      ]);
-      if (snapshot) messages.push(tRef.current('health.replaceSnapshotPending'));
-      if (externalBackupWaiting) messages.push(tRef.current('health.externalBackupPending'));
-      if (cleaned > 0) messages.push(tRef.current('health.cleanedTempFiles', { count: cleaned }));
-      if (active) setHealthMessages(messages);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [aesKey, externalBackupWaiting]);
+  const healthMessages = useAppHealthMessages({ aesKey, externalBackupWaiting, tRef });
 
   const {
     selectionMode, toggleSelectionMode,
