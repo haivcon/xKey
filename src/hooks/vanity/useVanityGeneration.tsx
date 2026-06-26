@@ -40,6 +40,12 @@ import {
   persistVanitySettings,
 } from './vanitySettingsPersistence';
 import {
+  createVanityExtraWallet,
+  createVanityWallet,
+  getVanityScoreTone as getVanityScoreToneClass,
+  rankVanityExtraWallets,
+} from './vanityWalletHelpers';
+import {
   createVanityDifficultyAnalyzer,
   getVanityBatchSize,
   getVanityDifficultyKey,
@@ -543,44 +549,31 @@ export function useVanityGeneration({
     setVanityTagInput('');
   };
 
-  const buildVanityWallet = (wallet: GeneratedWallet, index: number): GeneratedWallet => ({
-    ...wallet,
-    name:
-      vanitySafeTargetCount === 1
-        ? t('createWallet.vanityWalletName')
-        : `${t('createWallet.vanityWalletName')} ${index + 1}`,
-    network: vanityNetwork,
-    groupId: vanityFolder || VANITY_DEFAULT_FOLDER,
-    tags: vanityTags,
-    balance: '0.00',
-    createdAt: Date.now() + index,
-  });
+  const buildVanityWallet = (wallet: GeneratedWallet, index: number): GeneratedWallet =>
+    createVanityWallet({
+      wallet,
+      index,
+      targetCount: vanitySafeTargetCount,
+      network: vanityNetwork,
+      folder: vanityFolder,
+      tags: vanityTags,
+      vanityWalletName: t('createWallet.vanityWalletName'),
+    });
 
-  const buildVanityExtraWallet = (wallet: GeneratedWallet, index: number): GeneratedWallet => ({
-    ...wallet,
-    name: `${t('createWallet.vanityExtraWalletName')} ${index + 1}`,
-    network: vanityNetwork,
-    groupId: vanityExtraFolder || VANITY_EXTRA_DEFAULT_FOLDER,
-    tags: [...new Set([...vanityTags, 'extra-vanity'])],
-    balance: '0.00',
-    createdAt: Date.now() + index + 100000,
-    seedPhrase: wallet.seedPhrase || wallet.mnemonic || '',
-    mnemonic: wallet.mnemonic || wallet.seedPhrase || '',
-  });
+  const buildVanityExtraWallet = (wallet: GeneratedWallet, index: number): GeneratedWallet =>
+    createVanityExtraWallet({
+      wallet,
+      index,
+      network: vanityNetwork,
+      folder: vanityExtraFolder,
+      tags: vanityTags,
+      vanityExtraWalletName: t('createWallet.vanityExtraWalletName'),
+    });
 
-  const getVanityScoreTone = (score = 0) => {
-    if (score >= 80) return 'border-emerald-400/35 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200';
-    if (score >= 50) return 'border-amber-400/35 bg-amber-500/15 text-amber-700 dark:text-amber-200';
-    if (score >= 30) return 'border-orange-400/35 bg-orange-500/15 text-orange-700 dark:text-orange-200';
-    return 'border-rose-400/35 bg-rose-500/15 text-rose-700 dark:text-rose-200';
-  };
+  const getVanityScoreTone = getVanityScoreToneClass;
 
   const syncVanityExtraWallets = (wallets: GeneratedWallet[]) => {
-    const nextExtras = wallets
-      .filter(w => !!w.address)
-      .filter((w, i, arr) => arr.findIndex(o => o.address?.toLowerCase() === w.address?.toLowerCase()) === i)
-      .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
-      .slice(0, vanitySafeExtraLimit);
+    const nextExtras = rankVanityExtraWallets(wallets, vanitySafeExtraLimit);
     vanityExtraRef.current = nextExtras;
     setVanityExtraWallets(nextExtras);
     return nextExtras;
