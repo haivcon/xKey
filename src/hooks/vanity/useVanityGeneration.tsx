@@ -35,6 +35,7 @@ import {
   writeVanitySessionBackup,
 } from './vanitySessionStorage';
 import {
+  buildVanitySelectedWallets,
   createVanityExtraWallet,
   createVanityWallet,
   getVanityScoreTone as getVanityScoreToneClass,
@@ -679,20 +680,12 @@ export function useVanityGeneration({
     walletsToSave: GeneratedWallet[],
     closeAfterSave = false
   ): Promise<boolean> => {
-    const extraRanks = new Map(
-      walletsToSave
-        .filter(w => w.vanityMatchType === 'extra' && !!w.address)
-        .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
-        .map((w, i) => [w.address!.toLowerCase(), i + 1])
-    );
-    const selectedWallets = walletsToSave
-      .filter(
-        w => !!w.address && vanitySelectedRef.current.has(w.address) && !vanitySavedRef.current.has(w.address)
-      )
-      .map(w => {
-        const rank = w.address ? extraRanks.get(w.address.toLowerCase()) : undefined;
-        return rank ? { ...w, name: `${t('createWallet.vanityExtraWalletName')} ${rank}` } : w;
-      });
+    const selectedWallets = buildVanitySelectedWallets({
+      wallets: walletsToSave,
+      selectedAddresses: vanitySelectedRef.current,
+      savedAddresses: vanitySavedRef.current,
+      extraWalletName: t('createWallet.vanityExtraWalletName'),
+    });
     if (!selectedWallets.length) return true;
     try {
       await onSave(selectedWallets.length === 1 ? selectedWallets[0] : selectedWallets);

@@ -80,3 +80,34 @@ export const rankVanityExtraWallets = (
     )
     .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
     .slice(0, limit);
+
+export const buildVanitySelectedWallets = ({
+  wallets,
+  selectedAddresses,
+  savedAddresses,
+  extraWalletName,
+}: {
+  wallets: GeneratedWallet[];
+  selectedAddresses: Set<string>;
+  savedAddresses: Set<string>;
+  extraWalletName: string;
+}): GeneratedWallet[] => {
+  const extraRanks = new Map(
+    wallets
+      .filter(wallet => wallet.vanityMatchType === 'extra' && !!wallet.address)
+      .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
+      .map((wallet, index) => [wallet.address!.toLowerCase(), index + 1])
+  );
+
+  return wallets
+    .filter(
+      wallet =>
+        !!wallet.address &&
+        selectedAddresses.has(wallet.address) &&
+        !savedAddresses.has(wallet.address)
+    )
+    .map(wallet => {
+      const rank = wallet.address ? extraRanks.get(wallet.address.toLowerCase()) : undefined;
+      return rank ? { ...wallet, name: `${extraWalletName} ${rank}` } : wallet;
+    });
+};
