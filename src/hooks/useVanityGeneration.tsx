@@ -36,6 +36,14 @@ import type {
   VanitySessionState,
   VanitySettings,
 } from '../components/create-wallet/types';
+import {
+  createVanityDifficultyAnalyzer,
+  getVanityBatchSize,
+  getVanityDifficultyKey,
+  getVanityDifficultyTone,
+  getVanityExtraLabel as formatVanityExtraLabel,
+  getVanityWorkerCount,
+} from './vanityGenerationUtils';
 
 type VanityConfirmOptions = {
   danger?: boolean;
@@ -178,47 +186,13 @@ export function useVanityGeneration({
   const liteModeActive =
     typeof document !== 'undefined' &&
     document.documentElement.classList.contains('lite-mode');
-  const vanityBatchSize = liteModeActive
-    ? vanityPerformanceMode === 'eco'
-      ? 128
-      : vanityPerformanceMode === 'fast'
-        ? 2048
-        : 512
-    : vanityPerformanceMode === 'eco'
-      ? 256
-      : vanityPerformanceMode === 'fast'
-        ? 4096
-        : 1024;
-  const vanityWorkerCount =
-    vanityPerformanceMode === 'eco'
-      ? 1
-      : Math.max(
-          1,
-          Math.min(
-            vanityPerformanceMode === 'fast' ? 8 : 4,
-            Math.max(
-              1,
-              Math.floor(
-                (navigator.hardwareConcurrency || 2) *
-                  (vanityPerformanceMode === 'fast' ? 1 : 0.6)
-              )
-            )
-          )
-        );
-  const vanityDifficultyKey =
-    vanityPatternLength <= 2
-      ? 'easy'
-      : vanityPatternLength <= 4
-        ? 'medium'
-        : vanityPatternLength <= 6
-          ? 'hard'
-          : 'extreme';
-  const vanityDifficultyTone = {
-    easy: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25',
-    medium: 'bg-amber-500/10 text-amber-300 border-amber-500/25',
-    hard: 'bg-orange-500/10 text-orange-300 border-orange-500/25',
-    extreme: 'bg-red-500/10 text-red-300 border-red-500/25',
-  }[vanityDifficultyKey];
+  const vanityBatchSize = getVanityBatchSize(vanityPerformanceMode, liteModeActive);
+  const vanityWorkerCount = getVanityWorkerCount(
+    vanityPerformanceMode,
+    navigator.hardwareConcurrency || 2
+  );
+  const vanityDifficultyKey = getVanityDifficultyKey(vanityPatternLength);
+  const vanityDifficultyTone = getVanityDifficultyTone(vanityDifficultyKey);
   const vanityRunActive = vanityGenerating || vanityPaused;
   const vanityProgress =
     vanityTimeLimit > 0
@@ -266,79 +240,29 @@ export function useVanityGeneration({
     setExpandedVanitySecrets(prev => ({ ...prev, [address]: !prev[address] }));
   };
 
-  const vanityDifficultyAnalyzer = useMemo(() => {
-    if (!vanityHasPattern) return null;
-    const len = vanityPatternLength;
-    const hasBoth = vanityPrefixClean.length > 0 && vanitySuffixClean.length > 0;
-    const combinations = Math.pow(16, len);
-    const generationCostFactor =
-      vanityGenerationMode === 'mnemonic' ? (vanityMnemonicWords === 24 ? 50 : 25) : 1;
-    const effectiveSpeed = Math.max(
-      1,
-      vanitySpeed > 0 ? vanitySpeed : Math.floor(25000 / generationCostFactor)
-    );
-    const timeInSeconds = combinations / effectiveSpeed;
-    const timeLabelStr =
-      timeInSeconds < 60
-        ? t('createWallet.vanityTimeSeconds', { seconds: Math.ceil(timeInSeconds) })
-        : timeInSeconds < 3600
-          ? t('createWallet.vanityTimeMinutes', { minutes: Math.ceil(timeInSeconds / 60) })
-          : timeInSeconds < 86400
-            ? t('createWallet.vanityTimeHours', { hours: (timeInSeconds / 3600).toFixed(1) })
-            : timeInSeconds < 31536000
-              ? t('createWallet.vanityTimeDays', { days: (timeInSeconds / 86400).toFixed(1) })
-              : t('createWallet.vanityTimeOverYear');
-
-    let diffTone =
-      'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-500/30';
-    let difficultyBadgeTone =
-      'bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-400/25';
-    let difficultyLabel = t('createWallet.vanityDifficultyEasy');
-    if (len >= 8 || timeInSeconds > 86400) {
-      diffTone =
-        'text-red-700 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-950/40 dark:border-red-500/30';
-      difficultyBadgeTone =
-        'bg-red-100 text-red-700 border border-red-200 dark:bg-red-500/15 dark:text-red-200 dark:border-red-400/25';
-      difficultyLabel = t('createWallet.vanityDifficultyExtreme');
-    } else if (len >= 6 || timeInSeconds > 3600) {
-      diffTone =
-        'text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-300 dark:bg-orange-950/40 dark:border-orange-500/30';
-      difficultyBadgeTone =
-        'bg-orange-100 text-orange-700 border border-orange-200 dark:bg-orange-500/15 dark:text-orange-200 dark:border-orange-400/25';
-      difficultyLabel = t('createWallet.vanityDifficultyHard');
-    } else if (len >= 4 || timeInSeconds > 60) {
-      diffTone =
-        'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-500/30';
-      difficultyBadgeTone =
-        'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-400/25';
-      difficultyLabel = t('createWallet.vanityDifficultyMedium');
-    }
-
-    const sourceLabel =
-      vanityGenerationMode === 'mnemonic'
-        ? t('createWallet.vanitySourceMnemonic', { words: vanityMnemonicWords })
-        : t('createWallet.vanitySourcePrivateKey');
-
-    return {
-      combinations,
-      timeLabel: timeLabelStr,
-      diffTone,
-      difficultyBadgeTone,
-      difficultyLabel,
-      hasBoth,
-      effectiveSpeed,
-      sourceLabel,
-    };
-  }, [
-    t,
-    vanityPatternLength,
-    vanitySpeed,
-    vanityPrefixClean,
-    vanitySuffixClean,
-    vanityHasPattern,
-    vanityGenerationMode,
-    vanityMnemonicWords,
-  ]);
+  const vanityDifficultyAnalyzer = useMemo(
+    () =>
+      createVanityDifficultyAnalyzer({
+        t,
+        patternLength: vanityPatternLength,
+        speed: vanitySpeed,
+        prefix: vanityPrefixClean,
+        suffix: vanitySuffixClean,
+        hasPattern: vanityHasPattern,
+        generationMode: vanityGenerationMode,
+        mnemonicWords: vanityMnemonicWords,
+      }),
+    [
+      t,
+      vanityPatternLength,
+      vanitySpeed,
+      vanityPrefixClean,
+      vanitySuffixClean,
+      vanityHasPattern,
+      vanityGenerationMode,
+      vanityMnemonicWords,
+    ]
+  );
 
   const usableFolders = folders.filter(f => f && f !== 'All');
   const visibleVanityPresetGroups = vanityPresetsExpanded
@@ -354,36 +278,8 @@ export function useVanityGeneration({
     setVanitySuffix(clean);
   };
 
-  const getVanityExtraLabel = (wallet: GeneratedWallet): string => {
-    if (wallet.vanityPatternType === 'sequence-up')
-      return t('createWallet.vanityExtraSequenceUp', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'sequence-down')
-      return t('createWallet.vanityExtraSequenceDown', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'mirror')
-      return t('createWallet.vanityExtraMirror', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'palindrome')
-      return t('createWallet.vanityExtraPalindrome', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'bracket')
-      return t('createWallet.vanityExtraBracket', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'lucky')
-      return t('createWallet.vanityExtraLucky', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityPatternType === 'alternating')
-      return t('createWallet.vanityExtraAlternating', { pattern: wallet.vanityRepeatChar || '-' });
-    if (wallet.vanityRepeatSide === 'both') {
-      return t('createWallet.vanityExtraBoth', {
-        head: wallet.vanityHeadRun || '-',
-        tail: wallet.vanityTailRun || '-',
-      });
-    }
-    const sideKey =
-      wallet.vanityRepeatSide === 'head'
-        ? 'createWallet.vanityExtraHead'
-        : 'createWallet.vanityExtraTail';
-    const repeat = `${wallet.vanityRepeatChar || ''}`.repeat(
-      Math.max(0, wallet.vanityRepeatLength || 0)
-    );
-    return t(sideKey, { pattern: repeat || '-' });
-  };
+  const getVanityExtraLabel = (wallet: GeneratedWallet): string =>
+    formatVanityExtraLabel(wallet, t);
 
   const renderVanityAddress = (address: string, compact = false): ReactNode => {
     if (compact) return <>{compactAddress(address, 12, 8)}</>;
