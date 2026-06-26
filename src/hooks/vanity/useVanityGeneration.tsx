@@ -36,6 +36,7 @@ import type {
   VanitySessionState,
   VanitySettings,
 } from '../../components/create-wallet/types';
+import type { UseVanityGenerationParams } from './vanityGenerationTypes';
 import {
   createVanityDifficultyAnalyzer,
   getVanityBatchSize,
@@ -44,32 +45,6 @@ import {
   getVanityExtraLabel as formatVanityExtraLabel,
   getVanityWorkerCount,
 } from './vanityGenerationUtils';
-
-type VanityConfirmOptions = {
-  danger?: boolean;
-  title?: string;
-  confirmText?: string;
-  cancelText?: string;
-  hideCancel?: boolean;
-};
-
-export interface UseVanityGenerationParams {
-  activeFolder: string;
-  folders: string[];
-  aesKey: string;
-  onSave: (
-    wallet: GeneratedWallet | GeneratedWallet[]
-  ) => Promise<GeneratedWallet | GeneratedWallet[] | void> | GeneratedWallet | GeneratedWallet[] | void;
-  onClose: () => void;
-  showToast: (message: unknown, type?: string) => void;
-  showConfirm: (message: string, options?: VanityConfirmOptions) => Promise<boolean>;
-  t: (key: string, vars?: unknown) => string;
-  registerCloseHandler?: ((handler: (() => void | Promise<void>) | null) => void) | undefined;
-  // shared state from parent
-  generatedWallets: GeneratedWallet[];
-  setGeneratedWallets: React.Dispatch<React.SetStateAction<GeneratedWallet[]>>;
-  setWalletName: React.Dispatch<React.SetStateAction<string>>;
-}
 
 export function useVanityGeneration({
   activeFolder,
