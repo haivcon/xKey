@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
+    "test": "npm run test:shamir && npm run test:reed-solomon && npm run test:vanity && npm run test:key-health && npm run test:backup-import && npm run test:backup-utils",
     "test:shamir": "tsx tests/shamir.test.mjs",
     "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:vanity": "tsx tests/vanity-match.test.mjs",
