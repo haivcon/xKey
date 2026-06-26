@@ -38,8 +38,11 @@ import {
   buildVanitySelectedWallets,
   createVanityExtraWallet,
   createVanityWallet,
+  getLowercaseWalletAddressSet,
   getVanityScoreTone as getVanityScoreToneClass,
+  mergeVanityExtraWallets,
   rankVanityExtraWallets,
+  syncVanityExtraSelection,
 } from './vanityWalletHelpers';
 import {
   createVanityDifficultyAnalyzer,
@@ -877,41 +880,18 @@ export function useVanityGeneration({
 
       if (type === 'extras' && Array.isArray(event.data.wallets)) {
         const previousExtras = vanityExtraRef.current;
-        const byAddress = new Map(previousExtras.map(w => [w.address?.toLowerCase(), w]));
-        const mergedExtras = [...previousExtras, ...(event.data.wallets as GeneratedWallet[])]
-          .filter(w => !!w.address)
-          .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0));
-        const nextExtras: GeneratedWallet[] = mergedExtras
-          .filter(
-            (w, i, arr) =>
-              arr.findIndex(o => o.address?.toLowerCase() === w.address?.toLowerCase()) === i
-          )
-          .slice(0, vanitySafeExtraLimit)
-          .map((w, i) => {
-            const existing = byAddress.get(w.address?.toLowerCase() || '');
-            const base = existing || buildVanityExtraWallet(w, i);
-            return {
-              ...base,
-              ...w,
-              privateKey: w.privateKey || base.privateKey,
-              seedPhrase: w.seedPhrase || w.mnemonic || base.seedPhrase || base.mnemonic || '',
-              mnemonic: w.mnemonic || w.seedPhrase || base.mnemonic || base.seedPhrase || '',
-              name: `${t('createWallet.vanityExtraWalletName')} ${i + 1}`,
-            };
-          });
-        const nextAddresses = new Set(
-          nextExtras.map(w => w.address?.toLowerCase()).filter(Boolean)
-        );
-        const previousAddresses = new Set(
-          previousExtras.map(w => w.address?.toLowerCase()).filter(Boolean)
-        );
-        previousExtras.forEach(w => {
-          const addr = w.address?.toLowerCase();
-          if (addr && !nextAddresses.has(addr)) vanitySelectedRef.current.delete(w.address || '');
+        const previousAddresses = getLowercaseWalletAddressSet(previousExtras);
+        const nextExtras = mergeVanityExtraWallets({
+          previousExtras,
+          incomingExtras: event.data.wallets as GeneratedWallet[],
+          limit: vanitySafeExtraLimit,
+          buildWallet: buildVanityExtraWallet,
+          extraWalletName: t('createWallet.vanityExtraWalletName'),
         });
-        nextExtras.forEach(w => {
-          const addr = w.address?.toLowerCase();
-          if (addr && !previousAddresses.has(addr)) vanitySelectedRef.current.add(w.address || '');
+        syncVanityExtraSelection({
+          previousExtras,
+          nextExtras,
+          selectedAddresses: vanitySelectedRef.current,
         });
         vanityExtraRef.current = nextExtras;
         setVanityExtraWallets(nextExtras);

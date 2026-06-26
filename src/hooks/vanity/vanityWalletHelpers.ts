@@ -111,3 +111,69 @@ export const buildVanitySelectedWallets = ({
       return rank ? { ...wallet, name: `${extraWalletName} ${rank}` } : wallet;
     });
 };
+
+export const mergeVanityExtraWallets = ({
+  previousExtras,
+  incomingExtras,
+  limit,
+  buildWallet,
+  extraWalletName,
+}: {
+  previousExtras: GeneratedWallet[];
+  incomingExtras: GeneratedWallet[];
+  limit: number;
+  buildWallet: (wallet: GeneratedWallet, index: number) => GeneratedWallet;
+  extraWalletName: string;
+}): GeneratedWallet[] => {
+  const byAddress = new Map(previousExtras.map(wallet => [wallet.address?.toLowerCase(), wallet]));
+  const mergedExtras = [...previousExtras, ...incomingExtras]
+    .filter(wallet => !!wallet.address)
+    .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0));
+
+  return mergedExtras
+    .filter(
+      (wallet, index, list) =>
+        list.findIndex(
+          other => other.address?.toLowerCase() === wallet.address?.toLowerCase()
+        ) === index
+    )
+    .slice(0, limit)
+    .map((wallet, index) => {
+      const existing = byAddress.get(wallet.address?.toLowerCase() || '');
+      const base = existing || buildWallet(wallet, index);
+      return {
+        ...base,
+        ...wallet,
+        privateKey: wallet.privateKey || base.privateKey,
+        seedPhrase: wallet.seedPhrase || wallet.mnemonic || base.seedPhrase || base.mnemonic || '',
+        mnemonic: wallet.mnemonic || wallet.seedPhrase || base.mnemonic || base.seedPhrase || '',
+        name: `${extraWalletName} ${index + 1}`,
+      };
+    });
+};
+
+export const getLowercaseWalletAddressSet = (wallets: GeneratedWallet[]): Set<string> =>
+  new Set(wallets.map(wallet => wallet.address?.toLowerCase()).filter(Boolean) as string[]);
+
+export const syncVanityExtraSelection = ({
+  previousExtras,
+  nextExtras,
+  selectedAddresses,
+}: {
+  previousExtras: GeneratedWallet[];
+  nextExtras: GeneratedWallet[];
+  selectedAddresses: Set<string>;
+}): void => {
+  const nextAddresses = getLowercaseWalletAddressSet(nextExtras);
+  const previousAddresses = getLowercaseWalletAddressSet(previousExtras);
+
+  previousExtras.forEach(wallet => {
+    const address = wallet.address?.toLowerCase();
+    if (address && !nextAddresses.has(address)) selectedAddresses.delete(wallet.address || '');
+  });
+
+  nextExtras.forEach(wallet => {
+    const address = wallet.address?.toLowerCase();
+    if (address && !previousAddresses.has(address)) selectedAddresses.add(wallet.address || '');
+  });
+};
