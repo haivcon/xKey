@@ -13,6 +13,7 @@
     "test:vanity": "tsx tests/vanity-match.test.mjs",
     "test:key-health": "tsx tests/key-health.test.mjs",
     "test:backup-import": "tsx tests/backup-import-analysis.test.mjs",
+    "test:backup-utils": "tsx tests/backup-utils.test.mjs",
     "test:adb-open": "node tests/adb-open-xkey.mjs",
     "audit:report": "node scripts/audit-report.mjs",
     "locale:audit": "node scripts/locale-audit.mjs",
