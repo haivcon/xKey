@@ -6,7 +6,7 @@ import { useT } from '../contexts/LanguageContext';
 import { readClipboard } from '../utils/clipboard';
 import type { FilterKey, SortOrder } from '../types';
 
-const QRScannerModal = lazy(() => import('./QRScannerModal'));
+const QRScannerModal = lazy(() => import('./qr/QRScannerModal'));
 
 type FilterOption = {
   key: FilterKey | 'new';

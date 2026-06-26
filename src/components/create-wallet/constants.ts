@@ -1,4 +1,4 @@
-import type { VanityExtraPatternKey } from '../../utils/vanityMatch';
+import type { VanityExtraPatternKey } from '../../utils/vanity/vanityMatch';
 
 export const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 

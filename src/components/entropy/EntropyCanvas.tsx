@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { useT } from '../../contexts/LanguageContext';
-import { EntropyAccumulator } from '../../utils/entropyUtils';
+import { EntropyAccumulator } from '../../utils/crypto/entropyUtils';
 
 interface Particle {
   x: number;

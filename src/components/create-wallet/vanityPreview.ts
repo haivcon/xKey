@@ -1,6 +1,6 @@
 import { VANITY_PREVIEW_FILL } from './constants';
 import type { VanityExtraFilterPreview, VanityExtraFilterPreviewSegment } from './types';
-import type { VanityExtraFilterRule, VanityExtraPatternKey } from '../../utils/vanityMatch';
+import type { VanityExtraFilterRule, VanityExtraPatternKey } from '../../utils/vanity/vanityMatch';
 
 const clampVanityPreviewLength = (value: unknown, fallback = 4) => Math.max(3, Math.min(12, Math.floor(Number(value) || fallback)));
 

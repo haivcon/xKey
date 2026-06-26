@@ -5,11 +5,11 @@ import { getAddress } from 'ethers';
 import { X, Wrench, ShieldCheck, Tags, Download, GitCompare, Search, Network, History, LockKeyhole, Merge, Sparkles, ClipboardCheck, RefreshCw, type LucideIcon } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { saveWallets } from '../utils/storage';
-import { exportPortableBackup, parseVaultBackupFile } from '../utils/backupUtils';
+import { exportPortableBackup, parseVaultBackupFile } from '../utils/backup/backupUtils';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
-import PasswordInput from './PasswordInput';
-import Notice from './Notice';
+import PasswordInput from './shared/PasswordInput';
+import Notice from './shared/Notice';
 import type { Wallet } from '../types';
 
 export const SENSITIVE_EXPORT_LOCK_KEY = 'xkey_sensitive_export_lock';

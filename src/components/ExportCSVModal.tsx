@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { X, Download, Copy, Check, ShieldAlert } from 'lucide-react';
-import { reauthenticate } from '../hooks/useReauth';
+import { reauthenticate } from '../hooks/security/useReauth';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import type { Wallet } from '../types';
 import { saveTextFile } from '../utils/fileSaver';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { useTheme } from '../contexts/ThemeContext';
-import BrandSlogan from './BrandSlogan';
+import BrandSlogan from './shared/BrandSlogan';
 
 type CsvColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 type CsvColumn = {

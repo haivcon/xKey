@@ -1,7 +1,7 @@
 ﻿import type { Dispatch, SetStateAction } from 'react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import type { useVanityGeneration } from '../../../../hooks/useVanityGeneration';
+import type { useVanityGeneration } from '../../../../hooks/vanity/useVanityGeneration';
 import type { GeneratedWallet } from '../../types';
 import { VanityExtraFiltersSection } from './VanityExtraFiltersSection';
 import { VanityPerformanceSection } from './VanityPerformanceSection';

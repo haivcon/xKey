@@ -1,5 +1,5 @@
 import { ChevronDown, Save } from 'lucide-react';
-import PasswordInput from '../../PasswordInput';
+import PasswordInput from '../../shared/PasswordInput';
 import { hapticTap } from '../../../utils/haptics';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
 

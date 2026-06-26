@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
 import { AlertTriangle, Camera, ChevronDown, Info } from 'lucide-react';
-import PasswordInput from '../../PasswordInput';
-import SecureTextarea from '../../SecureTextarea';
+import PasswordInput from '../../shared/PasswordInput';
+import SecureTextarea from '../../shared/SecureTextarea';
 import { formatAmountInput, normalizeAmountInput } from '../../../utils/amountFormat';
 import { NETWORKS } from '../constants';
 

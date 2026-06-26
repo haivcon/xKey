@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { RefreshCw, Dices } from 'lucide-react';
 import { useT } from '../../contexts/LanguageContext';
-import { EntropyAccumulator } from '../../utils/entropyUtils';
+import { EntropyAccumulator } from '../../utils/crypto/entropyUtils';
 
 interface DiceEntropyInputProps {
   onComplete: (seedHex: string) => void;

@@ -6,7 +6,7 @@ const {
   inspectBackupFile,
   parseEncryptedBackupText,
   parseVaultBackupFile,
-} = await import('../src/utils/backupUtils.ts');
+} = await import('../src/utils/backup/backupUtils.ts');
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();

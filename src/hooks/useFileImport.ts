@@ -83,7 +83,7 @@ export default function useFileImport(
     if (!value) return;
     const storedRef = parseInternalTextRef(value);
     const snapshotText = storedRef ? await readInternalText(storedRef) : value;
-    const { parseVaultBackupFile } = await import('../utils/backupUtils');
+    const { parseVaultBackupFile } = await import('../utils/backup/backupUtils');
     const snapshot = await parseVaultBackupFile(snapshotText, aesKey || '', aesKey || '') as { wallets: Wallet[] };
     setWallets(snapshot.wallets);
     await saveWallets(snapshot.wallets, aesKey, isDecoyMode);
@@ -120,7 +120,7 @@ export default function useFileImport(
         // Handle .xkey Backup File — always prompt for password
         if (file.name && file.name.toLowerCase().endsWith('.xkey')) {
           setFileOperationKey('fileStatus.verifying');
-          const { inspectBackupFile } = await import('../utils/backupUtils');
+          const { inspectBackupFile } = await import('../utils/backup/backupUtils');
           const preview = await withTimeout(
             inspectBackupFile(fileData) as Promise<BackupPreview>,
             FILE_IMPORT_TIMEOUT_MS,
@@ -202,7 +202,7 @@ export default function useFileImport(
     setLoading(true);
     setFileOperationKey('fileStatus.verifying');
     try {
-      const { inspectBackupFile } = await import('../utils/backupUtils');
+      const { inspectBackupFile } = await import('../utils/backup/backupUtils');
       const preview = await withTimeout(
         inspectBackupFile(fileData) as Promise<BackupPreview>,
         FILE_IMPORT_TIMEOUT_MS,
@@ -238,7 +238,7 @@ export default function useFileImport(
     try {
       setLoading(true);
       setFileOperationKey('fileStatus.decrypting');
-      const { parseVaultBackupFile } = await import('../utils/backupUtils');
+      const { parseVaultBackupFile } = await import('../utils/backup/backupUtils');
       const backup = await withTimeout(
         parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as Promise<{ wallets: Wallet[] }>,
         FILE_IMPORT_TIMEOUT_MS,
@@ -248,7 +248,7 @@ export default function useFileImport(
 
       let sensitiveUpdated = 0;
       if (backupImportMode === 'replace') {
-        const { createPortableBackupText } = await import('../utils/backupUtils');
+        const { createPortableBackupText } = await import('../utils/backup/backupUtils');
         const snapshot = await createPortableBackupText(wallets, { scope: 'replace-snapshot' }, aesKey || '');
         const snapshotRef = await writeInternalText('xkey-replace-snapshot', snapshot);
         await Preferences.set({ key: REPLACE_SNAPSHOT_KEY, value: serializeInternalTextRef(snapshotRef) });
@@ -327,7 +327,7 @@ export default function useFileImport(
     try {
       setLoading(true);
       setFileOperationKey('fileStatus.previewing');
-      const { parseVaultBackupFile } = await import('../utils/backupUtils');
+      const { parseVaultBackupFile } = await import('../utils/backup/backupUtils');
       const backup = await withTimeout(
         parseVaultBackupFile(pendingBackupData, aesKey || '', importPassword || null) as Promise<{ wallets: Wallet[] }>,
         FILE_IMPORT_TIMEOUT_MS,

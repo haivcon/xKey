@@ -3,7 +3,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import CryptoJS from 'crypto-js';
 import { appendAuditLog } from '../auditLog';
-import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from '../reedSolomon';
+import { decodeReedSolomon, encodeReedSolomon, reedSolomonDefaults } from '../crypto/reedSolomon';
 
 const FRAGMENT_VERSION = 1;
 const FRAGMENT_DIR = 'xkey-vault-fragments';

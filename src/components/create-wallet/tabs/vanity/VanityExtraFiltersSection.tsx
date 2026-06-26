@@ -4,7 +4,7 @@ import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { InlineSelect } from '../../components';
 import { VANITY_EXTRA_FILTER_KEYS, VANITY_EXTRA_LIMITS } from '../../constants';
 import { buildVanityExtraFilterPreview } from '../../vanityPreview';
-import type { VanityExtraFilterConfig, VanityExtraFilterRule, VanityExtraPatternKey } from '../../../../utils/vanityMatch';
+import type { VanityExtraFilterConfig, VanityExtraFilterRule, VanityExtraPatternKey } from '../../../../utils/vanity/vanityMatch';
 
 type VanityExtraFiltersSectionProps = {
   t: TranslationFn;

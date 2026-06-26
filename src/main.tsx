@@ -11,7 +11,7 @@ import { MasterPasswordProvider } from './contexts/MasterPasswordContext';
 import { ScrambledKeyboardProvider } from './contexts/ScrambledKeyboardContext';
 import { SecureDisplayProvider } from './contexts/SecureDisplayContext';
 import { ScreenSecurityProvider } from './contexts/ScreenSecurityContext';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
 const hideNativeSplash = () => {
   SplashScreen.hide().catch(() => {});

@@ -1,9 +1,9 @@
 import { CheckCircle2, Download, MapPin, QrCode, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import Notice from '../../Notice';
+import Notice from '../../shared/Notice';
 import { XKEY_SLOGAN } from '../../../utils/branding';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
-import type { BackupHistoryEntry } from '../../../utils/backupUtils';
+import type { BackupHistoryEntry } from '../../../utils/backup/backupUtils';
 
 type BackupHistorySectionProps = {
   t: TranslationFn;

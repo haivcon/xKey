@@ -5,7 +5,7 @@ import { authenticateDeviceCredential, isDeviceCredentialAvailable } from '../..
 import { appendAuditLog, readAuditLog, type AuditDetails, type DecodedAuditEntry } from '../../utils/auditLog';
 import { hapticTap } from '../../utils/haptics';
 import { useLanguage, useT, type TranslationFn } from '../../contexts/LanguageContext';
-import Notice from '../Notice';
+import Notice from '../shared/Notice';
 import { clearActionHistory, getActionHistory, type ActionHistoryCategory, type ActionHistoryItem } from '../../utils/actionHistory';
 
 const formatDetails = (details: AuditDetails = {}, t: TranslationFn) => {

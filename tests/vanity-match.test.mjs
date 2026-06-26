@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareVanityExtraMatches, detectExtraVanityMatch } from '../src/utils/vanityMatch.ts';
+import { compareVanityExtraMatches, detectExtraVanityMatch } from '../src/utils/vanity/vanityMatch.ts';
 
 const head = detectExtraVanityMatch('0x111abcde1234567890abcdef1234567890abcdef', 3);
 assert.deepEqual(head, {

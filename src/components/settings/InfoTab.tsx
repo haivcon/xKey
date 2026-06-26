@@ -4,7 +4,7 @@ import { useT } from '../../contexts/LanguageContext';
 import { hapticTap } from '../../utils/haptics';
 import useAppVersion from '../../hooks/useAppVersion';
 import DonateModal from '../DonateModal';
-import BrandSlogan from '../BrandSlogan';
+import BrandSlogan from '../shared/BrandSlogan';
 
 export default function InfoTab() {
   const t = useT();

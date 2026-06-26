@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Wallet as WalletModel } from '../../types';
-import type { VanityExtraFilterRule, VanityExtraPatternKey } from '../../utils/vanityMatch';
+import type { VanityExtraFilterRule, VanityExtraPatternKey } from '../../utils/vanity/vanityMatch';
 
 export type SelectOption = { value: string; label: ReactNode };
 export type CreateWalletTab = 'manual' | 'generate' | 'hdTree' | 'vanity' | 'advancedEntropy';

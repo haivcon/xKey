@@ -1,4 +1,4 @@
-import QRScannerModal from '../QRScannerModal';
+import QRScannerModal from '../qr/QRScannerModal';
 
 type QRScannerResultType = 'address' | 'privateKey' | 'seedPhrase' | string;
 

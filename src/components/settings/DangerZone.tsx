@@ -1,5 +1,5 @@
 import { ShieldAlert, Trash2 } from 'lucide-react';
-import Notice from '../Notice';
+import Notice from '../shared/Notice';
 
 type DangerZoneProps = {
   title: string;

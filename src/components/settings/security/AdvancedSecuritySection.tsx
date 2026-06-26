@@ -5,8 +5,8 @@ import type { useMasterPassword } from '../../../contexts/MasterPasswordContext'
 import type { useScreenSecurity } from '../../../contexts/ScreenSecurityContext';
 import type { useScrambledKeyboard } from '../../../contexts/ScrambledKeyboardContext';
 import type { useSecureDisplay } from '../../../contexts/SecureDisplayContext';
-import Notice from '../../Notice';
-import PasswordInput from '../../PasswordInput';
+import Notice from '../../shared/Notice';
+import PasswordInput from '../../shared/PasswordInput';
 import type { TFunction } from './types';
 
 type MasterPasswordContext = ReturnType<typeof useMasterPassword>;

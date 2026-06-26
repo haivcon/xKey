@@ -9,7 +9,7 @@ import { PostQuantumOptions } from './PostQuantumOptions';
 import { ManualTab } from './tabs/ManualTab';
 import { GenerateTab, GenerateUtilityTabs } from './tabs/GenerateTab';
 import { VanityTab } from './tabs/VanityTab';
-import { useVanityGeneration } from '../../hooks/useVanityGeneration';
+import { useVanityGeneration } from '../../hooks/vanity/useVanityGeneration';
 import { useWalletGeneration } from '../../hooks/useWalletGeneration';
 import type {
   CreateWalletModalProps,

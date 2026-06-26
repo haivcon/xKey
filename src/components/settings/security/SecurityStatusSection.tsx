@@ -1,5 +1,5 @@
 import { ChevronDown, ShieldCheck } from 'lucide-react';
-import Notice from '../../Notice';
+import Notice from '../../shared/Notice';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
 
 type SecurityStatus = {

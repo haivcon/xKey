@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, ChevronDown, Copy, GitBranch, KeyRound, Leaf, Plus, RefreshCw, Save, ShieldAlert, Trees, Wallet } from 'lucide-react';
 import { ethers } from 'ethers';
-import SecureTextarea from './SecureTextarea';
+import SecureTextarea from './shared/SecureTextarea';
 import { useT } from '../contexts/LanguageContext';
 import { hapticSuccess, hapticWarning } from '../utils/haptics';
 import type { Wallet as WalletModel } from '../types';

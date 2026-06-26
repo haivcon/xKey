@@ -1,6 +1,6 @@
 import type { ChangeEvent } from 'react';
 import { ChevronDown, Lock, Monitor, RefreshCw, ShieldAlert, ShieldOff } from 'lucide-react';
-import PasswordInput from '../../PasswordInput';
+import PasswordInput from '../../shared/PasswordInput';
 import type { PinStep } from '../securityTabUtils';
 import type { TFunction } from './types';
 

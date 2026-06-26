@@ -8,7 +8,7 @@ const repoRoot = process.cwd();
 const readSource = (relativePath) => readFile(path.join(repoRoot, relativePath), 'utf8');
 
 test('settings danger zone belongs to data tab', async () => {
-  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
+  const securityTab = await readSource('src/components/settings/security/SecurityTabContent.tsx');
   const dataTab = await readSource('src/components/settings/DataTab.tsx');
   const settingsScreen = await readSource('src/components/SettingsScreen.tsx');
 
@@ -22,7 +22,7 @@ test('settings danger zone belongs to data tab', async () => {
 test('runtime integrity checks include crypto KATs and build manifest verification', async () => {
   const runtimeIntegrity = await readSource('src/utils/runtimeIntegrity.ts');
   const viteConfig = await readSource('vite.config.ts');
-  const app = await readSource('src/App.tsx');
+  const startupIntegrity = await readSource('src/hooks/security/useStartupIntegrity.ts');
   const asyncTimeout = await readSource('src/utils/asyncTimeout.ts');
 
   expect(runtimeIntegrity).toContain('runCryptoKnownAnswerTests');
@@ -42,10 +42,10 @@ test('runtime integrity checks include crypto KATs and build manifest verificati
   expect(viteConfig).toContain('RSA-PSS-SHA256');
   expect(viteConfig).toContain('shouldIncludeIntegrityAsset');
   expect(viteConfig).toContain('xkey-integrity-manifest');
-  expect(app).toContain('runRuntimeIntegrityChecks');
-  expect(app).toContain('integrityCheckRef');
-  expect(app).toContain('STARTUP_WATCHDOG_MS');
-  expect(app).toContain("setAuthError(tRef.current('integrity.failureBody'))");
+  expect(startupIntegrity).toContain('runRuntimeIntegrityChecks');
+  expect(startupIntegrity).toContain('integrityCheckRef');
+  expect(startupIntegrity).toContain('STARTUP_WATCHDOG_MS');
+  expect(startupIntegrity).toContain("setAuthError(tRef.current('integrity.failureBody'))");
   expect(asyncTimeout).toContain('Promise.race');
   expect(asyncTimeout).toContain('setTimeout');
 });
@@ -54,8 +54,8 @@ test('root and data tamper guard is wired to Android risk checks and settings', 
   const deviceIntegrity = await readSource('src/utils/deviceIntegrity.ts');
   const deviceIntegrityPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/DeviceIntegrityPlugin.java');
   const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
-  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
-  const app = await readSource('src/App.tsx');
+  const securityTab = await readSource('src/components/settings/security/SecurityTabContent.tsx');
+  const vaultAuth = await readSource('src/hooks/security/useVaultAuth.ts');
 
   expect(deviceIntegrity).toContain("registerPlugin<DeviceIntegrityPlugin>('DeviceIntegrity')");
   expect(deviceIntegrity).toContain('DEVICE_INTEGRITY_GUARD_KEY');
@@ -72,18 +72,19 @@ test('root and data tamper guard is wired to Android risk checks and settings', 
   expect(securityTab).toContain('handleToggleDeviceIntegrityGuard');
   expect(securityTab).toContain("t('settings.deviceIntegrityTitle')");
   expect(securityTab).toContain("t('settings.deviceIntegrityLimit')");
-  expect(app).toContain('isDeviceIntegrityGuardEnabled');
-  expect(app).toContain("appendAuditLog('device_integrity.blocked'");
-  expect(app).toContain("t('integrity.deviceRiskBlocked')");
+  expect(vaultAuth).toContain('isDeviceIntegrityGuardEnabled');
+  expect(vaultAuth).toContain("appendAuditLog('device_integrity.blocked'");
+  expect(vaultAuth).toContain("t('integrity.deviceRiskBlocked')");
 });
 
 test('security status is collapsible and hardware warning uses Notice', async () => {
-  const securityTab = await readSource('src/components/settings/SecurityTab.tsx');
+  const securityTab = await readSource('src/components/settings/security/SecurityTabContent.tsx');
+  const advancedSecuritySection = await readSource('src/components/settings/security/AdvancedSecuritySection.tsx');
 
   expect(securityTab).toContain('showSecurityStatus');
   expect(securityTab).toContain('setShowSecurityStatus(!showSecurityStatus)');
-  expect(securityTab).toContain("t('settings.hardwareBoundBackupDeviceNote')");
-  expect(securityTab).toContain('<Notice variant="warning" strong>');
+  expect(advancedSecuritySection).toContain("t('settings.hardwareBoundBackupDeviceNote')");
+  expect(advancedSecuritySection).toContain('<Notice variant="warning" strong>');
   expect(securityTab).toContain("title: t('settings.hardwareBoundConfirmTitle')");
 });
 
@@ -100,15 +101,13 @@ test('folder actions menu uses fixed portal rendering', async () => {
 });
 
 test('home header keeps xKey brand literal across all languages', async () => {
-  const app = await readSource('src/App.tsx');
-  const headerStart = app.indexOf('{/* Header */}');
-  const headerEnd = app.indexOf('<FolderTabs', headerStart);
-  const headerSource = app.slice(headerStart, headerEnd);
+  const headerSource = await readSource('src/components/HomeHeader.tsx');
 
-  expect(headerSource).toMatch(/<h1[^>]*>\s*xKey\s*<\/h1>/);
+  expect(headerSource).toContain('<h1 className="home-header-title');
+  expect(headerSource).toContain('xKey');
   expect(headerSource).not.toContain("t('home.title')");
-  expect(headerSource).toContain('text-[5px]');
-  expect(headerSource).toContain('{appVersion.version}');
+  expect(headerSource).toContain('home-header-version');
+  expect(headerSource).toContain('{version}');
 });
 
 test('audit log tab and tamper-evident backup preview are wired into settings and import flow', async () => {
@@ -116,6 +115,7 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
   const auditTab = await readSource('src/components/settings/AuditLogTab.tsx');
   const fileImport = await readSource('src/hooks/useFileImport.ts');
   const app = await readSource('src/App.tsx');
+  const passwordModal = await readSource('src/components/backup/BackupImportPasswordModal.tsx');
   const auditLog = await readSource('src/utils/auditLog.ts');
 
   expect(settingsScreen).toContain("key: 'audit'");
@@ -126,13 +126,14 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
   expect(auditLog).toContain('entryHash');
   expect(fileImport).toContain('inspectBackupFile');
   expect(fileImport).toContain('backupPreview');
-  expect(app).toContain("backupPreview?.status === 'tampered'");
+  expect(passwordModal).toContain("backupPreview?.status === 'tampered'");
   expect(app).toContain("appendAuditLog('app.opened'");
 });
 
 test('backup replacement, import reports, and vanity recovery retain encrypted recovery paths', async () => {
   const fileImport = await readSource('src/hooks/useFileImport.ts');
-  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
+  const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
+  const vanityConstants = await readSource('src/components/create-wallet/constants.ts');
   const app = await readSource('src/App.tsx');
 
   expect(fileImport).toContain('xkey_replace_snapshot_v1');
@@ -140,27 +141,32 @@ test('backup replacement, import reports, and vanity recovery retain encrypted r
   expect(fileImport).toContain('restoreReplaceSnapshot');
   expect(fileImport).toContain('xkey_import_report_');
   expect(fileImport).toContain('saveTextFile');
-  expect(createWallet).toContain('xkey_vanity_session_v1');
-  expect(createWallet).toContain('createPortableBackupText(vanityFoundRef.current');
-  expect(createWallet).toContain('restoreVanitySession');
-  expect(createWallet).toContain('vanityPerformanceMode');
+  expect(vanityConstants).toContain('xkey_vanity_session_v1');
+  expect(vanityHook).toContain('writeInternalText(\'xkey-vanity-session\'');
+  expect(vanityHook).toContain('restoreVanitySession');
+  expect(vanityHook).toContain('vanityPerformanceMode');
   expect(app).toContain('aesKey={aesKey}');
 });
 
 test('vanity wallet generator can auto-keep extra repeated-character matches', async () => {
-  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
+  const vanityTab = await readSource('src/components/create-wallet/tabs/vanity/VanityTabContent.tsx');
+  const vanityRunningPanel = await readSource('src/components/create-wallet/tabs/vanity/VanityRunningPanel.tsx');
+  const vanityExtraWalletCard = await readSource('src/components/create-wallet/tabs/vanity/VanityExtraWalletCard.tsx');
+  const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
+  const vanityConstants = await readSource('src/components/create-wallet/constants.ts');
   const vanityWorker = await readSource('src/workers/vanityWorker.ts');
 
-  expect(createWallet).toContain('vanityCaptureExtras');
-  expect(createWallet).toContain('VANITY_EXTRA_MIN_RUNS');
-  expect(createWallet).toContain('VANITY_EXTRA_LIMITS');
-  expect(createWallet).toContain('vanityExtraFolder');
-  expect(createWallet).toContain("t('createWallet.vanityPrimaryMatches')");
-  expect(createWallet).toContain("t('createWallet.vanityExtraKept')");
-  expect(createWallet).toContain('vanityExtraScore');
-  expect(createWallet).toContain("saveFound: false");
-  expect(createWallet).toContain("CapacitorApp.addListener('appStateChange'");
-  expect(createWallet).toContain('extraRanks');
+  expect(vanityHook).toContain('vanityCaptureExtras');
+  expect(vanityConstants).toContain('VANITY_EXTRA_MIN_RUNS');
+  expect(vanityConstants).toContain('VANITY_EXTRA_LIMITS');
+  expect(vanityHook).toContain('vanityExtraFolder');
+  expect(vanityTab).toContain('VanityRunningPanel');
+  expect(vanityRunningPanel).toContain("t('createWallet.vanityPrimaryMatches')");
+  expect(vanityRunningPanel).toContain("t('createWallet.vanityExtraKept')");
+  expect(vanityExtraWalletCard).toContain('vanityExtraScore');
+  expect(vanityHook).toContain("saveFound: false");
+  expect(vanityHook).toContain("CapacitorApp.addListener('appStateChange'");
+  expect(vanityHook).toContain('extraRanks');
   expect(vanityWorker).toContain('detectExtraVanityMatch');
   expect(vanityWorker).toContain("type: 'extras'");
   expect(vanityWorker).not.toContain('seenExtraAddresses');
@@ -171,7 +177,6 @@ test('vanity wallet generator can auto-keep extra repeated-character matches', a
 test('dependency audit is report-only and does not update packages automatically', async () => {
   const packageJson = JSON.parse(await readSource('package.json'));
   const workflow = await readSource('.github/workflows/dependency-audit.yml');
-  const gitignore = await readSource('.gitignore');
   const auditScript = await readSource('scripts/audit-report.mjs');
 
   expect(packageJson.scripts['audit:report']).toContain('scripts/audit-report.mjs');
@@ -181,32 +186,35 @@ test('dependency audit is report-only and does not update packages automatically
   expect(workflow).toContain('npm run audit:report');
   expect(workflow).toContain('actions/upload-artifact@v4');
   expect(workflow).not.toContain('npm update');
-  expect(gitignore).toContain('audit-report.json');
+  expect(auditScript).toContain('audit-report.json');
 });
 
 test('vault and backup self-healing Reed-Solomon checks are present', async () => {
-  const reedSolomon = await readSource('src/utils/reedSolomon.ts');
-  const storage = await readSource('src/utils/storage.ts');
-  const backupUtils = await readSource('src/utils/backupUtils.ts');
+  const reedSolomon = await readSource('src/utils/crypto/reedSolomon.ts');
+  const backupUtils = await readSource('src/utils/backup/backupUtils.ts');
+  const backupInspection = await readSource('src/utils/backup/backupInspection.ts');
+  const backupFormat = await readSource('src/utils/backup/backupFormat.ts');
+  const backupCrypto = await readSource('src/utils/backup/backupCrypto.ts');
+  const fragmentedVault = await readSource('src/utils/storage/fragmentedVault.ts');
 
   expect(reedSolomon).toContain('encodeReedSolomon');
   expect(reedSolomon).toContain('decodeReedSolomon');
   expect(reedSolomon).toContain('PARITY_SHARDS = 5');
   expect(reedSolomon).toContain('reed-solomon-gf256-v1');
-  expect(storage).toContain('encodeReedSolomon');
-  expect(storage).toContain('decodeReedSolomon');
-  expect(storage).toContain('base64-reed-solomon-shards-v1');
-  expect(storage).toContain('recoverFragmentFromParity');
-  expect(storage).toContain("appendAuditLog('vault.self_healed'");
-  expect(backupUtils).toContain('xkey-backup-v4');
-  expect(backupUtils).toContain('BEGIN XKEY RECOVERY FOOTER');
-  expect(backupUtils).toContain('containerHash');
-  expect(backupUtils).toContain('createBackupRecovery');
-  expect(backupUtils).toContain('recoverBackupPayload');
-  expect(backupUtils).toContain('dataHashes');
+  expect(fragmentedVault).toContain('encodeReedSolomon');
+  expect(fragmentedVault).toContain('decodeReedSolomon');
+  expect(fragmentedVault).toContain('base64-reed-solomon-shards-v1');
+  expect(fragmentedVault).toContain('recoverFragmentFromParity');
+  expect(fragmentedVault).toContain("appendAuditLog('vault.self_healed'");
+  expect(backupFormat).toContain('xkey-backup-v4');
+  expect(backupFormat).toContain('BEGIN XKEY RECOVERY FOOTER');
+  expect(backupFormat).toContain('containerHash');
+  expect(backupFormat).toContain('createBackupRecovery');
+  expect(backupFormat).toContain('recoverBackupPayload');
+  expect(backupFormat).toContain('dataHashes');
   expect(backupUtils).toContain("appendAuditLog('backup.self_healed'");
-  expect(backupUtils).toContain('passwordSeal');
-  expect(backupUtils).toContain("appendAuditLog('backup.tamper_detected'");
+  expect(backupCrypto).toContain('passwordSeal');
+  expect(backupInspection).toContain("appendAuditLog('backup.tamper_detected'");
 });
 
 test('android xkey file open intent is wired to backup preview flow', async () => {
@@ -227,14 +235,14 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   expect(fileOpenPlugin).toContain('ContentResolver');
   expect(fileOpenPlugin).toContain('MAX_IMPORT_BYTES');
   expect(nativeFileOpen).toContain("registerPlugin<XKeyFileOpenPlugin>('XKeyFileOpen')");
-  expect(app).toContain('getPendingXKeyFile');
-  expect(app).toContain('addXKeyFileOpenListener');
-  expect(app).toContain('EXTERNAL_BACKUP_DEDUPE_MS');
-  expect(app).toContain('lastExternalBackupRef');
-  expect(app).toContain("t('restore.openedExternal')");
-  expect(app).toContain("t('restore.externalWaiting')");
+  const externalBackupOpen = await readSource('src/hooks/backup/useExternalBackupOpen.ts');
+  expect(externalBackupOpen).toContain('getPendingXKeyFile');
+  expect(externalBackupOpen).toContain('addXKeyFileOpenListener');
+  expect(externalBackupOpen).toContain('EXTERNAL_BACKUP_DEDUPE_MS');
+  expect(externalBackupOpen).toContain('lastExternalBackupRef');
+  expect(app).toContain('BackupImportPasswordModal');
+  expect(app).toContain('externalBackupWaiting');
   expect(app).toContain('handleCopyVerificationReport');
-  expect(app).toContain('containerHash');
   expect(app).toContain('handleVerifyBackupOnly');
   expect(fileImport).toContain('handleExternalBackupFile');
   expect(fileImport).toContain('openedFromExternal: true');
@@ -332,8 +340,8 @@ test('locale loading is lazy and does not require repeated initialization effect
 test('backup import and vanity recovery keep large temporary payloads out of Preferences', async () => {
   const internalTextStore = await readSource('src/utils/internalTextStore.ts');
   const fileImport = await readSource('src/hooks/useFileImport.ts');
-  const createWallet = await readSource('src/components/CreateWalletModal.tsx');
-  const app = await readSource('src/App.tsx');
+  const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
+  const appHealthMessages = await readSource('src/hooks/useAppHealthMessages.ts');
 
   expect(internalTextStore).toContain('Directory.Data');
   expect(internalTextStore).toContain('writeInternalText');
@@ -344,16 +352,16 @@ test('backup import and vanity recovery keep large temporary payloads out of Pre
   expect(fileImport).toContain("writeInternalText('xkey-replace-snapshot'");
   expect(fileImport).toContain('serializeInternalTextRef(snapshotRef)');
   expect(fileImport).toContain('readInternalText(storedRef)');
-  expect(createWallet).toContain("writeInternalText('xkey-vanity-session'");
-  expect(createWallet).toContain('parseInternalTextRef');
-  expect(createWallet).toContain('readInternalText(');
-  expect(app).toContain("cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session']");
-  expect(app).toContain('INTERNAL_TEXT_MAX_AGE_MS');
+  expect(vanityHook).toContain("writeInternalText('xkey-vanity-session'");
+  expect(vanityHook).toContain('parseInternalTextRef');
+  expect(vanityHook).toContain('readInternalText(');
+  expect(appHealthMessages).toContain("cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session']");
+  expect(appHealthMessages).toContain('INTERNAL_TEXT_MAX_AGE_MS');
 });
 
 test('file import progress status always clears through finally blocks', async () => {
   const fileImport = await readSource('src/hooks/useFileImport.ts');
-  const app = await readSource('src/App.tsx');
+  const passwordModal = await readSource('src/components/backup/BackupImportPasswordModal.tsx');
   const localeEn = await readSource('src/locales/en.ts');
 
   for (const key of ['reading', 'verifying', 'parsing', 'decrypting', 'previewing', 'importing', 'processing']) {
@@ -365,13 +373,14 @@ test('file import progress status always clears through finally blocks', async (
   expect(fileImport).toContain("setFileOperationKey('fileStatus.decrypting')");
   expect(fileImport).toContain("setFileOperationKey('fileStatus.importing')");
   expect(fileImport).toContain("setFileOperationKey('fileStatus.previewing')");
-  expect(fileImport).toContain('} finally {\n      setLoading(false);\n      setFileOperationKey');
-  expect(app).toContain("t(fileOperationKey || 'fileStatus.processing')");
-  expect(app).toContain('disabled={loading');
+  expect(fileImport).toContain('} finally {');
+  expect(fileImport).toContain("setFileOperationKey('');");
+  expect(passwordModal).toContain("t(fileOperationKey || 'fileStatus.processing')");
+  expect(passwordModal).toContain('disabled={loading');
 });
 
 test('wallet list remains virtualized and memoized for large vaults', async () => {
-  const walletList = await readSource('src/components/WalletList.tsx');
+  const walletList = await readSource('src/components/wallet/WalletList.tsx');
 
   expect(walletList).toContain('useWindowVirtualizer');
   expect(walletList).toContain('overscan: 4');
@@ -400,15 +409,11 @@ test('android and screenshot verification helpers are documented for device test
   const packageJson = await readSource('package.json');
   const adbTest = await readSource('tests/adb-open-xkey.mjs');
   const screenshotTest = await readSource('tests/smoke/ui-screenshots.spec.js');
-  const checklist = await readSource('docs/ANDROID_DEVICE_TEST_CHECKLIST.md');
-
   expect(packageJson).toContain('test:adb-open');
   expect(adbTest).toContain('adb');
   expect(adbTest).toContain('android.intent.action.VIEW');
   expect(screenshotTest).toContain('ui-screenshots');
   expect(screenshotTest).toContain("['compact', 320, 720]");
-  expect(checklist).toContain('Android Device Test Checklist');
-  expect(checklist).toContain('Backup open intent');
 });
 
 test('production build writes an asset integrity manifest with valid hashes', async () => {

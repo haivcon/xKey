@@ -5,22 +5,22 @@ import { useToast } from '../../../contexts/ToastContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useT } from '../../../contexts/LanguageContext';
 import { useMasterPassword } from '../../../contexts/MasterPasswordContext';
-import { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT } from '../../../hooks/useAutoLock';
+import { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT } from '../../../hooks/security/useAutoLock';
 import {
   requestMotionPermission,
   SHAKE_SETTINGS_CHANGED_EVENT,
   SHAKE_SENSITIVITY_KEY,
   SHAKE_TO_LOCK_KEY,
-} from '../../../hooks/useShakeToLock';
+} from '../../../hooks/security/useShakeToLock';
 import { CLIPBOARD_TIMEOUT_KEY } from '../../../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../../../utils/haptics';
-import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../../PinLockScreen';
+import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../../auth/PinLockScreen';
 import { getVaultSecurityStatus, isBiometricAvailable, setHardwareBoundOnlyMode } from '../../../utils/storage';
 import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled, setDeviceIntegrityGuardEnabled, type DeviceIntegrityRisk } from '../../../utils/deviceIntegrity';
 import { useScrambledKeyboard } from '../../../contexts/ScrambledKeyboardContext';
 import { useSecureDisplay } from '../../../contexts/SecureDisplayContext';
 import { useScreenSecurity } from '../../../contexts/ScreenSecurityContext';
-import Notice from '../../Notice';
+import Notice from '../../shared/Notice';
 import { getErrorMessage, hashPin, parseStoredInt, type PinStep } from '../securityTabUtils';
 import { AdvancedSecuritySection } from './AdvancedSecuritySection';
 import { SecurityStatusSection } from './SecurityStatusSection';

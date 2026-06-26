@@ -6,24 +6,24 @@ import {
 } from 'lucide-react';
 
 // Components (Eager loaded)
-import WalletList from './components/WalletList';
-import AuthErrorScreen from './components/AuthErrorScreen';
+import WalletList from './components/wallet/WalletList';
+import AuthErrorScreen from './components/auth/AuthErrorScreen';
 import FolderTabs from './components/FolderTabs';
 import ActionBar from './components/ActionBar';
 import DuplicateDetector from './components/DuplicateDetector';
 import AdvancedToolsModal, { SENSITIVE_EXPORT_LOCK_KEY } from './components/AdvancedToolsModal';
-import OnboardingScreen from './components/OnboardingScreen';
-import PinLockScreen from './components/PinLockScreen';
-import DeviceUnlockScreen from './components/DeviceUnlockScreen';
+import OnboardingScreen from './components/auth/OnboardingScreen';
+import PinLockScreen from './components/auth/PinLockScreen';
+import DeviceUnlockScreen from './components/auth/DeviceUnlockScreen';
 import BatchActionBar from './components/BatchActionBar';
 import AnimatedSplash from './components/AnimatedSplash';
-import BackupExportModal from './components/BackupExportModal';
+import BackupExportModal from './components/backup/BackupExportModal';
 import HomeHeader from './components/HomeHeader';
-import BackupImportPasswordModal from './components/backup-import/BackupImportPasswordModal';
+import BackupImportPasswordModal from './components/backup/BackupImportPasswordModal';
 
 // Components (Lazy loaded)
 const SettingsScreen = lazy(() => import('./components/SettingsScreen'));
-const QRCodeModal = lazy(() => import('./components/QRCodeModal'));
+const QRCodeModal = lazy(() => import('./components/qr/QRCodeModal'));
 const DashboardView = lazy(() => import('./components/DashboardView'));
 const ExportCSVModal = lazy(() => import('./components/ExportCSVModal'));
 const CreateWalletModal = lazy(() => import('./components/CreateWalletModal'));
@@ -35,25 +35,25 @@ const KeyHealthModal = lazy(() => import('./components/KeyHealthModal'));
 
 // Utils & Hooks
 import { hapticTap, hapticSuccess, initFeedbackSettings } from './utils/haptics';
-import useAutoLock from './hooks/useAutoLock';
-import useAutoBackup from './hooks/useAutoBackup';
+import useAutoLock from './hooks/security/useAutoLock';
+import useAutoBackup from './hooks/backup/useAutoBackup';
 import useWallets from './hooks/useWallets';
 import useFileImport from './hooks/useFileImport';
 import useBackButton from './hooks/useBackButton';
-import useShakeToLock from './hooks/useShakeToLock';
+import useShakeToLock from './hooks/security/useShakeToLock';
 import useBatchSelect from './hooks/useBatchSelect';
 import useLiteMode from './hooks/useLiteMode';
 import useAppVersion from './hooks/useAppVersion';
 import useGlobalInputFocus from './hooks/useGlobalInputFocus';
 import useHomeHeaderHeight from './hooks/useHomeHeaderHeight';
-import useBackupVerificationReport from './hooks/useBackupVerificationReport';
-import useExternalBackupOpen from './hooks/useExternalBackupOpen';
+import useBackupVerificationReport from './hooks/backup/useBackupVerificationReport';
+import useExternalBackupOpen from './hooks/backup/useExternalBackupOpen';
 import useAssetBalanceSettings from './hooks/useAssetBalanceSettings';
-import useStartupIntegrity from './hooks/useStartupIntegrity';
-import useBackupExport from './hooks/useBackupExport';
+import useStartupIntegrity from './hooks/security/useStartupIntegrity';
+import useBackupExport from './hooks/backup/useBackupExport';
 import useFolderEditing from './hooks/useFolderEditing';
 import useKeyHealthFlow from './hooks/useKeyHealthFlow';
-import useVaultAuth from './hooks/useVaultAuth';
+import useVaultAuth from './hooks/security/useVaultAuth';
 import useAppHealthMessages from './hooks/useAppHealthMessages';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';

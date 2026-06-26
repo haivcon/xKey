@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Network } from 'lucide-react';
-import { NETWORK_KEYS, NETWORK_COLORS } from './WalletCard';
+import { NETWORK_KEYS, NETWORK_COLORS } from './wallet/WalletCard';
 import { useT } from '../contexts/LanguageContext';
 
 type BulkNetworkModalProps = {

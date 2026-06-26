@@ -2,15 +2,15 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { QrCode, Camera, SplitSquareVertical } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets, encryptSetting } from '../../utils/storage';
-import { exportPortableBackup, getBackupHistory, type BackupHistoryEntry } from '../../utils/backupUtils';
+import { exportPortableBackup, getBackupHistory, type BackupHistoryEntry } from '../../utils/backup/backupUtils';
 import { verifySavedTextFile } from '../../utils/fileSaver';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
 import { useT } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { hapticTap, hapticSuccess } from '../../utils/haptics';
-import QRTransferModal from '../QRTransferModal';
-import QRReceiveModal from '../QRReceiveModal';
+import QRTransferModal from '../qr/QRTransferModal';
+import QRReceiveModal from '../qr/QRReceiveModal';
 import DangerZone from './DangerZone';
 import type { Wallet } from '../../types';
 import { AutoBackupSection, type AutoBackupInterval } from './data/AutoBackupSection';
@@ -24,8 +24,8 @@ type DataTabProps = {
 };
 
 const AUTO_BACKUP_INTERVALS: AutoBackupInterval[] = ['off', 'daily', 'weekly'];
-const ShamirBackupModal = lazy(() => import('../ShamirBackupModal'));
-const ShamirRestoreModal = lazy(() => import('../ShamirRestoreModal'));
+const ShamirBackupModal = lazy(() => import('../shamir/ShamirBackupModal'));
+const ShamirRestoreModal = lazy(() => import('../shamir/ShamirRestoreModal'));
 
 export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   // Auto-Backup

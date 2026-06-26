@@ -1,6 +1,6 @@
 import { Download, Lock, ShieldAlert, ShieldCheck, QrCode, Camera } from 'lucide-react';
-import PasswordInput from '../../PasswordInput';
-import Notice from '../../Notice';
+import PasswordInput from '../../shared/PasswordInput';
+import Notice from '../../shared/Notice';
 import { hapticTap } from '../../../utils/haptics';
 import { XKEY_SLOGAN } from '../../../utils/branding';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
