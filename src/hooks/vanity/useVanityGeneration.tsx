@@ -26,7 +26,6 @@ import {
   VANITY_MAX_SAFE_LENGTH,
   VANITY_PRESET_GROUPS,
   VANITY_SESSION_KEY,
-  VANITY_SETTINGS_KEY,
 } from '../../components/create-wallet/constants';
 import { compactVanityAddress, createVanityAddressRenderer } from './vanityRenderHelpers';
 import type {
@@ -34,9 +33,12 @@ import type {
   VanityCandidate,
   VanityPerformanceMode,
   VanitySessionState,
-  VanitySettings,
 } from '../../components/create-wallet/types';
 import type { UseVanityGenerationParams } from './vanityGenerationTypes';
+import {
+  loadVanitySettings,
+  persistVanitySettings,
+} from './vanitySettingsPersistence';
 import {
   createVanityDifficultyAnalyzer,
   getVanityBatchSize,
@@ -426,57 +428,31 @@ export function useVanityGeneration({
 
   // Load saved settings on mount
   useEffect(() => {
-    let active = true;
-    Preferences.get({ key: VANITY_SETTINGS_KEY })
-      .then(({ value }) => {
-        if (!value || !active) return;
-        const settings = JSON.parse(value) as VanitySettings;
-        if (settings.targetCount)
-          setVanityTargetCount(Math.max(1, Math.floor(Number(settings.targetCount) || 1)));
-        if (typeof settings.timeLimit === 'number')
-          setVanityTimeLimit(Math.max(0, Math.floor(settings.timeLimit)));
-        if (settings.network && NETWORKS.includes(settings.network))
-          setVanityNetwork(settings.network);
-        if (settings.folder) setVanityFolder(settings.folder);
-        if (typeof settings.captureExtras === 'boolean')
-          setVanityCaptureExtras(settings.captureExtras);
-        if (settings.extraMinRun && VANITY_EXTRA_MIN_RUNS.includes(settings.extraMinRun))
-          setVanityExtraMinRun(settings.extraMinRun);
-        if (settings.extraLimit)
-          setVanityExtraLimit(Math.max(1, Math.min(500, settings.extraLimit)));
-        if (settings.extraFilters)
-          setVanityExtraFilters(
-            normalizeVanityExtraFilters(settings.extraFilters, settings.extraMinRun || 4)
-          );
-        if (settings.extraFolder) setVanityExtraFolder(settings.extraFolder);
-        if (
-          settings.performanceMode === 'eco' ||
-          settings.performanceMode === 'balanced' ||
-          settings.performanceMode === 'fast'
-        )
-          setVanityPerformanceMode(settings.performanceMode);
-        if (settings.generationMode === 'privateKey' || settings.generationMode === 'mnemonic')
-          setVanityGenerationMode(settings.generationMode);
-        if (settings.mnemonicWords === 12 || settings.mnemonicWords === 24)
-          setVanityMnemonicWords(settings.mnemonicWords);
-        if (Array.isArray(settings.customPatterns)) {
-          setVanityCustomPatterns(
-            [
-              ...new Set(
-                settings.customPatterns
-                  .map(p => String(p).replace(/\s/g, '').toLowerCase().slice(0, 12))
-                  .filter(p => p && VANITY_HEX_PATTERN.test(p))
-              ),
-            ].slice(-12)
-          );
-        }
-      })
+    const activeRef = { current: true };
+    loadVanitySettings(
+      {
+        setVanityTargetCount,
+        setVanityTimeLimit,
+        setVanityNetwork,
+        setVanityFolder,
+        setVanityCaptureExtras,
+        setVanityExtraMinRun,
+        setVanityExtraLimit,
+        setVanityExtraFilters,
+        setVanityExtraFolder,
+        setVanityPerformanceMode,
+        setVanityGenerationMode,
+        setVanityMnemonicWords,
+        setVanityCustomPatterns,
+      },
+      activeRef
+    )
       .catch(() => {})
       .finally(() => {
-        if (active) vanitySettingsLoadedRef.current = true;
+        if (activeRef.current) vanitySettingsLoadedRef.current = true;
       });
     return () => {
-      active = false;
+      activeRef.current = false;
     };
   }, []);
 
@@ -497,23 +473,20 @@ export function useVanityGeneration({
   // Persist settings on change
   useEffect(() => {
     if (!vanitySettingsLoadedRef.current) return;
-    Preferences.set({
-      key: VANITY_SETTINGS_KEY,
-      value: JSON.stringify({
-        targetCount: vanitySafeTargetCount,
-        timeLimit: vanityTimeLimit,
-        network: vanityNetwork,
-        folder: vanityFolder,
-        captureExtras: vanityCaptureExtras,
-        extraMinRun: vanitySafeExtraMinRun,
-        extraLimit: vanitySafeExtraLimit,
-        extraFilters: vanitySafeExtraFilters,
-        extraFolder: vanityExtraFolder,
-        performanceMode: vanityPerformanceMode,
-        generationMode: vanityGenerationMode,
-        mnemonicWords: vanityMnemonicWords,
-        customPatterns: vanityCustomPatterns,
-      } satisfies VanitySettings),
+    persistVanitySettings({
+      targetCount: vanitySafeTargetCount,
+      timeLimit: vanityTimeLimit,
+      network: vanityNetwork,
+      folder: vanityFolder,
+      captureExtras: vanityCaptureExtras,
+      extraMinRun: vanitySafeExtraMinRun,
+      extraLimit: vanitySafeExtraLimit,
+      extraFilters: vanitySafeExtraFilters,
+      extraFolder: vanityExtraFolder,
+      performanceMode: vanityPerformanceMode,
+      generationMode: vanityGenerationMode,
+      mnemonicWords: vanityMnemonicWords,
+      customPatterns: vanityCustomPatterns,
     }).catch(() => {});
   }, [
     vanitySafeTargetCount,
