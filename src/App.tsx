@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
 import {
   UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell
 } from 'lucide-react';
@@ -13,8 +12,8 @@ import FolderTabs from './components/FolderTabs';
 import ActionBar from './components/ActionBar';
 import DuplicateDetector from './components/DuplicateDetector';
 import AdvancedToolsModal, { SENSITIVE_EXPORT_LOCK_KEY } from './components/AdvancedToolsModal';
-import OnboardingScreen, { ONBOARDED_KEY } from './components/OnboardingScreen';
-import PinLockScreen, { PIN_HASH_KEY } from './components/PinLockScreen';
+import OnboardingScreen from './components/OnboardingScreen';
+import PinLockScreen from './components/PinLockScreen';
 import DeviceUnlockScreen from './components/DeviceUnlockScreen';
 import BatchActionBar from './components/BatchActionBar';
 import AnimatedSplash from './components/AnimatedSplash';
@@ -35,16 +34,6 @@ const AssetBalanceModal = lazy(() => import('./components/AssetBalanceModal'));
 const KeyHealthModal = lazy(() => import('./components/KeyHealthModal'));
 
 // Utils & Hooks
-import {
-  loadWallets,
-  saveWallets,
-  isBiometricAvailable,
-  getEncryptionKeyBiometric,
-  getEncryptionKeyFallback,
-  hasFallbackEncryptionKey,
-  persistFallbackEncryptionKey,
-  persistBiometricEncryptionKey,
-} from './utils/storage';
 import { hapticTap, hapticSuccess, initFeedbackSettings } from './utils/haptics';
 import useAutoLock from './hooks/useAutoLock';
 import useAutoBackup from './hooks/useAutoBackup';
@@ -63,23 +52,20 @@ import useAssetBalanceSettings from './hooks/useAssetBalanceSettings';
 import useStartupIntegrity from './hooks/useStartupIntegrity';
 import useBackupExport from './hooks/useBackupExport';
 import useFolderEditing from './hooks/useFolderEditing';
+import useKeyHealthFlow from './hooks/useKeyHealthFlow';
+import useVaultAuth from './hooks/useVaultAuth';
 import { useT } from './contexts/LanguageContext';
 import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
 import { useTheme } from './contexts/ThemeContext';
-import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled } from './utils/deviceIntegrity';
 import { appendAuditLog } from './utils/auditLog';
 import { cleanupInternalTextFiles } from './utils/internalTextStore';
-import { runWalletProofCheck, selectProofWallets, shouldShowProofOfKeysReminder, summarizeKeyHealth, type ProofCheckReport, type ProofScope } from './utils/keyHealth';
 import { INTERNAL_TEXT_MAX_AGE_MS, REPLACE_SNAPSHOT_KEY } from './app/constants';
-import type { PinSuccessOptions, WalletSaveInput } from './app/types';
+import type { WalletSaveInput } from './app/types';
 import type { QrModalData, Wallet } from './types';
 
 export default function App() {
-  // Auth state
-  const [aesKey, setAesKey] = useState<string | null>(null);
   const [authError, setAuthError] = useState('');
-  const [isDecoyMode, setIsDecoyMode] = useState(false);
 
   // Navigation
   const navigate = useNavigate();
@@ -107,12 +93,7 @@ export default function App() {
     initFeedbackSettings();
   }, []);
 
-  // Onboarding
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [vaultLoading, setVaultLoading] = useState(true);
-  const [needsPinAuth, setNeedsPinAuth] = useState(false);
   const [healthMessages, setHealthMessages] = useState<string[]>([]);
-  const useDeviceCredentialUnlock = Capacitor.isNativePlatform();
 
   const t = useT();
   const tRef = useRef(t);
@@ -125,15 +106,43 @@ export default function App() {
     tRef.current = t;
   }, [t]);
 
+  // ─── Custom Hooks ───
+  const setWalletsRef = useRef<(wallets: Wallet[]) => void>(() => {});
+  const setVaultLoadingRef = useRef<(loading: boolean) => void>(() => {});
+
   const {
     showSplash,
     setSplashAnimationDone,
     integrityStatus,
     integrityFailed,
     setIntegrityFailed,
-  } = useStartupIntegrity({ t, setAuthError, setVaultLoading });
+  } = useStartupIntegrity({
+    t,
+    setAuthError,
+    setVaultLoading: (loading) => setVaultLoadingRef.current(loading),
+  });
 
-  // ─── Custom Hooks ───
+  const {
+    aesKey,
+    setAesKey,
+    isDecoyMode,
+    showOnboarding,
+    setShowOnboarding,
+    vaultLoading,
+    setVaultLoading,
+    needsPinAuth,
+    setNeedsPinAuth,
+    useDeviceCredentialUnlock,
+    handlePinSuccess,
+    handleDeviceUnlock,
+    resetVaultLock,
+  } = useVaultAuth({
+    showSplash,
+    setWallets: (nextWallets) => setWalletsRef.current(nextWallets),
+    setAuthError,
+    t,
+  });
+
   const {
     wallets, setWallets,
     activeFolder, setActiveFolder,
@@ -149,9 +158,25 @@ export default function App() {
     handleTogglePin, handleMoveWallet, handleReorderWallet,
     pinnedFolders, defaultFolder,
   } = useWallets(aesKey, isDecoyMode);
-  const keyHealthSummary = useMemo(() => summarizeKeyHealth(wallets), [wallets]);
-  const showProofOfKeysReminder = shouldShowProofOfKeysReminder();
-  const keyHealthAttentionCount = keyHealthSummary.attentionCount + (showProofOfKeysReminder ? 1 : 0);
+
+  useEffect(() => {
+    setWalletsRef.current = setWallets;
+    setVaultLoadingRef.current = setVaultLoading;
+  }, [setWallets, setVaultLoading]);
+  const {
+    showProofOfKeysReminder,
+    keyHealthAttentionCount,
+    runProofOfKeysCheck: handleRunProofOfKeysCheck,
+    patchKeyHealthWallets,
+  } = useKeyHealthFlow({
+    aesKey,
+    wallets,
+    filteredWallets,
+    setWallets,
+    isDecoyMode,
+    showToast,
+    t,
+  });
 
   const {
     showBackupExport,
@@ -205,56 +230,6 @@ export default function App() {
     }
     return savedWallets;
   }, [handleSaveWallet, setActiveFolder, setSearchQuery, setActiveFilter, setSortOrder]);
-
-  const getWalletIdentity = useCallback((wallet: Wallet) => (
-    wallet._id || `${wallet.address || ''}|${wallet.name || ''}|${wallet.groupId || ''}|${wallet.createdAt || ''}`
-  ), []);
-
-  const handleRunProofOfKeysCheck = useCallback(async (scope: ProofScope): Promise<ProofCheckReport> => {
-    const now = Date.now();
-    if (!aesKey || wallets.length === 0) {
-      return { total: 0, passed: 0, failed: 0, skipped: 0, checkedAt: now, scope, results: [] };
-    }
-    const targetWallets = selectProofWallets(wallets, scope, filteredWallets, now);
-    if (targetWallets.length === 0) {
-      return { total: 0, passed: 0, failed: 0, skipped: 0, checkedAt: now, scope, results: [] };
-    }
-    const randomNonce = crypto.getRandomValues(new Uint8Array(16));
-    const nonce = Array.from(randomNonce, byte => byte.toString(16).padStart(2, '0')).join('');
-    const checkedTargets = await Promise.all(targetWallets.map(wallet => runWalletProofCheck(wallet, nonce, now)));
-    const checkedById = new Map(checkedTargets.map(wallet => [getWalletIdentity(wallet), wallet]));
-    const checked = wallets.map(wallet => checkedById.get(getWalletIdentity(wallet)) || wallet);
-    setWallets(checked);
-    await saveWallets(checked, aesKey, isDecoyMode);
-    const passed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'passed').length;
-    const failed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'failed').length;
-    const skipped = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'skipped').length;
-    const report: ProofCheckReport = {
-      total: checkedTargets.length,
-      passed,
-      failed,
-      skipped,
-      checkedAt: now,
-      scope,
-      results: checkedTargets.map(wallet => ({
-        name: wallet.name || t('walletCard.unnamed'),
-        address: wallet.address || '',
-        status: wallet.lastProofOfKeysStatus || 'skipped',
-        message: wallet.lastProofOfKeysMessage || '',
-      })),
-    };
-    appendAuditLog('wallet.proof_of_keys_check', { total: checkedTargets.length, passed, failed, skipped, scope }).catch(() => {});
-    showToast?.(t('keyHealth.proofResult', { passed, total: checkedTargets.length, failed, skipped }), failed > 0 ? 'warning' : 'success');
-    return report;
-  }, [aesKey, wallets, filteredWallets, getWalletIdentity, setWallets, isDecoyMode, showToast, t]);
-
-  const patchKeyHealthWallets = useCallback(async (targetWallets: Wallet[], patch: Partial<Wallet>) => {
-    if (!aesKey || targetWallets.length === 0) return;
-    const targetIds = new Set(targetWallets.map(getWalletIdentity));
-    const updated = wallets.map(wallet => targetIds.has(getWalletIdentity(wallet)) ? { ...wallet, ...patch } : wallet);
-    setWallets(updated);
-    await saveWallets(updated, aesKey, isDecoyMode);
-  }, [aesKey, wallets, getWalletIdentity, setWallets, isDecoyMode]);
 
   const {
     editingFolder,
@@ -352,93 +327,6 @@ export default function App() {
 
   useGlobalInputFocus();
 
-  // On Unlock, load data
-  useEffect(() => {
-    if (showSplash) return;
-
-    const authenticate = async () => {
-      try {
-        if (useDeviceCredentialUnlock && await isDeviceIntegrityGuardEnabled()) {
-          const riskInfo = await getDeviceIntegrityRisk();
-          if (riskInfo?.risky) {
-            await appendAuditLog('device_integrity.blocked', { reasons: riskInfo.reasons || [] }).catch(() => {});
-            setAuthError(tRef.current('integrity.deviceRiskBlocked'));
-            setVaultLoading(false);
-            return;
-          }
-        }
-
-        const { value: onboarded } = await Preferences.get({ key: ONBOARDED_KEY });
-        if (!onboarded) { setShowOnboarding(true); }
-
-        const hasBio = await isBiometricAvailable();
-        if (hasBio) {
-          if (useDeviceCredentialUnlock) {
-            setNeedsPinAuth(true);
-          } else {
-            try {
-              const key = await getEncryptionKeyBiometric();
-              setAesKey(key);
-              const savedWallets = await loadWallets(key);
-              if (savedWallets && savedWallets.length > 0) {
-                setWallets(savedWallets);
-              }
-            } catch (bioErr) {
-              const [{ value: pinHash }, hasFallbackKey] = await Promise.all([
-                Preferences.get({ key: PIN_HASH_KEY }),
-                hasFallbackEncryptionKey(),
-              ]);
-              if (pinHash && hasFallbackKey) {
-                setNeedsPinAuth(true);
-              } else {
-                throw bioErr;
-              }
-            }
-          }
-        } else {
-          setNeedsPinAuth(true);
-        }
-      } catch (err) {
-        setAuthError(err instanceof Error ? err.message : tRef.current('deviceUnlock.unlockFailed'));
-      }
-      setVaultLoading(false);
-    };
-    authenticate();
-  }, [showSplash, setWallets, useDeviceCredentialUnlock]);
-
-  // Called after PIN verification succeeds
-  const handlePinSuccess = async (isDecoy = false, options: PinSuccessOptions = {}) => {
-    try {
-      setIsDecoyMode(isDecoy);
-      const key = aesKey || await getEncryptionKeyFallback({ createIfMissing: !!options.createdPin });
-      if (aesKey) {
-        await persistFallbackEncryptionKey(aesKey);
-      }
-      if (!isDecoy) {
-        persistBiometricEncryptionKey(key).catch(() => {});
-      }
-      setAesKey(key);
-      const savedWallets = await loadWallets(key, isDecoy);
-      if (savedWallets && savedWallets.length > 0) {
-        setWallets(savedWallets);
-      } else {
-        setWallets([]);
-      }
-      setNeedsPinAuth(false);
-    } catch (err) {
-      setAuthError(err instanceof Error ? err.message : tRef.current('deviceUnlock.unlockFailed'));
-    }
-  };
-
-  const handleDeviceUnlock = useCallback(async () => {
-    setIsDecoyMode(false);
-    const key = await getEncryptionKeyBiometric();
-    setAesKey(key);
-    const savedWallets = await loadWallets(key);
-    setWallets(savedWallets && savedWallets.length > 0 ? savedWallets : []);
-    setNeedsPinAuth(false);
-  }, [setWallets]);
-
   // Self-destruct
   const handleSelfDestruct = async () => {
     const { wipeAllData } = await import('./utils/storage');
@@ -450,9 +338,8 @@ export default function App() {
   // Wipe vault
   const handleWipe = () => {
     setWallets([]);
-    setAesKey(null);
+    resetVaultLock();
     navigate('/');
-    setNeedsPinAuth(true);
   };
 
   const handleVerifyBackupOnly = useCallback(() => {

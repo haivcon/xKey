@@ -118,6 +118,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await appendAuditLog('pin.created');
             onSuccess(false, { createdPin: true });
+            setPin('');
           } else {
             triggerShake();
             setError(t('pinLock.pinsNotMatch'));
@@ -134,11 +135,13 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
             await appendAuditLog('pin.unlock_success', { decoy: false });
             onSuccess(false);
+            setPin('');
           } else if (decoyStored && hashPin(newPin) === decoyStored) {
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
             await appendAuditLog('pin.unlock_success', { decoy: true });
             onSuccess(true);
+            setPin('');
           } else {
             const newAttempts = failedAttempts + 1;
             setFailedAttempts(newAttempts);

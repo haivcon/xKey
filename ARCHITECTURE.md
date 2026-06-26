@@ -71,6 +71,7 @@ The React source is organized around clear application boundaries:
 - `src/components/backup-import/` contains backup import modal UI; import analysis/pure logic stays outside UI.
 - `src/components/create-wallet/` contains the create-wallet feature module:
   - `index.tsx` is the feature container and UI composition entry point.
+  - `components.tsx` contains extracted sub-components used within the create-wallet modal.
   - `types.ts` contains feature-local models and prop contracts.
   - `constants.ts` contains create-wallet and vanity generation constants.
   - `formatters.ts` contains display formatting helpers.
@@ -80,9 +81,15 @@ The React source is organized around clear application boundaries:
   - `src/features/import/fileImportParsers.ts` contains CSV/JSON/text import parsing and normalization.
   - `src/features/import/backupImportAnalysis.ts` contains backup import fingerprinting and preview analysis.
 - `src/hooks/` contains reusable React hooks and extracted orchestration hooks:
+  - `useVaultAuth` owns vault bootstrap, biometric/PIN fallback unlock, decoy-mode unlock state, and vault lock reset.
+  - `useStartupIntegrity` owns splash-time integrity checks and startup failure state.
+  - `useKeyHealthFlow` owns proof-of-keys checks, key-health summaries, wallet patching, persistence, and audit logging.
   - `useBackupExport` owns backup export confirmation, modal state, and backup verification trigger handoff.
   - `useFolderEditing` owns folder edit modal state and folder delete cleanup.
   - `useFileImport` owns file picker/external-open orchestration, while parsing/analysis helpers live under `src/features/import/`.
+  - `useExternalBackupOpen` owns native file-open intent listening and deduplication for external `.xkey` file intents on Capacitor platforms.
+  - `useAssetBalanceSettings` owns asset unit preference persistence and batch wallet-balance save logic.
+  - `useBackupVerificationReport` owns backup verification report generation, secure clipboard copy, and audit logging for backup metadata inspection.
 - `src/utils/` contains storage, backup, crypto, validation, and domain utilities.
 - `src/workers/` contains CPU-heavy worker entry points.
 

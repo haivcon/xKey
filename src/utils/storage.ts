@@ -309,16 +309,13 @@ const getLegacyBiometricKey = async (): Promise<string> => {
  * Used after the user authenticates via the in-app PIN screen.
  */
 export const getEncryptionKeyFallback = async ({ createIfMissing = true }: { createIfMissing?: boolean } = {}): Promise<string> => {
-    if (Capacitor.isNativePlatform() && await isDeviceCredentialAvailable()) {
-        return getEncryptionKeyBiometric();
-    }
+    const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
+    if (value) return value;
 
     if (Capacitor.isNativePlatform() && await isHardwareBoundOnlyEnabled()) {
         throw new Error('Hardware-bound mode requires this device lock to unlock the vault.');
     }
 
-    const { value } = await Preferences.get({ key: STORAGE_KEYS.AES_KEY_FALLBACK });
-    if (value) return value;
     if (!createIfMissing) {
         throw new Error('PIN unlock is not configured for this vault.');
     }
