@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey を起動できませんでした",
     "failedBody": "アプリを再起動してください。繰り返し発生する場合は、アプリデータをリセットするか xKey を再インストールしてください。",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "端末のセキュリティが変更され、保存済みキーを開けません。.xkey バックアップを復元するか、バックアップがない場合は保管庫をリセットしてください。"
   },
   "common": {
+    "custom": "カスタム",
     "back": "戻る",
     "cancel": "キャンセル",
     "save": "保存",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "エラー詳細を表示",
     "hideDetails": "詳細を隠す",
+    "expandDetails": "詳細を表示",
     "show": "表示",
     "hide": "非表示",
     "secureDisplayPixels": "機密値は安全表示ピクセルとして描画されています",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "有効",
-    "disabled": "オフになっています",
-    "expandDetails": "Expand details",
+    "disabled": "オフになっています",
     "autoLock": "操作しない時間で自動ロック",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "自動ロック時間を保存しました",
@@ -1007,6 +1008,7 @@ export default {
     "new": "新規"
   },
   "actionBar": {
+    "vanityScore": "バニティスコア",
     "searchPlaceholder": "アドレス、名前、メモで検索...",
     "allWallets": "すべてのウォレット",
     "newWallets": "新規",

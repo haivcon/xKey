@@ -12,6 +12,7 @@ import { useToast } from '../../contexts/ToastContext';
 import type { Wallet as WalletModel } from '../../types';
 import type { ShamirSharePage } from '../../utils/crypto/shamir';
 import { XKEY_SLOGAN } from '../../utils/branding';
+import { MiddleEllipsisAddress } from '../create-wallet/components';
 
 const PART_LABELS = ['A', 'B', 'C'];
 
@@ -284,7 +285,11 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
                             {wallet.network || 'ETH'}
                           </span>
                         </div>
-                        <p className="mt-1 truncate font-mono text-[0.6875rem] text-surface-400">{shortAddress(wallet.address)}</p>
+                        <p className="mt-1 min-w-0 font-mono text-[0.6875rem] text-surface-400">
+                          {wallet.address ? (
+                            <MiddleEllipsisAddress address={wallet.address} head={14} tail={10} minHead={5} minTail={5} />
+                          ) : t('walletCard.noAddress')}
+                        </p>
                       </button>
                     );
                   })}

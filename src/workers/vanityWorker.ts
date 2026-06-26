@@ -148,7 +148,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   const startTime = Date.now() - Math.max(0, Number(elapsedOffset) || 0) * 1000;
   let scanned = Math.max(0, Number(initialScanned) || 0);
   let found = 0;
-  let lastReport = Date.now();
+  let lastReport = 0;
   let lastCandidate = '';
   const safeTargetCount = Math.max(1, Math.min(100, Number(targetCount) || 1));
   const safeExtraMinRun = Math.max(3, Math.min(6, Number(extraMinRun) || 4));
@@ -160,6 +160,19 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     .slice(0, safeExtraLimit);
 
   const safeBatchSize = Math.max(1, Math.min(20000, Number(batchSize) || 1024));
+
+  const reportProgress = (now = Date.now()): void => {
+    lastReport = now;
+    postVanityMessage({
+      type: 'progress',
+      scanned,
+      found,
+      elapsed: (now - startTime) / 1000,
+      candidate: lastCandidate,
+    });
+  };
+
+  reportProgress();
 
   const runBatch = (): void => {
     if (!running) return;
@@ -236,25 +249,19 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
       } else {
         if (privateKeyBytes) wipePrivateKeyBytes(privateKeyBytes);
       }
+
+      const now = Date.now();
+      if (now - lastReport >= 250) {
+        reportProgress(now);
+      }
     }
 
-    const now = Date.now();
-    if (now - lastReport >= 250) {
-      lastReport = now;
-      postVanityMessage({
-        type: 'progress',
-        scanned,
-        found,
-        elapsed: (now - startTime) / 1000,
-        candidate: lastCandidate
-      });
+    const batchEnd = Date.now();
+    if (batchEnd - lastReport >= 250) {
+      reportProgress(batchEnd);
     }
 
-    if (typeof queueMicrotask === 'function' && safeBatchSize <= 5000) {
-      queueMicrotask(runBatch);
-    } else {
-      setTimeout(runBatch, 0);
-    }
+    setTimeout(runBatch, 0);
   };
 
   runBatch();

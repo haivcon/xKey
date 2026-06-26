@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "Не удалось запустить xKey",
     "failedBody": "Перезапустите приложение. Если это повторяется, сбросьте данные приложения или переустановите xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Безопасность устройства изменилась, и xKey не может открыть сохраненный ключ. Восстановите резервную копию .xkey или сбросьте хранилище, если копии нет."
   },
   "common": {
+    "custom": "Пользовательский",
     "back": "Назад",
     "cancel": "Отмена",
     "save": "Сохранить",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Показать детали ошибки",
     "hideDetails": "Скрыть детали",
+    "expandDetails": "Показать подробности",
     "show": "Показать",
     "hide": "Скрыть",
     "secureDisplayPixels": "Конфиденциальное значение отображается защищенными пикселями",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Включено",
-    "disabled": "Выключено",
-    "expandDetails": "Expand details",
+    "disabled": "Выключено",
     "autoLock": "Автоблокировка при бездействии",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Время автоблокировки сохранено",
@@ -1007,6 +1008,7 @@ export default {
     "new": "НОВОЕ"
   },
   "actionBar": {
+    "vanityScore": "Оценка vanity",
     "searchPlaceholder": "Поиск по адресу, имени, заметкам...",
     "allWallets": "Все кошельки",
     "newWallets": "Новые",

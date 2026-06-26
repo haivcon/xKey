@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "Falha ao iniciar o xKey",
     "failedBody": "Reinicie o app. Se isso continuar acontecendo, redefina os dados do app ou reinstale o xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "A segurança do dispositivo mudou e o xKey não consegue abrir a chave salva. Restaure um backup .xkey ou redefina o cofre se não tiver backup."
   },
   "common": {
+    "custom": "Personalizado",
     "back": "Voltar",
     "cancel": "Cancelar",
     "save": "Salvar",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Mostrar detalhes do erro",
     "hideDetails": "Ocultar detalhes",
+    "expandDetails": "Mostrar detalhes",
     "show": "Mostrar",
     "hide": "Ocultar",
     "secureDisplayPixels": "Valor sensível renderizado como pixels seguros",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Habilitado",
-    "disabled": "Desligado",
-    "expandDetails": "Expand details",
+    "disabled": "Desligado",
     "autoLock": "Bloqueio automático por inatividade",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Tempo de bloqueio automático salvo",
@@ -1007,6 +1008,7 @@ export default {
     "new": "NOVO"
   },
   "actionBar": {
+    "vanityScore": "Pontuação vanity",
     "searchPlaceholder": "Buscar por endereço, nome, notas...",
     "allWallets": "Todas as carteiras",
     "newWallets": "Novas",

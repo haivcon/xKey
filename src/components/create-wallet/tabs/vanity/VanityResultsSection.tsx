@@ -28,7 +28,7 @@ type VanityResultsSectionProps = {
   saveSingleVanityWallet: (wallet: GeneratedWallet) => void | Promise<void>;
   saveVanityWallets: (wallets: GeneratedWallet[], onlySelected?: boolean) => boolean | Promise<boolean>;
   renderVanityAddress: (address: string, compact?: boolean) => React.ReactNode;
-  renderVanityExtraAddress: (address: string, wallet: GeneratedWallet) => React.ReactNode;
+  renderVanityExtraAddress: (address: string, wallet: GeneratedWallet, compact?: boolean) => React.ReactNode;
   getVanityExtraLabel: (wallet: GeneratedWallet) => string;
   getVanityScoreTone: (score: number) => string;
 };
@@ -93,8 +93,8 @@ export function VanityResultsSection({
                 </button>
 
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-bold ${isExtra ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
                         {isExtra ? t('createWallet.vanityExtraTypeExtra') : t('createWallet.vanityExtraTypePrimary')}
                       </span>
@@ -114,8 +114,8 @@ export function VanityResultsSection({
                     </div>
                   </div>
 
-                  <code className="mt-1 block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold tracking-wide text-surface-950 dark:text-white sm:text-[12px]">
-                    {isExtra ? renderVanityExtraAddress(address, wallet) : renderVanityAddress(address)}
+                  <code className="mt-1 block min-w-0 max-w-full overflow-hidden whitespace-nowrap font-mono text-[clamp(0.62rem,2.8vw,0.75rem)] font-bold leading-tight tracking-normal text-surface-950 dark:text-white">
+                    {isExtra ? renderVanityExtraAddress(address, wallet, true) : renderVanityAddress(address, true)}
                   </code>
 
                   {isExtra && (

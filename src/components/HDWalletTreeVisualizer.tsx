@@ -5,6 +5,7 @@ import SecureTextarea from './shared/SecureTextarea';
 import { useT } from '../contexts/LanguageContext';
 import { hapticSuccess, hapticWarning } from '../utils/haptics';
 import type { Wallet as WalletModel } from '../types';
+import { MiddleEllipsisAddress } from './create-wallet/components';
 
 const HD_NETWORKS = [
   { value: 'XLAYER', label: 'XLAYER', coinType: 60 },
@@ -38,7 +39,6 @@ type HDWalletTreeVisualizerProps = {
 };
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
-const shortAddress = (address?: string): string => address ? `${address.slice(0, 10)}...${address.slice(-6)}` : '';
 
 export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets = [] }: HDWalletTreeVisualizerProps) {
   const t = useT();
@@ -319,7 +319,9 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
               <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
                 <p className="text-xs font-semibold text-emerald-200">{t('createWallet.address')}</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <code className="min-w-0 flex-1 break-all rounded-lg bg-surface-950/70 px-3 py-2 font-mono text-xs text-white">{activeWallet.address}</code>
+                  <code className="min-w-0 flex-1 rounded-lg bg-surface-950/70 px-3 py-2 font-mono text-xs text-white">
+                    <MiddleEllipsisAddress address={activeWallet.address || ''} head={18} tail={14} minHead={6} minTail={6} />
+                  </code>
                   <button type="button" onClick={() => copyText(activeWallet.address, 'address')} className="rounded-lg border border-surface-700 bg-surface-900 p-2 text-surface-200">
                     {copiedField === 'address' ? <Check size={15} /> : <Copy size={15} />}
                   </button>
@@ -363,8 +365,10 @@ export default function HDWalletTreeVisualizer({ onSaveWallet, existingWallets =
                 className={`rounded-xl border p-3 text-left transition-colors ${active ? 'border-brand-400 bg-brand-500/10' : 'border-surface-700 bg-surface-800/60 hover:border-surface-500'}`}
               >
                 <span className="flex items-center gap-2 text-xs font-bold text-white"><Leaf size={13} />{t('createWallet.hdTreeLeaf')} {index}</span>
-                <span className="mt-1 block font-mono text-[0.6875rem] text-surface-400">
-                  {wallet ? shortAddress(wallet.address) : `m/44'/${selectedNetwork.coinType}'/${account}'/0/${index}`}
+                <span className="mt-1 block min-w-0 font-mono text-[0.6875rem] text-surface-400">
+                  {wallet ? (
+                    <MiddleEllipsisAddress address={wallet.address || ''} head={14} tail={10} minHead={5} minTail={5} />
+                  ) : `m/44'/${selectedNetwork.coinType}'/${account}'/0/${index}`}
                 </span>
               </button>
             );

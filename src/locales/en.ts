@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey failed to start",
     "failedBody": "Restart the app. If this keeps happening, reset the app data or reinstall xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Device security changed and xKey cannot open the stored key. Restore a .xkey backup or reset the vault if you no longer have a backup."
   },
   "common": {
+    "custom": "Custom",
     "back": "Back",
     "enabled": "Enabled",
     "disabled": "Disabled",
@@ -147,6 +148,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Show error details",
     "hideDetails": "Hide details",
+    "expandDetails": "Expand details",
     "show": "Show",
     "hide": "Hide",
     "secureDisplayPixels": "Sensitive value rendered as secure display pixels",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Enabled",
-    "disabled": "Disabled",
-    "expandDetails": "Expand details",
+    "disabled": "Disabled",
     "autoLock": "Auto-lock after inactivity",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Auto-lock timeout saved",
@@ -1007,6 +1008,7 @@ export default {
     "new": "NEW"
   },
   "actionBar": {
+    "vanityScore": "Vanity score",
     "searchPlaceholder": "Search by address, name, notes...",
     "allWallets": "All Wallets",
     "newWallets": "New",

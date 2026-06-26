@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey başlatılamadı",
     "failedBody": "Uygulamayı yeniden başlatın. Bu devam ederse uygulama verilerini sıfırlayın veya xKey’i yeniden yükleyin.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Cihaz güvenliği değişti ve xKey kayıtlı anahtarı açamıyor. Bir .xkey yedeğini geri yükleyin veya yedeğiniz yoksa kasayı sıfırlayın."
   },
   "common": {
+    "custom": "Özel",
     "back": "Geri",
     "cancel": "İptal",
     "save": "Kaydet",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Hata ayrıntılarını göster",
     "hideDetails": "Ayrıntıları gizle",
+    "expandDetails": "Ayrıntıları göster",
     "show": "Göster",
     "hide": "Gizle",
     "secureDisplayPixels": "Hassas değer güvenli ekran pikselleri olarak gösterilir",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Etkinleştirilmiş",
-    "disabled": "Kapatıldı",
-    "expandDetails": "Expand details",
+    "disabled": "Kapatıldı",
     "autoLock": "Kullanılmadığında otomatik kilitle",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Otomatik kilit süresi kaydedildi",
@@ -1007,6 +1008,7 @@ export default {
     "new": "YENİ"
   },
   "actionBar": {
+    "vanityScore": "Vanity puanı",
     "searchPlaceholder": "Adres, ad veya notlara göre ara...",
     "allWallets": "Tüm Cüzdanlar",
     "newWallets": "Yeni",

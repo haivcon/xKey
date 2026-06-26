@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey n’a pas pu démarrer",
     "failedBody": "Redémarrez l’application. Si cela continue, réinitialisez les données de l’application ou réinstallez xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "La sécurité de l’appareil a changé et xKey ne peut pas ouvrir la clé enregistrée. Restaurez une sauvegarde .xkey ou réinitialisez le coffre si vous n’avez plus de sauvegarde."
   },
   "common": {
+    "custom": "Personnalisé",
     "back": "Retour",
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Afficher les détails",
     "hideDetails": "Masquer les détails",
+    "expandDetails": "Afficher les détails",
     "show": "Afficher",
     "hide": "Masquer",
     "secureDisplayPixels": "Valeur sensible rendue sous forme de pixels sécurisés",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Activé",
-    "disabled": "Éteint",
-    "expandDetails": "Expand details",
+    "disabled": "Éteint",
     "autoLock": "Verrouillage automatique après inactivité",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Délai de verrouillage enregistré",
@@ -1007,6 +1008,7 @@ export default {
     "new": "NOUVEAU"
   },
   "actionBar": {
+    "vanityScore": "Score vanity",
     "searchPlaceholder": "Rechercher par adresse, nom, notes...",
     "allWallets": "Tous les portefeuilles",
     "newWallets": "Nouveaux",

@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "Không thể khởi động xKey",
     "failedBody": "Hãy khởi động lại ứng dụng. Nếu lỗi vẫn tiếp diễn, hãy đặt lại dữ liệu ứng dụng hoặc cài đặt lại xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Bảo mật thiết bị đã thay đổi và xKey không mở được khóa đã lưu. Hãy khôi phục từ bản sao lưu .xkey hoặc đặt lại kho nếu không còn bản sao lưu."
   },
   "common": {
+    "custom": "Tùy chỉnh",
     "back": "Quay lại",
     "enabled": "Đã bật",
     "disabled": "Đã tắt",
@@ -147,6 +148,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Hiện chi tiết lỗi",
     "hideDetails": "Ẩn chi tiết",
+    "expandDetails": "Mở chi tiết",
     "show": "Hiện",
     "hide": "Ẩn",
     "secureDisplayPixels": "Giá trị nhạy cảm được hiển thị bằng điểm ảnh bảo mật",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Được phép",
     "blocked": "Đã chặn",
     "enabled": "Đã bật",
-    "disabled": "Đã tắt",
-    "expandDetails": "Mở chi tiết",
+    "disabled": "Đã tắt",
     "autoLock": "Tự khóa sau khi không thao tác",
     "autoLockSummary": "Tự khóa khi không dùng trong {value}",
     "autoLockSaved": "Đã lưu thời gian tự khóa",
@@ -1007,6 +1008,7 @@ export default {
     "new": "MỚI"
   },
   "actionBar": {
+    "vanityScore": "Điểm ví đẹp",
     "searchPlaceholder": "Tìm theo địa chỉ, tên, ghi chú...",
     "allWallets": "Tất cả ví",
     "newWallets": "Mới tạo",

@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey शुरू नहीं हो सका",
     "failedBody": "ऐप को पुनः शुरू करें। यदि ऐसा बार-बार होता है, तो ऐप डेटा रीसेट करें या xKey को फिर से इंस्टॉल करें।",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "डिवाइस सुरक्षा बदल गई है और xKey सहेजी गई कुंजी नहीं खोल सकता। .xkey बैकअप पुनर्स्थापित करें या बैकअप न हो तो वॉल्ट रीसेट करें।"
   },
   "common": {
+    "custom": "कस्टम",
     "back": "वापस",
     "cancel": "रद्द करें",
     "save": "सहेजें",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "त्रुटि विवरण दिखाएं",
     "hideDetails": "विवरण छिपाएं",
+    "expandDetails": "विवरण दिखाएँ",
     "show": "दिखाएं",
     "hide": "छिपाएं",
     "secureDisplayPixels": "संवेदनशील मान सुरक्षित डिस्प्ले पिक्सेल के रूप में दिखाया गया है",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "सक्रिय",
-    "disabled": "कामोत्तेजित",
-    "expandDetails": "Expand details",
+    "disabled": "कामोत्तेजित",
     "autoLock": "निष्क्रियता के बाद ऑटो-लॉक",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "ऑटो-लॉक समय सेव किया गया",
@@ -1007,6 +1008,7 @@ export default {
     "new": "नया"
   },
   "actionBar": {
+    "vanityScore": "वैनिटी स्कोर",
     "searchPlaceholder": "पते, नाम या नोट्स से खोजें...",
     "allWallets": "सभी वॉलेट",
     "newWallets": "नए",

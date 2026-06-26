@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey 启动失败",
     "failedBody": "请重新启动应用。如果问题持续发生，请重置应用数据或重新安装 xKey。",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "设备安全设置已更改，xKey 无法打开已保存的密钥。请恢复 .xkey 备份；如果没有备份，请重置保险库。"
   },
   "common": {
+    "custom": "自定义",
     "back": "返回",
     "cancel": "取消",
     "save": "保存",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "显示错误详情",
     "hideDetails": "隐藏详情",
+    "expandDetails": "展开详情",
     "show": "显示",
     "hide": "隐藏",
     "secureDisplayPixels": "敏感值以安全显示像素呈现",
@@ -424,8 +426,7 @@ export default {
     "allowed": "允许",
     "blocked": "已阻止",
     "enabled": "启用",
-    "disabled": "已关闭",
-    "expandDetails": "展开详情",
+    "disabled": "已关闭",
     "autoLock": "无操作后自动锁定",
     "autoLockSummary": "在 {value} 内未使用时自动锁定",
     "autoLockSaved": "已保存自动锁定时间",
@@ -1007,6 +1008,7 @@ export default {
     "new": "新"
   },
   "actionBar": {
+    "vanityScore": "靓号评分",
     "searchPlaceholder": "按地址、名称、备注搜索...",
     "allWallets": "所有钱包",
     "newWallets": "新建",

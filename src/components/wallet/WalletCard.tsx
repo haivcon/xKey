@@ -17,6 +17,7 @@ import { appendAuditLog } from '../../utils/auditLog';
 import { formatKeyAge, getWalletHealth } from '../../utils/keyHealth';
 import type { NetworkColor, Wallet } from '../../types';
 import { XKEY_SLOGAN } from '../../utils/branding';
+import { MiddleEllipsisAddress } from '../create-wallet/components';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -209,16 +210,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   const visibleTags = (wallet.tags || []).filter(tag => tag !== 'extra-vanity');
 
-  const compactWalletAddress = (address: string, head = 12, tail = 12) => {
-    if (address.length <= head + tail + 3) return address;
-    return `${address.slice(0, head)}...${address.slice(-tail)}`;
-  };
-
-  const displayAddress = wallet.address
-    ? showFullAddress
-      ? wallet.address
-      : compactWalletAddress(wallet.address, isUltraCompact ? 8 : 10, isUltraCompact ? 8 : 10)
-    : t('walletCard.noAddress');
+  const displayAddress = wallet.address || t('walletCard.noAddress');
 
   const editInput = (key: keyof EditFields, label: string, type = 'text', multiline = false) => (
     <div>
@@ -311,8 +303,16 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 )}
               </div>
             )}
-            <p className={`max-w-full text-surface-400 font-mono ${showFullAddress ? 'overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : `truncate ${addressClass}`}`}>
-              {displayAddress}
+            <p className={`max-w-full min-w-0 text-surface-400 font-mono ${showFullAddress ? 'text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : addressClass}`}>
+              {wallet.address ? (
+                <MiddleEllipsisAddress
+                  address={displayAddress}
+                  head={showFullAddress ? 22 : isUltraCompact ? 12 : 16}
+                  tail={showFullAddress ? 18 : isUltraCompact ? 10 : 14}
+                  minHead={isUltraCompact ? 5 : 6}
+                  minTail={isUltraCompact ? 5 : 6}
+                />
+              ) : displayAddress}
             </p>
             {wallet.createdAt && (
               <p className={`mt-0.5 text-[10px] ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
@@ -443,7 +443,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 block">{t('walletCard.address')}</label>
                   <div className="flex items-center gap-2">
-                    <code className="min-w-0 flex-1 whitespace-nowrap rounded bg-surface-800 p-2 font-mono text-[clamp(0.68rem,2vw,0.875rem)] leading-tight text-brand-300 overflow-hidden text-ellipsis">{compactWalletAddress(wallet.address, 14, 14)}</code>
+                    <code className="min-w-0 flex-1 whitespace-nowrap rounded bg-surface-800 p-2 font-mono text-[clamp(0.68rem,2vw,0.875rem)] leading-tight text-brand-300">
+                      <MiddleEllipsisAddress address={wallet.address} head={18} tail={16} minHead={6} minTail={6} />
+                    </code>
                     <button onClick={() => onShowQR(wallet.address || '', t('walletCard.address'), wallet.name || '')} className="p-2 bg-surface-800 hover:bg-brand-500/20 text-brand-400 rounded transition-colors"><QrCode size={18} /></button>
                     <button
                       onClick={() => handleCopy(wallet.address, 'address', t('walletCard.address'), { revealAddress: true })}

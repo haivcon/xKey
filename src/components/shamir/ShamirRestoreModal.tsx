@@ -3,6 +3,7 @@ import { Camera, Check, Loader2, Lock, ShieldCheck, Wallet, X } from 'lucide-rea
 import { Html5Qrcode } from 'html5-qrcode';
 import PasswordInput from '../shared/PasswordInput';
 import Notice from '../shared/Notice';
+import { MiddleEllipsisAddress } from '../create-wallet/components';
 import { assembleShamirShareFromPages, combineShamirShares, parseShamirQr, verifyShamirPage } from '../../utils/crypto/shamir';
 import { parseEncryptedBackupText } from '../../utils/backup/backupUtils';
 import { useT } from '../../contexts/LanguageContext';
@@ -121,12 +122,6 @@ export default function ShamirRestoreModal({ aesKey, onClose, onRestore }: Shami
   const ready = scannedShareCount >= 2;
   const previewWallet = previewWallets?.[0] || null;
 
-  const shortAddress = (address?: string) => {
-    if (!address) return t('walletCard.noAddress');
-    if (address.length <= 18) return address;
-    return `${address.slice(0, 10)}...${address.slice(-6)}`;
-  };
-
   const pageStatusForPart = (part: number) => {
     const pages = Object.values(pagesByPart[part] || {});
     if (shares[part]) return t('shamir.fullPartScanned');
@@ -224,12 +219,15 @@ export default function ShamirRestoreModal({ aesKey, onClose, onRestore }: Shami
                 </div>
               </div>
               <div className="rounded-xl border border-surface-700 bg-surface-950/70 p-3">
-                <p className="truncate text-sm font-semibold text-white">
-                  {t('shamir.confirmRestoreWallet', {
-                    name: previewWallet?.name || t('walletCard.unnamed'),
-                    address: shortAddress(previewWallet?.address),
-                  })}
-                </p>
+                <div className="min-w-0 text-sm font-semibold text-white">
+                  <span>{previewWallet?.name || t('walletCard.unnamed')}</span>
+                  <span> - </span>
+                  {previewWallet?.address ? (
+                    <span className="inline-block min-w-0 max-w-full align-bottom font-mono">
+                      <MiddleEllipsisAddress address={previewWallet.address} head={14} tail={10} minHead={5} minTail={5} />
+                    </span>
+                  ) : t('walletCard.noAddress')}
+                </div>
                 <p className="mt-1 text-xs text-surface-400">
                   {previewWallet?.network || 'ETH'} · {t('shamir.confirmRestoreCount', { count: previewWallets.length })}
                 </p>

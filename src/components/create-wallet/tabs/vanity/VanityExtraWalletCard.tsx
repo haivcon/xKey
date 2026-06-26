@@ -9,7 +9,7 @@ type VanityExtraWalletCardProps = {
   selected: boolean;
   saved: boolean;
   copiedField: string | null;
-  renderVanityExtraAddress: (address: string, wallet: GeneratedWallet) => React.ReactNode;
+  renderVanityExtraAddress: (address: string, wallet: GeneratedWallet, compact?: boolean) => React.ReactNode;
   getVanityExtraLabel: (wallet: GeneratedWallet) => string;
   getVanityScoreTone: (score: number) => string;
   handleCopy: (text: string, field: string) => void | Promise<void>;
@@ -42,7 +42,9 @@ export function VanityExtraWalletCard({
         <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 items-start gap-2 overflow-hidden text-left" aria-pressed={selected}>
           <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${selected ? 'bg-cyan-500 text-white shadow shadow-cyan-500/25' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>{index + 1}</span>
           <span className="block min-w-0 overflow-hidden">
-            <code className="block min-w-0 overflow-hidden whitespace-nowrap text-[11px] font-bold leading-snug tracking-tight text-surface-950 dark:text-white sm:text-[12px]">{renderVanityExtraAddress(address, wallet)}</code>
+            <code className="block min-w-0 max-w-full overflow-hidden whitespace-nowrap font-mono text-[clamp(0.62rem,2.6vw,0.75rem)] font-bold leading-snug tracking-tight text-surface-950 dark:text-white">
+              {renderVanityExtraAddress(address, wallet, true)}
+            </code>
             <span className="mt-1 flex flex-wrap items-center gap-1 text-[9px] font-semibold text-cyan-700/80 dark:text-cyan-100/75">
               <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-1.5 py-0.5">{getVanityExtraLabel(wallet)}</span>
               <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold shadow-sm ${getVanityScoreTone(score)}`}>{t('createWallet.vanityExtraScore', { score })}</span>

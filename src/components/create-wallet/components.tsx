@@ -2,7 +2,21 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import type { SelectOption } from './types';
 
-export function MiddleEllipsisAddress({ address, head = 12, tail = 8 }: { address: string; head?: number; tail?: number }) {
+export function MiddleEllipsisAddress({
+  address,
+  head = 18,
+  tail = 14,
+  minHead = 6,
+  minTail = 6,
+  className = '',
+}: {
+  address: string;
+  head?: number;
+  tail?: number;
+  minHead?: number;
+  minTail?: number;
+  className?: string;
+}) {
   const containerRef = useRef<HTMLSpanElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
   const [display, setDisplay] = useState(address);
@@ -25,15 +39,22 @@ export function MiddleEllipsisAddress({ address, head = 12, tail = 8 }: { addres
       }
 
       const normalizedWidth = Math.max(0, availableWidth - 4);
-      measure.textContent = '0'.repeat(42);
-      const charWidth = Math.max(1, measure.scrollWidth / 42);
-      const availableChars = Math.max(10, Math.floor(normalizedWidth / charWidth) - 2);
+      measure.textContent = '0'.repeat(Math.max(address.length, 42));
+      const charWidth = Math.max(1, measure.scrollWidth / Math.max(address.length, 42));
+      const availableChars = Math.max(minHead + minTail + 3, Math.floor(normalizedWidth / charWidth));
 
-      let nextTail = Math.min(tail, Math.max(4, availableChars - 7));
-      let nextHead = Math.min(head, Math.max(4, availableChars - nextTail - 3));
+      const maxVisibleChars = Math.max(minHead + minTail, availableChars - 3);
+      const preferredHead = Math.min(head, Math.max(minHead, Math.ceil(maxVisibleChars * 0.56)));
+      let nextHead = Math.min(preferredHead, maxVisibleChars - minTail);
+      let nextTail = Math.min(tail, maxVisibleChars - nextHead);
 
-      while (nextHead + nextTail + 3 > availableChars && nextTail > 4) nextTail -= 1;
-      while (nextHead + nextTail + 3 > availableChars && nextHead > 4) nextHead -= 1;
+      if (nextTail < minTail) {
+        nextTail = Math.min(minTail, maxVisibleChars - minHead);
+        nextHead = Math.max(minHead, maxVisibleChars - nextTail);
+      }
+
+      while (nextHead + nextTail + 3 > availableChars && nextHead > minHead) nextHead -= 1;
+      while (nextHead + nextTail + 3 > availableChars && nextTail > minTail) nextTail -= 1;
 
       setDisplay(`${address.slice(0, nextHead)}...${address.slice(-nextTail)}`);
     };
@@ -49,10 +70,10 @@ export function MiddleEllipsisAddress({ address, head = 12, tail = 8 }: { addres
       observer?.disconnect();
       window.removeEventListener('resize', updateDisplay);
     };
-  }, [address, head, tail]);
+  }, [address, head, tail, minHead, minTail]);
 
   return (
-    <span ref={containerRef} className="relative block min-w-0 max-w-full overflow-hidden whitespace-nowrap" title={address}>
+    <span ref={containerRef} className={`relative block min-w-0 max-w-full overflow-hidden whitespace-nowrap ${className}`} title={address}>
       <span className="block min-w-0 overflow-visible whitespace-nowrap">{display}</span>
       <span ref={measureRef} className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap font-mono" aria-hidden="true" />
     </span>

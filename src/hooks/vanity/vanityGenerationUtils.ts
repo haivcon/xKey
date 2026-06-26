@@ -34,8 +34,26 @@ export const getVanityDifficultyTone = (difficultyKey: VanityDifficultyKey): str
 
 export const getVanityBatchSize = (
   performanceMode: VanityPerformanceMode,
-  liteModeActive: boolean
+  liteModeActive: boolean,
+  generationMode: 'privateKey' | 'mnemonic' = 'privateKey',
+  mnemonicWords: 12 | 24 = 12
 ): number => {
+  if (generationMode === 'mnemonic') {
+    if (mnemonicWords === 24) {
+      return performanceMode === 'eco'
+        ? 8
+        : performanceMode === 'fast'
+          ? 32
+          : 16;
+    }
+
+    return performanceMode === 'eco'
+      ? 16
+      : performanceMode === 'fast'
+        ? 64
+        : 32;
+  }
+
   if (liteModeActive) {
     return performanceMode === 'eco'
       ? 128

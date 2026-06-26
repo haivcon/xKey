@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey เริ่มทำงานไม่สำเร็จ",
     "failedBody": "รีสตาร์ทแอป หากยังเกิดขึ้นอีก ให้รีเซ็ตข้อมูลแอปหรือติดตั้ง xKey ใหม่",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "ความปลอดภัยของอุปกรณ์เปลี่ยนไป และ xKey เปิดกุญแจที่บันทึกไว้ไม่ได้ ให้กู้คืนไฟล์สำรอง .xkey หรือรีเซ็ตคลังหากไม่มีไฟล์สำรอง"
   },
   "common": {
+    "custom": "กำหนดเอง",
     "back": "ย้อนกลับ",
     "cancel": "ยกเลิก",
     "save": "บันทึก",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "แสดงรายละเอียดข้อผิดพลาด",
     "hideDetails": "ซ่อนรายละเอียด",
+    "expandDetails": "แสดงรายละเอียด",
     "show": "แสดง",
     "hide": "ซ่อน",
     "secureDisplayPixels": "ค่าที่ละเอียดอ่อนแสดงเป็นพิกเซลความปลอดภัย",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "เปิดใช้งานแล้ว",
-    "disabled": "ปิดแล้ว",
-    "expandDetails": "Expand details",
+    "disabled": "ปิดแล้ว",
     "autoLock": "ล็อกอัตโนมัติเมื่อไม่ได้ใช้งาน",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "บันทึกเวลาล็อกอัตโนมัติแล้ว",
@@ -1007,6 +1008,7 @@ export default {
     "new": "ใหม่"
   },
   "actionBar": {
+    "vanityScore": "คะแนน Vanity",
     "searchPlaceholder": "ค้นหาตามที่อยู่ ชื่อ หรือบันทึก...",
     "allWallets": "กระเป๋าเงินทั้งหมด",
     "newWallets": "ใหม่",

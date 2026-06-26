@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey gagal dimulai",
     "failedBody": "Mulai ulang aplikasi. Jika ini terus terjadi, reset data aplikasi atau instal ulang xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "Keamanan perangkat berubah dan xKey tidak dapat membuka kunci tersimpan. Pulihkan cadangan .xkey atau reset vault jika tidak ada cadangan."
   },
   "common": {
+    "custom": "Kustom",
     "back": "Kembali",
     "cancel": "Batal",
     "save": "Simpan",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "Tampilkan detail error",
     "hideDetails": "Sembunyikan detail",
+    "expandDetails": "Tampilkan detail",
     "show": "Tampilkan",
     "hide": "Sembunyikan",
     "secureDisplayPixels": "Nilai sensitif ditampilkan sebagai piksel layar aman",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Diaktifkan",
-    "disabled": "Mati",
-    "expandDetails": "Expand details",
+    "disabled": "Mati",
     "autoLock": "Kunci otomatis setelah tidak aktif",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Waktu kunci otomatis disimpan",
@@ -1007,6 +1008,7 @@ export default {
     "new": "BARU"
   },
   "actionBar": {
+    "vanityScore": "Skor vanity",
     "searchPlaceholder": "Cari berdasarkan alamat, nama, catatan...",
     "allWallets": "Semua Dompet",
     "newWallets": "Baru",

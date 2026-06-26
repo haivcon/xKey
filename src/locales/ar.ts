@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "تعذر بدء xKey",
     "failedBody": "أعد تشغيل التطبيق. إذا استمر ذلك، فأعد ضبط بيانات التطبيق أو أعد تثبيت xKey.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "تم تغيير أمان الجهاز ولا يستطيع xKey فتح المفتاح المخزن. استعد نسخة .xkey الاحتياطية أو أعد ضبط الخزنة إذا لم تعد تملك نسخة احتياطية."
   },
   "common": {
+    "custom": "مخصص",
     "back": "رجوع",
     "cancel": "إلغاء",
     "save": "حفظ",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "عرض تفاصيل الخطأ",
     "hideDetails": "إخفاء التفاصيل",
+    "expandDetails": "عرض التفاصيل",
     "show": "إظهار",
     "hide": "إخفاء",
     "secureDisplayPixels": "تم عرض القيمة الحساسة كبكسلات عرض آمنة",
@@ -424,8 +426,7 @@ export default {
     "allowed": "مسموح",
     "blocked": "محظور",
     "enabled": "ممكّن",
-    "disabled": "تم الإيقاف",
-    "expandDetails": "افتح التفاصيل",
+    "disabled": "تم الإيقاف",
     "autoLock": "مهلة القفل التلقائي",
     "autoLockSummary": "القفل التلقائي عند عدم استخدامه في {value}",
     "autoLockSaved": "تم حفظ مهلة القفل التلقائي",
@@ -1007,6 +1008,7 @@ export default {
     "new": "جديد"
   },
   "actionBar": {
+    "vanityScore": "درجة العنوان المميز",
     "searchPlaceholder": "ابحث بالعنوان أو الاسم أو الملاحظات...",
     "allWallets": "جميع المحافظ",
     "newWallets": "جديدة",

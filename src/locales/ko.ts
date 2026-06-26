@@ -1,4 +1,4 @@
-export default {
+﻿export default {
   "boot": {
     "failedTitle": "xKey를 시작하지 못했습니다",
     "failedBody": "앱을 다시 시작하세요. 계속 발생하면 앱 데이터를 재설정하거나 xKey를 다시 설치하세요.",
@@ -122,6 +122,7 @@ export default {
     "unrecoverableBody": "기기 보안이 변경되어 xKey가 저장된 키를 열 수 없습니다. .xkey 백업을 복원하거나 백업이 없으면 보관함을 초기화하세요."
   },
   "common": {
+    "custom": "사용자 지정",
     "back": "뒤로",
     "cancel": "취소",
     "save": "저장",
@@ -145,6 +146,7 @@ export default {
     "reset": "Reset",
     "showDetails": "오류 세부정보 보기",
     "hideDetails": "세부정보 숨기기",
+    "expandDetails": "자세히 보기",
     "show": "보기",
     "hide": "숨기기",
     "secureDisplayPixels": "민감한 값이 보안 표시 픽셀로 렌더링됨",
@@ -424,8 +426,7 @@ export default {
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "활성화됨",
-    "disabled": "꺼짐",
-    "expandDetails": "Expand details",
+    "disabled": "꺼짐",
     "autoLock": "사용하지 않을 때 자동 잠금",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "자동 잠금 시간이 저장되었습니다",
@@ -1007,6 +1008,7 @@ export default {
     "new": "NEW"
   },
   "actionBar": {
+    "vanityScore": "배니티 점수",
     "searchPlaceholder": "주소, 이름, 메모로 검색...",
     "allWallets": "모든 지갑",
     "newWallets": "신규",
