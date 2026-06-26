@@ -18,6 +18,54 @@ export type VanityTabProps = ReturnType<typeof useVanityGeneration> & {
   copiedField: string | null;
 };
 
+type VanitySetupProgressProps = {
+  t: TranslationFn;
+  vanityDifficultyTone: string;
+  vanityDifficultyKey: string;
+  vanityExpandedSections: VanityTabProps['vanityExpandedSections'];
+};
+
+function VanitySetupProgress({
+  t,
+  vanityDifficultyTone,
+  vanityDifficultyKey,
+  vanityExpandedSections,
+}: VanitySetupProgressProps) {
+  const setupSteps = [
+    { number: 1, label: t('createWallet.seedPhrase') + ' / ' + t('createWallet.privateKey'), active: vanityExpandedSections.primary },
+    { number: 2, label: t('createWallet.vanityTitle'), active: vanityExpandedSections.target },
+    { number: 3, label: t('createWallet.vanityStorage'), active: vanityExpandedSections.storage },
+    { number: 4, label: t('createWallet.vanityPerformanceSafety'), active: vanityExpandedSections.performance },
+    { number: 5, label: t('createWallet.vanityExtraCaptureTitle'), active: vanityExpandedSections.extraFilters },
+  ];
+
+  return (
+    <>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-surface-950 dark:text-white flex items-center gap-2">
+            <Sparkles size={16} className="text-brand-400" />
+            {t('createWallet.vanityTitle')}
+          </h3>
+          <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('createWallet.vanitySubtitle')}</p>
+        </div>
+        <div className={`vanity-status-badge inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold ${vanityDifficultyTone}`}>
+          {t(`createWallet.vanityDifficulty_${vanityDifficultyKey}`)}
+        </div>
+      </div>
+
+      <div className="vanity-step-progress" aria-label="Vanity setup steps">
+        {setupSteps.map((step) => (
+          <div key={step.number} className={`vanity-progress-step ${step.active ? 'is-active' : ''}`}>
+            <span>{step.number}</span>
+            <strong>{step.label}</strong>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export function VanityTab(props: VanityTabProps) {
   const {
     t,
@@ -143,33 +191,12 @@ export function VanityTab(props: VanityTabProps) {
   return (
             <div className="vanity-theme-sync space-y-6 pb-20">
               <div className={`vanity-setup-card mb-4 space-y-4 rounded-xl border border-surface-200 bg-surface-50/80 p-4 shadow-sm shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-800/40 dark:shadow-none ${vanityRunActive ? 'hidden' : ''}`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-surface-950 dark:text-white flex items-center gap-2">
-                      <Sparkles size={16} className="text-brand-400" />
-                      {t('createWallet.vanityTitle')}
-                    </h3>
-                    <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('createWallet.vanitySubtitle')}</p>
-                  </div>
-                  <div className={`vanity-status-badge inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-bold ${vanityDifficultyTone}`}>
-                    {t(`createWallet.vanityDifficulty_${vanityDifficultyKey}`)}
-                  </div>
-                </div>
-
-                <div className="vanity-step-progress" aria-label="Vanity setup steps">
-                  {[
-                    { number: 1, label: t('createWallet.seedPhrase') + ' / ' + t('createWallet.privateKey'), active: vanityExpandedSections.primary },
-                    { number: 2, label: t('createWallet.vanityTitle'), active: vanityExpandedSections.target },
-                    { number: 3, label: t('createWallet.vanityStorage'), active: vanityExpandedSections.storage },
-                    { number: 4, label: t('createWallet.vanityPerformanceSafety'), active: vanityExpandedSections.performance },
-                    { number: 5, label: t('createWallet.vanityExtraCaptureTitle'), active: vanityExpandedSections.extraFilters },
-                  ].map((step) => (
-                    <div key={step.number} className={`vanity-progress-step ${step.active ? 'is-active' : ''}`}>
-                      <span>{step.number}</span>
-                      <strong>{step.label}</strong>
-                    </div>
-                  ))}
-                </div>
+                <VanitySetupProgress
+                  t={t}
+                  vanityDifficultyTone={vanityDifficultyTone}
+                  vanityDifficultyKey={vanityDifficultyKey}
+                  vanityExpandedSections={vanityExpandedSections}
+                />
 
                 <div className={`vanity-step-card ${vanityExpandedSections.primary ? 'is-open' : ''}`}>
                   <button

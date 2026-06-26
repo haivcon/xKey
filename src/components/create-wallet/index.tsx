@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { useT } from '../../contexts/LanguageContext';
 import { useConfirm } from '../../contexts/ConfirmContext';
-import QRScannerModal from '../QRScannerModal';
 import { CreateWalletHeader, CreateWalletSaveFooter } from './CreateWalletModalLayout';
+import { CreateWalletQRScanner } from './CreateWalletQRScanner';
 import { CreateWalletTabs, GenerateModeTabs } from './CreateWalletTabs';
 import { PostQuantumOptions } from './PostQuantumOptions';
 import { ManualTab } from './tabs/ManualTab';
@@ -82,111 +82,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     setTab,
   });
 
-  const {
-    vanityPrefix, setVanityPrefix,
-    vanitySuffix, setVanitySuffix,
-    vanityGenerating,
-    vanityScanned,
-    vanitySpeed,
-    vanityTime, setVanityTime,
-    vanityTimeLimit, setVanityTimeLimit,
-    vanityTargetCount, setVanityTargetCount,
-    vanityNetwork, setVanityNetwork,
-    vanityFolder, setVanityFolder,
-    vanityCaptureExtras, setVanityCaptureExtras,
-    vanityExtraMinRun, setVanityExtraMinRun,
-    vanityExtraMinRunDrafts, setVanityExtraMinRunDrafts,
-    vanityExtraLimit, setVanityExtraLimit,
-    vanityExtraFilters, setVanityExtraFilters,
-    vanityExtraFolder, setVanityExtraFolder,
-    vanityTagInput, setVanityTagInput,
-    vanityTags, setVanityTags,
-    vanityStopReason,
-    vanitySavedCount,
-    vanityCandidates,
-    vanityExtraWallets,
-    selectedVanityAddresses, setSelectedVanityAddresses,
-    vanityPaused, setVanityPaused,
-    vanityGenerationMode, setVanityGenerationMode,
-    vanityMnemonicWords, setVanityMnemonicWords,
-    vanityExpandedSections,
-    vanityGeneratorExpanded, setVanityGeneratorExpanded,
-    expandedVanitySecrets, setExpandedVanitySecrets,
-    visibleVanitySecrets, setVisibleVanitySecrets,
-    vanityPerformanceMode, setVanityPerformanceMode,
-    vanityPresetsExpanded, setVanityPresetsExpanded,
-    vanityCustomPattern, setVanityCustomPattern,
-    vanityCustomPatterns, setVanityCustomPatterns,
-    hasRecoverableVanitySession,
-    vanityPrefixClean,
-    vanitySuffixClean,
-    vanityInvalidChars,
-    vanityPatternLength,
-    vanityHasPattern,
-    vanitySafeTargetCount,
-    vanityExpectedTries,
-    vanityCompletionRatio,
-    vanityTooLong,
-    vanityCanStart,
-    vanityCanResume,
-    vanitySafeExtraLimit,
-    vanitySafeExtraMinRun,
-    vanitySafeExtraFilters,
-    vanityBatchSize,
-    vanityWorkerCount,
-    vanityDifficultyKey,
-    vanityDifficultyTone,
-    vanityRunActive,
-    vanityProgress,
-    vanityRemainingPrimary,
-    vanityEtaSeconds,
-    vanityProgressPercentLabel,
-    vanityEffectiveThroughput,
-    allVanityWallets,
-    hasSelectedUnsavedVanityWallets,
-    vanityDifficultyAnalyzer,
-    vanityNetworkOptions,
-    vanityFolderOptions,
-    vanityFolderLabel,
-    vanityStorageSummary,
-    vanityExtraFolderOptions,
-    vanityExtraFolderLabel,
-    vanityEnabledExtraFilterCount,
-    vanityExtraSummary,
-    visibleVanityPresetGroups,
-    vanityHiddenPresetCount,
-    vanitySavedRef,
-    vanityFoundRef,
-    vanityExtraRef,
-    compactAddress,
-    toggleVanitySection,
-    toggleVanitySecret,
-    applyVanitySuffixPattern,
-    getVanityExtraLabel,
-    renderVanityAddress,
-    renderVanityExtraAddress,
-    updateVanityExtraFilter,
-    getVanityExtraMinRunValue,
-    commitVanityExtraMinRun,
-    stepVanityExtraMinRun,
-    addVanityTag,
-    getVanityScoreTone,
-    removeVanityExtraWallet,
-    removeVanityPrimaryWallet,
-    clearVanityExtraWallets,
-    saveSingleVanityWallet,
-    saveAllVanityExtraWallets,
-    saveVanityWallets,
-    finishVanityRun,
-    restoreVanitySession,
-    startVanity,
-    pauseVanity,
-    stopVanity,
-    toggleVanitySelection,
-    resetVanityResults,
-    closeCreateWalletModal,
-    clearVanitySession,
-  } = useVanityGeneration({
+  const vanity = useVanityGeneration({
     activeFolder,
     folders,
     aesKey,
@@ -201,118 +97,12 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     setWalletName,
   });
 
-  const vanity = {
-    vanityPrefix, setVanityPrefix,
-    vanitySuffix, setVanitySuffix,
-    vanityGenerating,
-    vanityScanned,
-    vanitySpeed,
-    vanityTime, setVanityTime,
-    vanityTimeLimit, setVanityTimeLimit,
-    vanityTargetCount, setVanityTargetCount,
-    vanityNetwork, setVanityNetwork,
-    vanityFolder, setVanityFolder,
-    vanityCaptureExtras, setVanityCaptureExtras,
-    vanityExtraMinRun, setVanityExtraMinRun,
-    vanityExtraMinRunDrafts, setVanityExtraMinRunDrafts,
-    vanityExtraLimit, setVanityExtraLimit,
-    vanityExtraFilters, setVanityExtraFilters,
-    vanityExtraFolder, setVanityExtraFolder,
-    vanityTagInput, setVanityTagInput,
-    vanityTags, setVanityTags,
-    vanityStopReason,
-    vanitySavedCount,
-    vanityCandidates,
-    vanityExtraWallets,
-    selectedVanityAddresses, setSelectedVanityAddresses,
-    vanityPaused, setVanityPaused,
-    vanityGenerationMode, setVanityGenerationMode,
-    vanityMnemonicWords, setVanityMnemonicWords,
-    vanityExpandedSections,
-    vanityGeneratorExpanded, setVanityGeneratorExpanded,
-    expandedVanitySecrets, setExpandedVanitySecrets,
-    visibleVanitySecrets, setVisibleVanitySecrets,
-    vanityPerformanceMode, setVanityPerformanceMode,
-    vanityPresetsExpanded, setVanityPresetsExpanded,
-    vanityCustomPattern, setVanityCustomPattern,
-    vanityCustomPatterns, setVanityCustomPatterns,
-    hasRecoverableVanitySession,
-    vanityPrefixClean,
-    vanitySuffixClean,
-    vanityInvalidChars,
-    vanityPatternLength,
-    vanityHasPattern,
-    vanitySafeTargetCount,
-    vanityExpectedTries,
-    vanityCompletionRatio,
-    vanityTooLong,
-    vanityCanStart,
-    vanityCanResume,
-    vanitySafeExtraLimit,
-    vanitySafeExtraMinRun,
-    vanitySafeExtraFilters,
-    vanityBatchSize,
-    vanityWorkerCount,
-    vanityDifficultyKey,
-    vanityDifficultyTone,
-    vanityRunActive,
-    vanityProgress,
-    vanityRemainingPrimary,
-    vanityEtaSeconds,
-    vanityProgressPercentLabel,
-    vanityEffectiveThroughput,
-    allVanityWallets,
-    hasSelectedUnsavedVanityWallets,
-    vanityDifficultyAnalyzer,
-    vanityNetworkOptions,
-    vanityFolderOptions,
-    vanityFolderLabel,
-    vanityStorageSummary,
-    vanityExtraFolderOptions,
-    vanityExtraFolderLabel,
-    vanityEnabledExtraFilterCount,
-    vanityExtraSummary,
-    visibleVanityPresetGroups,
-    vanityHiddenPresetCount,
-    vanitySavedRef,
-    vanityFoundRef,
-    vanityExtraRef,
-    compactAddress,
-    toggleVanitySection,
-    toggleVanitySecret,
-    applyVanitySuffixPattern,
-    getVanityExtraLabel,
-    renderVanityAddress,
-    renderVanityExtraAddress,
-    updateVanityExtraFilter,
-    getVanityExtraMinRunValue,
-    commitVanityExtraMinRun,
-    stepVanityExtraMinRun,
-    addVanityTag,
-    getVanityScoreTone,
-    removeVanityExtraWallet,
-    removeVanityPrimaryWallet,
-    clearVanityExtraWallets,
-    saveSingleVanityWallet,
-    saveAllVanityExtraWallets,
-    saveVanityWallets,
-    finishVanityRun,
-    restoreVanitySession,
-    startVanity,
-    pauseVanity,
-    stopVanity,
-    toggleVanitySelection,
-    resetVanityResults,
-    closeCreateWalletModal,
-    clearVanitySession,
-  };
-
   const mathStepItems = t('createWallet.mathSteps.steps') as unknown as MathStep[];
 
   return (
     <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-4">
       <div className="create-wallet-modal-panel flex max-h-[90dvh] flex-col rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl">
-        <CreateWalletHeader t={t} onClose={closeCreateWalletModal} />
+        <CreateWalletHeader t={t} onClose={vanity.closeCreateWalletModal} />
 
         <CreateWalletTabs tab={tab} setTab={setTab} t={t} />
 
@@ -414,17 +204,14 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
           t={t}
         />
       </div>
-      {showQRScanner && (
-        <QRScannerModal
-          onResult={({ text, type }) => {
-            if (type === 'address') { setManualAddress(text); checkDuplicate(text); }
-            else if (type === 'privateKey') setManualPK(text);
-            else if (type === 'seedPhrase') setManualSeed(text);
-            else setManualAddress(text);
-          }}
-          onClose={() => setShowQRScanner(false)}
-        />
-      )}
+      <CreateWalletQRScanner
+        show={showQRScanner}
+        setManualAddress={setManualAddress}
+        setManualPK={setManualPK}
+        setManualSeed={setManualSeed}
+        checkDuplicate={checkDuplicate}
+        onClose={() => setShowQRScanner(false)}
+      />
     </div>
   );
 }
