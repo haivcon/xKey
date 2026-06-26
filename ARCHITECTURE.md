@@ -141,11 +141,11 @@ xKey development should preserve these constraints:
 
 ## 8. Android Build Metadata
 
-For v5.20.0:
+For v5.21.0:
 
-- `package.json` version: `5.20.0`
-- Android `versionName`: `5.20.0`
-- Android `versionCode`: `83`
+- `package.json` version: `5.21.0`
+- Android `versionName`: `5.21.0`
+- Android `versionCode`: `85`
 - Android package: `com.haivcon.xkey`
 
 The top-level Android Gradle configuration keeps shared repository and plugin configuration, while `android/app/build.gradle` owns application version metadata and release build settings.
@@ -174,7 +174,7 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v5.20.0`.
+5. Create an annotated tag such as `v5.21.0`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 

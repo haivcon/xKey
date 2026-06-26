@@ -30,15 +30,15 @@ export const getVanityScoreGradeLabel = (score = 0): string => {
 
 export const getVanityScoreTone = (score = 0): string => {
   if (score >= 90) {
-    return 'border-fuchsia-300/45 bg-fuchsia-500/15 text-fuchsia-700 shadow-fuchsia-500/10 dark:text-fuchsia-100';
+    return 'border-cyan-300/50 bg-cyan-500/20 text-cyan-700 shadow-[0_0_8px_rgba(6,182,212,0.4)] dark:text-cyan-100 dark:shadow-[0_0_12px_rgba(6,182,212,0.3)] font-bold';
   }
   if (score >= 70) {
-    return 'border-emerald-400/35 bg-emerald-500/15 text-emerald-700 shadow-emerald-500/10 dark:text-emerald-200';
+    return 'border-blue-400/40 bg-blue-500/15 text-blue-700 shadow-[0_0_6px_rgba(59,130,246,0.2)] dark:text-blue-200 font-semibold';
   }
   if (score >= 50) {
-    return 'border-amber-400/35 bg-amber-500/15 text-amber-700 shadow-amber-500/10 dark:text-amber-200';
+    return 'border-sky-400/30 bg-sky-500/10 text-sky-700 dark:text-sky-300';
   }
-  return 'border-orange-400/35 bg-orange-500/15 text-orange-700 shadow-orange-500/10 dark:text-orange-200';
+  return 'border-slate-400/30 bg-slate-500/10 text-slate-600 dark:text-slate-300 opacity-80';
 };
 
 export const getVanityPatternLabel = (patternType?: string, side?: string): string => {

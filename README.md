@@ -18,15 +18,15 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.20.0
+## Current Release: v5.21.0
 
-v5.20.0 introduces UI refinements for the splash screen experience, ensuring correct theme-based logo loading during application boot and fixing asset resolving issues for Vite production builds.
+v5.21.0 introduces UI enhancements in the Duplicate Detector, refining the visual presentation of tags for improved readability and a more professional layout.
 
 ### Main Upgrades
 
-- **Splash Screen Fix:** Fixed an issue where the light theme logo would fail to load on the initial boot sequence ("Integrity checks passed") because it attempted to load a non-existent `logo-dark.png` asset.
-- **Vite Asset Resolution:** Unified the splash screen logo to always resolve `/logo.png`, allowing the CSS-driven dynamic theme styling (glow, shadow, text color) to correctly adjust to the user's system preferences.
-- **Android release metadata:** Android version metadata is updated to `versionCode 84` and `versionName 5.20.0`.
+- **Duplicate Detector UI Enhancement:** Redesigned the folder location tag in the Duplicate Detector with a new "tech blue" color scheme, making it stand out more clearly and look more professional.
+- **Improved Alignment:** Repositioned the folder tags to right-align properly within the list items, creating a cleaner and more organized layout alongside the duplicate count indicators.
+- **Android release metadata:** Android version metadata is updated to `versionCode 85` and `versionName 5.21.0`.
 - **Release documentation refresh:** README, changelog, and project versioning were updated for the current release while older release notes are collapsed.
 
 ### Verification for This Release
@@ -108,6 +108,12 @@ Android release builds are triggered by GitHub tags matching `v*`.
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+### v5.20.0
+
+- Splash Screen Fix: Fixed an issue where the light theme logo would fail to load on the initial boot sequence.
+- Vite Asset Resolution: Unified the splash screen logo to always resolve `/logo.png`.
+- App Version Bump: Bumped app version to `5.20.0` (Android versionCode 84).
 
 ### v5.19.0
 

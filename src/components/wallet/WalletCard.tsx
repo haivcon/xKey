@@ -317,9 +317,6 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     <ShieldCheck size={10} /> PQ
                   </span>
                 )}
-                {showVanityScore && (
-                  <VanityScoreBadge wallet={wallet} compact={isCompact || isUltraCompact} />
-                )}
                 {parseAmount(wallet.balance) > 0 && (
                   <span className="ml-auto shrink-0 rounded-full border border-surface-700/70 bg-surface-950/35 px-2 py-0.5 text-[0.68rem] font-semibold leading-none text-white shadow-inner shadow-black/10">
                     {formatAssetValue(wallet.balance, assetUnit)}
@@ -345,6 +342,11 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <span className={`inline-flex min-w-0 max-w-full items-center gap-1 whitespace-nowrap text-[9px] leading-none ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
                   <span className="shrink-0 opacity-75">{t('keyHealth.age')}:</span>
                   <span className="min-w-0 truncate font-medium">{formatKeyAge(wallet.createdAt, nowTick)}</span>
+                </span>
+              )}
+              {showVanityScore && (
+                <span className="flex-shrink-0">
+                  <VanityScoreBadge wallet={wallet} compact={isCompact || isUltraCompact} />
                 </span>
               )}
             </div>

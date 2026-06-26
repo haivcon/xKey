@@ -2,20 +2,25 @@
 
 All notable changes to this project are documented here.
 
-## [5.20.0] - Current Release
+## [5.21.0] - Current Release
 
 ### Release Focus
 
-v5.20.0 introduces UI refinements for the splash screen experience, ensuring correct theme-based logo loading during application boot and fixing asset resolving issues for Vite production builds. 
+v5.21.0 introduces UI enhancements in the Duplicate Detector, refining the visual presentation of tags for improved readability and a more professional layout.
 
 ### Upgraded Features
 
-- **Splash Screen Fix:** Fixed an issue where the light theme logo would fail to load on the initial boot sequence ("Integrity checks passed") because it attempted to load a non-existent `logo-dark.png` asset.
-- **Vite Asset Resolution:** Unified the splash screen logo to always resolve `/logo.png`, allowing the CSS-driven dynamic theme styling (glow, shadow, text color) to correctly adjust to the user's system preferences.
-- **App Version Bump:** Bumped app version to `5.20.0` (Android versionCode 84) to propagate these UI/UX corrections.
+- **Duplicate Detector UI Enhancement:** Redesigned the folder location tag in the Duplicate Detector with a new "tech blue" color scheme, making it stand out more clearly and look more professional.
+- **Improved Alignment:** Repositioned the folder tags to right-align properly within the list items, creating a cleaner and more organized layout alongside the duplicate count indicators.
+- **App Version Bump:** Bumped app version to `5.21.0` (Android versionCode 85) to propagate these UI/UX corrections.
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+## [5.20.0]
+- Splash Screen Fix: Fixed an issue where the light theme logo would fail to load on the initial boot sequence.
+- Vite Asset Resolution: Unified the splash screen logo to always resolve `/logo.png`.
+- App Version Bump: Bumped app version to `5.20.0` (Android versionCode 84).
 
 ## [5.19.0]
 - Vanity Wallet UI Redesign with a 5-step intuitive workflow.

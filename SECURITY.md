@@ -34,16 +34,14 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.19.0
+## Current Release Security Notes: v5.21.0
 
-v5.19.0 introduces a UI/UX overhaul of the Vanity Wallet generation process.
+v5.21.0 introduces UI enhancements in the Duplicate Detector, refining the visual presentation of tags for improved readability and a more professional layout.
 
 Security-relevant changes include:
 
-- **Structured Configuration:** The vanity generator uses a 5-step workflow with clear status badges, ensuring users configure security options properly before starting a scan.
-- **Improved Warnings:** Heat, CPU, and performance warnings are grouped clearly in a dedicated step, reducing the risk of accidental device overheating.
-- **Code Optimization:** Improved component rendering for safer and more stable UI states during intensive scans.
-- Android metadata is updated to `versionCode 83` and `versionName 5.19.0`.
+- No new security features or changes in this release.
+- Android metadata is updated to `versionCode 85` and `versionName 5.21.0`.
 
 ---
 

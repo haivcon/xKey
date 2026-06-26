@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, AlertTriangle, Trash2, Copy, Check } from 'lucide-react';
+import { X, AlertTriangle, Trash2, Copy, Check, Folder } from 'lucide-react';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useT } from '../contexts/LanguageContext';
 import type { Wallet } from '../types';
@@ -74,7 +74,10 @@ export default function DuplicateDetector({ wallets, onDeleteWallet, onClose }: 
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white truncate">{w.name || t('walletCard.unnamed')}</p>
                           <div className="flex items-center gap-2 text-xs text-surface-500">
-                            <span>{w.groupId || 'Imported'}</span>
+                            <span className="flex items-center gap-1 bg-surface-800/50 px-1.5 py-0.5 rounded border border-surface-700/50 text-surface-300">
+                              <Folder size={10} className="text-surface-400" />
+                              {w.groupId || 'Imported'}
+                            </span>
                             {w.createdAt && <><span>·</span><span>{new Date(w.createdAt).toLocaleDateString()}</span></>}
                             {w.privateKey && <><span>·</span><span className="text-emerald-400">{t('duplicates.hasPK')}</span></>}
                           </div>
