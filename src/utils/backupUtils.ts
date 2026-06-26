@@ -28,6 +28,9 @@ export const parseEncryptedBackupText = async (
   let backupText = encryptedText;
   let inspection: BackupInspection | null = null;
   if (container) {
+    if (typeof container.version === 'number' && container.version > 2) {
+      throw new Error(`Unsupported backup version: ${container.version}`);
+    }
     inspection = await inspectBackupFile(encryptedText);
     if (inspection.status === 'tampered') {
       throw new Error('Backup integrity check failed. This file was modified or corrupted.');
