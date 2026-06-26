@@ -133,6 +133,7 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
 test('backup replacement, import reports, and vanity recovery retain encrypted recovery paths', async () => {
   const fileImport = await readSource('src/hooks/useFileImport.ts');
   const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
+  const vanitySessionStorage = await readSource('src/hooks/vanity/vanitySessionStorage.ts');
   const vanityConstants = await readSource('src/components/create-wallet/constants.ts');
   const app = await readSource('src/App.tsx');
 
@@ -142,7 +143,7 @@ test('backup replacement, import reports, and vanity recovery retain encrypted r
   expect(fileImport).toContain('xkey_import_report_');
   expect(fileImport).toContain('saveTextFile');
   expect(vanityConstants).toContain('xkey_vanity_session_v1');
-  expect(vanityHook).toContain('writeInternalText(\'xkey-vanity-session\'');
+  expect(vanitySessionStorage).toContain('writeInternalText(\'xkey-vanity-session\'');
   expect(vanityHook).toContain('restoreVanitySession');
   expect(vanityHook).toContain('vanityPerformanceMode');
   expect(app).toContain('aesKey={aesKey}');
@@ -340,7 +341,7 @@ test('locale loading is lazy and does not require repeated initialization effect
 test('backup import and vanity recovery keep large temporary payloads out of Preferences', async () => {
   const internalTextStore = await readSource('src/utils/internalTextStore.ts');
   const fileImport = await readSource('src/hooks/useFileImport.ts');
-  const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
+  const vanitySessionStorage = await readSource('src/hooks/vanity/vanitySessionStorage.ts');
   const appHealthMessages = await readSource('src/hooks/useAppHealthMessages.ts');
 
   expect(internalTextStore).toContain('Directory.Data');
@@ -352,9 +353,9 @@ test('backup import and vanity recovery keep large temporary payloads out of Pre
   expect(fileImport).toContain("writeInternalText('xkey-replace-snapshot'");
   expect(fileImport).toContain('serializeInternalTextRef(snapshotRef)');
   expect(fileImport).toContain('readInternalText(storedRef)');
-  expect(vanityHook).toContain("writeInternalText('xkey-vanity-session'");
-  expect(vanityHook).toContain('parseInternalTextRef');
-  expect(vanityHook).toContain('readInternalText(');
+  expect(vanitySessionStorage).toContain("writeInternalText('xkey-vanity-session'");
+  expect(vanitySessionStorage).toContain('parseInternalTextRef');
+  expect(vanitySessionStorage).toContain('readInternalText(');
   expect(appHealthMessages).toContain("cleanupInternalTextFiles(['xkey-replace-snapshot', 'xkey-vanity-session']");
   expect(appHealthMessages).toContain('INTERNAL_TEXT_MAX_AGE_MS');
 });

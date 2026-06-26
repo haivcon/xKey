@@ -1,14 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Preferences } from '@capacitor/preferences';
 import { App as CapacitorApp } from '@capacitor/app';
 import { APP_ACTIVITY_EVENT } from '../security/useAutoLock';
-import {
-  deleteInternalText,
-  parseInternalTextRef,
-  readInternalText,
-  serializeInternalTextRef,
-  writeInternalText,
-} from '../../utils/internalTextStore';
 import {
   DEFAULT_VANITY_EXTRA_FILTERS,
   normalizeVanityExtraFilters,
@@ -25,7 +17,6 @@ import {
   VANITY_HEX_PATTERN,
   VANITY_MAX_SAFE_LENGTH,
   VANITY_PRESET_GROUPS,
-  VANITY_SESSION_KEY,
 } from '../../components/create-wallet/constants';
 import { compactVanityAddress, createVanityAddressRenderer } from './vanityRenderHelpers';
 import type {
@@ -39,6 +30,12 @@ import {
   loadVanitySettings,
   persistVanitySettings,
 } from './vanitySettingsPersistence';
+import {
+  clearStoredVanitySession,
+  hasStoredVanitySession,
+  readVanitySessionBackup,
+  writeVanitySessionBackup,
+} from './vanitySessionStorage';
 import {
   createVanityExtraWallet,
   createVanityWallet,
@@ -341,11 +338,8 @@ export function useVanityGeneration({
       vanitySessionPersistTimerRef.current = null;
     }
     await vanitySessionPersistQueueRef.current.catch(() => {});
-    const { value } = await Preferences.get({ key: VANITY_SESSION_KEY });
-    const storedRef = parseInternalTextRef(value);
     setHasRecoverableVanitySession(false);
-    await Preferences.remove({ key: VANITY_SESSION_KEY });
-    if (storedRef) await deleteInternalText(storedRef);
+    await clearStoredVanitySession();
   };
 
   const persistVanitySession = async () => {
@@ -373,17 +367,11 @@ export function useVanityGeneration({
       selectedAddresses: [...vanitySelectedRef.current],
       savedAddresses: [...vanitySavedRef.current],
     };
-    const { createPortableBackupText } = await import('../../utils/backup/backupUtils');
-    const container = await createPortableBackupText(
-      vanityFoundRef.current,
-      { scope: 'vanity-session', state },
-      aesKey
-    );
-    const { value: previousValue } = await Preferences.get({ key: VANITY_SESSION_KEY });
-    const previousRef = parseInternalTextRef(previousValue);
-    const sessionRef = await writeInternalText('xkey-vanity-session', container);
-    await Preferences.set({ key: VANITY_SESSION_KEY, value: serializeInternalTextRef(sessionRef) });
-    if (previousRef) await deleteInternalText(previousRef);
+    await writeVanitySessionBackup({
+      wallets: vanityFoundRef.current,
+      state,
+      aesKey,
+    });
     setHasRecoverableVanitySession(true);
   };
 
@@ -523,9 +511,9 @@ export function useVanityGeneration({
   // Detect recoverable session on mount
   useEffect(() => {
     let active = true;
-    Preferences.get({ key: VANITY_SESSION_KEY })
-      .then(({ value }) => {
-        if (active && !!value) setHasRecoverableVanitySession(true);
+    hasStoredVanitySession()
+      .then(hasSession => {
+        if (active && hasSession) setHasRecoverableVanitySession(true);
       })
       .catch(() => {});
     return () => {
@@ -760,15 +748,8 @@ export function useVanityGeneration({
 
   const restoreVanitySession = async () => {
     try {
-      const { value } = await Preferences.get({ key: VANITY_SESSION_KEY });
-      if (!value) return;
-      const storedRef = parseInternalTextRef(value);
-      const sessionText = storedRef ? await readInternalText(storedRef) : value;
-      const { parseVaultBackupFile } = await import('../../utils/backup/backupUtils');
-      const restored = (await parseVaultBackupFile(sessionText, aesKey, aesKey)) as {
-        wallets?: GeneratedWallet[];
-        config?: { state?: VanitySessionState };
-      };
+      const restored = await readVanitySessionBackup({ aesKey });
+      if (!restored.wallets) return;
       const state = restored.config?.state;
       if (!state || !Array.isArray(restored.wallets)) throw new Error('Invalid vanity session');
       setVanityPrefix(state.prefix || '');
