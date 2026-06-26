@@ -72,6 +72,10 @@ const decryptPayload = (cipher: string, secret: string): AuditPayload => {
 };
 
 export const appendAuditLog = async (type: string, details: AuditDetails = {}): Promise<boolean> => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+
   try {
     const secret = await getAuditSecret();
     const entries = await readRawEntries();
