@@ -12,11 +12,9 @@ import {
   NETWORKS,
   VANITY_DEFAULT_FOLDER,
   VANITY_EXTRA_DEFAULT_FOLDER,
-  VANITY_EXTRA_FILTER_KEYS,
   VANITY_EXTRA_MIN_RUNS,
   VANITY_HEX_PATTERN,
   VANITY_MAX_SAFE_LENGTH,
-  VANITY_PRESET_GROUPS,
 } from '../../components/create-wallet/constants';
 import { compactVanityAddress, createVanityAddressRenderer } from './vanityRenderHelpers';
 import type {
@@ -50,6 +48,17 @@ import {
   getVanityExtraLabel as formatVanityExtraLabel,
   getVanityWorkerCount,
 } from './vanityGenerationUtils';
+import {
+  buildVanityExtraFolderOptions,
+  buildVanityFolderOptions,
+  formatVanityExtraSummary,
+  formatVanityStorageSummary,
+  getEnabledVanityExtraFilterCount,
+  getUsableVanityFolders,
+  getVanityHiddenPresetCount,
+  getVanityOptionLabel,
+  getVisibleVanityPresetGroups,
+} from './vanityUiHelpers';
 
 export function useVanityGeneration({
   activeFolder,
@@ -244,14 +253,9 @@ export function useVanityGeneration({
     ]
   );
 
-  const usableFolders = folders.filter(f => f && f !== 'All');
-  const visibleVanityPresetGroups = vanityPresetsExpanded
-    ? VANITY_PRESET_GROUPS
-    : VANITY_PRESET_GROUPS.slice(0, 2);
-  const vanityHiddenPresetCount = Math.max(
-    0,
-    VANITY_PRESET_GROUPS.length - visibleVanityPresetGroups.length
-  );
+  const usableFolders = getUsableVanityFolders(folders);
+  const visibleVanityPresetGroups = getVisibleVanityPresetGroups(vanityPresetsExpanded);
+  const vanityHiddenPresetCount = getVanityHiddenPresetCount(visibleVanityPresetGroups.length);
 
   const applyVanitySuffixPattern = (pattern: string) => {
     const clean = pattern.replace(/\s/g, '').toLowerCase().slice(0, 12);
@@ -298,29 +302,29 @@ export function useVanityGeneration({
   };
 
   const vanityNetworkOptions = NETWORKS.map(n => ({ value: n, label: n }));
-  const vanityFolderOptions = [
-    { value: VANITY_DEFAULT_FOLDER, label: t('createWallet.vanityFolder') },
-    ...usableFolders
-      .filter(f => f !== VANITY_DEFAULT_FOLDER)
-      .map(f => ({ value: f, label: f })),
-  ];
-  const vanityFolderLabel =
-    vanityFolderOptions.find(o => o.value === vanityFolder)?.label ?? vanityFolder;
-  const vanityStorageSummary = `${vanitySafeTargetCount} · ${vanityNetwork} · ${vanityFolderLabel}`;
-  const vanityExtraFolderOptions = [
-    { value: VANITY_EXTRA_DEFAULT_FOLDER, label: t('createWallet.vanityExtraFolderDefault') },
-    ...usableFolders
-      .filter(f => f !== VANITY_EXTRA_DEFAULT_FOLDER)
-      .map(f => ({ value: f, label: f })),
-  ];
-  const vanityExtraFolderLabel =
-    vanityExtraFolderOptions.find(o => o.value === vanityExtraFolder)?.label ?? vanityExtraFolder;
-  const vanityEnabledExtraFilterCount = VANITY_EXTRA_FILTER_KEYS.filter(
-    k => vanitySafeExtraFilters[k]?.enabled
-  ).length;
-  const vanityExtraSummary = vanityCaptureExtras
-    ? `${vanitySafeExtraLimit} · ${vanityEnabledExtraFilterCount}/${VANITY_EXTRA_FILTER_KEYS.length} · ${vanityExtraFolderLabel}`
-    : t('common.disabled');
+  const vanityFolderOptions = buildVanityFolderOptions(
+    usableFolders,
+    t('createWallet.vanityFolder')
+  );
+  const vanityFolderLabel = getVanityOptionLabel(vanityFolderOptions, vanityFolder);
+  const vanityStorageSummary = formatVanityStorageSummary(
+    vanitySafeTargetCount,
+    vanityNetwork,
+    vanityFolderLabel
+  );
+  const vanityExtraFolderOptions = buildVanityExtraFolderOptions(
+    usableFolders,
+    t('createWallet.vanityExtraFolderDefault')
+  );
+  const vanityExtraFolderLabel = getVanityOptionLabel(vanityExtraFolderOptions, vanityExtraFolder);
+  const vanityEnabledExtraFilterCount = getEnabledVanityExtraFilterCount(vanitySafeExtraFilters);
+  const vanityExtraSummary = formatVanityExtraSummary({
+    captureExtras: vanityCaptureExtras,
+    extraLimit: vanitySafeExtraLimit,
+    enabledFilterCount: vanityEnabledExtraFilterCount,
+    extraFolderLabel: vanityExtraFolderLabel,
+    disabledLabel: t('common.disabled'),
+  });
 
   // ── Session persistence helpers ────────────────────────────────────────
   const scheduleVanitySessionPersist = () => {
