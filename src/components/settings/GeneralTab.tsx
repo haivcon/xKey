@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -52,7 +52,7 @@ export default function GeneralTab() {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores } = useTheme();
   const t = useT();
   const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
@@ -239,6 +239,29 @@ export default function GeneralTab() {
             aria-pressed={brandReminders}
           >
             <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${brandReminders ? 'translate-x-7' : 'translate-x-1'}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* ═══ Wallet Scores ═══ */}
+      <div className="glass-card p-4 mt-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <Sparkles size={20} className="text-cyan-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-white font-medium text-sm">{t('settings.walletScores')}</p>
+              <p className="text-xs text-surface-400">{t('settings.walletScoresDesc')}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { hapticTap(); setShowWalletScores(!showWalletScores); }}
+            className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${showWalletScores ? 'bg-cyan-500' : 'bg-surface-600'}`}
+            aria-pressed={showWalletScores}
+          >
+            <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showWalletScores ? 'translate-x-7' : 'translate-x-1'}`} />
           </button>
         </div>
       </div>

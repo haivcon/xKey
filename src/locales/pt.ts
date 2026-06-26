@@ -601,6 +601,8 @@
     "vibrationFeedback": "Vibração",
     "walletDensity": "Densidade das carteiras",
     "walletDensityDesc": "Escolha quão compactos ficam os cartões de carteira.",
+    "walletScores": "Pontuação da carteira",
+    "walletScoresDesc": "Mostre uma pontuação pequena diretamente no ícone de cada carteira na tela inicial.",
     "walletDensityComfortable": "Conforto",
     "walletDensityCompact": "Compacto",
     "walletDensityUltra": "Ultra",

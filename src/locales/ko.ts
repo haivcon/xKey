@@ -601,6 +601,8 @@
     "vibrationFeedback": "진동",
     "walletDensity": "지갑 밀도",
     "walletDensityDesc": "홈 화면 지갑 카드의 표시 밀도를 선택합니다.",
+    "walletScores": "지갑 점수",
+    "walletScoresDesc": "홈 화면에서 각 지갑 아이콘 안에 작은 점수를 표시합니다.",
     "walletDensityComfortable": "편안함",
     "walletDensityCompact": "간결",
     "walletDensityUltra": "초간결",

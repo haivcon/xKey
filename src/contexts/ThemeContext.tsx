@@ -14,6 +14,8 @@ type ThemeContextValue = {
   setWalletDensity: (next: string | null | undefined) => void;
   brandReminders: boolean;
   setBrandReminders: (next: boolean) => void;
+  showWalletScores: boolean;
+  setShowWalletScores: (next: boolean) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -21,6 +23,7 @@ const THEME_KEY = 'xkey_theme';
 const DISPLAY_SCALE_KEY = 'xkey_display_scale';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
 const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
+const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
 const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
@@ -74,6 +77,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [displayScale, setDisplayScaleState] = useState(DEFAULT_DISPLAY_SCALE);
   const [walletDensity, setWalletDensityState] = useState<WalletDensity>('comfortable');
   const [brandReminders, setBrandRemindersState] = useState(true);
+  const [showWalletScores, setShowWalletScoresState] = useState(false);
 
   useEffect(() => {
     applyThemeClass('dark');
@@ -102,6 +106,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (value === 'false') setBrandRemindersState(false);
       else if (value === 'true') setBrandRemindersState(true);
     }).catch(() => {});
+
+    Preferences.get({ key: SHOW_WALLET_SCORES_KEY }).then(({ value }) => {
+      if (value === 'true') setShowWalletScoresState(true);
+      else if (value === 'false') setShowWalletScoresState(false);
+    }).catch(() => {});
   }, []);
 
   const setTheme = useCallback((next: ThemeMode) => {
@@ -128,6 +137,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.set({ key: BRAND_REMINDERS_KEY, value: String(next) }).catch(() => {});
   }, []);
 
+  const setShowWalletScores = useCallback((next: boolean) => {
+    setShowWalletScoresState(next);
+    Preferences.set({ key: SHOW_WALLET_SCORES_KEY, value: String(next) }).catch(() => {});
+  }, []);
+
   // Legacy toggle for backward compat
   const toggleTheme = useCallback(() => {
     setThemeState(prev => {
@@ -139,7 +153,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores }}>
       {children}
     </ThemeContext.Provider>
   );

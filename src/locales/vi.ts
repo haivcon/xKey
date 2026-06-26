@@ -426,7 +426,8 @@
     "allowed": "Được phép",
     "blocked": "Đã chặn",
     "enabled": "Đã bật",
-    "disabled": "Đã tắt",
+    "disabled": "Đã tắt",
+
     "autoLock": "Tự khóa sau khi không thao tác",
     "autoLockSummary": "Tự khóa khi không dùng trong {value}",
     "autoLockSaved": "Đã lưu thời gian tự khóa",
@@ -601,6 +602,8 @@
     "vibrationFeedback": "Rung",
     "walletDensity": "Mật độ ví",
     "walletDensityDesc": "Chọn mức gọn của thẻ ví trên trang chủ.",
+    "walletScores": "Điểm ví",
+    "walletScoresDesc": "Hiển thị điểm gọn cho từng ví trên trang chủ bằng kiểu gạch chân đẹp.",
     "walletDensityComfortable": "Dễ nhìn",
     "walletDensityCompact": "Gọn",
     "walletDensityUltra": "Rất gọn",

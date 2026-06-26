@@ -601,6 +601,8 @@
     "vibrationFeedback": "การสั่น",
     "walletDensity": "ความหนาแน่นกระเป๋า",
     "walletDensityDesc": "เลือกความกะทัดรัดของการ์ดกระเป๋าในหน้าแรก",
+    "walletScores": "คะแนนกระเป๋า",
+    "walletScoresDesc": "แสดงคะแนนขนาดเล็กในไอคอนของแต่ละกระเป๋าบนหน้าแรก",
     "walletDensityComfortable": "สบายตา",
     "walletDensityCompact": "กะทัดรัด",
     "walletDensityUltra": "กะทัดรัดมาก",

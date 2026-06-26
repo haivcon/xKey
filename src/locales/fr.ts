@@ -601,6 +601,8 @@
     "vibrationFeedback": "Vibration",
     "walletDensity": "Densité des wallets",
     "walletDensityDesc": "Choisissez la compacité des cartes wallet sur l’accueil.",
+    "walletScores": "Score du wallet",
+    "walletScoresDesc": "Affiche un score compact directement dans l’icône de chaque wallet sur l’accueil.",
     "walletDensityComfortable": "Confort",
     "walletDensityCompact": "Compact",
     "walletDensityUltra": "Ultra",

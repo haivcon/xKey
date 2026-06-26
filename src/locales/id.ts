@@ -601,6 +601,8 @@
     "vibrationFeedback": "Getaran",
     "walletDensity": "Kepadatan dompet",
     "walletDensityDesc": "Pilih seberapa ringkas kartu dompet di beranda.",
+    "walletScores": "Skor dompet",
+    "walletScoresDesc": "Tampilkan skor kecil langsung di ikon setiap dompet pada layar beranda.",
     "walletDensityComfortable": "Nyaman",
     "walletDensityCompact": "Ringkas",
     "walletDensityUltra": "Ultra",

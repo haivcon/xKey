@@ -601,6 +601,8 @@
     "vibrationFeedback": "Вибрация",
     "walletDensity": "Плотность кошельков",
     "walletDensityDesc": "Выберите, насколько компактно показывать карточки кошельков.",
+    "walletScores": "Оценка кошелька",
+    "walletScoresDesc": "Показывать небольшую оценку прямо внутри значка каждого кошелька на главном экране.",
     "walletDensityComfortable": "Обычная",
     "walletDensityCompact": "Компактная",
     "walletDensityUltra": "Очень компактная",

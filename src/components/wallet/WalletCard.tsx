@@ -18,6 +18,9 @@ import { formatKeyAge, getWalletHealth } from '../../utils/keyHealth';
 import type { NetworkColor, Wallet } from '../../types';
 import { XKEY_SLOGAN } from '../../utils/branding';
 import { MiddleEllipsisAddress } from '../create-wallet/components';
+import { createVanityAddressRenderer } from '../../hooks/vanity/vanityRenderHelpers';
+import VanityScoreBadge from '../vanity/VanityScoreBadge';
+import { shouldShowVanityScore } from '../../utils/vanity/vanityScoreGrade';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -72,7 +75,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const fullAddressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
   const { showToast } = useToast();
-  const { brandReminders } = useTheme();
+  const { brandReminders, showWalletScores } = useTheme();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const secureDisplay = useSecureDisplay();
   const [showMPPrompt, setShowMPPrompt] = useState<SensitiveAction | null>(null);
@@ -89,6 +92,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const actionIconSize = isUltraCompact ? 16 : 18;
   const isNewWallet = !!wallet.newUntil && wallet.newUntil > nowTick;
   const keyHealth = getWalletHealth(wallet, nowTick);
+  const showVanityScore = !selectionMode && shouldShowVanityScore(wallet, showWalletScores);
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
@@ -211,6 +215,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const visibleTags = (wallet.tags || []).filter(tag => tag !== 'extra-vanity');
 
   const displayAddress = wallet.address || t('walletCard.noAddress');
+  const { renderVanityExtraAddress } = createVanityAddressRenderer('', '');
+  const vanityAddressNode = wallet.address && wallet.vanityMatchType
+    ? renderVanityExtraAddress(wallet.address, wallet, true)
+    : null;
 
   const editInput = (key: keyof EditFields, label: string, type = 'text', multiline = false) => (
     <div>
@@ -244,7 +252,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   );
 
   return (
-    <div className={`glass-card overflow-hidden border transition-all relative ${isNewWallet ? 'wallet-new-card' : ''} ${
+    <div className={`glass-card isolate overflow-hidden border transition-colors duration-150 relative ${isNewWallet ? 'wallet-new-card' : ''} ${
       isSelected
         ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5'
         : isNewWallet
@@ -260,7 +268,15 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
           }
         }}>
         <div className={`flex min-w-0 flex-1 items-center ${rowGap} overflow-hidden`}>
-          <div className={`${iconBox} rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${selectionMode ? (isSelected ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400') : 'bg-brand-500/10 text-brand-400'}`}>
+          <div
+            className={`${iconBox} rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+              selectionMode
+                ? isSelected
+                  ? 'bg-brand-500 text-white'
+                  : 'bg-surface-700 text-surface-400'
+                : 'bg-brand-500/10 text-brand-400'
+            }`}
+          >
             {selectionMode ? (
               isSelected ? <CheckSquare size={iconSize} /> : <Square size={iconSize} />
             ) : (
@@ -274,7 +290,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 onBlur={() => { onRename(editName); setRenaming(false); }} onKeyDown={(e) => { if (e.key === 'Enter') { onRename(editName); setRenaming(false); } }} />
             ) : (
               <div className="flex items-center gap-2">
-                <h3 className={`text-white font-medium truncate ${titleClass}`}>{wallet.name || t('walletCard.unnamed')}</h3>
+                <h3 className={`min-w-0 text-white font-medium truncate ${titleClass}`}>{wallet.name || t('walletCard.unnamed')}</h3>
                 {wallet.pinned && <Pin size={12} className="text-amber-400 flex-shrink-0" />}
                 {wallet.network && NETWORK_COLORS[wallet.network] && (
                   <button
@@ -301,24 +317,37 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     <ShieldCheck size={10} /> PQ
                   </span>
                 )}
+                {showVanityScore && (
+                  <VanityScoreBadge wallet={wallet} compact={isCompact || isUltraCompact} />
+                )}
+                {parseAmount(wallet.balance) > 0 && (
+                  <span className="ml-auto shrink-0 rounded-full border border-surface-700/70 bg-surface-950/35 px-2 py-0.5 text-[0.68rem] font-semibold leading-none text-white shadow-inner shadow-black/10">
+                    {formatAssetValue(wallet.balance, assetUnit)}
+                  </span>
+                )}
               </div>
             )}
             <p className={`max-w-full min-w-0 text-surface-400 font-mono ${showFullAddress ? 'text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : addressClass}`}>
               {wallet.address ? (
-                <MiddleEllipsisAddress
-                  address={displayAddress}
-                  head={showFullAddress ? 22 : isUltraCompact ? 12 : 16}
-                  tail={showFullAddress ? 18 : isUltraCompact ? 10 : 14}
-                  minHead={isUltraCompact ? 5 : 6}
-                  minTail={isUltraCompact ? 5 : 6}
-                />
+                showFullAddress || !vanityAddressNode ? (
+                  <MiddleEllipsisAddress
+                    address={displayAddress}
+                    head={showFullAddress ? 22 : isUltraCompact ? 12 : 16}
+                    tail={showFullAddress ? 18 : isUltraCompact ? 10 : 14}
+                    minHead={isUltraCompact ? 5 : 6}
+                    minTail={isUltraCompact ? 5 : 6}
+                  />
+                ) : vanityAddressNode
               ) : displayAddress}
             </p>
-            {wallet.createdAt && (
-              <p className={`mt-0.5 text-[10px] ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
-                {t('keyHealth.age')}: {formatKeyAge(wallet.createdAt, nowTick)}
-              </p>
-            )}
+            <div className="mt-0.5 flex min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
+              {wallet.createdAt && (
+                <span className={`inline-flex min-w-0 max-w-full items-center gap-1 whitespace-nowrap text-[9px] leading-none ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
+                  <span className="shrink-0 opacity-75">{t('keyHealth.age')}:</span>
+                  <span className="min-w-0 truncate font-medium">{formatKeyAge(wallet.createdAt, nowTick)}</span>
+                </span>
+              )}
+            </div>
             {visibleTags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {visibleTags.slice(0, 3).map(tag => (
@@ -329,15 +358,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             )}
           </div>
         </div>
-        <div className={`flex flex-shrink-0 items-center ${isUltraCompact ? 'gap-2' : 'gap-3'}`}>
-          {parseAmount(wallet.balance) > 0 && (
-            <div className="text-right">
-              <p className="text-white font-semibold">{formatAssetValue(wallet.balance, assetUnit)}</p>
-              <p className="text-xs text-surface-400">{t('walletCard.balanceLabel')}</p>
-            </div>
-          )}
+        <div className={`flex flex-shrink-0 items-center ${isUltraCompact ? 'gap-1.5' : 'gap-2'}`}>
           {!selectionMode && wallet.address && (
-            <div className="flex items-center gap-2 pr-2 sm:pr-3 border-r border-surface-700/70">
+            <div className="flex items-center gap-1 pr-1.5 sm:pr-2 border-r border-surface-700/70">
               <button
                 type="button"
                 onClick={(e: MouseEvent<HTMLButtonElement>) => {

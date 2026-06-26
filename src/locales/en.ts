@@ -426,7 +426,8 @@
     "allowed": "Allowed",
     "blocked": "Blocked",
     "enabled": "Enabled",
-    "disabled": "Disabled",
+    "disabled": "Disabled",
+
     "autoLock": "Auto-lock after inactivity",
     "autoLockSummary": "Auto-lock when unused for {value}",
     "autoLockSaved": "Auto-lock timeout saved",
@@ -601,6 +602,8 @@
     "vibrationFeedback": "Vibration",
     "walletDensity": "Wallet density",
     "walletDensityDesc": "Choose how compact wallet cards appear on the home screen.",
+    "walletScores": "Wallet score",
+    "walletScoresDesc": "Show a compact underlined score for each wallet on the home screen.",
     "walletDensityComfortable": "Comfort",
     "walletDensityCompact": "Compact",
     "walletDensityUltra": "Ultra",

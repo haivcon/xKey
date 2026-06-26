@@ -117,7 +117,6 @@ export function VanityTabContent(props: VanityTabProps) {
     commitVanityExtraMinRun,
     stepVanityExtraMinRun,
     addVanityTag,
-    getVanityScoreTone,
     saveSingleVanityWallet,
     saveVanityWallets,
     restoreVanitySession,
@@ -294,7 +293,6 @@ export function VanityTabContent(props: VanityTabProps) {
                   renderVanityAddress={renderVanityAddress}
                   renderVanityExtraAddress={renderVanityExtraAddress}
                   getVanityExtraLabel={getVanityExtraLabel}
-                  getVanityScoreTone={getVanityScoreTone}
                 />
               )}
             </div>

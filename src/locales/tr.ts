@@ -601,6 +601,8 @@
     "vibrationFeedback": "Titreşim",
     "walletDensity": "Cüzdan yoğunluğu",
     "walletDensityDesc": "Ana ekranda cüzdan kartlarının ne kadar sıkı görüneceğini seçin.",
+    "walletScores": "Cüzdan puanı",
+    "walletScoresDesc": "Ana ekranda her cüzdanın simgesinin içinde küçük bir puan göster.",
     "walletDensityComfortable": "Rahat",
     "walletDensityCompact": "Kompakt",
     "walletDensityUltra": "Ultra",

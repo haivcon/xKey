@@ -601,6 +601,8 @@
     "vibrationFeedback": "振动",
     "walletDensity": "钱包密度",
     "walletDensityDesc": "选择首页钱包卡片的紧凑程度。",
+    "walletScores": "钱包评分",
+    "walletScoresDesc": "在首页每个钱包的图标内直接显示紧凑评分。",
     "walletDensityComfortable": "舒适",
     "walletDensityCompact": "紧凑",
     "walletDensityUltra": "超紧凑",

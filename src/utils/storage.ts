@@ -14,6 +14,7 @@ import {
 import CryptoWorker from '../workers/crypto.worker.js?worker';
 import { getVaultStorageStatusForKeys, loadVaultCipher, removeVaultFragmentDirectory, saveVaultCipher } from './storage/fragmentedVault';
 import type { Wallet } from '../types';
+import { inferVanityScoreMetadata } from './vanity/vanityScoreGrade';
 
 export { loadVaultCipher, saveVaultCipher };
 
@@ -62,6 +63,28 @@ type VaultKeyError = Error & {
 };
 
 const walletSaveQueues = new Map<string, Promise<boolean>>();
+
+const backfillVanityScoreMetadata = (wallets: Wallet[]): { wallets: Wallet[]; migrated: boolean } => {
+    let migrated = false;
+    const next = wallets.map(wallet => {
+        if (!wallet.address) return wallet;
+        if (
+            wallet.vanityMatchType &&
+            typeof wallet.vanityScore === 'number' &&
+            wallet.vanityPatternType &&
+            (wallet.vanityHeadRun || wallet.vanityTailRun || wallet.vanityRepeatLength)
+        ) {
+            return wallet;
+        }
+
+        const metadata = inferVanityScoreMetadata(wallet);
+        if (!metadata) return wallet;
+        migrated = true;
+        return { ...wallet, ...metadata };
+    });
+
+    return { wallets: next, migrated };
+};
 
 // Crypto functions migrated to crypto.worker.js
 
@@ -373,8 +396,11 @@ export const loadWallets = async (key: string | null, isDecoy = false): Promise<
     const { wallets: migrated, migrated: didMigrate } = await runMigrations(wallets);
     wallets = migrated;
     
+    const { wallets: vanityBackfilled, migrated: didBackfillVanity } = backfillVanityScoreMetadata(wallets);
+    wallets = vanityBackfilled;
+    
     // If migration happened, re-save with new schema + field encryption
-    if (didMigrate) {
+    if (didMigrate || didBackfillVanity) {
         await saveWallets(wallets, key, isDecoy);
     } else if (source === 'legacy' && Capacitor.isNativePlatform()) {
         await saveVaultCipher(storageKey, value);

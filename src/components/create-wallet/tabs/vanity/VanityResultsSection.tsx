@@ -1,9 +1,10 @@
 import type React from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Check, Copy, KeyRound, Maximize2, Minimize2, RefreshCw, Save, Star, Trees } from 'lucide-react';
+import { Check, Copy, KeyRound, Maximize2, Minimize2, RefreshCw, Save, Trees } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { VANITY_DEFAULT_FOLDER } from '../../constants';
 import type { GeneratedWallet } from '../../types';
+import VanityScoreBadge from '../../../vanity/VanityScoreBadge';
 
 type VanityResultsSectionProps = {
   t: TranslationFn;
@@ -30,7 +31,6 @@ type VanityResultsSectionProps = {
   renderVanityAddress: (address: string, compact?: boolean) => React.ReactNode;
   renderVanityExtraAddress: (address: string, wallet: GeneratedWallet, compact?: boolean) => React.ReactNode;
   getVanityExtraLabel: (wallet: GeneratedWallet) => string;
-  getVanityScoreTone: (score: number) => string;
 };
 
 export function VanityResultsSection({
@@ -58,7 +58,6 @@ export function VanityResultsSection({
   renderVanityAddress,
   renderVanityExtraAddress,
   getVanityExtraLabel,
-  getVanityScoreTone,
 }: VanityResultsSectionProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-surface-200 bg-surface-50 shadow-xl shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-800 theme-aurora:border-white/10 theme-aurora:bg-white/8 theme-aurora:shadow-black/30 theme-glass:border-white/15 theme-glass:bg-white/10 theme-glass:shadow-black/20">
@@ -121,7 +120,7 @@ export function VanityResultsSection({
                   {isExtra && (
                     <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-cyan-700/80 dark:text-cyan-200/80 font-medium">
                       <span>{getVanityExtraLabel(wallet)}</span>
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-bold shadow-sm ${getVanityScoreTone(wallet.vanityScore || 0)}`}><Star size={10} />{t('createWallet.vanityExtraScore', { score: wallet.vanityScore || 0 })}</span>
+                      <VanityScoreBadge wallet={wallet} compact />
                     </span>
                   )}
                 </div>

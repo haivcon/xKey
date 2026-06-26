@@ -601,6 +601,8 @@
     "vibrationFeedback": "振動",
     "walletDensity": "ウォレット密度",
     "walletDensityDesc": "ホーム画面のウォレットカードの詰め方を選択します。",
+    "walletScores": "ウォレットスコア",
+    "walletScoresDesc": "ホーム画面で各ウォレットのアイコン内に小さなスコアを表示します。",
     "walletDensityComfortable": "標準",
     "walletDensityCompact": "コンパクト",
     "walletDensityUltra": "超コンパクト",

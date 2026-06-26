@@ -601,6 +601,8 @@
     "vibrationFeedback": "Vibración",
     "walletDensity": "Densidad de wallets",
     "walletDensityDesc": "Elige qué tan compactas se ven las tarjetas de wallets.",
+    "walletScores": "Puntuación de wallet",
+    "walletScoresDesc": "Muestra una puntuación pequeña dentro del icono de cada wallet en la pantalla de inicio.",
     "walletDensityComfortable": "Cómoda",
     "walletDensityCompact": "Compacta",
     "walletDensityUltra": "Ultra",

@@ -601,6 +601,8 @@
     "vibrationFeedback": "कंपन",
     "walletDensity": "वॉलेट घनत्व",
     "walletDensityDesc": "होम स्क्रीन पर वॉलेट कार्ड कितने कॉम्पैक्ट दिखें चुनें।",
+    "walletScores": "वॉलेट स्कोर",
+    "walletScoresDesc": "होम स्क्रीन पर हर वॉलेट के आइकन के अंदर छोटा स्कोर दिखाएँ।",
     "walletDensityComfortable": "आरामदायक",
     "walletDensityCompact": "कॉम्पैक्ट",
     "walletDensityUltra": "अल्ट्रा",

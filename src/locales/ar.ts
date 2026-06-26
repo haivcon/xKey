@@ -601,6 +601,8 @@
     "vibrationFeedback": "الاهتزاز",
     "walletDensity": "كثافة المحافظ",
     "walletDensityDesc": "اختر مدى ضغط بطاقات المحافظ في الصفحة الرئيسية.",
+    "walletScores": "نقاط المحفظة",
+    "walletScoresDesc": "اعرض نتيجة صغيرة داخل أيقونة كل محفظة على الشاشة الرئيسية.",
     "walletDensityComfortable": "مريح",
     "walletDensityCompact": "مضغوط",
     "walletDensityUltra": "مضغوط جدا",

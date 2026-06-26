@@ -601,6 +601,8 @@
     "vibrationFeedback": "Vibration",
     "walletDensity": "Wallet-Dichte",
     "walletDensityDesc": "Wähle, wie kompakt Wallet-Karten auf der Startseite erscheinen.",
+    "walletScores": "Wallet-Punktzahl",
+    "walletScoresDesc": "Zeige eine kleine Punktzahl direkt im Symbol jeder Wallet auf der Startseite.",
     "walletDensityComfortable": "Bequem",
     "walletDensityCompact": "Kompakt",
     "walletDensityUltra": "Sehr kompakt",
