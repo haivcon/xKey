@@ -34,14 +34,14 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.21.0
+## Current Release Security Notes: v5.21.1
 
-v5.21.0 introduces UI enhancements in the Duplicate Detector, refining the visual presentation of tags for improved readability and a more professional layout.
+v5.21.1 resolves a responsive UI issue where compacted vanity addresses failed to accurately resize according to their container width.
 
 Security-relevant changes include:
 
 - No new security features or changes in this release.
-- Android metadata is updated to `versionCode 85` and `versionName 5.21.0`.
+- Android metadata is updated to `versionCode 86` and `versionName 5.21.1`.
 
 ---
 
