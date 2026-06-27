@@ -977,28 +977,28 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.26rem, 1.18vw, 0.43rem);
-  font-weight: 900;
+  font-size: clamp(0.22rem, 1vw, 0.38rem);
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: clamp(0.004em, 0.16vw, 0.045em);
+  letter-spacing: clamp(0.02em, 0.2vw, 0.06em);
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
 }
 
 .home-header-slogan-space {
-  width: clamp(0.1em, 0.42vw, 0.2em);
+  width: clamp(0.15em, 0.5vw, 0.25em);
 }
 
 @media (max-width: 360px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(0.22rem, 1.05vw, 0.31rem);
-    letter-spacing: 0;
+    font-size: clamp(0.18rem, 0.9vw, 0.26rem);
+    letter-spacing: 0.01em;
   }
 
   .home-header-slogan-space {
-    width: 0.08em;
+    width: 0.12em;
   }
 }
 

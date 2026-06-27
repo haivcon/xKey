@@ -42,7 +42,7 @@ export default function HomeHeader({
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-[clamp(0.625rem,3vw,1rem)] py-[clamp(0.625rem,2.6vw,1rem)] shadow-xl"
+      className="sticky top-0 z-30 bg-surface-900/95 backdrop-blur-md border-b border-surface-800 px-[clamp(0.625rem,3vw,1rem)] pt-[calc(env(safe-area-inset-top,0px)+clamp(0.625rem,2.6vw,1rem))] pb-[clamp(0.625rem,2.6vw,1rem)] shadow-xl"
     >
       <div className="max-w-[140rem] mx-auto w-full">
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-[clamp(0.25rem,1.8vw,0.5rem)]">
