@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { QRCodeSVG } from 'qrcode.react';
 import { Check, ChevronLeft, ChevronRight, Copy, Download, Lock, Maximize2, Printer, QrCode, Search, ShieldCheck, Wallet, X } from 'lucide-react';
@@ -375,8 +375,8 @@ export default function ShamirBackupModal({ wallets, onClose }: ShamirBackupModa
 
               <div className="rounded-xl border border-surface-700 bg-surface-950/60 p-3 text-center">
                 <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-left">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-surface-400">Backup ID: {activePage?.id || '-'}</p>
+                  <p className="text-scale-2xs font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>
+                  <p className="mt-1 text-scale-xs leading-relaxed text-surface-400">Backup ID: {activePage?.id || '-'}</p>
                 </div>
                 <p className="mb-3 text-xs font-semibold text-surface-400">
                   {t('shamir.printPage', {

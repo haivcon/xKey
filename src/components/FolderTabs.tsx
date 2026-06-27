@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Download, Folder, FolderMinus, FolderPlus, MoreHorizontal, Pencil, Search, Star, Trash2, X } from 'lucide-react';
 import type { DragEvent, KeyboardEvent, MouseEvent, PointerEvent } from 'react';
@@ -251,7 +251,7 @@ export default function FolderTabs({
                     </span>
                     <span className="truncate">{f}</span>
                     {isPinned && <Star size={11} className="flex-shrink-0 fill-amber-300 text-amber-300" />}
-                    {isDefault && <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
+                    {isDefault && <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-scale-3xs font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
                   </span>
                   <span className="opacity-60 flex-shrink-0">{count}</span>
                 </>
@@ -259,7 +259,7 @@ export default function FolderTabs({
                 <>
                   {isPinned && <Star size={11} className="mr-1 inline fill-amber-300 text-amber-300" />}
                   {f} <span className="opacity-60 ml-1">({count})</span>
-                  {isDefault && <span className="ml-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
+                  {isDefault && <span className="ml-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-scale-3xs font-bold uppercase text-emerald-300">{t('home.defaultFolderBadge')}</span>}
                 </>
               )}
             </button>

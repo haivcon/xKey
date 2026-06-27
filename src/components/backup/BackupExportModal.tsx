@@ -1,4 +1,4 @@
-import { ShieldAlert, UploadCloud } from 'lucide-react';
+﻿import { ShieldAlert, UploadCloud } from 'lucide-react';
 import BrandSlogan from '../shared/BrandSlogan';
 import PasswordInput from '../shared/PasswordInput';
 import { hapticTap } from '../../utils/haptics';
@@ -72,7 +72,7 @@ export default function BackupExportModal({
           />
           <div className="bg-yellow-500/5 border border-yellow-500/15 rounded-lg p-2.5 flex gap-2">
             <ShieldAlert size={14} className="text-yellow-400 mt-0.5 flex-shrink-0" />
-            <p className="text-[11px] text-yellow-300/80 leading-relaxed">{t('settings.passwordWarning')}</p>
+            <p className="text-scale-xs text-yellow-300/80 leading-relaxed">{t('settings.passwordWarning')}</p>
           </div>
         </div>
         <div className="flex gap-3 mt-5">

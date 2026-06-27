@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
 import type { Wallet as WalletModel } from '../../../types';
 import { Check, ChevronDown, Copy, Info, Plus, RefreshCw, Sparkles, Wallet } from 'lucide-react';
@@ -81,7 +81,7 @@ export function GenerateTab(props: GenerateTabProps) {
                     {floatingEffects.map(effect => (
                       <div key={effect.key} className="absolute bottom-0 text-center animate-float-up-fade pointer-events-none">
                         <span className="text-brand-400 font-black text-3xl drop-shadow-[0_0_12px_rgba(56,189,248,0.8)]">+{effect.count}</span>
-                        <p className="text-[10px] text-brand-300/80 font-mono mt-1 bg-surface-900/80 px-2 py-0.5 rounded-full border border-surface-700/50 shadow-lg">{(effect.address || '').substring(0,8)}...{(effect.address || '').substring(34)}</p>
+                        <p className="text-scale-2xs text-brand-300/80 font-mono mt-1 bg-surface-900/80 px-2 py-0.5 rounded-full border border-surface-700/50 shadow-lg">{(effect.address || '').substring(0,8)}...{(effect.address || '').substring(34)}</p>
                       </div>
                     ))}
                     {floatingEffects.length === 0 && (
@@ -170,11 +170,11 @@ export function GenerateTab(props: GenerateTabProps) {
                         </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[11px] leading-relaxed text-surface-500">{t('createWallet.seedLengthHint')}</p>
+                    <p className="mt-2 text-scale-xs leading-relaxed text-surface-500">{t('createWallet.seedLengthHint')}</p>
                   </div>
 
                   <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-6 text-left">
-                    <p className="text-[11px] text-surface-300 leading-relaxed flex items-start gap-1.5 mb-3">
+                    <p className="text-scale-xs text-surface-300 leading-relaxed flex items-start gap-1.5 mb-3">
                       <Info size={12} className="text-brand-400 mt-0.5 flex-shrink-0" />
                       {t('createWallet.generateExplain')}
                     </p>
@@ -187,11 +187,11 @@ export function GenerateTab(props: GenerateTabProps) {
                           return (
                             <div key={idx} className={`border ${theme.border} ${theme.bg} rounded-lg overflow-hidden transition-all duration-300`}>
                               <button onClick={() => setExpandedStep(isExpanded ? null : idx)} className="w-full px-3 py-2 flex items-center justify-between text-left focus:outline-none">
-                                <span className={`text-[11px] font-semibold ${theme.text}`}>{step.title}</span>
+                                <span className={`text-scale-xs font-semibold ${theme.text}`}>{step.title}</span>
                                 <ChevronDown size={14} className={`${theme.text} transition-transform ${isExpanded ? 'rotate-180' : ''} flex-shrink-0 ml-2`} />
                               </button>
                               {isExpanded && (
-                                <div className={`px-3 pb-3 text-[10px] text-surface-300 space-y-2 border-t ${theme.contentBorder} pt-2`}>
+                                <div className={`px-3 pb-3 text-scale-2xs text-surface-300 space-y-2 border-t ${theme.contentBorder} pt-2`}>
                                   <div>
                                     <span className={`font-semibold ${theme.label}`}>{t('createWallet.mathSteps.task')}: </span>
                                     <span className="opacity-90">{step.task}</span>
@@ -229,7 +229,7 @@ export function GenerateTab(props: GenerateTabProps) {
                       <div>
                         <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">{t('createWallet.address')}</label>
                         <div className="mt-1 flex items-start gap-2">
-                          <code className="min-w-0 flex-1 break-all rounded-lg border border-brand-500/15 bg-brand-500/10 px-3 py-2 font-mono text-[12px] font-semibold leading-relaxed text-surface-900 dark:bg-brand-500/15 dark:text-brand-100 sm:text-[13px]">
+                          <code className="min-w-0 flex-1 break-all rounded-lg border border-brand-500/15 bg-brand-500/10 px-3 py-2 font-mono text-scale-sm font-semibold leading-relaxed text-surface-900 dark:bg-brand-500/15 dark:text-brand-100 sm:text-[13px]">
                             {w.address}
                           </code>
                           <button type="button" onClick={() => handleCopy(w.address || '', `addr_${index}`)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-surface-200 bg-surface-50 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-950 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-white" aria-label={t('common.copy')}>
@@ -237,7 +237,7 @@ export function GenerateTab(props: GenerateTabProps) {
                           </button>
                         </div>
                         {(w as GeneratedWallet).vanityScore !== undefined && (
-                          <span className="mt-1.5 inline-flex rounded-full border border-amber-400/25 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-700 dark:text-amber-200">
+                          <span className="mt-1.5 inline-flex rounded-full border border-amber-400/25 bg-amber-500/10 px-2 py-0.5 font-mono text-scale-2xs font-bold text-amber-700 dark:text-amber-200">
                             {t('createWallet.vanityExtraScore', { score: (w as GeneratedWallet).vanityScore })}
                           </span>
                         )}
@@ -246,7 +246,7 @@ export function GenerateTab(props: GenerateTabProps) {
                       <div>
                         <label className="mb-1 block text-xs font-semibold text-surface-600 dark:text-surface-400">{t('createWallet.privateKey')}</label>
                         <div className="flex items-start gap-2">
-                          <code className="min-w-0 flex-1 break-all rounded-lg border border-red-500/15 bg-red-500/5 p-3 font-mono text-[12px] leading-relaxed text-red-600 dark:bg-surface-800 dark:text-red-300 sm:text-xs">{w.privateKey}</code>
+                          <code className="min-w-0 flex-1 break-all rounded-lg border border-red-500/15 bg-red-500/5 p-3 font-mono text-scale-sm leading-relaxed text-red-600 dark:bg-surface-800 dark:text-red-300 sm:text-xs">{w.privateKey}</code>
                           <button onClick={() => handleCopy(w.privateKey || '', `pk_${index}`)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-surface-200 bg-surface-50 text-surface-500 transition-colors hover:bg-surface-100 hover:text-surface-950 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700 dark:hover:text-white">
                             {copiedField === `pk_${index}` ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                           </button>
@@ -261,7 +261,7 @@ export function GenerateTab(props: GenerateTabProps) {
                           <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800">
                             <div className="grid grid-cols-3 gap-2 mb-2">
                               {w.mnemonic.split(' ').map((word, i) => (
-                                <span key={i} className="rounded border border-surface-200 bg-white px-1 py-1 text-center font-mono text-[10px] text-surface-800 dark:border-surface-700 dark:bg-surface-700 dark:text-surface-200">
+                                <span key={i} className="rounded border border-surface-200 bg-white px-1 py-1 text-center font-mono text-scale-2xs text-surface-800 dark:border-surface-700 dark:bg-surface-700 dark:text-surface-200">
                                   <span className="mr-1 text-surface-500">{i + 1}.</span>{word}
                                 </span>
                               ))}

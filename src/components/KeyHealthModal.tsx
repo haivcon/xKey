@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { AlertTriangle, Bell, CheckCircle2, Clock3, Copy, KeyRound, ShieldCheck, X } from 'lucide-react';
 import { formatKeyAge, getWalletHealth, selectProofWallets, shouldShowProofOfKeysReminder, summarizeKeyHealth, type ProofCheckReport, type ProofScope } from '../utils/keyHealth';
 import type { TranslationFn } from '../contexts/LanguageContext';
@@ -112,7 +112,7 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                       <CheckCircle2 size={16} className="text-emerald-300" />
                       {t('keyHealth.proofTitle')}
                     </h3>
-                    <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                    <span className={`rounded-full border px-2.5 py-1 text-scale-xs font-bold ${
                       running
                         ? 'border-brand-500/25 bg-brand-500/10 text-brand-200'
                         : report
@@ -138,7 +138,7 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                     {running ? t('keyHealth.proofRunning') : t('keyHealth.proofSignTest')}
                   </button>
                   {report && (
-                    <button type="button" onClick={copyReport} className="text-[11px] text-surface-400 hover:text-emerald-300 transition-colors flex items-center justify-center gap-1">
+                    <button type="button" onClick={copyReport} className="text-scale-xs text-surface-400 hover:text-emerald-300 transition-colors flex items-center justify-center gap-1">
                       <Copy size={10} /> {copyState ? t('common.copied') : t('keyHealth.copyReport')}
                     </button>
                   )}
@@ -156,13 +156,13 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                       className={`rounded-xl border p-3 text-left text-xs transition-colors ${active ? 'border-emerald-500 bg-emerald-500/15 text-emerald-100' : 'border-surface-700 bg-surface-900/70 text-surface-300 hover:border-surface-500 hover:bg-surface-800'}`}
                     >
                       <span className="block font-bold">{t(`keyHealth.scope_${scope}`)}</span>
-                      <span className="mt-1 block text-[11px] leading-relaxed opacity-75">{t(`keyHealth.scope_${scope}_desc`)}</span>
+                      <span className="mt-1 block text-scale-xs leading-relaxed opacity-75">{t(`keyHealth.scope_${scope}_desc`)}</span>
                     </button>
                   );
                 })}
               </div>
 
-              <div className="grid gap-2 text-[11px] text-surface-400 sm:grid-cols-3">
+              <div className="grid gap-2 text-scale-xs text-surface-400 sm:grid-cols-3">
                 <div className="flex items-start gap-1.5 rounded-lg border border-surface-700 bg-surface-900/60 px-3 py-2">
                   <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-emerald-400" />
                   <span>{t('keyHealth.proofNoteNoGas')}</span>
@@ -177,7 +177,7 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                 </div>
               </div>
 
-              <div className="text-[11px] text-surface-500">
+              <div className="text-scale-xs text-surface-500">
                 {t('keyHealth.proofTargetCount', { count: proofTargets.length })}
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate font-semibold text-white">{item.name}</span>
-                      <span className="block truncate text-[11px] text-surface-500 font-mono mt-0.5">{item.message}</span>
+                      <span className="block truncate text-scale-xs text-surface-500 font-mono mt-0.5">{item.message}</span>
                     </span>
                   </div>
                 ))}
@@ -229,10 +229,10 @@ export default function KeyHealthModal({ wallets, visibleWallets, onClose, onRun
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <span className="truncate text-sm font-semibold text-white">{label}</span>
                         {wallet.pqPrepared && (
-                          <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-200">PQ-ready</span>
+                          <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-scale-2xs font-bold text-emerald-200">PQ-ready</span>
                         )}
                         {wallet.lastProofOfKeysStatus === 'failed' && (
-                          <span className="rounded-full border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200">{t('keyHealth.failed')}</span>
+                          <span className="rounded-full border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-scale-2xs font-bold text-red-200">{t('keyHealth.failed')}</span>
                         )}
                       </div>
                       <p className="mt-1 truncate text-xs text-surface-500">{wallet.address || t('walletCard.noAddress')}</p>

@@ -1,4 +1,4 @@
-import { CheckCircle2, Download, MapPin, QrCode, RefreshCw } from 'lucide-react';
+﻿import { CheckCircle2, Download, MapPin, QrCode, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import Notice from '../../shared/Notice';
 import { XKEY_SLOGAN } from '../../../utils/branding';
@@ -32,7 +32,7 @@ export function BackupHistorySection({
     <div className="glass-card p-6">
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500/10"><Download size={20} className="text-brand-400" /></div>
-        <div><h2 className="text-lg font-semibold text-white">{t('settings.backupHistoryTitle')}</h2><p className="text-xs text-surface-400">{t('settings.backupHistoryDesc')}</p>{brandReminders && <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-300/80">{XKEY_SLOGAN}</p>}</div>
+        <div><h2 className="text-lg font-semibold text-white">{t('settings.backupHistoryTitle')}</h2><p className="text-xs text-surface-400">{t('settings.backupHistoryDesc')}</p>{brandReminders && <p className="mt-1 text-scale-2xs font-bold uppercase tracking-[0.14em] text-brand-300/80">{XKEY_SLOGAN}</p>}</div>
       </div>
       {backupHistory.length > 0 && vaultChangedAt && new Date(vaultChangedAt).getTime() > new Date(backupHistory[0].createdAt).getTime() && (
         <Notice variant="warning" className="mb-4">{t('settings.backupOutdated')}</Notice>
@@ -52,7 +52,7 @@ export function BackupHistorySection({
                   type="button"
                   onClick={() => onVerifySavedBackup(entry)}
                   disabled={verifyingBackupId === entry.backupId}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-brand-500/20 bg-brand-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-brand-300 hover:bg-brand-500/20 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-brand-500/20 bg-brand-500/10 px-2.5 py-1.5 text-scale-xs font-semibold text-brand-300 hover:bg-brand-500/20 disabled:opacity-60"
                 >
                   <RefreshCw size={12} className={verifyingBackupId === entry.backupId ? 'animate-spin' : ''} />
                   {verifyingBackupId === entry.backupId ? t('settings.backupVerifying') : t('settings.backupVerifySaved')}
@@ -60,7 +60,7 @@ export function BackupHistorySection({
                 <button
                   type="button"
                   onClick={() => setVisibleBackupQr(current => current === entry.backupId ? '' : entry.backupId)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1.5 text-scale-xs font-semibold text-emerald-300 hover:bg-emerald-500/20"
                 >
                   <QrCode size={12} />
                   {t('settings.backupIdQr')}

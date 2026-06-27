@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState, type ComponentType, type ReactNode } from 'react';
+﻿import { StrictMode, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -60,7 +60,7 @@ function Boot() {
         <div className="max-w-sm">
           <h1 className="mb-2 text-xl font-bold text-white">{t('boot.failedTitle')}</h1>
           <p className="mb-4 text-sm text-surface-400">{t('boot.failedBody')}</p>
-          <pre className="max-h-48 overflow-auto rounded-lg bg-surface-900 p-3 text-left text-[11px] text-red-300">
+          <pre className="max-h-48 overflow-auto rounded-lg bg-surface-900 p-3 text-left text-scale-xs text-red-300">
             {bootError instanceof Error ? bootError.message : String(bootError)}
           </pre>
         </div>

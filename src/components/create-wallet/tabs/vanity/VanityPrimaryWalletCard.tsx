@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import { ChevronDown, KeyRound } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import type { VanityTabProps } from './VanityTabContent';
@@ -37,7 +37,7 @@ export function VanityPrimaryWalletCard({
           <span className="text-sm font-bold text-brand-700 dark:text-brand-200">{t('createWallet.seedPhrase')} / {t('createWallet.privateKey')}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-brand-400/25 bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold text-brand-700 dark:text-brand-200">
+          <span className="rounded-full border border-brand-400/25 bg-brand-500/10 px-2 py-0.5 text-scale-2xs font-bold text-brand-700 dark:text-brand-200">
             {vanityGenerationMode === 'mnemonic' ? t('createWallet.seedPhrase') : t('createWallet.privateKey')}
           </span>
           <ChevronDown size={16} className={`text-brand-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -46,7 +46,7 @@ export function VanityPrimaryWalletCard({
 
       {expanded && (
         <div className="px-3 pb-3 space-y-3">
-          <p className="text-[11px] leading-relaxed text-surface-400">
+          <p className="text-scale-xs leading-relaxed text-surface-400">
             {t('createWallet.vanityGenerationModeDesc')}
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -74,7 +74,7 @@ export function VanityPrimaryWalletCard({
                 type="button"
                 disabled={vanityGenerating}
                 onClick={() => setVanityMnemonicWords(12)}
-                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${vanityMnemonicWords === 12 ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-brand-200' : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500'} disabled:opacity-50`}
+                className={`rounded-lg border px-3 py-1.5 text-scale-xs font-semibold transition-colors ${vanityMnemonicWords === 12 ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-brand-200' : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500'} disabled:opacity-50`}
               >
                 12 {t('createWallet.words')}
               </button>
@@ -82,7 +82,7 @@ export function VanityPrimaryWalletCard({
                 type="button"
                 disabled={vanityGenerating}
                 onClick={() => setVanityMnemonicWords(24)}
-                className={`rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${vanityMnemonicWords === 24 ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-brand-200' : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500'} disabled:opacity-50`}
+                className={`rounded-lg border px-3 py-1.5 text-scale-xs font-semibold transition-colors ${vanityMnemonicWords === 24 ? 'border-brand-500 bg-brand-500/15 text-brand-700 dark:text-brand-200' : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400 dark:hover:border-surface-500'} disabled:opacity-50`}
               >
                 24 {t('createWallet.words')}
               </button>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Copy, Fingerprint, FolderOpen, Globe2, Hash, KeyRound, MonitorSmartphone, Package, PlusCircle, RefreshCw, Settings, ShieldAlert, ShieldCheck, ShieldX, Wallet, Wrench } from 'lucide-react';
 import BrandSlogan from '../shared/BrandSlogan';
 import PasswordInput from '../shared/PasswordInput';
@@ -42,7 +42,7 @@ function PreviewValueBlock({ label, value, icon: Icon, expanded, onToggle, onCop
             aria-expanded={expanded}
             aria-label={`${expanded ? t('common.hide') : t('common.show')} ${label}`}
             onClick={onToggle}
-            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-scale-xs font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
           >
             {expanded ? <ChevronUp size={12} aria-hidden="true" /> : <ChevronDown size={12} aria-hidden="true" />}
             {expanded ? t('common.hide') : t('common.show')}
@@ -51,13 +51,13 @@ function PreviewValueBlock({ label, value, icon: Icon, expanded, onToggle, onCop
             type="button"
             aria-label={`${t('common.copy')} ${label}`}
             onClick={onCopy}
-            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-scale-xs font-semibold transition-colors hover:bg-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
           >
             <Copy size={12} aria-hidden="true" />{t('common.copy')}
           </button>
         </span>
       </div>
-      <code className={`block rounded-lg bg-black/10 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-emerald-50 sm:text-[11px] ${expanded ? 'break-all' : 'truncate whitespace-nowrap'}`}>
+      <code className={`block rounded-lg bg-black/10 px-2 py-1.5 font-mono text-scale-2xs leading-relaxed text-emerald-50 sm:text-scale-xs ${expanded ? 'break-all' : 'truncate whitespace-nowrap'}`}>
         {value || '-'}
       </code>
     </div>
@@ -281,7 +281,7 @@ export default function BackupImportPasswordModal({
             </div>
             {backupPreview.openedFromExternal && (
               <div className="mb-2 rounded-lg border border-sky-400/25 bg-sky-400/10 px-2.5 py-2 text-sky-100">
-                <div className="text-[11px] font-bold uppercase">{t('restore.openedExternal')}</div>
+                <div className="text-scale-xs font-bold uppercase">{t('restore.openedExternal')}</div>
                 <div className="mt-0.5 leading-relaxed">{t('restore.openedExternalWarning')}</div>
               </div>
             )}
@@ -294,8 +294,8 @@ export default function BackupImportPasswordModal({
                         <Icon size={14} aria-hidden="true" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wide text-surface-400">{label}</span>
-                        <span className="block truncate text-[11px] font-semibold text-surface-100">{value || '-'}</span>
+                        <span className="block text-scale-2xs font-semibold uppercase tracking-wide text-surface-400">{label}</span>
+                        <span className="block truncate text-scale-xs font-semibold text-surface-100">{value || '-'}</span>
                       </span>
                     </div>
                   ))}
@@ -352,7 +352,7 @@ export default function BackupImportPasswordModal({
         {backupAnalysis && (
           <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200">
             <div className="mb-3">
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-brand-200">{t('restore.confirmSummaryTitle')}</div>
+              <div className="mb-2 text-scale-xs font-bold uppercase tracking-wide text-brand-200">{t('restore.confirmSummaryTitle')}</div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {[
                   { key: 'newWallets', label: t('restore.confirmNewWallets'), value: backupAnalysis.newWallets, icon: PlusCircle, className: 'text-emerald-200 bg-emerald-500/10 border-emerald-500/20' },
@@ -366,7 +366,7 @@ export default function BackupImportPasswordModal({
                       <Icon size={14} aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-80">{label}</span>
+                      <span className="block text-scale-2xs font-semibold uppercase tracking-wide opacity-80">{label}</span>
                       <span className="block text-sm font-bold">{value}</span>
                     </span>
                   </div>

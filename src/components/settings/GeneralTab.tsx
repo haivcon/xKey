@@ -646,6 +646,21 @@ export default function GeneralTab() {
         </div>
       </div>
 
+      {/* ═══ Lite Mode — visible in Appearance/General settings ═══ */}
+      <div className="glass-card overflow-hidden mt-4">
+        <div className="p-4">
+          <ToggleRow
+            icon={Zap}
+            title={t('settings.liteMode')}
+            description={t('settings.liteModeDesc')}
+            enabled={isLiteMode}
+            activeClass="bg-emerald-500"
+            iconClass="bg-emerald-500/10 text-emerald-400"
+            onToggle={() => { hapticTap(); toggleLiteMode(); }}
+          />
+        </div>
+      </div>
+
       <SettingsGroupLabel>{t('settings.walletDisplay')}</SettingsGroupLabel>
 
       {/* ═══ Wallet Display Options ═══ */}
@@ -691,10 +706,7 @@ export default function GeneralTab() {
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.feedback')}</p>
               <p className="text-xs text-surface-400">
-                {[
-                  (feedbackSettings.soundEnabled || feedbackSettings.vibrationEnabled) ? t('settings.enabled') : t('settings.disabled'),
-                  isLiteMode ? t('settings.liteMode') : null
-                ].filter(Boolean).join(' · ')}
+                {(feedbackSettings.soundEnabled || feedbackSettings.vibrationEnabled) ? t('settings.enabled') : t('settings.disabled')}
               </p>
             </div>
           </div>
@@ -741,17 +753,7 @@ export default function GeneralTab() {
                 </span>
               </button>
             </div>
-            <div className="mt-3 border-t border-surface-700/50 pt-3">
-              <ToggleRow
-                icon={Zap}
-                title={t('settings.liteMode')}
-                description={t('settings.liteModeDesc')}
-                enabled={isLiteMode}
-                activeClass="bg-emerald-500"
-                iconClass="bg-emerald-500/10 text-emerald-400"
-                onToggle={() => { hapticTap(); toggleLiteMode(); }}
-              />
-            </div>
+
           </div>
         </div>
       </div>

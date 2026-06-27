@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { AlertTriangle, Check, ClipboardPaste, Clock3, Coins, Copy, RotateCcw, Save, Search, Upload, Wallet as WalletIcon, X } from 'lucide-react';
 import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../utils/amountFormat';
 import { hapticSuccess, hapticTap } from '../utils/haptics';
@@ -365,7 +365,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
             <div className="min-w-0">
               <h3 className="truncate text-base font-semibold text-white">{t('assetBalance.title')}</h3>
               <p className="text-xs text-surface-400">{formatAssetValue(visibleTotal, unit || '$')}</p>
-              <p className={`mt-0.5 text-[10px] font-semibold ${
+              <p className={`mt-0.5 text-scale-2xs font-semibold ${
                 autoSaveState === 'error' ? 'text-red-400' : autoSaveState === 'saved' ? 'text-emerald-400' : 'text-surface-500'
               }`}>
                 {autoSaveState === 'pending' && t('assetBalance.autoSavePending')}
@@ -407,7 +407,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-[11px] text-surface-500">{t('assetBalance.unitHint')}</p>
+            <p className="mt-1 text-scale-xs text-surface-500">{t('assetBalance.unitHint')}</p>
           </div>
 
           <div className="mb-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -458,7 +458,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                 e.target.value = '';
               }}
             />
-            <p className="text-center text-[11px] leading-snug text-surface-500 sm:col-span-2 sm:text-left">
+            <p className="text-center text-scale-xs leading-snug text-surface-500 sm:col-span-2 sm:text-left">
               {t('assetBalance.importCsvHint')}
             </p>
           </div>
@@ -492,7 +492,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center justify-center gap-2 sm:justify-start">
                       <p className="truncate text-sm font-semibold text-white">{wallet.name || t('walletCard.unnamed')}</p>
-                      {changed && <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-semibold text-brand-300">{t('assetBalance.changed')}</span>}
+                      {changed && <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-scale-2xs font-semibold text-brand-300">{t('assetBalance.changed')}</span>}
                     </div>
                     <div className="mt-1 flex min-w-0 items-center justify-center gap-1.5 sm:justify-start">
                       <p className="max-w-full min-w-0 whitespace-nowrap font-mono text-[clamp(0.43rem,1.65vw,0.69rem)] leading-tight text-surface-500">
@@ -510,7 +510,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                         </button>
                       )}
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5 text-[10px] text-surface-500 sm:justify-start">
+                    <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5 text-scale-2xs text-surface-500 sm:justify-start">
                       {changed && autoSaveState === 'saving' && (
                         <span className="inline-flex items-center gap-1 text-brand-300">
                           <Clock3 size={11} />
@@ -526,15 +526,15 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                     </div>
                     <div className="mt-2 flex flex-wrap justify-center gap-1.5 sm:justify-start">
                       {QUICK_DELTAS.map(delta => (
-                        <button key={delta} type="button" onClick={() => adjustBalance(key, delta)} className="rounded-lg bg-surface-900/80 px-2 py-1 text-[11px] font-semibold text-surface-300 hover:text-white">
+                        <button key={delta} type="button" onClick={() => adjustBalance(key, delta)} className="rounded-lg bg-surface-900/80 px-2 py-1 text-scale-xs font-semibold text-surface-300 hover:text-white">
                           {delta > 0 ? `+${delta}` : delta}
                         </button>
                       ))}
-                      <button type="button" onClick={() => setBalance(key, '0')} className="rounded-lg bg-surface-900/80 px-2 py-1 text-[11px] font-semibold text-surface-300 hover:text-white">
+                      <button type="button" onClick={() => setBalance(key, '0')} className="rounded-lg bg-surface-900/80 px-2 py-1 text-scale-xs font-semibold text-surface-300 hover:text-white">
                         {t('assetBalance.setZero')}
                       </button>
                       {changed && (
-                        <button type="button" onClick={() => resetBalance(key)} className="flex items-center gap-1 rounded-lg bg-surface-900/80 px-2 py-1 text-[11px] font-semibold text-amber-300 hover:text-amber-200">
+                        <button type="button" onClick={() => resetBalance(key)} className="flex items-center gap-1 rounded-lg bg-surface-900/80 px-2 py-1 text-scale-xs font-semibold text-amber-300 hover:text-amber-200">
                           <RotateCcw size={11} />
                           {t('assetBalance.undo')}
                         </button>
@@ -563,7 +563,7 @@ export default function AssetBalanceModal({ wallets, assetUnit, totalBalance, on
                     />
                   </div>
                   {warning && (
-                    <div className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[11px] font-medium text-amber-300 sm:col-span-3">
+                    <div className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-scale-xs font-medium text-amber-300 sm:col-span-3">
                       <AlertTriangle size={13} />
                       <span>{warning}</span>
                     </div>

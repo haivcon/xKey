@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Camera, Check, Loader2, Lock, ShieldCheck, Wallet, X } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import PasswordInput from '../shared/PasswordInput';
@@ -197,7 +197,7 @@ export default function ShamirRestoreModal({ aesKey, onClose, onRestore }: Shami
                 <div key={label} className={`rounded-xl border p-2 text-center text-xs font-bold ${active ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-200' : 'border-surface-700 bg-surface-800 text-surface-500'}`}>
                   {active ? <Check size={14} className="mx-auto mb-1" /> : <ShieldCheck size={14} className="mx-auto mb-1" />}
                   {t('shamir.part', { part: label })}
-                  <span className="mt-1 block text-[10px] font-medium opacity-80">{pageStatusForPart(part)}</span>
+                  <span className="mt-1 block text-scale-2xs font-medium opacity-80">{pageStatusForPart(part)}</span>
                 </div>
               );
             })}

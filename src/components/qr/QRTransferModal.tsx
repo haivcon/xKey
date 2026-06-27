@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from 'react';
+﻿import { useState, type MouseEvent } from 'react';
 import { QrCode, ArrowRight, X, Copy, Check, Lock } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
@@ -171,7 +171,7 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
               )}
             </div>
 
-            <p className="text-[11px] text-surface-500 text-center">
+            <p className="text-scale-xs text-surface-500 text-center">
               {t('qrTransfer.hint')}
             </p>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Trash2, FolderInput, Tag, Pin, Square, X } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { hapticTap } from '../utils/haptics';
@@ -58,11 +58,11 @@ export default function BatchActionBar({
           </span>
           <div className="flex items-center gap-2">
             <button onClick={() => { hapticTap(); onSelectAll(); }}
-              className="text-[10px] text-brand-400 bg-brand-500/10 px-2 py-1 rounded-md">
+              className="text-scale-2xs text-brand-400 bg-brand-500/10 px-2 py-1 rounded-md">
               {t('batch.all') || 'All'}
             </button>
             <button onClick={() => { hapticTap(); onDeselectAll(); }}
-              className="text-[10px] text-surface-400 bg-surface-700 px-2 py-1 rounded-md">
+              className="text-scale-2xs text-surface-400 bg-surface-700 px-2 py-1 rounded-md">
               {t('batch.none') || 'None'}
             </button>
             <button onClick={onCancel}

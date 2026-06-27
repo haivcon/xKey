@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+﻿import { lazy, Suspense, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench } from 'lucide-react';
@@ -306,7 +306,7 @@ export default function ActionBar({
                   {item.loading ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={18} />}
                   <span className="truncate">{item.label}</span>
                   {item.badge && (
-                    <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-yellow-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-yellow-500 text-black text-scale-2xs font-bold rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -324,7 +324,7 @@ export default function ActionBar({
             <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white sm:text-base">{t('actionBar.tools')}</h3>
-                <p className="text-[11px] text-surface-500 sm:text-xs">{t('actionBar.moreTools')}</p>
+                <p className="text-scale-xs text-surface-500 sm:text-xs">{t('actionBar.moreTools')}</p>
               </div>
               <button onClick={closeTools} className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white sm:h-10 sm:w-10">
                 <X size={18} />
@@ -333,7 +333,7 @@ export default function ActionBar({
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:space-y-4 sm:px-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
               {toolGroups.map(group => (
                 <div key={group.key}>
-                  <div className="mb-1.5 px-1 text-[9px] font-semibold uppercase tracking-wider text-surface-500 sm:mb-2 sm:text-[10px]">
+                  <div className="mb-1.5 px-1 text-scale-3xs font-semibold uppercase tracking-wider text-surface-500 sm:mb-2 sm:text-scale-2xs">
                     {group.title}
                   </div>
                   <div className="grid grid-cols-1 gap-2">
@@ -351,10 +351,10 @@ export default function ActionBar({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-xs font-semibold sm:text-sm">{item.label}</span>
-                            <span className="mt-0.5 block text-[11px] leading-snug opacity-70 sm:text-xs">{item.desc}</span>
+                            <span className="mt-0.5 block text-scale-xs leading-snug opacity-70 sm:text-xs">{item.desc}</span>
                           </span>
                           {item.badge && (
-                            <span className="mt-1 min-w-5 h-5 px-1.5 bg-yellow-500 text-black text-[11px] font-bold rounded-full flex items-center justify-center">
+                            <span className="mt-1 min-w-5 h-5 px-1.5 bg-yellow-500 text-black text-scale-xs font-bold rounded-full flex items-center justify-center">
                               {item.badge}
                             </span>
                           )}
@@ -381,11 +381,11 @@ export default function ActionBar({
             ))}
           </div>
           <div className="border-t border-surface-700 pt-2 mt-1">
-            <span className="text-[10px] text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.byChain')}</span>
+            <span className="text-scale-2xs text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.byChain')}</span>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {FILTER_OPTIONS.filter(o => o.group === 'chain').map(opt => (
                 <button key={opt.key} onClick={() => { onFilterChange(opt.key); setShowFilters(false); }}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors ${activeFilter === opt.key ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400 hover:bg-surface-600'}`}>
+                  className={`px-2.5 py-1 rounded-full text-scale-2xs font-semibold transition-colors ${activeFilter === opt.key ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-400 hover:bg-surface-600'}`}>
                   {opt.label}
                 </button>
               ))}
@@ -393,11 +393,11 @@ export default function ActionBar({
           </div>
           {allTags.length > 0 && (
             <div className="border-t border-surface-700 pt-2 mt-1">
-              <span className="text-[10px] text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.tags')}</span>
+              <span className="text-scale-2xs text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.tags')}</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {allTags.map(tag => (
                   <button key={tag} onClick={() => { onFilterChange(`tag:${tag}`); setShowFilters(false); }}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors ${activeFilter === `tag:${tag}` ? 'bg-purple-500 text-white' : 'bg-surface-700 text-surface-400 hover:bg-surface-600'}`}>
+                    className={`px-2.5 py-1 rounded-full text-scale-2xs font-semibold transition-colors ${activeFilter === `tag:${tag}` ? 'bg-purple-500 text-white' : 'bg-surface-700 text-surface-400 hover:bg-surface-600'}`}>
                     #{tag}
                   </button>
                 ))}

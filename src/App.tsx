@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+﻿import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
@@ -513,7 +513,7 @@ export default function App() {
                 <div className="sticky top-[calc(var(--home-header-height)+1rem)] space-y-3">
                   <div className="glass-card p-3">
                     <div className="flex items-center justify-between gap-3 px-2 pb-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                      <span className="text-scale-2xs font-semibold uppercase tracking-wider text-surface-500">
                         {t('home.folders') || 'Folders'}
                       </span>
                       <button
@@ -584,7 +584,7 @@ export default function App() {
                       onClick={() => { hapticTap(); setShowAssetBalance(true); }}
                       className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-brand-500/30 bg-surface-900 px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-800"
                     >
-                      <span className="block text-[8px] font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
+                      <span className="block text-scale-3xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
                       <span className="block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200">{totalBalanceText}</span>
                     </button>
                   </div>

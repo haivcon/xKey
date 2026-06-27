@@ -100,13 +100,13 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
   const mathStepItems = t('createWallet.mathSteps.steps') as unknown as MathStep[];
 
   return (
-    <div className="app-scaled-icons fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-4">
-      <div className="create-wallet-modal-panel flex max-h-[90dvh] flex-col rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl">
+    <div className="app-scaled-icons create-wallet-modal-shell fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-4">
+      <div className="create-wallet-modal-panel flex flex-col rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl">
         <CreateWalletHeader t={t} onClose={vanity.closeCreateWalletModal} />
 
         <CreateWalletTabs tab={tab} setTab={setTab} t={t} />
 
-        <div className="keyboard-scroll-target p-5 space-y-4 overflow-y-auto flex-1">
+        <div className="keyboard-scroll-target create-wallet-modal-body space-y-4 overflow-y-auto flex-1">
           <GenerateModeTabs tab={tab} setTab={setTab} t={t} />
           {(tab === 'manual' || tab === 'generate') && (
             <PostQuantumOptions

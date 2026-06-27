@@ -1,4 +1,4 @@
-import type React from 'react';
+﻿import type React from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Check, Copy, KeyRound, Maximize2, Minimize2, RefreshCw, Save, Trees } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
@@ -64,7 +64,7 @@ export function VanityResultsSection({
       <div className="flex items-center justify-between border-b border-surface-200 bg-surface-50/90 p-4 dark:border-surface-700 dark:bg-surface-800/80 theme-aurora:border-white/10 theme-aurora:bg-white/10 theme-glass:border-white/15 theme-glass:bg-white/12">
         <div>
           <h3 className="text-sm font-bold text-surface-950 dark:text-white">{walletName || allVanityWallets[0].name}</h3>
-          <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+          <p className="mt-0.5 text-scale-xs font-medium text-emerald-600 dark:text-emerald-400">
             {vanitySavedCount > 0
               ? t('createWallet.vanitySavedSummary', { count: vanitySavedCount, folder: allVanityWallets[0]?.groupId || VANITY_DEFAULT_FOLDER })
               : t('createWallet.vanityResultSummary', { primary: generatedWallets.length, extra: vanityExtraWallets.length })}
@@ -87,17 +87,17 @@ export function VanityResultsSection({
           return (
             <div key={address || `vanity-${index}`} className={`relative isolate flex min-h-[68px] flex-col gap-1.5 rounded-lg border p-2 transition-all will-change-transform ${selected ? 'border-brand-500/50 bg-brand-500/10 shadow-sm theme-aurora:bg-brand-400/12 theme-glass:bg-brand-400/12' : 'border-surface-200 bg-surface-50/90 hover:border-surface-300 dark:border-surface-700 dark:bg-surface-800/80 dark:hover:border-surface-600 theme-aurora:border-white/10 theme-aurora:bg-white/8 theme-aurora:hover:border-brand-300/35 theme-glass:border-white/15 theme-glass:bg-white/10 theme-glass:hover:border-brand-300/40'}`}>
               <div className="flex items-start gap-2">
-                <button type="button" onClick={() => toggleVanitySelection(address)} className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[10px] font-bold transition-colors ${selected ? 'border-brand-500 bg-brand-500 text-white' : 'border-surface-300 bg-surface-50 text-transparent dark:border-surface-600 dark:bg-surface-900'}`}>
+                <button type="button" onClick={() => toggleVanitySelection(address)} className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-scale-2xs font-bold transition-colors ${selected ? 'border-brand-500 bg-brand-500 text-white' : 'border-surface-300 bg-surface-50 text-transparent dark:border-surface-600 dark:bg-surface-900'}`}>
                   <Check size={12} className={selected ? 'opacity-100' : 'opacity-0'} />
                 </button>
 
                 <div className="min-w-0 flex-1 overflow-hidden">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                      <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-bold ${isExtra ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
+                      <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-scale-2xs font-bold ${isExtra ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
                         {isExtra ? t('createWallet.vanityExtraTypeExtra') : t('createWallet.vanityExtraTypePrimary')}
                       </span>
-                      {saved && <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"><Check size={10} />{t('createWallet.vanityExtraSaved')}</span>}
+                      {saved && <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-scale-2xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"><Check size={10} />{t('createWallet.vanityExtraSaved')}</span>}
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1 rounded-lg border border-surface-200 bg-surface-100/70 p-1 dark:border-surface-700/50 dark:bg-surface-950/40">
@@ -118,7 +118,7 @@ export function VanityResultsSection({
                   </code>
 
                   {isExtra && (
-                    <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-cyan-700/80 dark:text-cyan-200/80 font-medium">
+                    <span className="mt-1 flex flex-wrap items-center gap-1.5 text-scale-2xs text-cyan-700/80 dark:text-cyan-200/80 font-medium">
                       <span>{getVanityExtraLabel(wallet)}</span>
                       <VanityScoreBadge wallet={wallet} compact />
                     </span>
@@ -130,7 +130,7 @@ export function VanityResultsSection({
                 <div className="mt-2 ml-0 space-y-2 rounded-lg border border-surface-200 bg-surface-50 p-3 shadow-inner dark:border-surface-700/50 dark:bg-surface-900/50 sm:ml-8">
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><KeyRound size={10} /> {t('createWallet.privateKey')}</span>
+                      <span className="text-scale-2xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><KeyRound size={10} /> {t('createWallet.privateKey')}</span>
                       <button onClick={() => {
                         const key = `${address}-pk`;
                         if (!visibleVanitySecrets[key]) {
@@ -139,18 +139,18 @@ export function VanityResultsSection({
                           return;
                         }
                         handleCopy(wallet.privateKey || '', `pk_${index}`);
-                      }} className="flex items-center gap-1 rounded bg-surface-50 px-2 py-0.5 text-[10px] font-medium text-surface-600 transition-colors hover:text-surface-950 dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
+                      }} className="flex items-center gap-1 rounded bg-surface-50 px-2 py-0.5 text-scale-2xs font-medium text-surface-600 transition-colors hover:text-surface-950 dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
                         {visibleVanitySecrets[`${address}-pk`] ? (copiedField === `pk_${index}` ? <><Check size={12} className="text-emerald-400" /> {t('common.copy')}</> : <><Copy size={12} /> {t('common.copy')}</>) : t('common.show')}
                       </button>
                     </div>
-                    <code className="block text-[11px] font-mono text-red-600 dark:text-red-300/90 break-all bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 shadow-inner">
+                    <code className="block text-scale-xs font-mono text-red-600 dark:text-red-300/90 break-all bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 shadow-inner">
                       {visibleVanitySecrets[`${address}-pk`] ? wallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                     </code>
                   </div>
                   {wallet.mnemonic && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><Trees size={10} /> {t('createWallet.seedPhrase')}</span>
+                        <span className="text-scale-2xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-1"><Trees size={10} /> {t('createWallet.seedPhrase')}</span>
                         <button onClick={() => {
                           const key = `${address}-mn`;
                           if (!visibleVanitySecrets[key]) {
@@ -159,11 +159,11 @@ export function VanityResultsSection({
                             return;
                           }
                           handleCopy(wallet.mnemonic || '', `mn_${index}`);
-                        }} className="flex items-center gap-1 rounded bg-surface-50 px-2 py-0.5 font-sans text-[10px] font-medium text-surface-600 transition-colors hover:text-surface-950 dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
+                        }} className="flex items-center gap-1 rounded bg-surface-50 px-2 py-0.5 font-sans text-scale-2xs font-medium text-surface-600 transition-colors hover:text-surface-950 dark:bg-surface-800 dark:text-surface-400 dark:hover:text-white">
                           {visibleVanitySecrets[`${address}-mn`] ? (copiedField === `mn_${index}` ? <><Check size={12} className="text-emerald-500 dark:text-emerald-400" /> {t('common.copy')}</> : <><Copy size={12} /> {t('common.copy')}</>) : t('common.show')}
                         </button>
                       </div>
-                      <div className="bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 text-[11px] font-medium font-sans text-brand-700 dark:text-brand-200 leading-relaxed shadow-inner">
+                      <div className="bg-surface-100 dark:bg-surface-950 p-2.5 rounded border border-surface-300 dark:border-surface-800 text-scale-xs font-medium font-sans text-brand-700 dark:text-brand-200 leading-relaxed shadow-inner">
                         {visibleVanitySecrets[`${address}-mn`] ? wallet.mnemonic : '•••• •••• •••• •••• •••• •••• •••• •••• •••• •••• •••• ••••'}
                       </div>
                     </div>

@@ -33,8 +33,10 @@ export default function Notice({ variant = 'info', children, className = '', str
   const content = strong ? <strong className={styles.strongClassName}>{children}</strong> : children;
 
   return (
-    <div className={`rounded-xl border p-3 text-xs leading-relaxed ${styles.className} ${className}`}>
-      {content}
+    <div className={`rounded-xl border p-3 text-center text-xs leading-relaxed ${styles.className} ${className}`}>
+      <div className="mx-auto max-w-3xl">
+        {content}
+      </div>
     </div>
   );
 }

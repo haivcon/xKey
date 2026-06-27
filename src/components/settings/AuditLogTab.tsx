@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, ClipboardCopy, Clock3, Database, FileArchive, FileText, KeyRound, LockKeyhole, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { authenticateDeviceCredential, isDeviceCredentialAvailable } from '../../utils/deviceCredential';
@@ -200,7 +200,7 @@ export default function AuditLogTab() {
               ) : entries.map(entry => (
                 <tr key={entry.id} className="border-t border-surface-800 text-surface-300">
                   <td className="whitespace-nowrap px-3 py-2">{new Date(entry.timestamp).toLocaleString(lang)}</td>
-                  <td className="px-3 py-2"><div className="font-semibold text-white">{getEventLabel(entry.type, t)}</div><div className="mt-0.5 font-mono text-[10px] text-surface-500">{entry.type}</div></td>
+                  <td className="px-3 py-2"><div className="font-semibold text-white">{getEventLabel(entry.type, t)}</div><div className="mt-0.5 font-mono text-scale-2xs text-surface-500">{entry.type}</div></td>
                   <td className="px-3 py-2">{formatDetails(entry.details, t) || '-'}</td>
                   <td className={`px-3 py-2 font-semibold ${entry.tampered ? 'text-red-300' : 'text-emerald-300'}`}>
                     {entry.tampered ? t('audit.modified') : t('audit.verified')}

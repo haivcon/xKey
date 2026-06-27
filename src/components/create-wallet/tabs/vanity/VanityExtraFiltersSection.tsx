@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import { ChevronDown, Folder, Info, Star } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { InlineSelect } from '../../components';
@@ -88,14 +88,14 @@ export function VanityExtraFiltersSection({
               }`}>
                 {t('createWallet.vanityExtraCaptureTitle')}
               </span>
-              <span className="mt-0.5 block truncate text-[11px] text-surface-500 dark:text-surface-400">
+              <span className="mt-0.5 block truncate text-scale-xs text-surface-500 dark:text-surface-400">
                 {vanityCaptureExtras ? vanityExtraSummary : t('common.disabled')}
               </span>
             </span>
           </button>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span className={`hidden max-w-[150px] truncate rounded-full border px-2 py-1 text-[10px] font-bold sm:inline-flex ${
+            <span className={`hidden max-w-[150px] truncate rounded-full border px-2 py-1 text-scale-2xs font-bold sm:inline-flex ${
               vanityCaptureExtras
                 ? 'border-cyan-400/30 bg-cyan-500/12 text-cyan-700 dark:text-cyan-200'
                 : 'border-surface-200 bg-white text-surface-500 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-400'
@@ -148,7 +148,7 @@ export function VanityExtraFiltersSection({
             <div className="rounded-xl border border-surface-200 bg-white/80 p-3 shadow-sm shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-900/75 dark:shadow-black/10">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <label className="text-xs font-bold text-surface-800 dark:text-surface-100">{t('createWallet.vanityExtraLimit')}</label>
-                <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-200">
+                <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-scale-2xs font-bold text-cyan-700 dark:text-cyan-200">
                   {vanitySafeExtraLimit}
                 </span>
               </div>
@@ -195,7 +195,7 @@ export function VanityExtraFiltersSection({
                 onChange={setVanityExtraFolder}
                 options={vanityExtraFolderOptions}
               />
-              <div className="mt-2 rounded-lg border border-cyan-500/15 bg-cyan-500/5 px-2.5 py-2 text-[11px] font-semibold text-cyan-700 dark:text-cyan-200">
+              <div className="mt-2 rounded-lg border border-cyan-500/15 bg-cyan-500/5 px-2.5 py-2 text-scale-xs font-semibold text-cyan-700 dark:text-cyan-200">
                 {vanityExtraFolderLabel}
               </div>
             </div>
@@ -205,9 +205,9 @@ export function VanityExtraFiltersSection({
             <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-xs font-bold text-surface-900 dark:text-white">{t('createWallet.vanityExtraFilterTitle')}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-surface-600 dark:text-surface-400">{t('createWallet.vanityExtraFilterDesc')}</p>
+                <p className="mt-0.5 text-scale-xs leading-relaxed text-surface-600 dark:text-surface-400">{t('createWallet.vanityExtraFilterDesc')}</p>
               </div>
-              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-700 dark:text-cyan-200">
+              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-scale-2xs font-bold text-cyan-700 dark:text-cyan-200">
                 {vanityEnabledExtraFilterCount}/{VANITY_EXTRA_FILTER_KEYS.length}
               </span>
             </div>
@@ -247,12 +247,12 @@ export function VanityExtraFiltersSection({
                       </button>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-bold text-surface-950 dark:text-white">{t(`createWallet.vanityExtraFilter_${key}`)}</p>
-                        <p className="mt-0.5 line-clamp-2 text-[10px] leading-relaxed text-surface-600 dark:text-surface-400">{t(`createWallet.vanityExtraFilterHint_${key}`)}</p>
+                        <p className="mt-0.5 line-clamp-2 text-scale-2xs leading-relaxed text-surface-600 dark:text-surface-400">{t(`createWallet.vanityExtraFilterHint_${key}`)}</p>
                       </div>
                     </div>
 
-                    <div className="mt-2 rounded-lg border border-cyan-400/20 bg-white/75 px-2 py-1.5 font-mono text-[10px] font-semibold leading-relaxed text-surface-600 shadow-inner dark:border-cyan-400/15 dark:bg-surface-950/70 dark:text-surface-300">
-                      <span className="mb-1 block font-sans text-[9px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{t('createWallet.vanityExtraFilterPreview')}</span>
+                    <div className="mt-2 rounded-lg border border-cyan-400/20 bg-white/75 px-2 py-1.5 font-mono text-scale-2xs font-semibold leading-relaxed text-surface-600 shadow-inner dark:border-cyan-400/15 dark:bg-surface-950/70 dark:text-surface-300">
+                      <span className="mb-1 block font-sans text-scale-3xs font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{t('createWallet.vanityExtraFilterPreview')}</span>
                       <span className="break-all">
                         {preview.segments.map((segment, segmentIndex) => segment.highlight ? (
                           <mark key={`${key}-preview-${segmentIndex}`} className="rounded bg-amber-300/80 px-0.5 font-black text-amber-950 dark:bg-amber-400/80">{segment.text}</mark>
@@ -264,7 +264,7 @@ export function VanityExtraFiltersSection({
 
                     {key !== 'lucky' ? (
                       <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-surface-200 bg-white/70 px-2 py-1.5 dark:border-surface-700 dark:bg-surface-900/70">
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityExtraFilterMin')}</span>
+                        <span className="text-scale-2xs font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityExtraFilterMin')}</span>
                         <div className="inline-flex items-center overflow-hidden rounded-md border border-surface-200 bg-surface-50 focus-within:border-cyan-500 dark:border-surface-700 dark:bg-surface-950">
                           <button
                             type="button"
@@ -289,7 +289,7 @@ export function VanityExtraFiltersSection({
                                 event.currentTarget.blur();
                               }
                             }}
-                            className="h-6 w-9 border-0 bg-transparent px-1 text-center text-[11px] font-extrabold text-surface-950 focus:outline-none disabled:opacity-50 dark:text-white"
+                            className="h-6 w-9 border-0 bg-transparent px-1 text-center text-scale-xs font-extrabold text-surface-950 focus:outline-none disabled:opacity-50 dark:text-white"
                           />
                           <button
                             type="button"

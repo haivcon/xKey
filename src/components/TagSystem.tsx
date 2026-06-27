@@ -1,4 +1,4 @@
-import { useState, useRef, type KeyboardEvent, type MouseEvent } from 'react';
+﻿import { useState, useRef, type KeyboardEvent, type MouseEvent } from 'react';
 import { Tag, X } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { useT } from '../contexts/LanguageContext';
@@ -40,7 +40,7 @@ type TagBadgeProps = {
 export function TagBadge({ tag, onRemove, small = false }: TagBadgeProps) {
   const color = getTagColor(tag);
   return (
-    <span className={`inline-flex items-center gap-1 ${small ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[10px]'} rounded-full font-medium ${color.bg} ${color.text} border ${color.border}`}>
+    <span className={`inline-flex items-center gap-1 ${small ? 'px-1.5 py-0.5 text-scale-3xs' : 'px-2 py-0.5 text-scale-2xs'} rounded-full font-medium ${color.bg} ${color.text} border ${color.border}`}>
       {tag}
       {onRemove && (
         <button onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); onRemove(); }} className="hover:opacity-70">

@@ -1,4 +1,4 @@
-import { AlertTriangle, BrainCircuit, Check, ChevronDown, Copy, Gauge, Maximize2, Pause, Play, RefreshCw, Save, ShieldCheck, Sparkles, Square, Target, Timer, Trash2 } from 'lucide-react';
+﻿import { AlertTriangle, BrainCircuit, Check, ChevronDown, Copy, Gauge, Maximize2, Pause, Play, RefreshCw, Save, ShieldCheck, Sparkles, Square, Target, Timer, Trash2 } from 'lucide-react';
 import { formatCompactNumber, formatVanitySeconds } from '../../formatters';
 import { VanityExtraWalletCard } from './VanityExtraWalletCard';
 import type { VanityTabProps } from './VanityTabContent';
@@ -61,7 +61,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-surface-950 dark:text-white">{vanityPaused ? t('createWallet.vanityPaused') : t('createWallet.vanityGeneratingCount', { current: generatedWallets.length, total: vanitySafeTargetCount })}</p>
-              <p className="mt-0.5 text-[11px] text-surface-600 dark:text-surface-400">{vanityPrefixClean || vanitySuffixClean ? `0x${vanityPrefixClean}...${vanitySuffixClean}` : t('createWallet.vanityScanning')}</p>
+              <p className="mt-0.5 text-scale-xs text-surface-600 dark:text-surface-400">{vanityPrefixClean || vanitySuffixClean ? `0x${vanityPrefixClean}...${vanitySuffixClean}` : t('createWallet.vanityScanning')}</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -95,7 +95,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
                   <div key={stat.label} className="flex min-w-0 items-center gap-2 rounded-xl border border-surface-200 bg-white/85 px-2 py-2 shadow-sm shadow-surface-900/5 dark:border-surface-700/70 dark:bg-surface-950/70">
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border ${stat.tone}`}><Icon size={13} /></span>
                     <span className="min-w-0">
-                      <p className="truncate text-[9px] font-bold uppercase tracking-wide text-surface-500">{stat.label}</p>
+                      <p className="truncate text-scale-3xs font-bold uppercase tracking-wide text-surface-500">{stat.label}</p>
                       <p className="truncate font-mono text-xs font-extrabold text-surface-950 dark:text-white">{stat.value}</p>
                     </span>
                   </div>
@@ -103,7 +103,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
               })}
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-orange-300/40 bg-gradient-to-r from-orange-50 to-amber-50/50 px-2.5 py-2 text-[10px] font-bold text-orange-800 shadow-sm shadow-orange-900/5 dark:border-orange-500/25 dark:from-orange-500/10 dark:to-amber-500/5 dark:text-orange-100">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-orange-300/40 bg-gradient-to-r from-orange-50 to-amber-50/50 px-2.5 py-2 text-scale-2xs font-bold text-orange-800 shadow-sm shadow-orange-900/5 dark:border-orange-500/25 dark:from-orange-500/10 dark:to-amber-500/5 dark:text-orange-100">
               <span className="flex h-5 w-5 items-center justify-center rounded-md border border-orange-400/25 bg-orange-500/15 text-orange-600 dark:text-orange-300"><ShieldCheck size={12} /></span>
               <span className="uppercase">{vanityPerformanceMode}</span>
               <span className="text-orange-500/60">·</span>
@@ -116,9 +116,9 @@ export function VanityRunningPanel(props: VanityTabProps) {
               <span>{t('createWallet.vanityExtra', { current: vanityExtraWallets.length, total: vanitySafeExtraLimit })}</span>
             </div>
 
-            <div className="mt-2 overflow-hidden rounded-xl border border-surface-200 bg-surface-50/85 font-mono text-[11px] shadow-inner shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-950/90 dark:shadow-black/20">
+            <div className="mt-2 overflow-hidden rounded-xl border border-surface-200 bg-surface-50/85 font-mono text-scale-xs shadow-inner shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-950/90 dark:shadow-black/20">
               <div className="flex items-center justify-between border-b border-surface-200/70 px-2.5 py-1.5 text-surface-500 dark:border-surface-700/70 dark:text-surface-400">
-                <span className="inline-flex items-center gap-1.5 font-sans text-[10px] font-bold uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 font-sans text-scale-2xs font-bold uppercase tracking-wide">
                   <Gauge size={12} />
                   {t('createWallet.vanityTerminal')}
                 </span>
@@ -130,7 +130,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
                   return (
                     <div key={`${candidate.address}-${index}`} className={`flex min-w-0 items-center gap-1.5 rounded-lg border px-1.5 py-1 ${candidate.matched ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-surface-200/70 bg-white/55 text-surface-600 dark:border-surface-800 dark:bg-surface-900/60 dark:text-surface-400'}`}>
                       {candidate.matched ? <Sparkles size={11} className="shrink-0" /> : <Gauge size={11} className="shrink-0" />}
-                      <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-[10px] leading-tight">{renderVanityAddress(candidate.address, true)}</span>
+                      <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-scale-2xs leading-tight">{renderVanityAddress(candidate.address, true)}</span>
                       <button type="button" onClick={() => handleCopy(candidate.address, copyKey)} className="shrink-0 rounded p-0.5 text-surface-500 transition-colors hover:bg-surface-200 hover:text-surface-950 dark:hover:bg-surface-800 dark:hover:text-white" aria-label={t('common.copy')}>{copiedField === copyKey ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}</button>
                     </div>
                   );
@@ -138,13 +138,13 @@ export function VanityRunningPanel(props: VanityTabProps) {
               </div>
             </div>
 
-            <details className="group mt-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700/80 transition-colors open:bg-amber-500/10 dark:text-amber-200/80">
+            <details className="group mt-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-scale-xs text-amber-700/80 transition-colors open:bg-amber-500/10 dark:text-amber-200/80">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-bold text-amber-700 dark:text-amber-300">
                 <span className="inline-flex min-w-0 items-center gap-1.5">
                   <AlertTriangle size={13} className="shrink-0 animate-pulse text-amber-500" />
                   <span className="truncate">{t('createWallet.vanityNoticeTitle')}</span>
                 </span>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-amber-700 transition-colors group-open:bg-amber-500/20 dark:text-amber-200">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-scale-2xs font-extrabold uppercase text-amber-700 transition-colors group-open:bg-amber-500/20 dark:text-amber-200">
                   <ChevronDown size={12} className="transition-transform group-open:rotate-180" />
                   {t('common.expandDetails')}
                 </span>
@@ -170,30 +170,30 @@ export function VanityRunningPanel(props: VanityTabProps) {
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-bold text-emerald-800 dark:text-emerald-100">{t('createWallet.vanityPrimaryMatches')}</p>
-                <p className="mt-0.5 truncate text-[10px] text-emerald-700/75 dark:text-emerald-100/55">{vanityPrefixClean || vanitySuffixClean ? `0x${vanityPrefixClean}...${vanitySuffixClean}` : t('createWallet.vanityScanning')}</p>
+                <p className="mt-0.5 truncate text-scale-2xs text-emerald-700/75 dark:text-emerald-100/55">{vanityPrefixClean || vanitySuffixClean ? `0x${vanityPrefixClean}...${vanitySuffixClean}` : t('createWallet.vanityScanning')}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
-              <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-100">{generatedWallets.length}/{vanitySafeTargetCount}</span>
+              <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-scale-2xs font-bold text-emerald-700 dark:text-emerald-100">{generatedWallets.length}/{vanitySafeTargetCount}</span>
               <ChevronDown size={14} className={`text-emerald-600 dark:text-emerald-400 transition-transform ${vanityExpandedSections.primary ? 'rotate-180' : ''}`} />
             </div>
           </button>
         </div>
         {vanityExpandedSections.primary && (
           <div className="max-h-80 space-y-1 overflow-y-auto p-1.5">
-            {generatedWallets.length === 0 ? <p className="px-2 py-3 text-center text-[11px] text-emerald-600/70 dark:text-emerald-200/50">{t('createWallet.vanityScanning')}</p> : generatedWallets.map((wallet, index) => {
+            {generatedWallets.length === 0 ? <p className="px-2 py-3 text-center text-scale-xs text-emerald-600/70 dark:text-emerald-200/50">{t('createWallet.vanityScanning')}</p> : generatedWallets.map((wallet, index) => {
               const address = wallet.address || '';
               const selected = selectedVanityAddresses.includes(address);
               const saved = !!address && vanitySavedRef.current.has(address);
               return <div key={address || index} className={`rounded-xl border p-2 transition-all ${selected ? 'border-emerald-400/60 bg-emerald-100/80 shadow-sm shadow-emerald-900/5 dark:bg-emerald-500/15 dark:shadow-emerald-950/20' : 'border-surface-200 bg-surface-50/90 hover:border-emerald-300 hover:bg-emerald-50/70 dark:border-surface-700/80 dark:bg-surface-900/80 dark:hover:border-emerald-500/35 dark:hover:bg-surface-900'}`}>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                   <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 items-start gap-2 overflow-hidden text-left" aria-pressed={selected}>
-                    <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${selected ? 'bg-emerald-500 text-white shadow shadow-emerald-500/25' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>{index + 1}</span>
+                    <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-scale-2xs font-bold transition-colors ${selected ? 'bg-emerald-500 text-white shadow shadow-emerald-500/25' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>{index + 1}</span>
                     <span className="block min-w-0 overflow-hidden">
                       <code className="block min-w-0 max-w-full overflow-hidden whitespace-nowrap font-mono text-[clamp(0.62rem,2.6vw,0.75rem)] font-bold leading-snug tracking-tight text-surface-950 dark:text-white">
                         {renderVanityAddress(address, true)}
                       </code>
-                      <span className="mt-1 flex flex-wrap items-center gap-1 text-[9px] font-semibold text-emerald-700/80 dark:text-emerald-100/75">
+                      <span className="mt-1 flex flex-wrap items-center gap-1 text-scale-3xs font-semibold text-emerald-700/80 dark:text-emerald-100/75">
                         <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-1.5 py-0.5">{t('createWallet.vanityExtraTypePrimary')}</span>
                         {saved && <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-700 shadow-sm dark:text-emerald-200">{t('createWallet.vanityExtraSaved')}</span>}
                       </span>
@@ -227,20 +227,20 @@ export function VanityRunningPanel(props: VanityTabProps) {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-bold text-cyan-800 dark:text-cyan-100">{t('createWallet.vanityExtraKept')}</p>
-                  <p className="mt-0.5 truncate text-[10px] text-cyan-700/75 dark:text-cyan-100/55">{t('createWallet.vanityExtraAutoReplaceHint')}</p>
+                  <p className="mt-0.5 truncate text-scale-2xs text-cyan-700/75 dark:text-cyan-100/55">{t('createWallet.vanityExtraAutoReplaceHint')}</p>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
-                <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-100">{vanityExtraWallets.length}/{vanitySafeExtraLimit}</span>
+                <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-2 py-0.5 text-scale-2xs font-bold text-cyan-700 dark:text-cyan-100">{vanityExtraWallets.length}/{vanitySafeExtraLimit}</span>
                 <ChevronDown size={14} className={`text-cyan-600 dark:text-cyan-400 transition-transform ${vanityExpandedSections.extra ? 'rotate-180' : ''}`} />
               </div>
             </button>
             {vanityExpandedSections.extra && (
               <div className="mt-2 flex items-center justify-end gap-1.5">
-                <button type="button" disabled={vanityExtraWallets.length === 0} onClick={saveAllVanityExtraWallets} className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-200">
+                <button type="button" disabled={vanityExtraWallets.length === 0} onClick={saveAllVanityExtraWallets} className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-scale-2xs font-bold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-200">
                   {t('createWallet.vanityExtraSaveAll')}
                 </button>
-                <button type="button" disabled={vanityExtraWallets.length === 0} onClick={clearVanityExtraWallets} className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold text-rose-700 shadow-sm transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-200">
+                <button type="button" disabled={vanityExtraWallets.length === 0} onClick={clearVanityExtraWallets} className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-scale-2xs font-bold text-rose-700 shadow-sm transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-200">
                   {t('createWallet.vanityExtraClearAll')}
                 </button>
               </div>
@@ -248,7 +248,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
           </div>
           {vanityExpandedSections.extra && (
             <div className="max-h-80 space-y-1 overflow-y-auto p-1.5">
-              {vanityExtraWallets.length === 0 ? <p className="px-2 py-3 text-center text-[11px] text-cyan-600/70 dark:text-cyan-200/50">{t('createWallet.vanityExtraEmpty')}</p> : vanityExtraWallets.map((wallet, index) => {
+              {vanityExtraWallets.length === 0 ? <p className="px-2 py-3 text-center text-scale-xs text-cyan-600/70 dark:text-cyan-200/50">{t('createWallet.vanityExtraEmpty')}</p> : vanityExtraWallets.map((wallet, index) => {
                 const address = wallet.address || '';
                 return (
                   <VanityExtraWalletCard
@@ -274,7 +274,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
         </section>
       )}
 
-      <p className="px-1 text-[11px] leading-relaxed text-surface-600 dark:text-surface-500">{t('createWallet.vanityAutoLockPaused')}</p>
+      <p className="px-1 text-scale-xs leading-relaxed text-surface-600 dark:text-surface-500">{t('createWallet.vanityAutoLockPaused')}</p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         {vanityPaused ? (
           <>

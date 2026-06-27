@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Fingerprint, Dices, Share2, RefreshCw, Check } from 'lucide-react';
 import EntropyCanvas from './EntropyCanvas';
 import DiceEntropyInput from './DiceEntropyInput';
@@ -75,7 +75,7 @@ export default function AdvancedEntropyPanel({ onGenerated }: AdvancedEntropyPan
           <div className="rounded-lg border border-emerald-500/20 bg-white/80 p-3 dark:bg-surface-950">
             <div className="grid grid-cols-3 gap-2">
               {seedPhrase.split(' ').map((word, i) => (
-                <span key={i} className="rounded bg-emerald-500/10 px-1 py-1 text-center text-[10px] text-surface-800 truncate dark:text-surface-200">
+                <span key={i} className="rounded bg-emerald-500/10 px-1 py-1 text-center text-scale-2xs text-surface-800 truncate dark:text-surface-200">
                   <span className="text-emerald-600/70 dark:text-emerald-400/60 mr-1">{i + 1}.</span>{word}
                 </span>
               ))}

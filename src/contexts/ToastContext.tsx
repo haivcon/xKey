@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 import { CheckCircle2, XCircle, AlertTriangle, Info, X, type LucideIcon } from 'lucide-react';
 import { logActionHistory } from '../utils/actionHistory';
 import { useT, type TranslationVars } from './LanguageContext';
+import { XKEY_SLOGAN } from '../utils/branding';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 type ToastAction = {
@@ -87,11 +88,23 @@ const normalizeToastType = (type: ToastType | string | undefined): ToastType => 
   type && Object.prototype.hasOwnProperty.call(TOAST_STYLES, type) ? type as ToastType : 'info'
 );
 
-const formatToastMessage = (message: unknown): { title: string; address: string } => {
-  const raw = String(message ?? '').replace(/\s+/g, ' ').trim();
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const splitSloganMessage = (message: unknown): { slogan: string; body: string } => {
+  const raw = String(message ?? '').replace(/\r\n/g, '\n').trim();
+  const sloganPattern = new RegExp(`^${escapeRegExp(XKEY_SLOGAN)}(?:\\s*\\n\\s*|\\s{2,}|\\s*[-–—:]\\s*)?`, 'i');
+  if (!sloganPattern.test(raw)) return { slogan: '', body: raw.replace(/\s+/g, ' ').trim() };
+
+  const body = raw.replace(sloganPattern, '').replace(/\s+/g, ' ').trim();
+  return { slogan: XKEY_SLOGAN, body };
+};
+
+const formatToastMessage = (message: unknown): { title: string; address: string; slogan: string } => {
+  const sloganMessage = splitSloganMessage(message);
+  const raw = sloganMessage.body || String(message ?? '').replace(/\s+/g, ' ').trim();
   const address = raw.match(ADDRESS_PATTERN)?.[1] || '';
   const looksLikeCopy = COPY_WORDS.some(word => raw.toLowerCase().includes(word));
-  if (!address || !looksLikeCopy) return { title: raw, address: '' };
+  if (!address || !looksLikeCopy) return { title: raw, address: '', slogan: sloganMessage.slogan };
 
   const title = raw
     .replace(address, '')
@@ -99,7 +112,7 @@ const formatToastMessage = (message: unknown): { title: string; address: string 
     .replace(/\s+/g, ' ')
     .trim();
 
-  return { title: title || raw, address };
+  return { title: title || raw, address, slogan: sloganMessage.slogan };
 };
 
 const getToastDuration = (type: ToastType, duration: number | undefined, message: unknown): number => {
@@ -162,39 +175,51 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
         ${exiting ? 'animate-toast-exit' : 'animate-toast-enter'}`}
       style={{ width: 'min(420px, calc(100vw - 28px))', fontSize: 'calc(1rem * var(--app-display-scale, 1))' }}
     >
-      <div className="flex items-center gap-2.5 px-3 py-2.5 text-center sm:gap-3 sm:px-4">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2.5 px-3 py-2.5 text-center sm:gap-3 sm:px-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
           <Icon size={17} className={style.icon} />
         </div>
         {formatted.address ? (
-          <div className={`min-w-0 flex-1 overflow-hidden text-center ${style.text}`}>
+          <div className={`min-w-0 overflow-hidden text-center ${style.text}`}>
+            {formatted.slogan && (
+              <p className="mb-1 truncate text-[0.66em] font-black uppercase tracking-[0.14em] leading-tight text-white/90">
+                {formatted.slogan}
+              </p>
+            )}
             <p className="truncate text-[0.82em] font-semibold leading-tight">{formatted.title}</p>
             <p className="mt-0.5 whitespace-nowrap font-mono font-bold leading-tight text-[clamp(0.56rem,2.55vw,0.78rem)]">
               {formatted.address}
             </p>
           </div>
         ) : (
-          <p className={`min-w-0 flex-1 overflow-hidden break-words text-center text-[0.82em] font-semibold leading-snug ${style.text}`}
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}
-          >
-            {messageText}
-          </p>
+          <div className={`min-w-0 overflow-hidden text-center ${style.text}`}>
+            {formatted.slogan && (
+              <p className="mb-1 text-[0.66em] font-black uppercase tracking-[0.14em] leading-tight text-white/90">
+                {formatted.slogan}
+              </p>
+            )}
+            <p className="mx-auto overflow-hidden break-words text-center text-[0.82em] font-semibold leading-snug"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: formatted.slogan ? 2 : 3,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {formatted.title || messageText}
+            </p>
+          </div>
         )}
         {toast.action ? (
           <button
             onClick={handleAction}
-            className="flex-shrink-0 rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-[0.72em] font-bold text-white transition-colors hover:bg-white/15"
+            className="justify-self-end rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-[0.72em] font-bold text-white transition-colors hover:bg-white/15"
           >
             {toast.action.label}
           </button>
         ) : (
           <button
             onClick={handleDismiss}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+            className="flex h-8 w-8 items-center justify-center justify-self-end rounded-full transition-colors hover:bg-white/10"
           >
             <X size={14} className="text-white/40" />
           </button>

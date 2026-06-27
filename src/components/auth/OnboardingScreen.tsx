@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ShieldCheck, Lock, Download, ChevronRight } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
@@ -65,7 +65,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     <div className="min-h-screen bg-surface-900 flex flex-col items-center justify-center p-6">
       {/* Logo */}
       <img src="/logo.png" alt="xKey" className="w-20 h-20 rounded-2xl logo-animated mb-8" />
-      <p className="mb-5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-brand-300">
+      <p className="mb-5 text-center text-scale-xs font-bold uppercase tracking-[0.18em] text-brand-300">
         {XKEY_SLOGAN}
       </p>
 

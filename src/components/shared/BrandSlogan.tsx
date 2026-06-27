@@ -1,4 +1,4 @@
-import { XKEY_SLOGAN } from '../../utils/branding';
+﻿import { XKEY_SLOGAN } from '../../utils/branding';
 
 type BrandSloganTone = 'brand' | 'success' | 'warning' | 'danger' | 'subtle';
 
@@ -19,7 +19,7 @@ const toneClasses: Record<BrandSloganTone, string> = {
 };
 
 export default function BrandSlogan({ note, tone = 'brand', compact = false, large = false, className = '' }: BrandSloganProps) {
-  const sloganSize = large ? 'text-base sm:text-lg' : compact ? 'text-[10px]' : 'text-[11px]';
+  const sloganSize = large ? 'text-base sm:text-lg' : compact ? 'text-scale-2xs' : 'text-scale-xs';
   const noteSize = large ? 'text-sm sm:text-base' : 'text-xs';
 
   return (

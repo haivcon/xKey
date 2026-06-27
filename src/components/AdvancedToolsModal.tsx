@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
+﻿import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import Papa from 'papaparse';
 import { getAddress } from 'ethers';
@@ -477,7 +477,7 @@ export default function AdvancedToolsModal({
                       <Icon size={15} className="lg:h-[17px] lg:w-[17px]" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[11px] font-semibold leading-tight sm:text-xs lg:text-sm">{t(`advancedTools.section_${section.key}`)}</span>
+                      <span className="block text-scale-xs font-semibold leading-tight sm:text-xs lg:text-sm">{t(`advancedTools.section_${section.key}`)}</span>
                       <span className="mt-1 hidden text-xs leading-snug opacity-75 lg:block">{t(`advancedTools.section_${section.key}Desc`)}</span>
                     </span>
                   </button>
@@ -502,7 +502,7 @@ function SectionHeading({ title, text }: { title: string; text: string }) {
   return (
     <div className="mb-2">
       <h4 className="text-sm font-semibold text-white">{title}</h4>
-      <p className="text-[11px] leading-relaxed text-surface-500 sm:text-xs">{text}</p>
+      <p className="text-scale-xs leading-relaxed text-surface-500 sm:text-xs">{text}</p>
     </div>
   );
 }
@@ -512,7 +512,7 @@ function Stats({ rows, compact }: { rows: [string, number][]; compact?: boolean 
     <div className="grid gap-2 sm:grid-cols-2">
       {rows.map(([label, value]) => (
         <div key={label} className={`rounded-lg border border-surface-700 bg-surface-900 ${compact ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4'}`}>
-          <div className="text-[11px] text-surface-500 sm:text-xs">{label}</div>
+          <div className="text-scale-xs text-surface-500 sm:text-xs">{label}</div>
           <div className={`mt-1 font-bold text-white ${compact ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>{value}</div>
         </div>
       ))}

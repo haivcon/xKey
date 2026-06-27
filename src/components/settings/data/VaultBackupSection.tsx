@@ -1,4 +1,4 @@
-import { Download, Lock, ShieldAlert, ShieldCheck, QrCode, Camera } from 'lucide-react';
+﻿import { Download, Lock, ShieldAlert, ShieldCheck, QrCode, Camera } from 'lucide-react';
 import PasswordInput from '../../shared/PasswordInput';
 import Notice from '../../shared/Notice';
 import { hapticTap } from '../../../utils/haptics';
@@ -57,7 +57,7 @@ export function VaultBackupSection({
           <ShieldCheck size={16} className="text-emerald-400" />
         </div>
         <div className="mx-auto max-w-2xl">
-          {brandReminders && <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>}
+          {brandReminders && <p className="text-scale-xs font-bold uppercase tracking-[0.14em] text-emerald-300">{XKEY_SLOGAN}</p>}
           <p className={`${brandReminders ? 'mt-1' : ''} text-xs text-surface-300 leading-relaxed`}>{t('settings.backupInfo')}</p>
         </div>
       </div>

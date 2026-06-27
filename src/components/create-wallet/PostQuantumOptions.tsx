@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import { Check, ChevronDown, Info, ShieldCheck } from 'lucide-react';
 import type { TranslationFn } from '../../contexts/LanguageContext';
 
@@ -31,12 +31,12 @@ export function PostQuantumOptions({
           <ShieldCheck size={18} className={`shrink-0 ${postQuantumMode ? 'text-emerald-500 dark:text-emerald-400' : 'text-surface-400'}`} />
           <div className="flex flex-col flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-[11px] font-semibold text-surface-900 dark:text-white truncate">{t('keyHealth.pqCreateTitle')}</h3>
-              <span className="shrink-0 rounded bg-brand-500/10 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-300">
+              <h3 className="text-scale-xs font-semibold text-surface-900 dark:text-white truncate">{t('keyHealth.pqCreateTitle')}</h3>
+              <span className="shrink-0 rounded bg-brand-500/10 px-1 py-0.5 text-scale-3xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-300">
                 {t('keyHealth.pqAdvancedBadge')}
               </span>
             </div>
-            <p className="text-[9px] text-surface-500 dark:text-surface-400 mt-0.5 truncate">{t('keyHealth.pqCreateDesc')}</p>
+            <p className="text-scale-3xs text-surface-500 dark:text-surface-400 mt-0.5 truncate">{t('keyHealth.pqCreateDesc')}</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function PostQuantumOptions({
         <div className="px-2.5 pb-2.5">
           <div className="space-y-2.5 pt-2.5 border-t border-surface-200 dark:border-surface-700/50">
             <div className="flex flex-col">
-              <div className="mb-1.5 text-[9px] font-bold text-surface-600 dark:text-surface-400">
+              <div className="mb-1.5 text-scale-3xs font-bold text-surface-600 dark:text-surface-400">
                 {t('keyHealth.rotationCadence')}
               </div>
               <div className="flex flex-col sm:flex-row gap-1.5 w-full">
@@ -84,9 +84,9 @@ export function PostQuantumOptions({
                         <span className={`flex h-2.5 w-2.5 shrink-0 items-center justify-center rounded-full border ${active ? 'border-brand-500 bg-brand-500 text-white' : 'border-surface-300 dark:border-surface-600'}`}>
                           {active && <Check size={6} />}
                         </span>
-                        <span className="text-[10px] font-bold">{option.label}</span>
+                        <span className="text-scale-2xs font-bold">{option.label}</span>
                       </div>
-                      <span className="text-[8px] leading-snug opacity-80 pl-3.5 text-left">{option.desc}</span>
+                      <span className="text-scale-3xs leading-snug opacity-80 pl-3.5 text-left">{option.desc}</span>
                     </button>
                   );
                 })}
@@ -94,7 +94,7 @@ export function PostQuantumOptions({
             </div>
 
             {postQuantumMode && (
-              <div className="rounded border border-emerald-500/20 bg-emerald-500/10 p-1.5 text-[9px] leading-relaxed text-emerald-800 dark:text-emerald-200 w-full flex items-start gap-1">
+              <div className="rounded border border-emerald-500/20 bg-emerald-500/10 p-1.5 text-scale-3xs leading-relaxed text-emerald-800 dark:text-emerald-200 w-full flex items-start gap-1">
                 <Info size={10} className="shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                 <span>{t('keyHealth.pqBetaWarning')}</span>
               </div>

@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+﻿import type { Dispatch, SetStateAction } from 'react';
 import { ChevronDown, Copy, Folder, Tag, Wallet } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { InlineSelect } from '../../components';
@@ -56,7 +56,7 @@ export function VanityStorageSection({
           <span className="shrink-0 text-sm font-bold text-surface-950 dark:text-white">{t('createWallet.vanityStorage')}</span>
         </div>
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
-          <span className="vanity-summary-pill min-w-0 truncate rounded-full border border-surface-200 bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-surface-600 dark:border-surface-700 dark:bg-surface-950/40 dark:text-surface-300">
+          <span className="vanity-summary-pill min-w-0 truncate rounded-full border border-surface-200 bg-white/80 px-2 py-0.5 text-scale-xs font-semibold text-surface-600 dark:border-surface-700 dark:bg-surface-950/40 dark:text-surface-300">
             {vanityStorageSummary}
           </span>
           <ChevronDown size={16} className={`shrink-0 text-surface-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -85,7 +85,7 @@ export function VanityStorageSection({
                 onBlur={() => setVanityTargetCount(vanitySafeTargetCount)}
                 className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm font-semibold text-surface-950 focus:border-brand-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900 dark:text-white"
               />
-              <p className="mt-1 text-[11px] text-surface-500">{t('createWallet.vanityQuantityHint')}</p>
+              <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanityQuantityHint')}</p>
             </div>
 
             <div>
@@ -110,7 +110,7 @@ export function VanityStorageSection({
                 onChange={setVanityFolder}
                 options={vanityFolderOptions}
               />
-              <p className="mt-1 text-[11px] text-surface-500">{t('createWallet.vanityFolderHint')}</p>
+              <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanityFolderHint')}</p>
             </div>
           </div>
 

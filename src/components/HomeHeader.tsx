@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+﻿import type { RefObject } from 'react';
 import { Bell, Heart, Settings } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { XKEY_SLOGAN } from '../utils/branding';
@@ -78,7 +78,7 @@ export default function HomeHeader({
             >
               <Bell size={20} />
               {keyHealthAttentionCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-surface-900 bg-red-500 px-1 text-[9px] font-black leading-none text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-surface-900 bg-red-500 px-1 text-scale-3xs font-black leading-none text-white">
                   {Math.min(9, keyHealthAttentionCount)}
                 </span>
               )}

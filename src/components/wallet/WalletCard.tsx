@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
+﻿import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
 import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck } from 'lucide-react';
 import { useT } from '../../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../../utils/haptics';
@@ -344,7 +344,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             </p>
             <div className="mt-0.5 flex min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
               {wallet.createdAt && (
-                <span className={`inline-flex min-w-0 max-w-full items-center gap-1 whitespace-nowrap text-[9px] leading-none ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
+                <span className={`inline-flex min-w-0 max-w-full items-center gap-1 whitespace-nowrap text-scale-3xs leading-none ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
                   <span className="shrink-0 opacity-75">{t('keyHealth.age')}:</span>
                   <span className="min-w-0 truncate font-medium">{formatKeyAge(wallet.createdAt, nowTick)}</span>
                 </span>
@@ -360,7 +360,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 {visibleTags.slice(0, 3).map(tag => (
                   <TagBadge key={tag} tag={tag} small />
                 ))}
-                {visibleTags.length > 3 && <span className="text-[9px] text-surface-500">+{visibleTags.length - 3}</span>}
+                {visibleTags.length > 3 && <span className="text-scale-3xs text-surface-500">+{visibleTags.length - 3}</span>}
               </div>
             )}
           </div>
@@ -493,7 +493,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 flex items-center gap-2">
                     {t('walletCard.privateKey')}
-                    {showPk && <span className="text-yellow-500/70 text-[10px] normal-case">{t('walletCard.autoHide')}</span>}
+                    {showPk && <span className="text-yellow-500/70 text-scale-2xs normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
                     {showPk && secureDisplay.enabled ? (
@@ -509,7 +509,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                       {copiedField === 'pk' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                     </button>
                   </div>
-                  <p className="text-[10px] text-red-400/60 mt-1">{t('walletCard.pkWarning')}</p>
+                  <p className="text-scale-2xs text-red-400/60 mt-1">{t('walletCard.pkWarning')}</p>
                 </div>
               )}
 
@@ -517,7 +517,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <div>
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 flex items-center gap-2">
                     {t('walletCard.seedPhrase')}
-                    {showSeed && <span className="text-yellow-500/70 text-[10px] normal-case">{t('walletCard.autoHide')}</span>}
+                    {showSeed && <span className="text-yellow-500/70 text-scale-2xs normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
                     {showSeed && secureDisplay.enabled ? (

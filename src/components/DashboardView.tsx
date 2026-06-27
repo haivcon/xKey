@@ -1,4 +1,4 @@
-import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
+﻿import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { formatAssetValue, parseAmount } from '../utils/amountFormat';
 import type { Wallet as WalletType } from '../types';
@@ -188,11 +188,11 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                     <div className="flex items-end gap-2 h-32">
                         {timeline.map((day, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                                <span className="text-[10px] text-surface-500">{day.count || ''}</span>
+                                <span className="text-scale-2xs text-surface-500">{day.count || ''}</span>
                                 <div className="w-full rounded-t-md bg-brand-500/20 relative overflow-hidden" style={{ height: `${Math.max((day.count / maxTimeline) * 100, 4)}%` }}>
                                     <div className="absolute inset-0 bg-gradient-to-t from-brand-500 to-brand-400 opacity-80 rounded-t-md" />
                                 </div>
-                                <span className="text-[10px] text-surface-500">{day.label}</span>
+                                <span className="text-scale-2xs text-surface-500">{day.label}</span>
                             </div>
                         ))}
                     </div>
