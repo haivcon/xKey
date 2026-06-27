@@ -955,31 +955,21 @@ html {
 }
 
 .home-header-logo {
-  width: clamp(1.625rem, 7.8vw, 2.25rem);
-  height: clamp(1.625rem, 7.8vw, 2.25rem);
+  width: clamp(1.5rem, 7.2vw, 2.25rem);
+  height: clamp(1.5rem, 7.2vw, 2.25rem);
 }
 
 .home-header-title {
-  font-size: clamp(1rem, 4.8vw, 1.25rem);
-}
-
-.home-header-version {
-  align-self: flex-start;
-  margin-top: 0.16em;
-  font-size: clamp(0.22rem, 0.85vw, 0.31rem);
-  letter-spacing: -0.03em;
-  opacity: 0.82;
+  font-size: clamp(1rem, 4.5vw, 1.25rem);
 }
 
 .home-header-slogan {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   max-width: 100%;
-  overflow: hidden;
   white-space: nowrap;
   color: #38bdf8;
-  transform: scaleX(clamp(0.52, calc(0.42 + 0.11vw), 0.78));
-  transform-origin: center;
-  text-overflow: clip;
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.32), 0 0 18px rgba(16, 185, 129, 0.14);
   animation: home-slogan-glow 3.8s ease-in-out infinite;
 }
@@ -987,17 +977,29 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.24rem, 1.08vw, 0.39rem);
+  font-size: clamp(0.26rem, 1.18vw, 0.43rem);
   font-weight: 900;
   line-height: 1;
-  letter-spacing: clamp(0.01em, 0.25vw, 0.06em);
+  letter-spacing: clamp(0.004em, 0.16vw, 0.045em);
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
 }
 
 .home-header-slogan-space {
-  width: clamp(0.12em, 0.55vw, 0.24em);
+  width: clamp(0.1em, 0.42vw, 0.2em);
+}
+
+@media (max-width: 360px) {
+  .home-header-slogan-letter,
+  .home-header-slogan-space {
+    font-size: clamp(0.22rem, 1.05vw, 0.31rem);
+    letter-spacing: 0;
+  }
+
+  .home-header-slogan-space {
+    width: 0.08em;
+  }
 }
 
 @media (min-width: 768px) {
@@ -1010,18 +1012,10 @@ html {
     font-size: clamp(1.125rem, 1.8vw, 1.25rem);
   }
 
-  .home-header-version {
-    font-size: clamp(0.25rem, 0.36vw, 0.31rem);
-  }
-
-  .home-header-slogan {
-    transform: scaleX(0.78);
-  }
-
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(0.34rem, 0.5vw, 0.39rem);
-    letter-spacing: 0.055em;
+    font-size: clamp(0.36rem, 0.56vw, 0.44rem);
+    letter-spacing: 0.04em;
   }
 }
 

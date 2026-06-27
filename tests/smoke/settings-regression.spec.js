@@ -100,14 +100,14 @@ test('folder actions menu uses fixed portal rendering', async () => {
   expect(folderTabs).toContain('onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}');
 });
 
-test('home header keeps xKey brand literal across all languages', async () => {
+test('home header keeps xKey brand literal across all languages without version clutter', async () => {
   const headerSource = await readSource('src/components/HomeHeader.tsx');
 
   expect(headerSource).toContain('<h1 className="home-header-title');
   expect(headerSource).toContain('xKey');
   expect(headerSource).not.toContain("t('home.title')");
-  expect(headerSource).toContain('home-header-version');
-  expect(headerSource).toContain('{version}');
+  expect(headerSource).not.toContain('home-header-version');
+  expect(headerSource).not.toContain('{version}');
 });
 
 test('audit log tab and tamper-evident backup preview are wired into settings and import flow', async () => {

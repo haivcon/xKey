@@ -404,7 +404,6 @@ export default function App() {
 
         <HomeHeader
           headerRef={homeHeaderRef}
-          version={appVersion.version}
           brandReminders={brandReminders}
           keyHealthAttentionCount={keyHealthAttentionCount}
           t={t}

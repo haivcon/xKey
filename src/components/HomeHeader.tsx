@@ -7,7 +7,6 @@ import type { TranslationFn } from '../contexts/LanguageContext';
 
 type HomeHeaderProps = {
   headerRef: RefObject<HTMLElement | null>;
-  version: string;
   brandReminders: boolean;
   keyHealthAttentionCount: number;
   t: TranslationFn;
@@ -18,7 +17,6 @@ type HomeHeaderProps = {
 
 export default function HomeHeader({
   headerRef,
-  version,
   brandReminders,
   keyHealthAttentionCount,
   t,
@@ -50,18 +48,15 @@ export default function HomeHeader({
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-[clamp(0.25rem,1.8vw,0.5rem)]">
           <div className="flex min-w-0 items-center gap-[clamp(0.25rem,1.5vw,0.5rem)]">
             <img src="/logo.png" alt="xKey" className="home-header-logo rounded-lg logo-animated" />
-            <div className="flex min-w-0 items-baseline gap-[clamp(0.125rem,0.8vw,0.25rem)]">
+            <div className="flex min-w-0 items-baseline">
               <h1 className="home-header-title font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 leading-tight">
                 xKey
               </h1>
-              <span className="home-header-version shrink-0 font-semibold leading-none text-surface-400">
-                {version}
-              </span>
             </div>
           </div>
-          <div className="pointer-events-none min-w-0 max-w-[42vw] overflow-hidden justify-self-center text-center sm:max-w-[48vw] md:max-w-[52vw]" aria-label={XKEY_SLOGAN}>
+          <div className="pointer-events-none min-w-0 w-full max-w-[50vw] justify-self-center text-center sm:max-w-[54vw] md:max-w-[56vw]" aria-label={XKEY_SLOGAN}>
             {brandReminders && (
-              <div className="home-header-slogan whitespace-nowrap text-center">
+              <div className="home-header-slogan text-center">
                 {HEADER_SLOGAN_LETTERS.map((letter, index) => (
                   <span
                     key={`${letter}-${index}`}
