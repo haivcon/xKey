@@ -34,15 +34,15 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.21.4
+## Current Release Security Notes: v5.21.5
 
-v5.21.4 focuses on critical security tab fixes, addressing UI logic bugs that previously locked out features or behaved unexpectedly during configuration.
+v5.21.5 is an Android UI hotfix release for the header slogan layout on high-DPI and narrow mobile viewports while retaining the security fixes from v5.21.4.
 
 Security-relevant changes include:
 
-- Biometric UI fix: Security settings (PIN, Kill Switch, Decoy Vault, Shake-to-lock) are no longer hidden on devices with biometrics.
-- Device Integrity and Screen Capture: Added proper busy-state guards and unsupported-environment checks.
-- Android metadata is updated to `versionCode 89` and `versionName 5.21.4`.
+- Header slogan layout is guarded against clipping/overlap on Android devices around 360–480 CSS px wide.
+- Responsive visual/layout Playwright coverage was added for common Android viewport widths, including Samsung S20 Ultra class sizing.
+- Android metadata is updated to `versionCode 90` and `versionName 5.21.5`.
 
 ---
 

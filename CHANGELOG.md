@@ -2,20 +2,19 @@
 
 All notable changes to this project are documented here.
 
-## [5.21.4] - Current Release
+## [5.21.5] - Current Release
 
 ### Release Focus
 
-v5.21.4 focuses on critical security tab fixes, addressing UI logic bugs that previously locked out features or behaved unexpectedly during configuration.
+v5.21.5 fixes the Android header slogan layout regression on high-DPI and narrow mobile viewports while retaining all v5.21.4 security and settings fixes.
 
 ### Upgraded Features
 
-- **Biometric UI Fix:** Resolved an issue where PIN, Kill Switch, Decoy Vault, and Shake-to-lock configurations were entirely hidden if the device had biometrics enabled.
-- **PIN Configuration Flow:** Fixed a logical bug preventing users without a PIN from setting a new one through the Settings tab.
-- **Decoy PIN Storage:** Standardized the decoy PIN hash storage key across all components.
-- **Security Guard Enhancements:** Added a busy-state guard to prevent rapid double-clicks on the Device Integrity toggle, and improved Screen Capture Protection logic to properly gracefully fail on unsupported environments instead of showing incorrect status indicators.
-- **Master Password Removal:** Added robust error handling and fallback catch blocks during master password removal to prevent the UI from getting stuck in a loading state.
-- **App Version Bump:** Bumped app version to `5.21.4` (Android versionCode 89).
+- **Header Slogan Responsive Fix:** Fixed the `NOT YOUR KEY, NOT YOUR CRYPTO` header slogan being squeezed, overlapped, or clipped on Android devices around 360–480 CSS px wide.
+- **Cross-Device Layout Guard:** Added safer overflow handling, mobile font sizing, spacing, and wrapper behavior so the slogan does not overlap the brand/title or action buttons.
+- **Visual Regression Coverage:** Added Playwright responsive visual/layout checks for Android viewport widths `360`, `390`, `412`, `430`, and `480` CSS px.
+- **App Version Bump:** Bumped app version to `5.21.5` (Android versionCode 90).
+- **Previous v5.21.4 fixes retained:** Security tab, PIN configuration, decoy PIN storage, Device Integrity guard, Screen Capture Protection, and master password removal fixes remain included.
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
