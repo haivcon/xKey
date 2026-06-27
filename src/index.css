@@ -977,7 +977,7 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.22rem, 1vw, 0.38rem);
+  font-size: clamp(0.11rem, 0.5vw, 0.19rem);
   font-weight: 800;
   line-height: 1;
   letter-spacing: clamp(0.02em, 0.2vw, 0.06em);
@@ -993,7 +993,7 @@ html {
 @media (max-width: 360px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(0.18rem, 0.9vw, 0.26rem);
+    font-size: clamp(0.09rem, 0.45vw, 0.13rem);
     letter-spacing: 0.01em;
   }
 
