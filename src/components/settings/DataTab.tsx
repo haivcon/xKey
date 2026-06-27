@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { QrCode, Camera, SplitSquareVertical } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { loadWallets, saveWallets, encryptSetting } from '../../utils/storage';
 import { exportPortableBackup, getBackupHistory, type BackupHistoryEntry } from '../../utils/backup/backupUtils';
@@ -16,6 +15,7 @@ import type { Wallet } from '../../types';
 import { AutoBackupSection, type AutoBackupInterval } from './data/AutoBackupSection';
 import { VaultBackupSection } from './data/VaultBackupSection';
 import { BackupHistorySection } from './data/BackupHistorySection';
+import { ShamirSection } from './data/ShamirSection';
 
 type DataTabProps = {
   aesKey: string;
@@ -26,6 +26,14 @@ type DataTabProps = {
 const AUTO_BACKUP_INTERVALS: AutoBackupInterval[] = ['off', 'daily', 'weekly'];
 const ShamirBackupModal = lazy(() => import('../shamir/ShamirBackupModal'));
 const ShamirRestoreModal = lazy(() => import('../shamir/ShamirRestoreModal'));
+
+function SettingsGroupLabel({ children }: { children: string }) {
+  return (
+    <div className="mt-5 mb-2 px-1 text-[0.625rem] font-bold uppercase tracking-[0.16em] text-surface-500 first:mt-0">
+      {children}
+    </div>
+  );
+}
 
 export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   // Auto-Backup
@@ -146,17 +154,7 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
 
   return (
     <>
-      <AutoBackupSection
-        t={t}
-        intervals={AUTO_BACKUP_INTERVALS}
-        autoBackupInterval={autoBackupInterval}
-        showAutoBackup={showAutoBackup}
-        autoBackupPassword={autoBackupPassword}
-        setShowAutoBackup={setShowAutoBackup}
-        setAutoBackupPassword={setAutoBackupPassword}
-        saveAutoBackup={saveAutoBackup}
-        saveAutoBackupPassword={saveAutoBackupPassword}
-      />
+      <SettingsGroupLabel>{t('settings.backupTitle')}</SettingsGroupLabel>
 
       <VaultBackupSection
         t={t}
@@ -178,6 +176,18 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
         onOpenQrReceive={() => { hapticTap(); setShowQRReceive(true); }}
       />
 
+      <AutoBackupSection
+        t={t}
+        intervals={AUTO_BACKUP_INTERVALS}
+        autoBackupInterval={autoBackupInterval}
+        showAutoBackup={showAutoBackup}
+        autoBackupPassword={autoBackupPassword}
+        setShowAutoBackup={setShowAutoBackup}
+        setAutoBackupPassword={setAutoBackupPassword}
+        saveAutoBackup={saveAutoBackup}
+        saveAutoBackupPassword={saveAutoBackupPassword}
+      />
+
       <BackupHistorySection
         t={t}
         brandReminders={brandReminders}
@@ -190,46 +200,20 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
         setVisibleBackupQr={setVisibleBackupQr}
       />
 
-      {/* ═══ Single Wallet Shamir Backup ═══ */}
-      <div className="glass-card p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
-            <SplitSquareVertical size={20} className="text-cyan-300" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-white">{t('shamir.sectionTitle')}</h2>
-            <p className="text-xs text-surface-400">{t('shamir.sectionSubtitle')}</p>
-          </div>
-        </div>
+      <SettingsGroupLabel>{t('shamir.restoreButton')}</SettingsGroupLabel>
 
-        <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-3.5">
-          <p className="text-xs leading-relaxed text-surface-300">{t('shamir.singleWalletDesc')}</p>
-        </div>
+      <ShamirSection
+        t={t}
+        onCreateBackup={async () => {
+          const w = await loadWallets(aesKey);
+          setShamirWallets(w || []);
+          setShowShamirBackup(true);
+        }}
+        onRestoreBackup={() => setShowShamirRestore(true)}
+      />
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <button
-            onClick={async () => {
-              hapticTap();
-              const w = await loadWallets(aesKey);
-              setShamirWallets(w || []);
-              setShowShamirBackup(true);
-            }}
-            className="btn-glow flex items-center justify-center gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20"
-          >
-            <QrCode size={16} />
-            {t('shamir.createSingleButton')}
-          </button>
-          <button
-            onClick={() => { hapticTap(); setShowShamirRestore(true); }}
-            className="btn-glow flex items-center justify-center gap-2 rounded-lg border border-fuchsia-500/20 bg-fuchsia-500/10 px-4 py-3 text-sm font-medium text-fuchsia-300 hover:bg-fuchsia-500/20"
-          >
-            <Camera size={16} />
-            {t('shamir.restoreButton')}
-          </button>
-        </div>
-      </div>
+      <SettingsGroupLabel>{t('settings.dangerZone')}</SettingsGroupLabel>
 
-      {/* ═══ Danger Zone ═══ */}
       <DangerZone
         title={t('settings.dangerZone')}
         subtitle={t('settings.dangerSubtitle')}
