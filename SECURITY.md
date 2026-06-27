@@ -34,16 +34,14 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.21.6
+## Current Release Security Notes: v5.21.7
 
-v5.21.6 adds Android app-only DPI controls while preserving xKey's local-first security model. The DPI override is scoped to the xKey Activity/WebView and does not write Android global secure display settings.
+v5.21.7 updates translation files for application theme settings. There are no changes to cryptography, access control, key management, or storage security.
 
-Security-relevant changes include:
+Security-relevant notes:
 
-- App-only DPI is applied through a native Android Activity/WebView density override rather than system-wide `wm density` or `WRITE_SECURE_SETTINGS` flows.
-- Other Android apps keep the device's original display density when xKey DPI mode is enabled.
-- The selected app DPI is stored locally and reset behavior is available when the mode is disabled.
-- Android metadata is updated to `versionCode 91` and `versionName 5.21.6`.
+- The locale automation script (`update-locales.cjs`) has been updated to use exact language maps instead of English fallbacks.
+- Android metadata is updated to `versionCode 92` and `versionName 5.21.7`.
 
 ---
 

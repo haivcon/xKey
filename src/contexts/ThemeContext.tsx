@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { Preferences } from '@capacitor/preferences';
 import { getAndroidCurrentDpi, getAndroidSystemDpi, resetAndroidAppDpi, setAndroidAppDpi } from '../utils/dpiOverride';
 
-type ThemeMode = 'dark' | 'light' | 'amoled';
+type ThemeMode = 'dark' | 'light' | 'amoled' | 'pink' | 'blue' | 'red' | 'purple' | 'emerald';
 type WalletDensity = 'comfortable' | 'compact' | 'ultra';
 
 type ThemeContextValue = {
@@ -41,7 +41,7 @@ const MIN_TARGET_DPI = 120;
 const MAX_TARGET_DPI = 960;
 const BASELINE_DPI = 160;
 
-const THEME_MODES: ThemeMode[] = ['dark', 'light', 'amoled'];
+const THEME_MODES: ThemeMode[] = ['dark', 'light', 'amoled', 'pink', 'blue', 'red', 'purple', 'emerald'];
 const WALLET_DENSITIES: WalletDensity[] = ['comfortable', 'compact', 'ultra'];
 
 export function useTheme(): ThemeContextValue {
@@ -59,7 +59,7 @@ const isWalletDensity = (value: unknown): value is WalletDensity => (
 );
 
 const applyThemeClass = (theme: ThemeMode) => {
-  const themeClasses = ['dark', 'theme-light', 'theme-dark', 'theme-amoled'];
+  const themeClasses = ['dark', 'theme-light', 'theme-dark', 'theme-amoled', 'theme-pink', 'theme-blue', 'theme-red', 'theme-purple', 'theme-emerald'];
   const roots = [document.documentElement, document.body].filter(Boolean);
 
   roots.forEach(root => {
@@ -70,7 +70,7 @@ const applyThemeClass = (theme: ThemeMode) => {
     if (theme === 'light') {
       cl.add('theme-light');
     } else {
-      cl.add('dark', theme === 'amoled' ? 'theme-amoled' : 'theme-dark');
+      cl.add('dark', theme === 'dark' ? 'theme-dark' : `theme-${theme}`);
     }
   });
 };

@@ -27,13 +27,173 @@
 html {
   --app-display-scale: 1;
   --home-header-height: 4.5rem;
+  --theme-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: calc(16px * var(--app-display-scale));
+}
+
+:where(.theme-dark, .theme-dark body) {
+  --theme-font: "Inter", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:where(.theme-light, .theme-light body) {
+  --theme-font: "Aptos", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:where(.theme-amoled, .theme-amoled body) {
+  --theme-font: "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
   background-color: var(--color-surface-900);
   color: var(--color-surface-100);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--theme-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+:where(.theme-pink, .theme-pink body) {
+  --theme-font: "Segoe UI Variable", "Inter", "SF Pro Display", "Segoe UI", Arial, sans-serif;
+  --color-surface-950: #190711;
+  --color-surface-900: #240b19;
+  --color-surface-800: #351126;
+  --color-surface-700: #4a1835;
+  --color-surface-600: #6d2450;
+  --color-surface-500: #a95580;
+  --color-surface-400: #f0a7c9;
+  --color-surface-300: #ffd1e3;
+  --color-surface-200: #ffe5ef;
+  --color-surface-100: #fff3f8;
+  --color-surface-50: #fff9fb;
+  --color-brand-300: #f9a8d4;
+  --color-brand-400: #f472b6;
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+}
+
+:where(.theme-blue, .theme-blue body) {
+  --theme-font: "Inter", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+  --color-surface-950: #04111f;
+  --color-surface-900: #071827;
+  --color-surface-800: #0d2336;
+  --color-surface-700: #15344d;
+  --color-surface-600: #1f4d70;
+  --color-surface-500: #4b82aa;
+  --color-surface-400: #9bd2ff;
+  --color-surface-300: #c7e6ff;
+  --color-surface-200: #dff2ff;
+  --color-surface-100: #f1f9ff;
+  --color-surface-50: #f8fcff;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+}
+
+:where(.theme-red, .theme-red body) {
+  --theme-font: "Segoe UI Variable", "Aptos", "Segoe UI", Roboto, Arial, sans-serif;
+  --color-surface-950: #1d0707;
+  --color-surface-900: #2a0b0b;
+  --color-surface-800: #3b1010;
+  --color-surface-700: #531616;
+  --color-surface-600: #762020;
+  --color-surface-500: #b45353;
+  --color-surface-400: #f6a3a3;
+  --color-surface-300: #ffcaca;
+  --color-surface-200: #fee2e2;
+  --color-surface-100: #fff1f1;
+  --color-surface-50: #fff7f7;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #ef4444;
+  --color-brand-600: #dc2626;
+}
+
+:where(.theme-purple, .theme-purple body) {
+  --theme-font: "SF Pro Display", "Segoe UI Variable", "Inter", "Segoe UI", Arial, sans-serif;
+  --color-surface-950: #110821;
+  --color-surface-900: #1a0d2e;
+  --color-surface-800: #271343;
+  --color-surface-700: #381b61;
+  --color-surface-600: #51258c;
+  --color-surface-500: #8060bd;
+  --color-surface-400: #c4b5fd;
+  --color-surface-300: #ddd6fe;
+  --color-surface-200: #ede9fe;
+  --color-surface-100: #f5f3ff;
+  --color-surface-50: #fbfaff;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+}
+
+:where(.theme-emerald, .theme-emerald body) {
+  --theme-font: "Inter", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+  --color-surface-950: #031713;
+  --color-surface-900: #05211b;
+  --color-surface-800: #0b3028;
+  --color-surface-700: #124438;
+  --color-surface-600: #1c5f50;
+  --color-surface-500: #3b8f7a;
+  --color-surface-400: #7dd3c7;
+  --color-surface-300: #a7f3d0;
+  --color-surface-200: #d1fae5;
+  --color-surface-100: #ecfdf5;
+  --color-surface-50: #f7fffb;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+}
+
+:where(.theme-pink, .theme-blue, .theme-red, .theme-purple, .theme-emerald) body {
+  background:
+    radial-gradient(circle at 18% -8%, color-mix(in srgb, var(--color-brand-500) 24%, transparent), transparent 34rem),
+    linear-gradient(180deg, var(--color-surface-950), var(--color-surface-900) 42%, #070a12 100%);
+  color: var(--color-surface-100);
+  letter-spacing: 0.003em;
+}
+
+:where(.theme-emerald) body {
+  background:
+    radial-gradient(circle at 18% -8%, rgba(16, 185, 129, 0.24), transparent 34rem),
+    radial-gradient(circle at 90% 12%, rgba(20, 184, 166, 0.16), transparent 28rem),
+    linear-gradient(180deg, #031713, #05211b 44%, #020b09 100%);
+}
+
+:where(.theme-pink, .theme-blue, .theme-red, .theme-purple, .theme-emerald) .glass-card {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-800) 72%, transparent), color-mix(in srgb, var(--color-surface-900) 62%, transparent));
+  border-color: color-mix(in srgb, var(--color-brand-400) 18%, transparent);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.22), inset 0 1px 0 color-mix(in srgb, var(--color-surface-100) 7%, transparent);
+}
+
+:where(.theme-pink, .theme-blue, .theme-red, .theme-purple, .theme-emerald) :is(input, textarea, select) {
+  font-family: var(--theme-font);
+  caret-color: var(--color-brand-400);
+}
+
+:root {
+  --xkey-pill-radius: 9999px;
+  --xkey-soft-radius: clamp(0.9rem, 1.1vw + 0.45rem, 1.35rem);
+  --xkey-panel-radius: clamp(1rem, 1.5vw + 0.55rem, 1.6rem);
+}
+
+:is(.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl):not(.rounded-none):not([class*="rounded-t-"]):not([class*="rounded-b-"]):not([class*="rounded-l-"]):not([class*="rounded-r-"]) {
+  border-radius: min(var(--xkey-pill-radius), var(--xkey-soft-radius)) !important;
+}
+
+:is(button, a[role="button"], input, select, textarea, .scale-range, .btn-glow, .btn-icon-glow, [class*="badge"], [class*="Badge"]):is(.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: var(--xkey-pill-radius) !important;
+}
+
+:is(.glass-card, .vanity-step-card, .restore-backup-modal, .qr-modal-panel, .create-wallet-modal-panel, [class*="modal"], [class*="Modal"]):not(.rounded-full) {
+  border-radius: var(--xkey-panel-radius) !important;
+}
+
+:is(.rounded-full, [class*="avatar"], [class*="Avatar"]) {
+  border-radius: 9999px;
 }
 
 .app-scaled-icons .lucide:not([class*="w-"]):not([class*="h-"]) {
@@ -236,7 +396,7 @@ body.keyboard-open .keyboard-scroll-target {
   background-color: rgba(31, 35, 46, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
+  border-radius: var(--xkey-panel-radius);
 }
 
 .scale-range {

@@ -18,18 +18,15 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.21.6
+## Current Release: v5.21.7
 
-v5.21.6 upgrades Android display-density handling with app-only DPI controls for xKey. The setting applies to the xKey Activity/WebView without changing the system-wide Android DPI and without requiring Developer Options.
+v5.21.7 updates localizations for the application's color theme options (Pink Rose, Blue Sapphire, Red Ruby, Purple Amethyst, Emerald Vault) across all supported languages, preventing untranslated fallback English strings from appearing in non-English settings menus.
 
 ### Main Upgrades
 
-- **App-only Android DPI:** Added a native `DpiOverride` Capacitor plugin that can apply a private density DPI to the xKey Android Activity/WebView.
-- **System DPI Safety:** The DPI override is scoped to xKey and does not modify Android global display density, so other apps keep the device's original DPI settings.
-- **Automatic Restore and Persistence:** xKey stores the selected app DPI, reapplies it when the app starts, and resets to system DPI when app DPI mode is disabled.
-- **Web Fallback:** Browser/web builds continue to use the existing CSS-based interface scaling fallback when native Android DPI override is unavailable.
-- **Localized Settings Copy:** Updated English and Vietnamese settings text to clearly explain app-only DPI behavior and possible Activity reloads.
-- **Android release metadata:** Android version metadata is updated to `versionCode 91` and `versionName 5.21.6`.
+- **Localized Theme Names:** Translated color theme settings into Arabic, German, Spanish, French, Hindi, Indonesian, Japanese, Korean, Portuguese, Russian, Thai, Turkish, Vietnamese, and Simplified Chinese.
+- **Improved Update Scripts:** Updated the locale automation script (`update-locales.cjs`) to correctly map localized strings for future updates.
+- **Android release metadata:** Android version metadata is updated to `versionCode 92` and `versionName 5.21.7`.
 
 ### Verification for This Release
 

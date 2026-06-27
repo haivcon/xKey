@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles, SlidersHorizontal, Zap, ZoomIn } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles, SlidersHorizontal, Zap, ZoomIn, Heart, Droplets, Flame, Gem } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -14,9 +14,14 @@ import useLiteMode from '../../hooks/useLiteMode';
 import { useConfirm } from '../../contexts/ConfirmContext';
 
 const THEME_OPTIONS = [
-  { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo' },
-  { key: 'light', icon: Sun, label: 'settings.lightMode', color: 'amber' },
-  { key: 'amoled', icon: Monitor, label: 'settings.amoledMode', color: 'slate' },
+  { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo', fallbackLabel: 'Tối chuyên nghiệp' },
+  { key: 'light', icon: Sun, label: 'settings.lightMode', color: 'amber', fallbackLabel: 'Sáng rõ nét' },
+  { key: 'amoled', icon: Monitor, label: 'settings.amoledMode', color: 'slate', fallbackLabel: 'AMOLED' },
+  { key: 'pink', icon: Heart, label: 'settings.pinkMode', color: 'pink', fallbackLabel: 'Hồng rose' },
+  { key: 'blue', icon: Droplets, label: 'settings.blueMode', color: 'blue', fallbackLabel: 'Xanh sapphire' },
+  { key: 'red', icon: Flame, label: 'settings.redMode', color: 'red', fallbackLabel: 'Đỏ ruby' },
+  { key: 'purple', icon: Gem, label: 'settings.purpleMode', color: 'purple', fallbackLabel: 'Tím amethyst' },
+  { key: 'emerald', icon: ShieldCheck, label: 'settings.emeraldMode', color: 'emerald', fallbackLabel: 'Xanh ngọc bảo mật' },
 ];
 
 const MIN_DISPLAY_SCALE = 5;
@@ -44,7 +49,7 @@ const clampTargetDpi = (value: number | string) => {
   return Math.min(MAX_TARGET_DPI, Math.max(MIN_TARGET_DPI, parsed));
 };
 
-type ThemeMode = 'dark' | 'light' | 'amoled';
+type ThemeMode = 'dark' | 'light' | 'amoled' | 'pink' | 'blue' | 'red' | 'purple' | 'emerald';
 type SettingsSection = 'theme' | 'scale' | 'dpi' | 'density' | 'feedback';
 type ToggleRowProps = {
   icon: typeof ShieldCheck;
@@ -331,7 +336,7 @@ export default function GeneralTab() {
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'theme' ? 'rotate-180' : ''}`} />
         </button>
         <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'theme' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4 flex gap-2">
+          <div className="grid grid-cols-2 gap-2 px-4 pb-4 border-t border-surface-700/50 pt-4 sm:grid-cols-3">
             {THEME_OPTIONS.map(opt => {
               const Icon = opt.icon;
               const active = theme === opt.key;
