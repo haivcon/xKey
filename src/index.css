@@ -968,6 +968,7 @@ html {
   align-items: center;
   justify-content: center;
   max-width: 100%;
+  overflow: hidden;
   white-space: nowrap;
   color: #38bdf8;
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.32), 0 0 18px rgba(16, 185, 129, 0.14);
@@ -977,28 +978,40 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.11rem, 0.5vw, 0.19rem);
+  font-size: clamp(0.34rem, 1.4vw, 0.5rem);
   font-weight: 800;
   line-height: 1;
-  letter-spacing: clamp(0.02em, 0.2vw, 0.06em);
+  letter-spacing: 0.03em;
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
 }
 
 .home-header-slogan-space {
-  width: clamp(0.15em, 0.5vw, 0.25em);
+  width: 0.18em;
 }
 
 @media (max-width: 360px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(0.09rem, 0.45vw, 0.13rem);
-    letter-spacing: 0.01em;
+    font-size: clamp(0.34rem, 1.35vw, 0.46rem);
+    letter-spacing: 0.025em;
   }
 
   .home-header-slogan-space {
-    width: 0.12em;
+    width: 0.15em;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .home-header-slogan-letter,
+  .home-header-slogan-space {
+    font-size: clamp(0.42rem, 1.2vw, 0.56rem);
+    letter-spacing: 0.04em;
+  }
+
+  .home-header-slogan-space {
+    width: 0.22em;
   }
 }
 
