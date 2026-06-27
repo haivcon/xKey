@@ -12,6 +12,7 @@ const PIN_HASH_KEY = 'xkey_pin_hash';
 const PIN_ATTEMPTS_KEY = 'xkey_pin_attempts';
 const PIN_LOCKOUT_KEY = 'xkey_pin_lockout_until';
 const KILL_SWITCH_KEY = 'xkey_kill_switch';
+const DECOY_PIN_HASH_KEY = 'xkey_decoy_pin_hash';
 const PIN_LENGTH = 6;
 
 // Lockout tiers: [maxAttempts, lockoutSeconds]
@@ -128,7 +129,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
           }
         } else if (mode === 'verify') {
           const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
-          const { value: decoyStored } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
+          const { value: decoyStored } = await Preferences.get({ key: DECOY_PIN_HASH_KEY });
           if (hashPin(newPin) === stored) {
             // Reset attempts on success
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
@@ -277,4 +278,4 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
   );
 }
 
-export { PIN_HASH_KEY, KILL_SWITCH_KEY };
+export { PIN_HASH_KEY, KILL_SWITCH_KEY, DECOY_PIN_HASH_KEY };

@@ -61,14 +61,15 @@ export function PinBiometricSection({
   handleChangeShakeSensitivity,
   onTap,
 }: PinBiometricSectionProps) {
-  if (hasBiometric) return null;
+  const pinIconTone = hasBiometric ? 'text-emerald-400' : 'text-amber-400';
+  const pinIconBg = hasBiometric ? 'bg-emerald-500/10' : 'bg-amber-500/10';
 
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-4 border-b border-surface-700/50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-            <Lock size={20} className="text-amber-400" />
+          <div className={`w-10 h-10 rounded-xl ${pinIconBg} flex items-center justify-center`}>
+            <Lock size={20} className={pinIconTone} />
           </div>
           <div>
             <h3 className="text-white font-medium">{t('settings.pinLockTitle')}</h3>
@@ -172,7 +173,7 @@ export function PinBiometricSection({
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between text-xs text-surface-400 mb-2">
               <span>{t('settings.shakeSensitivity')}</span>
-              <span>{shakeSensitivity === 10 ? t('settings.high') : shakeSensitivity === 15 ? t('settings.medium') : t('settings.low')}</span>
+              <span>{shakeSensitivity <= 10 ? t('settings.high') : shakeSensitivity <= 15 ? t('settings.medium') : shakeSensitivity <= 20 ? t('settings.low') : t('settings.veryLow', { default: 'Very low' })}</span>
             </div>
             <input
               type="range" min="10" max="25" step="5"

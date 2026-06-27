@@ -308,14 +308,15 @@ export function AdvancedSecuritySection({
             </div>
           </button>
           <div className="flex flex-shrink-0 items-center gap-2">
-            {settingStatus(screenSecurity.blocked ? t('settings.blocked') : t('settings.allowed'), screenSecurity.blocked)}
+            {settingStatus(!screenSecurity.supported ? t('settings.unavailable') : screenSecurity.blocked ? t('settings.blocked') : t('settings.allowed'), screenSecurity.supported && screenSecurity.blocked)}
             <button type="button" onClick={() => { onTap(); setShowScreenCapture(!showScreenCapture); }} className="p-1 text-surface-500" aria-label={t('settings.expandDetails')}>
               <ChevronDown size={16} className={`transition-transform ${showScreenCapture ? 'rotate-180' : ''}`} />
             </button>
             <button
               type="button"
               onClick={requestScreenCaptureToggle}
-              className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors ${screenSecurity.blocked ? 'bg-amber-500' : 'bg-surface-700'}`}
+              disabled={!screenSecurity.supported}
+              className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${screenSecurity.blocked ? 'bg-amber-500' : 'bg-surface-700'}`}
               aria-label={t('settings.screenCaptureTitle')}
             >
               <span className={`h-5 w-5 rounded-full bg-white transition-transform ${screenSecurity.blocked ? 'translate-x-5' : ''}`} />
@@ -325,8 +326,8 @@ export function AdvancedSecuritySection({
         {showScreenCapture && (
           <div className="mx-4 mb-4 space-y-3">
             <p className="text-xs leading-relaxed text-surface-400">{t('settings.screenCaptureDesc')}</p>
-            <Notice variant="warning">
-              {t('settings.screenCaptureGuide')}
+            <Notice variant={screenSecurity.supported ? 'warning' : 'info'}>
+              {screenSecurity.supported ? t('settings.screenCaptureGuide') : t('settings.screenCaptureUnsupported', { default: 'Screen capture protection is only supported on native devices.' })}
             </Notice>
             {screenCaptureTarget !== null && (
               <p className="text-xs leading-relaxed text-amber-200/90">{t('settings.screenCaptureConfirmInPasswordBox')}</p>

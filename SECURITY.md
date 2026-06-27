@@ -34,14 +34,15 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.21.1
+## Current Release Security Notes: v5.21.4
 
-v5.21.1 resolves a responsive UI issue where compacted vanity addresses failed to accurately resize according to their container width.
+v5.21.4 focuses on critical security tab fixes, addressing UI logic bugs that previously locked out features or behaved unexpectedly during configuration.
 
 Security-relevant changes include:
 
-- No new security features or changes in this release.
-- Android metadata is updated to `versionCode 86` and `versionName 5.21.1`.
+- Biometric UI fix: Security settings (PIN, Kill Switch, Decoy Vault, Shake-to-lock) are no longer hidden on devices with biometrics.
+- Device Integrity and Screen Capture: Added proper busy-state guards and unsupported-environment checks.
+- Android metadata is updated to `versionCode 89` and `versionName 5.21.4`.
 
 ---
 

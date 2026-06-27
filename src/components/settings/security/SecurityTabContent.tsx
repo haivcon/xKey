@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
+import { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
 import { ShieldCheck, ShieldAlert, ChevronDown } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { useToast } from '../../../contexts/ToastContext';
@@ -14,7 +14,7 @@ import {
 } from '../../../hooks/security/useShakeToLock';
 import { CLIPBOARD_TIMEOUT_KEY } from '../../../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../../../utils/haptics';
-import { PIN_HASH_KEY, KILL_SWITCH_KEY } from '../../auth/PinLockScreen';
+import { PIN_HASH_KEY, KILL_SWITCH_KEY, DECOY_PIN_HASH_KEY } from '../../auth/PinLockScreen';
 import { getVaultSecurityStatus, isBiometricAvailable, setHardwareBoundOnlyMode } from '../../../utils/storage';
 import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled, setDeviceIntegrityGuardEnabled, type DeviceIntegrityRisk } from '../../../utils/deviceIntegrity';
 import { useScrambledKeyboard } from '../../../contexts/ScrambledKeyboardContext';
@@ -32,6 +32,14 @@ export type SecurityTabProps = {
 };
 
 type VaultSecurityStatus = Awaited<ReturnType<typeof getVaultSecurityStatus>>;
+
+function SettingsGroupLabel({ children }: { children: string }) {
+  return (
+    <div className="mt-5 mb-2 px-1 text-[0.625rem] font-bold uppercase tracking-[0.16em] text-surface-500 first:mt-0">
+      {children}
+    </div>
+  );
+}
 
 export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   // Auto-lock & clipboard
@@ -107,7 +115,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       setSecurityStatus(vaultStatus);
       setDeviceIntegrityGuard(guardEnabled);
       setDeviceRiskInfo(riskInfo);
-      const { value: decoyHash } = await Preferences.get({ key: 'xkey_decoy_pin_hash' });
+      const { value: decoyHash } = await Preferences.get({ key: DECOY_PIN_HASH_KEY });
       setHasDecoyPin(!!decoyHash);
       const { value: shakeVal } = await Preferences.get({ key: SHAKE_TO_LOCK_KEY });
       setShakeToLockEnabled(shakeVal === 'true');
@@ -239,6 +247,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   };
 
   const handleToggleDeviceIntegrityGuard = async () => {
+    if (deviceIntegrityBusy) return;
     const next = !deviceIntegrityGuard;
     hapticTap();
     setDeviceIntegrityBusy(true);
@@ -286,6 +295,10 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
 
   const requestScreenCaptureToggle = () => {
     hapticTap();
+    if (!screenSecurity.supported) {
+      showToast(t('settings.screenCaptureUnsupported', { default: 'Screen capture protection is only supported on native devices.' }), 'warning');
+      return;
+    }
     if (!mp.hasMasterPassword) {
       setShowMasterPasswordDetails(true);
       setShowMPSetup(true);
@@ -330,6 +343,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       setShowMPRemove(false);
       setMpRemoveInput('');
       showToast(t('settings.masterPasswordRemoved'), 'success');
+    } catch (err) {
+      showToast(getErrorMessage(err) || t('settings.masterPasswordRemoveError', { default: 'Could not remove master password.' }), 'error');
     } finally {
       setMpBusy(false);
     }
@@ -338,6 +353,12 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const handleChangePin = async () => {
     if (pinStep === 'current') {
       const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
+      if (!stored) {
+        setPinStep('new');
+        setPinError('');
+        setPinCurrent('');
+        return;
+      }
       if (hashPin(pinCurrent) !== stored) { setPinError(t('settings.incorrectCurrentPin')); return; }
       setPinStep('new'); setPinError('');
     } else if (pinStep === 'new') {
@@ -375,7 +396,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         title: t('settings.decoyRemoveConfirm'),
       });
       if (confirmed) {
-        await Preferences.remove({ key: 'xkey_decoy_pin_hash' });
+        await Preferences.remove({ key: DECOY_PIN_HASH_KEY });
         setHasDecoyPin(false);
         showToast(t('settings.decoyRemoved'), 'info');
       }
@@ -388,7 +409,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     if (decoyPinInput.length !== 6) { showToast(t('pinLock.enter6Digits'), 'error'); return; }
     const { value: mainPinHash } = await Preferences.get({ key: PIN_HASH_KEY });
     if (hashPin(decoyPinInput) === mainPinHash) { showToast(t('settings.decoySameAsMain'), 'error'); return; }
-    await Preferences.set({ key: 'xkey_decoy_pin_hash', value: hashPin(decoyPinInput) });
+    await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: hashPin(decoyPinInput) });
     setHasDecoyPin(true); setShowDecoyPinInput(false); setDecoyPinInput('');
     showToast(t('settings.decoyEnabled'), 'success');
   };
@@ -418,6 +439,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
 
   return (
     <>
+      <SettingsGroupLabel>{t('settings.securityStatusTitle')}</SettingsGroupLabel>
+
       <SecurityStatusSection
         t={t}
         expanded={showSecurityStatus}
@@ -425,6 +448,39 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         securityStatus={securityStatus}
         hardwareSecurityLabel={hardwareSecurityLabel}
       />
+
+      <SettingsGroupLabel>{t('settings.pinLockTitle')}</SettingsGroupLabel>
+
+      <PinBiometricSection
+        t={t}
+        hasBiometric={hasBiometric}
+        showChangePin={showChangePin}
+        setShowChangePin={setShowChangePin}
+        pinStep={pinStep}
+        pinCurrent={pinCurrent}
+        setPinCurrent={setPinCurrent}
+        pinNew={pinNew}
+        setPinNew={setPinNew}
+        pinConfirmVal={pinConfirmVal}
+        setPinConfirmVal={setPinConfirmVal}
+        pinError={pinError}
+        handleChangePin={handleChangePin}
+        killSwitchEnabled={killSwitchEnabled}
+        handleToggleKillSwitch={handleToggleKillSwitch}
+        hasDecoyPin={hasDecoyPin}
+        showDecoyPinInput={showDecoyPinInput}
+        decoyPinInput={decoyPinInput}
+        setDecoyPinInput={setDecoyPinInput}
+        handleToggleDecoy={handleToggleDecoy}
+        handleSetDecoyPin={handleSetDecoyPin}
+        shakeToLockEnabled={shakeToLockEnabled}
+        handleToggleShakeToLock={handleToggleShakeToLock}
+        shakeSensitivity={shakeSensitivity}
+        handleChangeShakeSensitivity={handleChangeShakeSensitivity}
+        onTap={hapticTap}
+      />
+
+      <SettingsGroupLabel>{t('settings.security')}</SettingsGroupLabel>
 
       <div className="glass-card overflow-hidden">
         <div className="p-4 border-b border-surface-700/50">
@@ -557,34 +613,6 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         />
       </div>
 
-      <PinBiometricSection
-        t={t}
-        hasBiometric={hasBiometric}
-        showChangePin={showChangePin}
-        setShowChangePin={setShowChangePin}
-        pinStep={pinStep}
-        pinCurrent={pinCurrent}
-        setPinCurrent={setPinCurrent}
-        pinNew={pinNew}
-        setPinNew={setPinNew}
-        pinConfirmVal={pinConfirmVal}
-        setPinConfirmVal={setPinConfirmVal}
-        pinError={pinError}
-        handleChangePin={handleChangePin}
-        killSwitchEnabled={killSwitchEnabled}
-        handleToggleKillSwitch={handleToggleKillSwitch}
-        hasDecoyPin={hasDecoyPin}
-        showDecoyPinInput={showDecoyPinInput}
-        decoyPinInput={decoyPinInput}
-        setDecoyPinInput={setDecoyPinInput}
-        handleToggleDecoy={handleToggleDecoy}
-        handleSetDecoyPin={handleSetDecoyPin}
-        shakeToLockEnabled={shakeToLockEnabled}
-        handleToggleShakeToLock={handleToggleShakeToLock}
-        shakeSensitivity={shakeSensitivity}
-        handleChangeShakeSensitivity={handleChangeShakeSensitivity}
-        onTap={hapticTap}
-      />
     </>
   );
 }

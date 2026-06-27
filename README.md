@@ -18,15 +18,18 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.21.1
+## Current Release: v5.21.4
 
-v5.21.1 resolves a responsive UI issue where compacted vanity addresses failed to accurately resize according to their container width.
+v5.21.4 focuses on critical security tab fixes, addressing UI logic bugs that previously locked out features or behaved unexpectedly during configuration.
 
 ### Main Upgrades
 
-- **Vanity Address Responsive Scaling:** Restored accurate, real-time container-width measurement for dynamically generated `HighlightedCompactAddress` components. Vanity addresses with colored prefixes and suffixes now gracefully collapse with middle-ellipses without breaking layout constraints.
-- **Fixed Width Calculation Logic:** Replaced the static, absolute character count truncation method with a dynamically resizing layout approach, incorporating `ResizeObserver` for robust viewport changes.
-- **Android release metadata:** Android version metadata is updated to `versionCode 86` and `versionName 5.21.1`.
+- **Biometric UI Fix:** Resolved an issue where PIN, Kill Switch, Decoy Vault, and Shake-to-lock configurations were entirely hidden if the device had biometrics enabled.
+- **PIN Configuration Flow:** Fixed a logical bug preventing users without a PIN from setting a new one through the Settings tab.
+- **Decoy PIN Storage:** Standardized the decoy PIN hash storage key across all components.
+- **Security Guard Enhancements:** Added a busy-state guard to prevent rapid double-clicks on the Device Integrity toggle, and improved Screen Capture Protection logic to gracefully fail on unsupported environments instead of showing incorrect status indicators.
+- **Master Password Removal:** Added robust error handling and fallback catch blocks during master password removal to prevent the UI from getting stuck in a loading state.
+- **Android release metadata:** Android version metadata is updated to `versionCode 89` and `versionName 5.21.4`.
 - **Release documentation refresh:** README, changelog, and project versioning were updated for the current release while older release notes are collapsed.
 
 ### Verification for This Release
@@ -108,6 +111,17 @@ Android release builds are triggered by GitHub tags matching `v*`.
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+
+### v5.21.3
+
+- Critical fixes for duplicate settings tabs.
+- Removed duplicate Danger Zone configurations.
+- Fixed device integrity logic and screen capture issues in test cases.
+
+### v5.21.1
+
+- Vanity Address Responsive Scaling.
+- Fixed Width Calculation Logic.
 
 ### v5.21.0
 
