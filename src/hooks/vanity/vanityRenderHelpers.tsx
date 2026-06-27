@@ -96,11 +96,29 @@ function HighlightedCompactAddress({
     };
   }, [clean, head, tail, minHead, minTail]);
 
+  const fullBody = clean.slice(prefix.length);
   const visibleHead = displayParts.compacted ? clean.slice(0, displayParts.headLength) : clean;
   const visibleTail = displayParts.compacted && displayParts.tailLength ? clean.slice(-displayParts.tailLength) : '';
   const headBodyOffset = prefix.length;
   const headBody = visibleHead.slice(headBodyOffset);
   const tailBody = visibleTail;
+
+  const renderFullBody = () => {
+    const headHighlight = Math.min(Math.max(0, headHighlightLength), fullBody.length);
+    const tailHighlight = Math.min(
+      Math.max(0, tailHighlightLength),
+      Math.max(0, fullBody.length - headHighlight)
+    );
+    const tailStart = fullBody.length - tailHighlight;
+
+    return (
+      <>
+        {headHighlight ? <span className={highlightClassName}>{fullBody.slice(0, headHighlight)}</span> : null}
+        <span className="opacity-80">{fullBody.slice(headHighlight, tailStart)}</span>
+        {tailHighlight ? <span className={highlightClassName}>{fullBody.slice(tailStart)}</span> : null}
+      </>
+    );
+  };
 
   const renderHead = () => {
     const highlightLength = Math.min(headHighlightLength, headBody.length);
@@ -128,9 +146,13 @@ function HighlightedCompactAddress({
     <span ref={containerRef} className="relative block min-w-0 max-w-full overflow-hidden whitespace-nowrap" title={clean}>
       <span className="block min-w-0 overflow-visible whitespace-nowrap">
         <span>{prefix}</span>
-        {renderHead()}
-        {displayParts.compacted ? <span className="opacity-80">...</span> : null}
-        {renderTail()}
+        {displayParts.compacted ? (
+          <>
+            {renderHead()}
+            <span className="opacity-80">...</span>
+            {renderTail()}
+          </>
+        ) : renderFullBody()}
       </span>
       <span ref={measureRef} className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap font-mono" aria-hidden="true" />
     </span>
@@ -207,15 +229,16 @@ export const createVanityAddressRenderer = (
     const hasHexPrefix = address.startsWith('0x') || address.startsWith('0X');
     const prefix = hasHexPrefix ? address.slice(0, 2) : '';
     const body = hasHexPrefix ? address.slice(2) : address;
+    const repeatFallbackLength = Math.max(0, wallet.vanityRepeatLength || 0);
     const headLength = Math.max(
       0,
       wallet.vanityHeadRun?.length ||
-        (wallet.vanityRepeatSide === 'head' ? wallet.vanityRepeatLength || 0 : 0)
+        (wallet.vanityRepeatSide === 'head' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
     );
     const tailLength = Math.max(
       0,
       wallet.vanityTailRun?.length ||
-        (wallet.vanityRepeatSide === 'tail' ? wallet.vanityRepeatLength || 0 : 0)
+        (wallet.vanityRepeatSide === 'tail' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
     );
     const highlightClassName = 'rounded-[0.18em] bg-cyan-500/20 text-cyan-700 box-decoration-clone dark:text-cyan-200';
 
