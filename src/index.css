@@ -964,32 +964,40 @@ html {
 }
 
 .home-header-version {
-  font-size: clamp(0.25rem, 1.55vw, 0.375rem);
+  align-self: flex-start;
+  margin-top: 0.16em;
+  font-size: clamp(0.22rem, 0.85vw, 0.31rem);
+  letter-spacing: -0.03em;
+  opacity: 0.82;
 }
 
 .home-header-slogan {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   white-space: nowrap;
   color: #38bdf8;
-  transform: scaleX(clamp(0.62, calc(0.48 + 0.12vw), 0.9));
+  transform: scaleX(clamp(0.52, calc(0.42 + 0.11vw), 0.78));
   transform-origin: center;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.35), 0 0 22px rgba(16, 185, 129, 0.18);
+  text-overflow: clip;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.32), 0 0 18px rgba(16, 185, 129, 0.14);
   animation: home-slogan-glow 3.8s ease-in-out infinite;
 }
 
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(0.31rem, 1.55vw, 0.5rem);
+  font-size: clamp(0.24rem, 1.08vw, 0.39rem);
   font-weight: 900;
   line-height: 1;
-  letter-spacing: clamp(0.025em, 0.45vw, 0.1em);
+  letter-spacing: clamp(0.01em, 0.25vw, 0.06em);
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
 }
 
 .home-header-slogan-space {
-  width: clamp(0.2em, 1vw, 0.38em);
+  width: clamp(0.12em, 0.55vw, 0.24em);
 }
 
 @media (min-width: 768px) {
@@ -1003,17 +1011,17 @@ html {
   }
 
   .home-header-version {
-    font-size: clamp(0.3125rem, 0.55vw, 0.375rem);
+    font-size: clamp(0.25rem, 0.36vw, 0.31rem);
   }
 
   .home-header-slogan {
-    transform: scaleX(0.9);
+    transform: scaleX(0.78);
   }
 
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(0.4375rem, 0.75vw, 0.5rem);
-    letter-spacing: 0.1em;
+    font-size: clamp(0.34rem, 0.5vw, 0.39rem);
+    letter-spacing: 0.055em;
   }
 }
 

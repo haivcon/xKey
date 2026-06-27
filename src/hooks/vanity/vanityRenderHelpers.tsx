@@ -129,7 +129,7 @@ function HighlightedCompactAddress({
       <span className="block min-w-0 overflow-visible whitespace-nowrap">
         <span>{prefix}</span>
         {renderHead()}
-        {displayParts.compacted ? <span className="mx-0.5 opacity-80">...</span> : null}
+        {displayParts.compacted ? <span className="opacity-80">...</span> : null}
         {renderTail()}
       </span>
       <span ref={measureRef} className="pointer-events-none invisible absolute left-0 top-0 whitespace-nowrap font-mono" aria-hidden="true" />
@@ -165,7 +165,7 @@ export const createVanityAddressRenderer = (
     const body = hasHexPrefix ? address.slice(2) : address;
     const prefixEnd = Math.min(vanityPrefixClean.length, body.length);
     const suffixStart = Math.max(prefixEnd, body.length - vanitySuffixClean.length);
-    const highlightClassName = 'rounded bg-brand-500/20 px-1 py-0.5 font-extrabold text-brand-700 ring-1 ring-brand-400/30 dark:text-brand-200';
+    const highlightClassName = 'rounded-[0.18em] bg-brand-500/20 text-brand-700 box-decoration-clone dark:text-brand-200';
 
     if (compact) {
       return renderHighlightedCompactAddress({
@@ -188,7 +188,7 @@ export const createVanityAddressRenderer = (
             {body.slice(0, prefixEnd)}
           </span>
         ) : null}
-        <span className="mx-0.5 opacity-80">{body.slice(prefixEnd, suffixStart)}</span>
+        <span className="opacity-80">{body.slice(prefixEnd, suffixStart)}</span>
         {vanitySuffixClean.length ? (
           <span className={highlightClassName}>
             {body.slice(suffixStart)}
@@ -217,7 +217,7 @@ export const createVanityAddressRenderer = (
       wallet.vanityTailRun?.length ||
         (wallet.vanityRepeatSide === 'tail' ? wallet.vanityRepeatLength || 0 : 0)
     );
-    const highlightClassName = 'rounded bg-cyan-500/20 px-1 py-0.5 font-extrabold text-cyan-700 ring-1 ring-cyan-400/30 dark:text-cyan-200';
+    const highlightClassName = 'rounded-[0.18em] bg-cyan-500/20 text-cyan-700 box-decoration-clone dark:text-cyan-200';
 
     if (!headLength && !tailLength) return renderVanityAddress(address, compact, compactOptions);
 
@@ -245,7 +245,7 @@ export const createVanityAddressRenderer = (
             {body.slice(0, middleStart)}
           </span>
         ) : null}
-        <span className="mx-0.5 opacity-80">{body.slice(middleStart, middleEnd)}</span>
+        <span className="opacity-80">{body.slice(middleStart, middleEnd)}</span>
         {tailLength ? (
           <span className={highlightClassName}>
             {body.slice(middleEnd)}

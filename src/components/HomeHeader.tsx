@@ -59,7 +59,7 @@ export default function HomeHeader({
               </span>
             </div>
           </div>
-          <div className="pointer-events-none min-w-0 justify-self-center text-center" aria-label={XKEY_SLOGAN}>
+          <div className="pointer-events-none min-w-0 max-w-[42vw] overflow-hidden justify-self-center text-center sm:max-w-[48vw] md:max-w-[52vw]" aria-label={XKEY_SLOGAN}>
             {brandReminders && (
               <div className="home-header-slogan whitespace-nowrap text-center">
                 {HEADER_SLOGAN_LETTERS.map((letter, index) => (
