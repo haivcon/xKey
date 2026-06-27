@@ -34,15 +34,16 @@ Users should treat every private key, seed phrase, QR code, and exported backup 
 
 ---
 
-## Current Release Security Notes: v5.21.5
+## Current Release Security Notes: v5.21.6
 
-v5.21.5 is an Android UI hotfix release for the header slogan layout on high-DPI and narrow mobile viewports while retaining the security fixes from v5.21.4.
+v5.21.6 adds Android app-only DPI controls while preserving xKey's local-first security model. The DPI override is scoped to the xKey Activity/WebView and does not write Android global secure display settings.
 
 Security-relevant changes include:
 
-- Header slogan layout is guarded against clipping/overlap on Android devices around 360–480 CSS px wide.
-- Responsive visual/layout Playwright coverage was added for common Android viewport widths, including Samsung S20 Ultra class sizing.
-- Android metadata is updated to `versionCode 90` and `versionName 5.21.5`.
+- App-only DPI is applied through a native Android Activity/WebView density override rather than system-wide `wm density` or `WRITE_SECURE_SETTINGS` flows.
+- Other Android apps keep the device's original display density when xKey DPI mode is enabled.
+- The selected app DPI is stored locally and reset behavior is available when the mode is disabled.
+- Android metadata is updated to `versionCode 91` and `versionName 5.21.6`.
 
 ---
 

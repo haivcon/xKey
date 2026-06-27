@@ -18,17 +18,18 @@ The app is designed as a private cold-vault style manager, not a network-connect
 
 ---
 
-## Current Release: v5.21.5
+## Current Release: v5.21.6
 
-v5.21.5 is a hotfix release for the Android header slogan layout on high-DPI and narrow mobile viewports, including Samsung S20 Ultra class devices.
+v5.21.6 upgrades Android display-density handling with app-only DPI controls for xKey. The setting applies to the xKey Activity/WebView without changing the system-wide Android DPI and without requiring Developer Options.
 
 ### Main Upgrades
 
-- **Header Slogan Responsive Fix:** Fixed the `NOT YOUR KEY, NOT YOUR CRYPTO` header slogan being squeezed, overlapped, or clipped on Android devices around 360–480 CSS px wide.
-- **Cross-Device Layout Guard:** Added safer overflow handling, mobile font sizing, spacing, and wrapper behavior so the slogan does not overlap the brand/title or action buttons.
-- **Visual Regression Coverage:** Added Playwright responsive visual/layout checks for Android viewport widths `360`, `390`, `412`, `430`, and `480` CSS px.
-- **Android release metadata:** Android version metadata is updated to `versionCode 90` and `versionName 5.21.5`.
-- **Previous v5.21.4 fixes retained:** Security tab, PIN configuration, decoy PIN storage, Device Integrity guard, Screen Capture Protection, and master password removal fixes remain included.
+- **App-only Android DPI:** Added a native `DpiOverride` Capacitor plugin that can apply a private density DPI to the xKey Android Activity/WebView.
+- **System DPI Safety:** The DPI override is scoped to xKey and does not modify Android global display density, so other apps keep the device's original DPI settings.
+- **Automatic Restore and Persistence:** xKey stores the selected app DPI, reapplies it when the app starts, and resets to system DPI when app DPI mode is disabled.
+- **Web Fallback:** Browser/web builds continue to use the existing CSS-based interface scaling fallback when native Android DPI override is unavailable.
+- **Localized Settings Copy:** Updated English and Vietnamese settings text to clearly explain app-only DPI behavior and possible Activity reloads.
+- **Android release metadata:** Android version metadata is updated to `versionCode 91` and `versionName 5.21.6`.
 
 ### Verification for This Release
 

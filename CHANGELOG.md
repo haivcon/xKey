@@ -2,19 +2,20 @@
 
 All notable changes to this project are documented here.
 
-## [5.21.5] - Current Release
+## [5.21.6] - Current Release
 
 ### Release Focus
 
-v5.21.5 fixes the Android header slogan layout regression on high-DPI and narrow mobile viewports while retaining all v5.21.4 security and settings fixes.
+v5.21.6 introduces Android app-only DPI controls for xKey. The upgrade lets users adjust the xKey Activity/WebView display density without changing system-wide Android DPI and without enabling Developer Options.
 
 ### Upgraded Features
 
-- **Header Slogan Responsive Fix:** Fixed the `NOT YOUR KEY, NOT YOUR CRYPTO` header slogan being squeezed, overlapped, or clipped on Android devices around 360–480 CSS px wide.
-- **Cross-Device Layout Guard:** Added safer overflow handling, mobile font sizing, spacing, and wrapper behavior so the slogan does not overlap the brand/title or action buttons.
-- **Visual Regression Coverage:** Added Playwright responsive visual/layout checks for Android viewport widths `360`, `390`, `412`, `430`, and `480` CSS px.
-- **App Version Bump:** Bumped app version to `5.21.5` (Android versionCode 90).
-- **Previous v5.21.4 fixes retained:** Security tab, PIN configuration, decoy PIN storage, Device Integrity guard, Screen Capture Protection, and master password removal fixes remain included.
+- **Native App-only DPI Override:** Added a `DpiOverride` Capacitor plugin for Android Activity/WebView density control.
+- **No System-wide DPI Mutation:** The new DPI mode is scoped to xKey, keeping other Android apps on the device's original display density.
+- **Persisted DPI Preference:** The selected app DPI is saved locally and reapplied on startup; disabling the mode restores system DPI behavior.
+- **Safe Web Fallback:** Non-Android and unsupported environments continue to use CSS interface scaling as a fallback.
+- **Clear Upgrade Copy:** Updated English and Vietnamese settings text to explain app-only DPI behavior, fallback scaling, and Activity reloads.
+- **App Version Bump:** Bumped app version to `5.21.6` (Android versionCode 91).
 
 <details>
 <summary>Previous release history is collapsed to keep the current release notes focused.</summary>

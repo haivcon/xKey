@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { Preferences } from '@capacitor/preferences';
+import { getAndroidCurrentDpi, getAndroidSystemDpi, resetAndroidAppDpi, setAndroidAppDpi } from '../utils/dpiOverride';
 
 type ThemeMode = 'dark' | 'light' | 'amoled';
 type WalletDensity = 'comfortable' | 'compact' | 'ultra';
@@ -32,7 +33,7 @@ const TARGET_DPI_KEY = 'xkey_target_dpi';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
 const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
 const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
-const DEFAULT_DISPLAY_SCALE = 75;
+const DEFAULT_DISPLAY_SCALE = 60;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 const DEFAULT_TARGET_DPI = 250;
@@ -101,6 +102,27 @@ const applyDisplayScale = (scale: number) => {
   document.documentElement.style.setProperty('--app-display-scale', String(scale / 100));
 };
 
+const getEffectiveDeviceDpi = async (): Promise<number> => {
+  const native = await getAndroidSystemDpi();
+  if (native.supported && Number.isFinite(native.systemDpi)) return native.systemDpi as number;
+  if (native.supported && Number.isFinite(native.dpi)) return native.dpi as number;
+  return getDeviceDpi();
+};
+
+const applyNativeDpiIfAvailable = async (targetDpi: number, fallbackDeviceDpi: number) => {
+  const native = await setAndroidAppDpi(targetDpi);
+  const deviceDpi = native.supported && Number.isFinite(native.systemDpi) ? native.systemDpi as number : fallbackDeviceDpi;
+  const shouldUseCssFallback = !native.supported;
+  applyDisplayScale(shouldUseCssFallback ? calculateDpiScale(targetDpi, deviceDpi) : 100);
+  return { deviceDpi, nativeSupported: native.supported };
+};
+
+const resetNativeDpiIfAvailable = async (fallbackScale: number) => {
+  const native = await resetAndroidAppDpi();
+  applyDisplayScale(fallbackScale);
+  return native.supported && Number.isFinite(native.systemDpi) ? native.systemDpi as number : getDeviceDpi();
+};
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [displayScale, setDisplayScaleState] = useState(DEFAULT_DISPLAY_SCALE);
@@ -126,18 +148,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       Preferences.get({ key: DISPLAY_SCALE_KEY }),
       Preferences.get({ key: DPI_MODE_KEY }),
       Preferences.get({ key: TARGET_DPI_KEY })
-    ]).then(([scaleResult, dpiModeResult, targetDpiResult]) => {
+    ]).then(async ([scaleResult, dpiModeResult, targetDpiResult]) => {
       const nextScale = normalizeDisplayScale(scaleResult.value);
       const nextDpiMode = dpiModeResult.value === 'true';
       const storedTargetDpi = normalizeTargetDpi(targetDpiResult.value);
       const nextTargetDpi = nextDpiMode && storedTargetDpi === 480 ? DEFAULT_TARGET_DPI : storedTargetDpi;
-      const nextDeviceDpi = getDeviceDpi();
+      let nextDeviceDpi = await getEffectiveDeviceDpi();
 
       setDisplayScaleState(nextScale);
       setDpiModeState(nextDpiMode);
       setTargetDpiState(nextTargetDpi);
       setDeviceDpi(nextDeviceDpi);
-      applyDisplayScale(nextDpiMode ? calculateDpiScale(nextTargetDpi, nextDeviceDpi) : nextScale);
+      if (nextDpiMode) {
+        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
+        nextDeviceDpi = applied.deviceDpi;
+        setDeviceDpi(nextDeviceDpi);
+      } else {
+        const current = await getAndroidCurrentDpi();
+        if (current.supported && current.overrideEnabled) {
+          nextDeviceDpi = await resetNativeDpiIfAvailable(nextScale);
+          setDeviceDpi(nextDeviceDpi);
+        } else {
+          applyDisplayScale(nextScale);
+        }
+      }
       if (nextDpiMode && storedTargetDpi === 480) {
         Preferences.set({ key: TARGET_DPI_KEY, value: String(DEFAULT_TARGET_DPI) }).catch(() => {});
       }
@@ -174,23 +208,38 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [dpiMode]);
 
   const setDpiMode = useCallback((next: boolean) => {
-    const nextDeviceDpi = getDeviceDpi();
     const nextTargetDpi = next ? DEFAULT_TARGET_DPI : targetDpi;
-    setDeviceDpi(nextDeviceDpi);
     if (next) setTargetDpiState(nextTargetDpi);
     setDpiModeState(next);
-    applyDisplayScale(next ? calculateDpiScale(nextTargetDpi, nextDeviceDpi) : displayScale);
     if (next) Preferences.set({ key: TARGET_DPI_KEY, value: String(nextTargetDpi) }).catch(() => {});
     Preferences.set({ key: DPI_MODE_KEY, value: String(next) }).catch(() => {});
+
+    void (async () => {
+      const nextDeviceDpi = await getEffectiveDeviceDpi();
+      setDeviceDpi(nextDeviceDpi);
+      if (next) {
+        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
+        setDeviceDpi(applied.deviceDpi);
+      } else {
+        const restoredDpi = await resetNativeDpiIfAvailable(displayScale);
+        setDeviceDpi(restoredDpi);
+      }
+    })();
   }, [displayScale, targetDpi]);
 
   const setTargetDpi = useCallback((next: number | string | null | undefined) => {
     const nextTargetDpi = normalizeTargetDpi(next);
-    const nextDeviceDpi = getDeviceDpi();
     setTargetDpiState(nextTargetDpi);
-    setDeviceDpi(nextDeviceDpi);
-    if (dpiMode) applyDisplayScale(calculateDpiScale(nextTargetDpi, nextDeviceDpi));
     Preferences.set({ key: TARGET_DPI_KEY, value: String(nextTargetDpi) }).catch(() => {});
+
+    void (async () => {
+      const nextDeviceDpi = await getEffectiveDeviceDpi();
+      setDeviceDpi(nextDeviceDpi);
+      if (dpiMode) {
+        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
+        setDeviceDpi(applied.deviceDpi);
+      }
+    })();
   }, [dpiMode]);
 
   const setWalletDensity = useCallback((next: string | null | undefined) => {

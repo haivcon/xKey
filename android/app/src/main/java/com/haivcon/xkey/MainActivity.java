@@ -11,6 +11,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(XKeyFileOpenPlugin.class);
         registerPlugin(DeviceIntegrityPlugin.class);
         registerPlugin(XKeyFileSaverPlugin.class);
+        registerPlugin(DpiOverridePlugin.class);
+        DpiOverridePlugin.applyStoredDpi(this);
         super.onCreate(savedInstanceState);
     }
 }
