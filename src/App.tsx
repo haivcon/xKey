@@ -2,7 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
-  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell
+  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell, Eye, EyeOff
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -413,13 +413,9 @@ export default function App() {
         <HomeHeader
           headerRef={homeHeaderRef}
           brandReminders={brandReminders}
-          keyHealthAttentionCount={keyHealthAttentionCount}
-          privacyMode={privacyMode}
           t={t}
-          onOpenKeyHealth={() => setShowKeyHealth(true)}
           onOpenDonate={() => setShowDonate(true)}
           onOpenSettings={() => navigate('/settings')}
-          onTogglePrivacyMode={togglePrivacyMode}
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
@@ -592,14 +588,26 @@ export default function App() {
                         t={t}
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                      className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-brand-500/30 bg-surface-900 px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-800"
-                    >
-                      <span className="block text-scale-3xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
-                      <span className={`block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200 ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : totalBalanceText}</span>
-                    </button>
+                    <div className="grid max-w-[38vw] flex-shrink-0 grid-cols-[minmax(0,1fr)_1.75rem] items-center gap-1 rounded-xl border border-brand-500/30 bg-surface-900 px-2 py-1.5 text-right shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => { hapticTap(); setShowAssetBalance(true); }}
+                        className="min-w-0 text-right"
+                      >
+                        <span className="block text-scale-3xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
+                        <span className={`block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200 ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : totalBalanceText}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { hapticTap(); togglePrivacyMode(); }}
+                        className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${privacyMode ? 'bg-brand-500/20 text-brand-300' : 'bg-surface-800 text-surface-400 hover:bg-surface-700 hover:text-white'}`}
+                        title={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
+                        aria-label={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
+                        aria-pressed={privacyMode}
+                      >
+                        {privacyMode ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
                   </div>
                   <ActionBar
                     searchQuery={searchQuery} onSearchChange={setSearchQuery}
@@ -618,6 +626,8 @@ export default function App() {
                     duplicateCount={duplicateCount}
                     onAnalytics={() => { hapticTap(); navigate('/dashboard'); }}
                     onAdvancedTools={() => { hapticTap(); setShowAdvancedTools(true); }}
+                    keyHealthAttentionCount={keyHealthAttentionCount}
+                    onOpenKeyHealth={() => { hapticTap(); setShowKeyHealth(true); }}
                   />
                 </div>
 

@@ -2,9 +2,7 @@
 
 ## Our Pledge
 
-We pledge to make participation in the xKey community respectful, inclusive, and harassment-free for everyone.
-
-We commit to acting in ways that support a healthy open-source project focused on local-first wallet security, privacy, and user control.
+We pledge to make participation in the xKey community respectful, inclusive, and harassment-free for everyone. We commit to supporting a healthy open-source project focused on local-first wallet security, privacy, and user control.
 
 ---
 
@@ -23,14 +21,7 @@ Examples of behavior that contributes to a positive environment include:
 
 ## Unacceptable Behavior
 
-Unacceptable behavior includes:
-
-- Harassment, intimidation, threats, or personal attacks.
-- Sexualized language or imagery in project spaces.
-- Trolling, insulting comments, or sustained disruption.
-- Publishing private information without explicit permission.
-- Sharing private keys, seed phrases, backups, QR recovery shares, or other secret material in public project spaces.
-- Any conduct that would reasonably be considered inappropriate in a professional open-source community.
+Unacceptable behavior includes harassment, intimidation, threats, personal attacks, sexualized language or imagery, trolling, publishing private information without permission, or sharing private keys, seed phrases, backups, QR recovery shares, or other secret material in public project spaces.
 
 ---
 
@@ -39,6 +30,12 @@ Unacceptable behavior includes:
 xKey is a wallet-vault project. Discussions may involve private keys, seed phrases, encrypted backups, QR recovery flows, Android security, privacy masking, and secret handling.
 
 Do not post real secrets, production wallet data, backup files, screenshots with sensitive information, or exploit details in public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
+
+---
+
+## Release and Repository Hygiene
+
+Community release work should respect the current repository structure, keep older release notes compact, and never include local-only folders such as `1/`, generated APK/AAB files, or secret environment files. The current release documentation target is `v5.22.1`.
 
 ---
 

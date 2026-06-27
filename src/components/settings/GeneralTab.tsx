@@ -72,20 +72,20 @@ function SettingsGroupLabel({ children }: { children: string }) {
 
 function ToggleRow({ icon: Icon, title, description, enabled, activeClass, iconClass, onToggle }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconClass}`}>
+    <div className="flex items-center justify-between gap-3 sm:gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
           <Icon size={20} />
         </div>
-        <div className="min-w-0">
-          <p className="text-white font-medium text-sm">{title}</p>
-          <p className="text-xs text-surface-400">{description}</p>
+        <div className="min-w-0 flex-1 pr-1">
+          <p className="text-sm font-medium leading-tight text-white">{title}</p>
+          <p className="mt-1 text-xs leading-relaxed text-surface-400">{description}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={onToggle}
-        className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${enabled ? activeClass : 'bg-surface-600'}`}
+        className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${enabled ? activeClass : 'bg-surface-600'}`}
         aria-pressed={enabled}
       >
         <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${enabled ? 'translate-x-7' : 'translate-x-1'}`} />

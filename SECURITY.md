@@ -20,17 +20,17 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v5.21.9
+## Current Release Security Notes: v5.22.1
 
-v5.21.9 is primarily a UI/UX, localization, and release metadata update. It does not replace the existing encryption, backup, or authentication model.
+v5.22.1 is a UI layout, release metadata, and documentation update. It does not replace the existing encryption, backup, authentication, or local-only data model.
 
-Security-relevant changes:
+Security-relevant notes:
 
-- Privacy Mode labels are localized and the UI continues masking sensitive values when privacy mode is active.
-- Wallet cards add hold-to-reveal secret viewing and swipe actions; secret reveal/copy remains explicit.
-- Dashboard total value rendering avoids exposing the formatted total value when privacy mode is active.
-- Modal animations, reduced-motion handling, and Lite Mode support are UI-only changes.
-- Android metadata is updated to `versionCode 94` and `versionName 5.21.9`.
+- Privacy Mode remains explicit and now has a smaller toggle inside the Total Assets card.
+- Moving Key Health into Tools changes navigation only; health checks and proof-of-keys behavior are unchanged.
+- Combining sorting into the filter panel is UI-only and does not alter wallet data.
+- Header slogan resizing is display-only and does not affect security controls.
+- Android metadata is updated to `versionCode 96` and `versionName 5.22.1`.
 
 ---
 
@@ -59,11 +59,7 @@ Android is the preferred platform for secure vault usage.
 
 ### Web
 
-The web version is useful for portability and inspection but has weaker security boundaries.
-
-- Browser storage is not equivalent to Android Keystore.
-- Shared, infected, or managed browsers should not be used for real funds.
-- Browser extensions, malware, and compromised operating systems can undermine local security.
+The web version is useful for portability and inspection but has weaker security boundaries. Browser storage is not equivalent to Android Keystore, and compromised browsers or operating systems can undermine local security.
 
 ---
 
@@ -79,9 +75,7 @@ The web version is useful for portability and inspection but has weaker security
 
 ## Reporting a Vulnerability
 
-Do not open public GitHub issues for security vulnerabilities.
-
-Report privately by email:
+Do not open public GitHub issues for security vulnerabilities. Report privately by email:
 
 ```text
 security@xlayer.my

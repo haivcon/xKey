@@ -12,20 +12,19 @@
 
 ---
 
-## Current Release: v5.21.9
+## Current Release: v5.22.1
 
-xKey v5.21.9 focuses on a premium wallet-vault user experience while preserving the project's local-only security model.
+xKey v5.22.1 is a mobile layout and release-metadata update that keeps the vault local-only security model unchanged while making the home and settings screens more balanced on phones.
 
 ### What's New
 
-- **Global Privacy Mode polish:** privacy controls are localized and sensitive wallet values remain masked across key dashboard and card views.
-- **Wallet card upgrades:** improved balance typography, hold-to-reveal for private keys and seed phrases, a compact overflow action menu, and mobile swipe actions for pin/unpin and delete.
-- **Dashboard polish:** animated statistic cards, chart entrance animations, progress bar transitions, and privacy-aware total value rendering.
-- **Empty state onboarding:** redesigned empty vault and empty folder states with clearer CTAs for adding or importing wallets.
-- **Folder workflow improvements:** desktop drag/drop from wallet lists into folders with visual folder drop highlighting.
-- **Modal and page transitions:** lightweight motion utilities for modal backdrops/panels, with Lite Mode and reduced-motion support.
-- **Localization update:** Privacy Mode labels are available in all supported locales.
-- **Android release metadata:** `versionName 5.21.9`, `versionCode 94`.
+- **Cleaner home header:** moved Key Health alerts out of the header and into the Tools menu, leaving the header focused on logo, slogan, donate, and settings actions.
+- **Compact privacy control:** moved the privacy eye button into the Total Assets card with a smaller icon and preserved masked total rendering.
+- **Professional filter workflow:** merged sorting into the filter panel so the home action row only shows camera and filter controls.
+- **Balanced mobile controls:** aligned search/add-wallet widths with the camera/filter/tools column for a more consistent mobile grid.
+- **Settings display polish:** widened toggle rows for Brand Reminder and Wallet Score settings so icons, descriptions, and switches no longer feel cramped.
+- **Header slogan scaling:** reduced the mobile security slogan size to prevent overflow on narrow displays.
+- **Android release metadata:** `versionName 5.22.1`, `versionCode 96`.
 
 ---
 
@@ -42,7 +41,7 @@ xKey v5.21.9 focuses on a premium wallet-vault user experience while preserving 
 
 ### Wallet and Data Management
 
-- Wallet folders, tags, search, filters, sorting, batch actions, pinning, manual balances, and configurable wallet density.
+- Wallet folders, tags, search, combined filter/sort panel, batch actions, pinning, manual balances, and configurable wallet density.
 - QR display/share workflows and CSV import/export.
 - Drag wallets into folders on desktop layouts.
 - Mobile swipe affordances for common wallet-card actions.
@@ -60,7 +59,7 @@ xKey v5.21.9 focuses on a premium wallet-vault user experience while preserving 
 
 ```text
 xKey/
-├─ android/                    Capacitor Android project and release metadata
+├─ android/                    Capacitor Android project and Gradle release metadata
 ├─ assets/                     Project assets
 ├─ icons/                      Icon sources
 ├─ public/                     Static web assets
@@ -68,11 +67,15 @@ xKey/
 ├─ src/
 │  ├─ app/                     App constants and shared app-level contracts
 │  ├─ components/              Feature and reusable React UI components
+│  │  ├─ auth/                 Unlock, onboarding, and auth error screens
 │  │  ├─ backup/               Backup export/import UI
 │  │  ├─ create-wallet/        Create/import/vanity wallet feature module
+│  │  ├─ entropy/              Advanced entropy and derivation panels
 │  │  ├─ qr/                   QR scanner/display/transfer components
 │  │  ├─ settings/             Settings tabs and security/data panels
+│  │  ├─ shamir/               Shamir backup/restore UI
 │  │  ├─ shared/               Shared UI helpers
+│  │  ├─ vanity/               Vanity score UI
 │  │  └─ wallet/               Wallet cards, lists, sorting, swipe/drop UX
 │  ├─ contexts/                Theme, language, toast, confirm, vault contexts
 │  ├─ hooks/                   App, security, backup, vanity, and wallet hooks
@@ -130,6 +133,6 @@ xKey is an offline-first Web3 wallet vault for people who want direct local cont
 
 Older details are intentionally summarized here; see `CHANGELOG.md` for the compact history.
 
-- v5.21.8: Lite Mode relocation, tactile interaction polish, toast layout improvements.
-- v5.21.7: localized theme names and locale automation improvements.
+- v5.22.0: release metadata update before the mobile layout polish pass.
+- v5.21.9: privacy mode, wallet card, dashboard, empty-state, folder drag/drop, and transition polish.
 - v5.21.x: DPI, branding, vanity, duplicate detector, and security polish releases.

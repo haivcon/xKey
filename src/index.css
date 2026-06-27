@@ -1507,40 +1507,40 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(5.4px, 1.45vw, 8px);
+  font-size: clamp(3.2px, 0.72vw, 4.2px);
   font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.018em;
   opacity: 0;
   transform: translateY(3px);
   animation: home-slogan-letter-in 520ms ease-out forwards;
 }
 
 .home-header-slogan-space {
-  width: 0.18em;
+  width: 0.12em;
 }
 
 @media (max-width: 360px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(4.8px, 1.35vw, 5.4px);
-    letter-spacing: 0.025em;
+    font-size: clamp(3px, 0.68vw, 3.6px);
+    letter-spacing: 0.014em;
   }
 
   .home-header-slogan-space {
-    width: 0.15em;
+    width: 0.1em;
   }
 }
 
 @media (min-width: 481px) and (max-width: 767px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(6px, 1.25vw, 9px);
-    letter-spacing: 0.04em;
+    font-size: clamp(4px, 0.82vw, 5.2px);
+    letter-spacing: 0.02em;
   }
 
   .home-header-slogan-space {
-    width: 0.22em;
+    width: 0.14em;
   }
 }
 

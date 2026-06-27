@@ -1,7 +1,7 @@
 ﻿import { lazy, Suspense, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench } from 'lucide-react';
+import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench, Bell } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { readClipboard } from '../utils/clipboard';
 import type { FilterKey, SortOrder } from '../types';
@@ -57,16 +57,18 @@ type ActionBarProps = {
   duplicateCount?: number;
   onAnalytics: () => void;
   onAdvancedTools: () => void;
+  keyHealthAttentionCount?: number;
+  onOpenKeyHealth: () => void;
 };
 
 export default function ActionBar({
   searchQuery, onSearchChange, sortOrder, onSortChange,
   onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
   allTags = [], selectionMode, onToggleSelectionMode,
-  onExportCSV, onExportBackup, onShowDuplicates, duplicateCount = 0, onAnalytics, onAdvancedTools
+  onExportCSV, onExportBackup, onShowDuplicates, duplicateCount = 0, onAnalytics, onAdvancedTools,
+  keyHealthAttentionCount = 0, onOpenKeyHealth
 }: ActionBarProps) {
   const [showFilters, setShowFilters] = useState(false);
-  const [showSort, setShowSort] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const [showSearchScanner, setShowSearchScanner] = useState(false);
   const t = useT();
@@ -172,6 +174,16 @@ export default function ActionBar({
           onClick: () => { onShowDuplicates(); closeTools(); },
         },
         {
+          key: 'keyHealth',
+          label: t('keyHealth.title'),
+          desc: t('keyHealth.subtitle'),
+          icon: Bell,
+          active: keyHealthAttentionCount > 0,
+          badge: keyHealthAttentionCount > 0 ? keyHealthAttentionCount : null,
+          tone: keyHealthAttentionCount > 0 ? 'warning' : undefined,
+          onClick: () => { onOpenKeyHealth(); closeTools(); },
+        },
+        {
           key: 'analytics',
           label: t('actionBar.analytics'),
           desc: t('actionBar.analyticsDesc'),
@@ -227,46 +239,59 @@ export default function ActionBar({
 
   return (
     <>
-      <div className="flex flex-col gap-2 mb-2 mt-1">
-        <div className="flex items-stretch gap-2">
-        <div className="relative min-w-0 flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
-          <input type="text" placeholder={t('actionBar.searchPlaceholder')} value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
-            className="h-12 w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-20 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500" />
-          {searchQuery && (
+      <div className="mb-2 mt-1 flex flex-col gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_7rem]">
+          <div className="relative min-w-0">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+            <input
+              type="text"
+              placeholder={t('actionBar.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-12 w-full bg-surface-900 border border-surface-700 rounded-lg pl-10 pr-20 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-surface-500"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute right-10 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+                title={t('actionBar.clearSearch')}
+                aria-label={t('actionBar.clearSearch')}
+              >
+                <X size={16} />
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => onSearchChange('')}
-              className="absolute right-10 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
-              title={t('actionBar.clearSearch')}
-              aria-label={t('actionBar.clearSearch')}
+              onClick={handlePasteSearch}
+              className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+              title={t('actionBar.pasteSearch')}
             >
-              <X size={16} />
+              <ClipboardPaste size={17} />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={handlePasteSearch}
-            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
-            title={t('actionBar.pasteSearch')}
-          >
-            <ClipboardPaste size={17} />
-          </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setShowSearchScanner(true)}
+              className="flex h-12 min-w-0 items-center justify-center rounded-lg border border-surface-700 bg-surface-800 text-surface-300 transition-colors hover:bg-surface-700 hover:text-white"
+              title={t('actionBar.scanSearch')}
+            >
+              <Camera size={18} />
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`relative flex h-12 min-w-0 items-center justify-center rounded-lg border transition-colors ${activeFilter !== 'all' || sortOrder !== 'none' ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300' : 'border-surface-700 bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white'}`}
+              title={`${t('actionBar.filter')} / ${t('actionBar.sort')}`}
+            >
+              <Filter size={18} />
+              {sortOrder !== 'none' && <ArrowDownUp size={10} className="absolute right-1.5 top-1.5" />}
+            </button>
+          </div>
         </div>
-        <button onClick={() => setShowSearchScanner(true)} className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border border-surface-700 bg-surface-800 text-surface-300 transition-colors hover:bg-surface-700 hover:text-white" title={t('actionBar.scanSearch')}>
-          <Camera size={18} />
-        </button>
-        <button onClick={() => { setShowFilters(!showFilters); setShowSort(false); }}
-          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border transition-colors ${activeFilter !== 'all' ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300' : 'border-surface-700 bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white'}`}
-          title={t('actionBar.filter')}><Filter size={18} /></button>
-        <button onClick={() => { setShowSort(!showSort); setShowFilters(false); }}
-          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg border transition-colors ${sortOrder !== 'none' ? 'border-brand-500/30 bg-brand-500/10 text-brand-300' : 'border-surface-700 bg-surface-800 text-surface-300 hover:bg-surface-700 hover:text-white'}`}
-          title={t('actionBar.sort')}><ArrowDownUp size={18} /></button>
-        </div>
-        <div className="flex gap-2 xl:hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2 sm:grid-cols-[minmax(0,1fr)_7rem] xl:hidden">
           <button
             onClick={onAddWallet}
-            className="btn-glow flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
+            className="btn-glow flex min-w-0 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
             title={t('home.addWallet')}
           >
             <Plus size={18} />
@@ -274,46 +299,35 @@ export default function ActionBar({
           </button>
           <button
             onClick={() => setShowTools(!showTools)}
-            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${showTools ? 'bg-surface-700 border-surface-600 text-white' : 'bg-surface-800 border-surface-700 text-surface-200 hover:bg-surface-700'}`}
+            className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-3 text-sm font-semibold transition-colors ${showTools ? 'bg-surface-700 border-surface-600 text-white' : 'bg-surface-800 border-surface-700 text-surface-200 hover:bg-surface-700'}`}
             title={t('actionBar.moreTools')}
           >
             <MoreHorizontal size={18} />
-            <span>{t('actionBar.tools')}</span>
+            <span className="truncate">{t('actionBar.tools')}</span>
           </button>
         </div>
 
         <div className="hidden gap-2 xl:grid xl:grid-cols-4 2xl:grid-cols-5">
-          <button
-            onClick={onAddWallet}
-            className="btn-glow flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
-            title={t('home.addWallet')}
-          >
-            <Plus size={18} />
-            <span className="truncate">{t('home.addWallet')}</span>
-          </button>
-
-          <div className="contents">
-            {desktopTools.map(item => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.key}
-                  onClick={item.onClick}
-                  disabled={item.loading}
-                  className={`relative flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-semibold transition-colors disabled:opacity-60 ${toolButtonClass(item)}`}
-                  title={`${item.label}${item.desc ? ` - ${item.desc}` : ''}`}
-                >
-                  {item.loading ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={18} />}
-                  <span className="truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-yellow-500 text-black text-scale-2xs font-bold rounded-full flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          {desktopTools.map(item => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.key}
+                onClick={item.onClick}
+                disabled={item.loading}
+                className={`relative flex min-w-0 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-scale-xs font-semibold transition-colors disabled:opacity-60 ${toolButtonClass(item)}`}
+                title={item.desc}
+              >
+                {item.loading ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icon size={18} />}
+                <span className="truncate">{item.label}</span>
+                {item.badge && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-yellow-500 text-black text-scale-2xs font-bold rounded-full flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -392,7 +406,7 @@ export default function ActionBar({
             </div>
           </div>
           {allTags.length > 0 && (
-            <div className="border-t border-surface-700 pt-2 mt-1">
+            <div className="border-t border-surface-700 pt-2 mt-3">
               <span className="text-scale-2xs text-surface-500 uppercase tracking-wider mr-2">{t('actionBar.tags')}</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {allTags.map(tag => (
@@ -404,19 +418,23 @@ export default function ActionBar({
               </div>
             </div>
           )}
+          <div className="border-t border-surface-700 pt-3 mt-3">
+            <div className="mb-2 flex items-center gap-2 text-scale-2xs font-semibold uppercase tracking-wider text-surface-500">
+              <ArrowDownUp size={13} />
+              {t('actionBar.sort')}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SORT_OPTIONS.map(opt => (
+                <button key={opt.key} onClick={() => { onSortChange(opt.key); setShowFilters(false); }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${sortOrder === opt.key ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-300 hover:bg-surface-600'}`}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
-      {showSort && (
-        <div className="flex flex-wrap gap-2 mb-4 bg-surface-800/50 rounded-lg p-3 border border-surface-700">
-          {SORT_OPTIONS.map(opt => (
-            <button key={opt.key} onClick={() => { onSortChange(opt.key); setShowSort(false); }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${sortOrder === opt.key ? 'bg-brand-500 text-white' : 'bg-surface-700 text-surface-300 hover:bg-surface-600'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       {showSearchScanner && (
         <Suspense fallback={null}>

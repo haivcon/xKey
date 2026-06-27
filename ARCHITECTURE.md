@@ -44,7 +44,7 @@ The UI does not depend on a custody server. User data remains local unless the u
 
 ```text
 src/
-├─ App.tsx                     Top-level vault shell and route orchestration
+├─ App.tsx                     Top-level vault shell, route orchestration, home layout
 ├─ app/                        Constants, app contracts, shared app utilities
 ├─ components/
 │  ├─ auth/                    Unlock, onboarding, and auth error screens
@@ -80,13 +80,11 @@ tests/         Unit, focused, and smoke/regression tests
 
 ## 4. Authentication and Secret Handling
 
-xKey does not use a hosted account model.
-
 1. A vault key is generated or restored locally.
 2. On Android, the vault key can be protected by Android Device Credential and Android Keystore capabilities.
 3. Web fallback builds depend on browser storage and the local device environment.
 4. Sensitive fields such as private keys and seed phrases are hidden by default and revealed only through explicit UI actions.
-5. Privacy Mode masks wallet names, addresses, balances, and dashboard totals where supported.
+5. Privacy Mode masks wallet names, addresses, balances, dashboard totals, and the Total Assets card where supported.
 6. Hold-to-reveal allows temporary secret viewing without changing persistent reveal state.
 
 ---
@@ -104,37 +102,31 @@ xKey does not use a hosted account model.
 
 ## 6. UI Interaction Architecture
 
-v5.21.9 adds a polish layer without changing the custody/security model:
+v5.22.1 keeps the custody/security model unchanged and updates the mobile interaction layer:
 
-- Wallet cards support compact secondary actions, hold-to-reveal, and mobile swipe affordances.
-- Dashboard cards and charts use lightweight CSS entrance animations.
-- Empty state components provide clear add/import CTAs.
-- Folder tabs accept desktop wallet drag/drop payloads and highlight active drop targets.
-- Modal/page transition utilities are disabled by Lite Mode and by `prefers-reduced-motion`.
+- `HomeHeader` is focused on brand, slogan, donate, and settings actions.
+- Key Health opens from the Tools menu with badge support.
+- `ActionBar` uses a two-column mobile grid: search/add-wallet on the left and camera/filter/tools on the right.
+- Sorting is part of the filter panel so the mobile toolbar has fewer standalone buttons.
+- The Total Assets card owns the compact privacy eye toggle.
+- Settings toggle rows reserve more space for icon, title, description, and switch alignment.
 
 ---
 
 ## 7. Vanity Wallet Generator
 
-The vanity generator runs as an offline CPU-bound workflow.
-
-- It scans for user-provided vanity targets and additional mathematically interesting matches.
-- Generated private keys and seed phrases remain hidden until explicit reveal.
-- Long-running scans should remain pausable/stoppable.
-- Memory usage must stay bounded.
-- Users must receive heat, battery, and device-health guidance.
-- Generated secrets must never be sent to a remote service.
+The vanity generator runs as an offline CPU-bound workflow. Generated secrets must remain local, hidden until explicit reveal, and bounded by pause/stop and reserve limits.
 
 ---
 
 ## 8. Android Build Metadata
 
-For v5.21.9:
+For v5.22.1:
 
-- `package.json` version: `5.21.9`
-- `package-lock.json` version: `5.21.9`
-- Android `versionName`: `5.21.9`
-- Android `versionCode`: `94`
+- `package.json` version: `5.22.1`
+- `package-lock.json` version: `5.22.1`
+- Android `versionName`: `5.22.1`
+- Android `versionCode`: `96`
 - Android application ID/package: `com.haivcon.xkey`
 
 `android/app/build.gradle` owns application version metadata and release build settings.
@@ -159,7 +151,7 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v5.21.9`.
+5. Create an annotated tag such as `v5.22.1`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 
@@ -167,13 +159,4 @@ Release flow:
 
 ## 10. Repository Hygiene
 
-The repository should exclude:
-
-- `node_modules/`
-- Web and Android build outputs
-- APK/AAB/release artifacts
-- Local environment files and secrets
-- Playwright/test output folders
-- Local instruction or scratch folders such as `1/`
-
-Documentation should keep the current release information prominent while older release notes remain summarized.
+The repository should exclude dependencies, build outputs, APK/AAB/release artifacts, local secrets, Playwright/test outputs, and local instruction or scratch folders such as `1/`.

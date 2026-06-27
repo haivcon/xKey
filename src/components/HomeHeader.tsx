@@ -1,5 +1,5 @@
 ﻿import type { RefObject } from 'react';
-import { Bell, Eye, EyeOff, Heart, Settings } from 'lucide-react';
+import { Heart, Settings } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { HEADER_SLOGAN_LETTERS } from '../app/constants';
@@ -8,31 +8,18 @@ import type { TranslationFn } from '../contexts/LanguageContext';
 type HomeHeaderProps = {
   headerRef: RefObject<HTMLElement | null>;
   brandReminders: boolean;
-  keyHealthAttentionCount: number;
-  privacyMode: boolean;
   t: TranslationFn;
-  onOpenKeyHealth: () => void;
   onOpenDonate: () => void;
   onOpenSettings: () => void;
-  onTogglePrivacyMode: () => void;
 };
 
 export default function HomeHeader({
   headerRef,
   brandReminders,
-  keyHealthAttentionCount,
-  privacyMode,
   t,
-  onOpenKeyHealth,
   onOpenDonate,
   onOpenSettings,
-  onTogglePrivacyMode,
 }: HomeHeaderProps) {
-  const handleOpenKeyHealth = () => {
-    hapticTap();
-    onOpenKeyHealth();
-  };
-
   const handleOpenDonate = () => {
     hapticTap();
     onOpenDonate();
@@ -41,11 +28,6 @@ export default function HomeHeader({
   const handleOpenSettings = () => {
     hapticTap();
     onOpenSettings();
-  };
-
-  const handleTogglePrivacyMode = () => {
-    hapticTap();
-    onTogglePrivacyMode();
   };
 
   return (
@@ -79,29 +61,6 @@ export default function HomeHeader({
             )}
           </div>
           <div className="flex items-center justify-self-end gap-1">
-            <button
-              onClick={handleOpenKeyHealth}
-              className="btn-icon-glow relative rounded-full bg-surface-800 p-2 text-surface-400 transition-colors hover:bg-surface-700 hover:text-white"
-              title={t('keyHealth.title')}
-              aria-label={t('keyHealth.title')}
-            >
-              <Bell size={20} />
-              {keyHealthAttentionCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-surface-900 bg-red-500 px-1 text-scale-3xs font-black leading-none text-white">
-                  {Math.min(9, keyHealthAttentionCount)}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={handleTogglePrivacyMode}
-              className={`btn-icon-glow relative rounded-full p-2 transition-colors ${privacyMode ? 'bg-brand-500/20 text-brand-200 ring-1 ring-brand-400/30' : 'bg-surface-800 text-surface-400 hover:bg-surface-700 hover:text-white'}`}
-              title={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
-              aria-label={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
-              aria-pressed={privacyMode}
-            >
-              {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
-              {privacyMode && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-surface-900 bg-brand-300 shadow-[0_0_10px_rgba(125,211,252,0.9)]" />}
-            </button>
             <button
               onClick={handleOpenDonate}
               className="p-2 bg-gradient-to-br from-fuchsia-500/20 to-brand-500/20 hover:from-fuchsia-500/30 hover:to-brand-500/30 border border-fuchsia-500/30 rounded-full transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(217,70,239,0.4)] animate-pulse"

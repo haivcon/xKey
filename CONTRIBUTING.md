@@ -14,14 +14,7 @@ Never include private keys, seed phrases, wallet backups, backup passwords, QR r
 
 ## Project Principles
 
-xKey should remain:
-
-- Offline-first and local-only by default.
-- Non-custodial.
-- Free of telemetry requirements.
-- Explicit about secret reveal, copy, QR, export, and backup actions.
-- Careful with CPU-intensive workflows such as vanity wallet generation.
-- Clear about backup, recovery, and user responsibility.
+xKey should remain offline-first, non-custodial, free of telemetry requirements, explicit about secret reveal/export actions, careful with CPU-heavy vanity generation, and clear about backup/recovery responsibilities.
 
 Out of scope: custody, remote key recovery, hidden uploads, analytics requirements, or server-side wallet access.
 
@@ -42,7 +35,7 @@ Android/Capacitor work requires Android Studio and a compatible Java/Gradle envi
 
 ## Quality Checks
 
-Before opening a pull request or publishing a release, run the relevant checks:
+Before opening a pull request or publishing a release, run:
 
 ```bash
 npm run type-check
@@ -72,16 +65,9 @@ npm run test:smoke
 
 ## Localization Guidelines
 
-Supported locales:
+Supported locales: `ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`.
 
-`ar`, `de`, `en`, `es`, `fr`, `hi`, `id`, `ja`, `ko`, `pt`, `ru`, `th`, `tr`, `vi`, `zh`
-
-When editing translations:
-
-- Preserve placeholders and interpolation keys.
-- Keep security warnings unambiguous.
-- Update all locale files when adding user-facing keys.
-- Run locale audits when translation keys change.
+When editing translations, preserve placeholders, keep security warnings unambiguous, update all locale files when adding user-facing keys, and run locale audits when translation keys change.
 
 ---
 
@@ -93,4 +79,7 @@ For release work:
 - Update `README.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `ARCHITECTURE.md` when relevant.
 - Keep older release details summarized so the current release stays easy to read.
 - Ensure `.gitignore` excludes local scratch folders such as `1/`.
-- Use `v*` git tags for GitHub Actions release builds.
+- Confirm `git ls-files 1` is empty before committing.
+- Use annotated `v*` git tags for GitHub Actions release builds.
+
+Current release target: `v5.22.1`.

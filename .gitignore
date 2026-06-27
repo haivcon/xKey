@@ -83,3 +83,6 @@ android/**/*.iml
 *.sha1
 *.sha256
 *.sha512
+
+# Extra guard: never publish the local numbered scratch directory.
+/1/**
