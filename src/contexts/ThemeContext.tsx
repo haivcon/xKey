@@ -35,8 +35,8 @@ const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
 const DEFAULT_DISPLAY_SCALE = 75;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
-const DEFAULT_TARGET_DPI = 480;
-const MIN_TARGET_DPI = 160;
+const DEFAULT_TARGET_DPI = 250;
+const MIN_TARGET_DPI = 120;
 const MAX_TARGET_DPI = 960;
 const BASELINE_DPI = 160;
 
@@ -129,7 +129,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     ]).then(([scaleResult, dpiModeResult, targetDpiResult]) => {
       const nextScale = normalizeDisplayScale(scaleResult.value);
       const nextDpiMode = dpiModeResult.value === 'true';
-      const nextTargetDpi = normalizeTargetDpi(targetDpiResult.value);
+      const storedTargetDpi = normalizeTargetDpi(targetDpiResult.value);
+      const nextTargetDpi = nextDpiMode && storedTargetDpi === 480 ? DEFAULT_TARGET_DPI : storedTargetDpi;
       const nextDeviceDpi = getDeviceDpi();
 
       setDisplayScaleState(nextScale);
@@ -137,6 +138,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setTargetDpiState(nextTargetDpi);
       setDeviceDpi(nextDeviceDpi);
       applyDisplayScale(nextDpiMode ? calculateDpiScale(nextTargetDpi, nextDeviceDpi) : nextScale);
+      if (nextDpiMode && storedTargetDpi === 480) {
+        Preferences.set({ key: TARGET_DPI_KEY, value: String(DEFAULT_TARGET_DPI) }).catch(() => {});
+      }
     }).catch(() => {});
 
     Preferences.get({ key: WALLET_DENSITY_KEY }).then(({ value }) => {
@@ -171,9 +175,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setDpiMode = useCallback((next: boolean) => {
     const nextDeviceDpi = getDeviceDpi();
+    const nextTargetDpi = next ? DEFAULT_TARGET_DPI : targetDpi;
     setDeviceDpi(nextDeviceDpi);
+    if (next) setTargetDpiState(nextTargetDpi);
     setDpiModeState(next);
-    applyDisplayScale(next ? calculateDpiScale(targetDpi, nextDeviceDpi) : displayScale);
+    applyDisplayScale(next ? calculateDpiScale(nextTargetDpi, nextDeviceDpi) : displayScale);
+    if (next) Preferences.set({ key: TARGET_DPI_KEY, value: String(nextTargetDpi) }).catch(() => {});
     Preferences.set({ key: DPI_MODE_KEY, value: String(next) }).catch(() => {});
   }, [displayScale, targetDpi]);
 

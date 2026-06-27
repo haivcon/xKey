@@ -217,7 +217,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const displayAddress = wallet.address || t('walletCard.noAddress');
   const { renderVanityExtraAddress } = createVanityAddressRenderer('', '');
   const vanityAddressNode = wallet.address && wallet.vanityMatchType
-    ? renderVanityExtraAddress(wallet.address, wallet, true)
+    ? renderVanityExtraAddress(wallet.address, wallet, true, {
+      head: isUltraCompact ? 12 : 16,
+      tail: isUltraCompact ? 10 : 14,
+      minHead: isUltraCompact ? 5 : 6,
+      minTail: isUltraCompact ? 5 : 6,
+    })
     : null;
 
   const editInput = (key: keyof EditFields, label: string, type = 'text', multiline = false) => (

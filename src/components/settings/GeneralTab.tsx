@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FocusEvent, type KeyboardEvent, type PointerEvent, type TouchEvent } from 'react';
-import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Globe, Moon, Sun, Monitor, Check, ChevronDown, Volume2, Smartphone, Rows3, ShieldCheck, Sparkles, SlidersHorizontal, Zap, ZoomIn } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useT, useLanguage } from '../../contexts/LanguageContext';
 import { LANGUAGES } from '../../locales';
@@ -22,10 +22,10 @@ const THEME_OPTIONS = [
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 const DISPLAY_SCALE_PRESETS = [50, 75, 100, 125, 150, 200];
-const MIN_TARGET_DPI = 160;
+const MIN_TARGET_DPI = 120;
 const MAX_TARGET_DPI = 960;
-const DEFAULT_TARGET_DPI = 480;
-const TARGET_DPI_PRESETS = [320, 420, 480, 560, 640];
+const DEFAULT_TARGET_DPI = 250;
+const TARGET_DPI_PRESETS = [160, 200, 250, 320, 420, 480];
 const DENSITY_OPTIONS = [
   { key: 'comfortable', label: 'settings.walletDensityComfortable' },
   { key: 'compact', label: 'settings.walletDensityCompact' },
@@ -45,8 +45,49 @@ const clampTargetDpi = (value: number | string) => {
 };
 
 type ThemeMode = 'dark' | 'light' | 'amoled';
-type SettingsSection = 'theme' | 'scale' | 'density' | 'feedback';
+type SettingsSection = 'theme' | 'scale' | 'dpi' | 'density' | 'feedback';
+type ToggleRowProps = {
+  icon: typeof ShieldCheck;
+  title: string;
+  description: string;
+  enabled: boolean;
+  activeClass: string;
+  iconClass: string;
+  onToggle: () => void;
+};
 type FeedbackType = 'sound' | 'vibration';
+
+function SettingsGroupLabel({ children }: { children: string }) {
+  return (
+    <div className="mt-5 mb-2 px-1 text-[0.625rem] font-bold uppercase tracking-[0.16em] text-surface-500 first:mt-0">
+      {children}
+    </div>
+  );
+}
+
+function ToggleRow({ icon: Icon, title, description, enabled, activeClass, iconClass, onToggle }: ToggleRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconClass}`}>
+          <Icon size={20} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-white font-medium text-sm">{title}</p>
+          <p className="text-xs text-surface-400">{description}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${enabled ? activeClass : 'bg-surface-600'}`}
+        aria-pressed={enabled}
+      >
+        <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${enabled ? 'translate-x-7' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  );
+}
 
 export default function GeneralTab() {
   const [showLangPicker, setShowLangPicker] = useState(false);
@@ -139,8 +180,11 @@ export default function GeneralTab() {
   const requestDpiModeChange = async (enabled: boolean) => {
     if (enabled === dpiMode) return;
 
+    const nextDpi = enabled ? DEFAULT_TARGET_DPI : targetDpi;
+    const nextScale = enabled ? Math.round((nextDpi / Math.max(deviceDpi, 1)) * 100) : effectiveDisplayScale;
+
     const ok = await showConfirm(
-      t(enabled ? 'settings.dpiModeEnableConfirmMessage' : 'settings.dpiModeDisableConfirmMessage', { dpi: targetDpi, deviceDpi, scale: effectiveDisplayScale }),
+      t(enabled ? 'settings.dpiModeEnableConfirmMessage' : 'settings.dpiModeDisableConfirmMessage', { dpi: nextDpi, deviceDpi, scale: nextScale }),
       {
         title: t('settings.dpiModeConfirmTitle'),
         confirmText: t(enabled ? 'settings.enableDpiMode' : 'settings.disableDpiMode'),
@@ -149,6 +193,9 @@ export default function GeneralTab() {
     );
 
     if (ok) {
+      if (enabled) {
+        setTargetDpi(DEFAULT_TARGET_DPI);
+      }
       setDpiMode(enabled);
       hapticSuccess();
     }
@@ -213,6 +260,8 @@ export default function GeneralTab() {
 
   return (
     <>
+      <SettingsGroupLabel>{t('settings.language')}</SettingsGroupLabel>
+
       {/* ═══ Language Picker ═══ */}
       <div className="glass-card overflow-hidden">
         <button
@@ -262,9 +311,10 @@ export default function GeneralTab() {
       </div>
 
 
+      <SettingsGroupLabel>{t('settings.appearance')}</SettingsGroupLabel>
 
       {/* ═══ Theme Selector ═══ */}
-      <div className="glass-card overflow-hidden mt-4">
+      <div className="glass-card overflow-hidden">
         <button
           onClick={() => toggleSection('theme')}
           className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
@@ -298,52 +348,6 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Brand Reminders ═══ */}
-      <div className="glass-card p-4 mt-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <ShieldCheck size={20} className="text-emerald-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-medium text-sm">{t('settings.brandReminders')}</p>
-              <p className="text-xs text-surface-400">{t('settings.brandRemindersDesc')}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => { hapticTap(); setBrandReminders(!brandReminders); }}
-            className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${brandReminders ? 'bg-emerald-500' : 'bg-surface-600'}`}
-            aria-pressed={brandReminders}
-          >
-            <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${brandReminders ? 'translate-x-7' : 'translate-x-1'}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* ═══ Wallet Scores ═══ */}
-      <div className="glass-card p-4 mt-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <Sparkles size={20} className="text-cyan-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-medium text-sm">{t('settings.walletScores')}</p>
-              <p className="text-xs text-surface-400">{t('settings.walletScoresDesc')}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => { hapticTap(); setShowWalletScores(!showWalletScores); }}
-            className={`w-12 h-6 rounded-full transition-colors relative flex shrink-0 items-center ${showWalletScores ? 'bg-cyan-500' : 'bg-surface-600'}`}
-            aria-pressed={showWalletScores}
-          >
-            <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showWalletScores ? 'translate-x-7' : 'translate-x-1'}`} />
-          </button>
-        </div>
-      </div>
-
       {/* ═══ Display Scale ═══ */}
       <div className="glass-card overflow-hidden mt-4">
         <button
@@ -351,139 +355,27 @@ export default function GeneralTab() {
           className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <Monitor size={20} className="text-cyan-400" />
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
+              <ZoomIn size={20} className="text-brand-400" />
             </div>
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
-              <p className="text-xs text-surface-400">{dpiMode ? `${targetDpi} DPI · ${effectiveDisplayScale}%` : `${displayScale}%`}</p>
+              <p className="text-xs text-surface-400">{displayScale}% · {t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
         </button>
 
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
             <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.displayScaleDesc')}</p>
 
-            <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10">
-                    <SlidersHorizontal size={18} className="text-cyan-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{t('settings.dpiMode')}</p>
-                    <p className="text-xs leading-relaxed text-surface-400">{t('settings.dpiModeDesc')}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { hapticTap(); requestDpiModeChange(!dpiMode); }}
-                  className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${dpiMode ? 'bg-cyan-500' : 'bg-surface-600'}`}
-                  aria-pressed={dpiMode}
-                >
-                  <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${dpiMode ? 'translate-x-7' : 'translate-x-1'}`} />
-                </button>
+            {dpiMode && (
+              <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
+                {t('settings.displayScalePausedByDpi')}
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
-                  <p className="mt-1 text-sm font-bold text-white">{deviceDpi}</p>
-                </div>
-                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
-                  <p className="mt-1 text-sm font-bold text-cyan-200">{targetDpi}</p>
-                </div>
-                <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                  <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
-                  <p className="mt-1 text-sm font-bold text-brand-300">×{dpiScaleRatio.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
+            )}
 
-            {dpiMode ? (
-              <>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
-                  {TARGET_DPI_PRESETS.map(dpi => {
-                    const active = targetDpi === dpi;
-                    return (
-                      <button
-                        key={dpi}
-                        type="button"
-                        onClick={() => { hapticTap(); requestDpiChange(dpi); }}
-                        className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
-                          active
-                            ? 'border-cyan-500/50 bg-cyan-500/15 text-white shadow-sm shadow-cyan-500/10'
-                            : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
-                        }`}
-                      >
-                        {dpi}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <label className="text-xs font-medium text-surface-400">
-                    {t('settings.targetDpiCustom')}
-                  </label>
-                  <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-cyan-300">
-                    {MIN_TARGET_DPI}-{MAX_TARGET_DPI} DPI
-                  </span>
-                </div>
-
-                <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
-                  <div className="grid grid-cols-[1fr_6rem] items-center gap-3">
-                    <input
-                      type="range"
-                      min={MIN_TARGET_DPI}
-                      max={MAX_TARGET_DPI}
-                      step="20"
-                      value={visibleDpi}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        setDpiInput(String(clampTargetDpi(e.target.value)));
-                      }}
-                      onPointerUp={(e: PointerEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
-                      onTouchEnd={(e: TouchEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
-                      onBlur={(e: FocusEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
-                      style={{ '--scale-progress': `${dpiProgress}%` } as CSSProperties}
-                      className="scale-range"
-                    />
-                    <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-cyan-500/60 focus-within:ring-2 focus-within:ring-cyan-500/15">
-                      <input
-                        type="number"
-                        min={MIN_TARGET_DPI}
-                        max={MAX_TARGET_DPI}
-                        step="20"
-                        inputMode="numeric"
-                        value={dpiInput}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDpiInput(e.target.value)}
-                        onFocus={() => {
-                          setIsDpiInputFocused(true);
-                          setDpiInput(String(targetDpi));
-                        }}
-                        onBlur={commitDpiInput}
-                        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                          if (e.key === 'Enter') e.currentTarget.blur();
-                          if (e.key === 'Escape') {
-                            setDpiInput(String(targetDpi));
-                            e.currentTarget.blur();
-                          }
-                        }}
-                        className="w-14 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
-                      />
-                      <span className="text-xs font-semibold text-surface-400">DPI</span>
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-xs leading-relaxed text-surface-400">
-                    {t('settings.dpiCalculatedScale', { dpi: targetDpi, deviceDpi, scale: effectiveDisplayScale })}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
               {DISPLAY_SCALE_PRESETS.map(scale => {
                 const active = displayScale === scale;
@@ -570,8 +462,137 @@ export default function GeneralTab() {
                 <div />
               </div>
             </div>
-              </>
-            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ DPI Balanced Display ═══ */}
+      <div className="glass-card overflow-hidden mt-4">
+        <button
+          onClick={() => toggleSection('dpi')}
+          className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <SlidersHorizontal size={20} className="text-cyan-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium text-sm">{t('settings.dpiMode')}</p>
+              <p className="text-xs text-surface-400">{dpiMode ? `${targetDpi} DPI · ${effectiveDisplayScale}%` : t('settings.disabled')}</p>
+            </div>
+          </div>
+          <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'dpi' ? 'rotate-180' : ''}`} />
+        </button>
+
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'dpi' ? 'max-h-[760px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
+            <div className="mb-4 flex items-start justify-between gap-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">{t('settings.dpiBalancedTitle')}</p>
+                <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.dpiModeDesc')}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { hapticTap(); requestDpiModeChange(!dpiMode); }}
+                className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${dpiMode ? 'bg-cyan-500' : 'bg-surface-600'}`}
+                aria-pressed={dpiMode}
+              >
+                <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${dpiMode ? 'translate-x-7' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
+                <p className="mt-1 text-sm font-bold text-white">{deviceDpi}</p>
+              </div>
+              <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
+                <p className="mt-1 text-sm font-bold text-cyan-200">{targetDpi}</p>
+              </div>
+              <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
+                <p className="mt-1 text-sm font-bold text-brand-300">×{dpiScaleRatio.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+              {TARGET_DPI_PRESETS.map(dpi => {
+                const active = targetDpi === dpi;
+                return (
+                  <button
+                    key={dpi}
+                    type="button"
+                    onClick={() => { hapticTap(); requestDpiChange(dpi); }}
+                    className={`rounded-xl border px-2 py-2 text-xs font-semibold transition-all ${
+                      active
+                        ? 'border-cyan-500/50 bg-cyan-500/15 text-white shadow-sm shadow-cyan-500/10'
+                        : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                    }`}
+                  >
+                    {dpi}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <label className="text-xs font-medium text-surface-400">
+                {t('settings.targetDpiCustom')}
+              </label>
+              <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-cyan-300">
+                {MIN_TARGET_DPI}-{MAX_TARGET_DPI} DPI
+              </span>
+            </div>
+
+            <div className="rounded-2xl border border-surface-700/70 bg-surface-950/35 p-3">
+              <div className="grid grid-cols-[1fr_6rem] items-center gap-3">
+                <input
+                  type="range"
+                  min={MIN_TARGET_DPI}
+                  max={MAX_TARGET_DPI}
+                  step="10"
+                  value={visibleDpi}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    setDpiInput(String(clampTargetDpi(e.target.value)));
+                  }}
+                  onPointerUp={(e: PointerEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                  onTouchEnd={(e: TouchEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                  onBlur={(e: FocusEvent<HTMLInputElement>) => requestDpiChange(e.currentTarget.value)}
+                  style={{ '--scale-progress': `${dpiProgress}%` } as CSSProperties}
+                  className="scale-range"
+                />
+                <div className="flex h-11 items-center justify-center gap-1 rounded-xl border border-surface-700 bg-surface-950/80 px-2 shadow-inner shadow-black/20 focus-within:border-cyan-500/60 focus-within:ring-2 focus-within:ring-cyan-500/15">
+                  <input
+                    type="number"
+                    min={MIN_TARGET_DPI}
+                    max={MAX_TARGET_DPI}
+                    step="10"
+                    inputMode="numeric"
+                    value={dpiInput}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setDpiInput(e.target.value)}
+                    onFocus={() => {
+                      setIsDpiInputFocused(true);
+                      setDpiInput(String(targetDpi));
+                    }}
+                    onBlur={commitDpiInput}
+                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Escape') {
+                        setDpiInput(String(targetDpi));
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    className="w-14 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
+                  />
+                  <span className="text-xs font-semibold text-surface-400">DPI</span>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs leading-relaxed text-surface-400">
+                {t('settings.dpiCalculatedScale', { dpi: targetDpi, deviceDpi, scale: effectiveDisplayScale })}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -620,6 +641,38 @@ export default function GeneralTab() {
         </div>
       </div>
 
+      <SettingsGroupLabel>{t('settings.walletDisplay')}</SettingsGroupLabel>
+
+      {/* ═══ Wallet Display Options ═══ */}
+      <div className="glass-card overflow-hidden mt-4">
+        <div className="space-y-0 divide-y divide-surface-700/50">
+          <div className="p-4">
+            <ToggleRow
+              icon={ShieldCheck}
+              title={t('settings.brandReminders')}
+              description={t('settings.brandRemindersDesc')}
+              enabled={brandReminders}
+              activeClass="bg-emerald-500"
+              iconClass="bg-emerald-500/10 text-emerald-400"
+              onToggle={() => { hapticTap(); setBrandReminders(!brandReminders); }}
+            />
+          </div>
+          <div className="p-4">
+            <ToggleRow
+              icon={Sparkles}
+              title={t('settings.walletScores')}
+              description={t('settings.walletScoresDesc')}
+              enabled={showWalletScores}
+              activeClass="bg-cyan-500"
+              iconClass="bg-cyan-500/10 text-cyan-400"
+              onToggle={() => { hapticTap(); setShowWalletScores(!showWalletScores); }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <SettingsGroupLabel>{t('settings.feedback')}</SettingsGroupLabel>
+
       {/* ═══ Feedback Options ═══ */}
       <div className="glass-card overflow-hidden mt-4">
         <button
@@ -633,7 +686,10 @@ export default function GeneralTab() {
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.feedback')}</p>
               <p className="text-xs text-surface-400">
-                {(feedbackSettings.soundEnabled || feedbackSettings.vibrationEnabled) ? t('settings.enabled') || 'Bật' : t('settings.disabled') || 'Tắt'}
+                {[
+                  (feedbackSettings.soundEnabled || feedbackSettings.vibrationEnabled) ? t('settings.enabled') : t('settings.disabled'),
+                  isLiteMode ? t('settings.liteMode') : null
+                ].filter(Boolean).join(' · ')}
               </p>
             </div>
           </div>
@@ -680,28 +736,18 @@ export default function GeneralTab() {
                 </span>
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ Performance Options ═══ */}
-      <div className="glass-card p-4 mt-4 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <Monitor size={20} className="text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium text-sm">{t('settings.liteMode')}</p>
-              <p className="text-xs text-surface-400">{t('settings.liteModeDesc')}</p>
+            <div className="mt-3 border-t border-surface-700/50 pt-3">
+              <ToggleRow
+                icon={Zap}
+                title={t('settings.liteMode')}
+                description={t('settings.liteModeDesc')}
+                enabled={isLiteMode}
+                activeClass="bg-emerald-500"
+                iconClass="bg-emerald-500/10 text-emerald-400"
+                onToggle={() => { hapticTap(); toggleLiteMode(); }}
+              />
             </div>
           </div>
-          <button
-            onClick={() => { hapticTap(); toggleLiteMode(); }}
-            className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${isLiteMode ? 'bg-emerald-500' : 'bg-surface-600'}`}
-          >
-            <div className={`w-4 h-4 bg-white rounded-full absolute shadow-sm transition-transform ${isLiteMode ? 'right-1 translate-x-0' : 'left-1 translate-x-0'}`} />
-          </button>
         </div>
       </div>
 
