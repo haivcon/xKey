@@ -1136,6 +1136,7 @@ body.keyboard-open .keyboard-scroll-target {
 
 .wallet-swipe-action-pin { background: rgba(245, 158, 11, 0.9); }
 .wallet-swipe-action-delete { background: rgba(239, 68, 68, 0.9); }
+.wallet-swipe-shell:not(.is-swiping) .wallet-swipe-actions { opacity: 0; }
 .wallet-swipe-card {
   position: relative;
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -1775,6 +1776,27 @@ html {
   font-weight: 700;
   color: rgba(99, 102, 241, 0.9);
   margin-left: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop-enter,
+  .modal-panel-enter,
+  .xkey-fade-in,
+  .xkey-scale-in,
+  .dashboard-card-enter,
+  .dashboard-chart-in,
+  .empty-vault-container,
+  .empty-vault-glow,
+  .logo-animated,
+  .animated-splash {
+    animation: none !important;
+  }
+
+  .wallet-swipe-card,
+  .dashboard-progress-fill,
+  :is(button, .btn-glow, .btn-icon-glow) {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Lite Mode (Performance for low-end devices) ── */

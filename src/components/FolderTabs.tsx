@@ -55,6 +55,7 @@ export default function FolderTabs({
   const [openMenu, setOpenMenu] = useState<OpenFolderMenuState | null>(null);
   const [folderQuery, setFolderQuery] = useState('');
   const [dragFolder, setDragFolder] = useState<string | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const isSidebar = variant === 'sidebar';
   const draftCreateName = newFolderName || '';
   const draftEditName = editFolderName || '';
@@ -228,7 +229,10 @@ export default function FolderTabs({
             onDragStart={() => setDragFolder(f)}
             onDragOver={(e: DragEvent<HTMLDivElement>) => {
               const hasWallet = Array.from(e.dataTransfer.types).includes('application/x-xkey-wallet-id');
-              if ((dragFolder && f !== 'All') || (hasWallet && f !== 'All')) e.preventDefault();
+              if ((dragFolder && f !== 'All') || (hasWallet && f !== 'All')) {
+                e.preventDefault();
+                setDragOverFolder(f);
+              }
             }}
             onDrop={(e: DragEvent<HTMLDivElement>) => {
               e.preventDefault();
@@ -236,9 +240,12 @@ export default function FolderTabs({
               if (walletId && f !== 'All') onWalletDrop?.(f, walletId);
               else if (dragFolder && f !== 'All') onReorderFolder?.(dragFolder, f);
               setDragFolder(null);
+              setDragOverFolder(null);
+
             }}
-            onDragEnd={() => setDragFolder(null)}
-            className={isSidebar ? 'relative flex items-center gap-1 transition-transform' : 'relative flex items-center gap-1 flex-shrink-0 transition-transform'}
+            onDragLeave={() => setDragOverFolder(current => current === f ? null : current)}
+            onDragEnd={() => { setDragFolder(null); setDragOverFolder(null); }}
+            className={`${isSidebar ? 'relative flex items-center gap-1 transition-transform' : 'relative flex items-center gap-1 flex-shrink-0 transition-transform'} ${dragOverFolder === f && f !== 'All' ? 'folder-drop-target' : ''}`}
           >
             <button
               onClick={() => onSelectFolder(f)}

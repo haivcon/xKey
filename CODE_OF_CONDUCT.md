@@ -2,9 +2,9 @@
 
 ## Our Pledge
 
-We pledge to make participation in the xKey community respectful, inclusive, and harassment-free for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, experience level, education, socioeconomic status, nationality, personal appearance, race, religion, or sexual orientation.
+We pledge to make participation in the xKey community respectful, inclusive, and harassment-free for everyone.
 
-We commit to acting in ways that support an open, welcoming, diverse, inclusive, and healthy project community.
+We commit to acting in ways that support a healthy open-source project focused on local-first wallet security, privacy, and user control.
 
 ---
 
@@ -36,7 +36,7 @@ Unacceptable behavior includes:
 
 ## Security-Sensitive Discussions
 
-xKey is a wallet-vault project. Discussions may involve private keys, seed phrases, encrypted backups, QR recovery flows, Android security, and secret handling.
+xKey is a wallet-vault project. Discussions may involve private keys, seed phrases, encrypted backups, QR recovery flows, Android security, privacy masking, and secret handling.
 
 Do not post real secrets, production wallet data, backup files, screenshots with sensitive information, or exploit details in public issues. Use the private process in [SECURITY.md](./SECURITY.md) for vulnerability reports.
 

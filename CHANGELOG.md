@@ -1,58 +1,39 @@
 # Changelog
 
-All notable changes to this project are documented here.
+All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
-## [5.21.8] - Current Release
-
-### UI & Interaction Enhancements
-- **Lite Mode Relocated:** Moved Lite Mode toggle from Feedback to the Appearance section for better visibility.
-- **Tactile Effects:** Added subtle press scaling, hover shadows, and smooth ripple effects to buttons and glass cards (disabled in Lite mode).
-- **Toast Alignment:** Centered all toast notifications using a robust CSS grid layout.
-- **Slogan Formatting:** Slogan toasts now display the "NOT YOUR KEY, NOT YOUR CRYPTO" slogan on its own dedicated centered line.
-- **Notice Components:** Centered content in small notice cards across the app.
-
-### Under the Hood
-- Re-architected toast CSS grid to accommodate automatic sizing of action buttons.
-- Updated `package.json` and `build.gradle` to version 5.21.8 (versionCode 93).
-
-<details>
-<summary>Previous release history is collapsed to keep the current release notes focused.</summary>
-
-## [5.21.7]
+## [5.21.9] - Current Release
 
 ### Release Focus
 
-v5.21.7 translates the names of color themes (Pink Rose, Blue Sapphire, Red Ruby, Purple Amethyst, Emerald Vault) into all supported localized languages.
+v5.21.9 completes the UI/UX polish pass for the wallet vault experience and updates Android release metadata for a tagged GitHub build.
 
-### Upgraded Features
+### Added
 
-- **Localized Theme Names:** Translated color theme settings into Arabic, German, Spanish, French, Hindi, Indonesian, Japanese, Korean, Portuguese, Russian, Thai, Turkish, Vietnamese, and Simplified Chinese.
-- **Improved Update Scripts:** Updated the locale automation script (`update-locales.cjs`) to prevent the accidental injection of English fallback names into other localized files during future updates.
-- **App Version Bump:** Bumped app version to `5.21.7` (Android versionCode 92).
+- Localized Privacy Mode button labels across all supported locales.
+- Dashboard entrance animations, chart animations, progress transitions, and privacy-aware total value rendering.
+- Premium empty vault and empty folder states with clearer add/import CTAs.
+- Modal/page transition utilities with Lite Mode and `prefers-reduced-motion` support.
+- Desktop wallet-to-folder drag/drop with folder drop highlighting.
+- Mobile wallet-card swipe actions for pin/unpin and delete.
 
-<details>
-<summary>Previous release history is collapsed to keep the current release notes focused.</summary>
+### Improved
 
-## [5.21.6]
-- Native App-only DPI Override.
-- No System-wide DPI Mutation.
-- Persisted DPI Preference.
+- Wallet cards now provide balance typography polish, hold-to-reveal secret viewing, and a compact overflow menu for secondary actions.
+- Folder tabs visually respond to drag-over targets.
+- `.gitignore` explicitly keeps the local `1/` instruction/scratch folder out of Git.
 
-## [5.21.3]
-- Critical fixes for duplicate settings tabs.
-- Removed duplicate Danger Zone configurations.
-- Fixed device integrity logic and screen capture issues in test cases.
+### Release Metadata
 
-## [5.21.1]
-- Vanity Address Responsive Scaling.
-- Fixed Width Calculation Logic.
+- `package.json`: `5.21.9`
+- `package-lock.json`: `5.21.9`
+- Android `versionName`: `5.21.9`
+- Android `versionCode`: `94`
 
-## [5.21.0]
-- Duplicate Detector UI Enhancement.
-- Improved Alignment.
+## Previous Releases - Compact Summary
 
-## [5.20.0]
-- Splash Screen Fix for light theme logo.
-- Vite Asset Resolution.
-
-</details>
+- **5.21.8:** Lite Mode relocation, tactile interaction effects, toast layout and slogan formatting polish.
+- **5.21.7:** localized theme names and safer locale update automation.
+- **5.21.6:** Android app-only DPI override and persisted DPI preference.
+- **5.21.x:** vanity UX, duplicate detector, branding, backup, and security hardening improvements.
+- **5.20.x and earlier:** foundational Vite/Capacitor Android setup, vault workflows, QR flows, and wallet management features.

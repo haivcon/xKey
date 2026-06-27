@@ -76,6 +76,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const swipeStartRef = useRef<{ x: number; y: number; active: boolean } | null>(null);
+  const suppressNextClickRef = useRef(false);
   const [nowTick, setNowTick] = useState(Date.now());
   const fullAddressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
@@ -303,6 +304,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     swipeStartRef.current = null;
     setIsSwiping(false);
     setSwipeOffset(0);
+    if (Math.abs(offset) > 8) {
+      suppressNextClickRef.current = true;
+      window.setTimeout(() => { suppressNextClickRef.current = false; }, 180);
+    }
     if (offset > 64 && onPin) {
       hapticTap();
       onPin();
@@ -327,8 +332,17 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
       onPointerUp={finishSwipe}
       onPointerCancel={finishSwipe}
     >
+      <div className="wallet-swipe-actions" aria-hidden="true">
+        <span className="wallet-swipe-action wallet-swipe-action-pin">
+          {wallet.pinned ? <PinOff size={14} /> : <Pin size={14} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}
+        </span>
+        <span className="wallet-swipe-action wallet-swipe-action-delete">
+          <Trash2 size={14} /> {t('walletCard.delete')}
+        </span>
+      </div>
       <div className={`${cardPadding} flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50`}
         onClick={() => {
+          if (suppressNextClickRef.current) return;
           if (selectionMode) {
               onToggleSelect?.();
           } else {
