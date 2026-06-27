@@ -1376,6 +1376,10 @@ export default {
     "saved": "Đã lưu",
     "sensitiveWarning": "QR này chứa dữ liệu ví nhạy cảm. Chỉ quét hoặc chia sẻ ở nơi riêng tư."
   },
+  "privacy": {
+    "showSensitiveValues": "Hiện giá trị nhạy cảm",
+    "hideSensitiveValues": "Ẩn giá trị nhạy cảm"
+  },
   "privacyShield": {
     "subtitle": "Được che khi không hoạt động"
   }

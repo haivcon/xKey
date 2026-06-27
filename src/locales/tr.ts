@@ -1376,6 +1376,10 @@ export default {
     "saved": "Kaydedildi",
     "sensitiveWarning": "Bu QR hassas cüzdan verileri içerir. Yalnızca özel bir yerde tarayın veya paylaşın."
   },
+  "privacy": {
+    "showSensitiveValues": "Hassas değerleri göster",
+    "hideSensitiveValues": "Hassas değerleri gizle"
+  },
   "privacyShield": {
     "subtitle": "Pasifken korunuyor"
   }

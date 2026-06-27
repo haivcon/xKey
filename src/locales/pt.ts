@@ -1376,6 +1376,10 @@ export default {
     "saved": "Salvo",
     "sensitiveWarning": "Este QR contém dados sensíveis da carteira. Digitalize ou compartilhe apenas em local privado."
   },
+  "privacy": {
+    "showSensitiveValues": "Mostrar valores sensíveis",
+    "hideSensitiveValues": "Ocultar valores sensíveis"
+  },
   "privacyShield": {
     "subtitle": "Protegido quando inativo"
   }

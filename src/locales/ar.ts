@@ -1376,6 +1376,10 @@ export default {
     "saved": "تم الحفظ",
     "sensitiveWarning": "يحتوي رمز QR هذا على بيانات محفظة حساسة. امسحه أو شاركه في مكان خاص فقط."
   },
+  "privacy": {
+    "showSensitiveValues": "إظهار القيم الحساسة",
+    "hideSensitiveValues": "إخفاء القيم الحساسة"
+  },
   "privacyShield": {
     "subtitle": "محمي عند عدم النشاط"
   }

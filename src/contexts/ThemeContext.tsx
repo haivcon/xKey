@@ -23,6 +23,9 @@ type ThemeContextValue = {
   setBrandReminders: (next: boolean) => void;
   showWalletScores: boolean;
   setShowWalletScores: (next: boolean) => void;
+  privacyMode: boolean;
+  setPrivacyMode: (next: boolean) => void;
+  togglePrivacyMode: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -33,6 +36,7 @@ const TARGET_DPI_KEY = 'xkey_target_dpi';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
 const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
 const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
+const PRIVACY_MODE_KEY = 'xkey_privacy_mode';
 const DEFAULT_DISPLAY_SCALE = 60;
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
@@ -132,6 +136,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [walletDensity, setWalletDensityState] = useState<WalletDensity>('comfortable');
   const [brandReminders, setBrandRemindersState] = useState(true);
   const [showWalletScores, setShowWalletScoresState] = useState(false);
+  const [privacyMode, setPrivacyModeState] = useState(false);
 
   useEffect(() => {
     applyThemeClass('dark');
@@ -191,6 +196,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.get({ key: SHOW_WALLET_SCORES_KEY }).then(({ value }) => {
       if (value === 'true') setShowWalletScoresState(true);
       else if (value === 'false') setShowWalletScoresState(false);
+    }).catch(() => {});
+
+    Preferences.get({ key: PRIVACY_MODE_KEY }).then(({ value }) => {
+      if (value === 'true') setPrivacyModeState(true);
+      else if (value === 'false') setPrivacyModeState(false);
     }).catch(() => {});
   }, []);
 
@@ -258,6 +268,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.set({ key: SHOW_WALLET_SCORES_KEY, value: String(next) }).catch(() => {});
   }, []);
 
+  const setPrivacyMode = useCallback((next: boolean) => {
+    setPrivacyModeState(next);
+    Preferences.set({ key: PRIVACY_MODE_KEY, value: String(next) }).catch(() => {});
+  }, []);
+
+  const togglePrivacyMode = useCallback(() => {
+    setPrivacyModeState(prev => {
+      const next = !prev;
+      Preferences.set({ key: PRIVACY_MODE_KEY, value: String(next) }).catch(() => {});
+      return next;
+    });
+  }, []);
+
   // Legacy toggle for backward compat
   const toggleTheme = useCallback(() => {
     setThemeState(prev => {
@@ -271,7 +294,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const effectiveDisplayScale = dpiMode ? calculateDpiScale(targetDpi, deviceDpi) : displayScale;
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, privacyMode, setPrivacyMode, togglePrivacyMode }}>
       {children}
     </ThemeContext.Provider>
   );

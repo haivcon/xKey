@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus, UploadCloud } from 'lucide-react';
+import { KeyRound, Plus, ShieldCheck, Sparkles, UploadCloud, Wallet as WalletIcon } from 'lucide-react';
 import WalletCard from './WalletCard';
 import SortableWalletCard from './SortableWalletCard';
 import SkeletonCard from '../shared/SkeletonCard';
@@ -150,41 +150,47 @@ function WalletList({
     const isEmptyFolder = activeFolder !== 'All' && !searchQuery;
     return (
       <div className="pt-3">
-        <div className="rounded-2xl border border-dashed border-surface-700 bg-surface-900/50 px-4 py-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-300">
-            <Plus size={22} />
-          </div>
-          <h3 className="text-sm font-bold text-white">
-            {isEmptyFolder ? t('home.emptyFolderTitle', { name: activeFolder }) : t('home.noWallets')}
-          </h3>
-          {brandReminders && !isEmptyFolder && !searchQuery && (
-            <div className="mx-auto mt-2 max-w-sm">
-              <BrandSlogan note={t('brand.emptyVaultDesc')} tone="brand" compact />
+        <div className="empty-vault-container rounded-3xl border border-dashed border-brand-400/30 bg-gradient-to-b from-surface-900/80 to-surface-950/80 px-5 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.22)]">
+          <div className="empty-vault-glow" aria-hidden="true" />
+          <div className="relative z-[1]">
+            <div className="empty-vault-illustration mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-brand-400/25 bg-brand-500/10 text-brand-200">
+              <WalletIcon size={32} />
+              <Sparkles size={14} className="absolute -right-1 top-3 text-amber-300" />
+              <ShieldCheck size={16} className="absolute -bottom-1 -left-1 text-emerald-300" />
             </div>
-          )}
-          {isEmptyFolder && (
-            <>
-              <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-surface-400">
+            <div className="mx-auto mb-3 flex w-fit items-center gap-2 rounded-full border border-surface-700 bg-surface-900/80 px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-surface-400">
+              <KeyRound size={12} className="text-brand-300" /> xKey vault
+            </div>
+            <h3 className="text-base font-black text-white">
+              {isEmptyFolder ? t('home.emptyFolderTitle', { name: activeFolder }) : t('home.noWallets')}
+            </h3>
+            {brandReminders && !isEmptyFolder && !searchQuery && (
+              <div className="mx-auto mt-3 max-w-sm">
+                <BrandSlogan note={t('brand.emptyVaultDesc')} tone="brand" compact />
+              </div>
+            )}
+            {isEmptyFolder && (
+              <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-surface-400">
                 {t('home.emptyFolderDesc')}
               </p>
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={onAddWallet}
-                  className="btn-glow flex items-center justify-center gap-2 rounded-xl border border-brand-400 bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-500"
-                >
-                  <Plus size={16} /> {t('home.addToFolder')}
-                </button>
-                <button
-                  type="button"
-                  onClick={onImport}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-800 px-4 py-3 text-sm font-semibold text-surface-200 hover:bg-surface-700"
-                >
-                  <UploadCloud size={16} /> {t('home.importToFolder')}
-                </button>
-              </div>
-            </>
-          )}
+            )}
+            <div className="mx-auto mt-5 grid max-w-md grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={onAddWallet}
+                className="btn-glow flex items-center justify-center gap-2 rounded-2xl border border-brand-300/60 bg-gradient-to-r from-brand-600 to-cyan-600 px-4 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(14,165,233,0.22)] hover:from-brand-500 hover:to-cyan-500"
+              >
+                <Plus size={16} /> {isEmptyFolder ? t('home.addToFolder') : t('home.addWallet')}
+              </button>
+              <button
+                type="button"
+                onClick={onImport}
+                className="btn-glow flex items-center justify-center gap-2 rounded-2xl border border-surface-700 bg-surface-800/90 px-4 py-3 text-sm font-bold text-surface-200 hover:border-surface-600 hover:bg-surface-700"
+              >
+                <UploadCloud size={16} /> {isEmptyFolder ? t('home.importToFolder') : t('home.importWallet')}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -203,7 +209,15 @@ function WalletList({
           return isDndEnabled ? (
             <SortableWalletCard key={id} id={id}>{renderCard(w, i)}</SortableWalletCard>
           ) : (
-            <div key={id} className="min-w-0">
+            <div
+              key={id}
+              className="min-w-0"
+              draggable={!selectionMode}
+              onDragStart={(event) => {
+                event.dataTransfer.setData('application/x-xkey-wallet-id', String(w._id || w.address || id));
+                event.dataTransfer.effectAllowed = 'move';
+              }}
+            >
               {renderCard(w, i)}
             </div>
           );

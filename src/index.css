@@ -473,6 +473,66 @@ body.keyboard-open .keyboard-scroll-target {
   border-radius: var(--xkey-panel-radius);
 }
 
+.wallet-balance-pill {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+
+.wallet-balance-main {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.wallet-balance-fraction {
+  margin-left: 0.02rem;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.wallet-more-menu {
+  animation: wallet-menu-in 140ms ease-out both;
+  transform-origin: top left;
+}
+
+.wallet-more-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.625rem;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.hold-reveal-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-brand-400) 34%, transparent), 0 0 18px color-mix(in srgb, var(--color-brand-400) 18%, transparent);
+}
+
+.privacy-mask-text {
+  user-select: none;
+  filter: blur(0.35px);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--color-brand-400) 16%, transparent);
+}
+
+@keyframes wallet-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .scale-range {
   --scale-progress: 50%;
   width: 100%;
@@ -921,6 +981,165 @@ body.keyboard-open .keyboard-scroll-target {
 
 .animate-slide-up {
   animation: slide-up 0.25s ease-out;
+}
+
+/* ── Modal / Page Transitions ── */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-backdrop-enter {
+  animation: modal-backdrop-in 0.2s ease-out both;
+}
+
+.modal-panel-enter {
+  animation: modal-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.xkey-fade-in {
+  animation: modal-backdrop-in 0.2s ease-out both;
+}
+
+.xkey-scale-in {
+  animation: modal-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:root:not(.lite-mode) [class*="fixed"][class*="inset-0"][class*="bg-black"] {
+  animation: modal-backdrop-in 0.2s ease-out both;
+}
+
+:root:not(.lite-mode) [class*="fixed"][class*="inset-0"][class*="bg-black"] > :is(.glass-card, [class*="modal"], [class*="Modal"], [class*="rounded-2xl"], [class*="rounded-3xl"]) {
+  animation: modal-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Dashboard Polish ── */
+@keyframes dashboard-card-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dashboard-chart-in {
+  from { opacity: 0; transform: scale(0.82) rotate(-8deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.dashboard-card-enter {
+  animation: dashboard-card-enter 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.dashboard-chart-in {
+  animation: dashboard-chart-in 0.58s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center;
+}
+
+.dashboard-progress-fill {
+  transition: width 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dashboard-total-glow {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 28px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-total-glow::before {
+  content: '';
+  position: absolute;
+  inset: -35% auto auto -15%;
+  width: 55%;
+  height: 85%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+/* ── Empty Vault Polish ── */
+@keyframes empty-vault-enter {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes empty-vault-glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+
+.empty-vault-container {
+  position: relative;
+  overflow: hidden;
+  animation: empty-vault-enter 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.empty-vault-glow {
+  position: absolute;
+  inset: -30% 12% auto 12%;
+  height: 16rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.18), rgba(168, 85, 247, 0.08) 45%, transparent 72%);
+  filter: blur(8px);
+  pointer-events: none;
+  animation: empty-vault-glow-pulse 4s ease-in-out infinite;
+}
+
+.empty-vault-illustration {
+  position: relative;
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Folder Drop / Wallet Swipe ── */
+.folder-drop-target {
+  outline: 2px solid rgba(56, 189, 248, 0.75);
+  outline-offset: 2px;
+  background: rgba(14, 165, 233, 0.16) !important;
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.22);
+  transform: scale(1.03);
+}
+
+.wallet-swipe-shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--xkey-panel-radius);
+}
+
+.wallet-swipe-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.wallet-swipe-shell.is-swiping .wallet-swipe-actions {
+  opacity: 1;
+}
+
+.wallet-swipe-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: white;
+}
+
+.wallet-swipe-action-pin { background: rgba(245, 158, 11, 0.9); }
+.wallet-swipe-action-delete { background: rgba(239, 68, 68, 0.9); }
+.wallet-swipe-card {
+  position: relative;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 /* ── Logo Animations ── */
@@ -1571,6 +1790,14 @@ html {
 .lite-mode .animate-toast-exit,
 .lite-mode .animate-slide-down,
 .lite-mode .animate-slide-up,
+.lite-mode .modal-backdrop-enter,
+.lite-mode .modal-panel-enter,
+.lite-mode .xkey-fade-in,
+.lite-mode .xkey-scale-in,
+.lite-mode .dashboard-card-enter,
+.lite-mode .dashboard-chart-in,
+.lite-mode .empty-vault-container,
+.lite-mode .empty-vault-glow,
 .lite-mode .logo-animated,
 .lite-mode .animated-splash {
   animation: none !important;
@@ -1579,6 +1806,14 @@ html {
 .lite-mode .glass-card {
   background-color: var(--color-surface-900) !important;
   border: 1px solid var(--color-surface-700) !important;
+}
+
+.lite-mode .dashboard-total-glow {
+  box-shadow: none !important;
+}
+
+.lite-mode .dashboard-total-glow::before {
+  display: none !important;
 }
 
 .lite-mode .btn-glow,

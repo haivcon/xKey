@@ -1376,6 +1376,10 @@ export default {
     "saved": "Tersimpan",
     "sensitiveWarning": "QR ini berisi data dompet sensitif. Pindai atau bagikan hanya di tempat pribadi."
   },
+  "privacy": {
+    "showSensitiveValues": "Tampilkan nilai sensitif",
+    "hideSensitiveValues": "Sembunyikan nilai sensitif"
+  },
   "privacyShield": {
     "subtitle": "Dilindungi saat tidak aktif"
   }

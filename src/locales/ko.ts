@@ -1376,6 +1376,10 @@ export default {
     "saved": "저장됨",
     "sensitiveWarning": "이 QR에는 민감한 지갑 데이터가 포함되어 있습니다. 비공개 장소에서만 스캔하거나 공유하세요."
   },
+  "privacy": {
+    "showSensitiveValues": "민감한 값 표시",
+    "hideSensitiveValues": "민감한 값 숨기기"
+  },
   "privacyShield": {
     "subtitle": "비활성 상태 보호 중"
   }

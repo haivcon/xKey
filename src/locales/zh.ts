@@ -1376,6 +1376,10 @@ export default {
     "saved": "已保存",
     "sensitiveWarning": "此二维码包含敏感钱包数据。请只在私密环境中扫描或分享。"
   },
+  "privacy": {
+    "showSensitiveValues": "显示敏感值",
+    "hideSensitiveValues": "隐藏敏感值"
+  },
   "privacyShield": {
     "subtitle": "非活动时已保护"
   }

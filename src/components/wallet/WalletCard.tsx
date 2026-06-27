@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent } from 'react';
-import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck } from 'lucide-react';
+﻿import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck, MoreHorizontal } from 'lucide-react';
 import { useT } from '../../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../../utils/haptics';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
@@ -71,11 +71,16 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [editMode, setEditMode] = useState(false);
   const [editFields, setEditFields] = useState<EditFields>({});
   const [showFullAddress, setShowFullAddress] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [holdReveal, setHoldReveal] = useState<'pk' | 'seed' | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const swipeStartRef = useRef<{ x: number; y: number; active: boolean } | null>(null);
   const [nowTick, setNowTick] = useState(Date.now());
   const fullAddressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
   const { showToast } = useToast();
-  const { brandReminders, showWalletScores } = useTheme();
+  const { brandReminders, showWalletScores, privacyMode } = useTheme();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const secureDisplay = useSecureDisplay();
   const [showMPPrompt, setShowMPPrompt] = useState<SensitiveAction | null>(null);
@@ -256,14 +261,72 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     </div>
   );
 
+  const formattedBalance = formatAssetValue(wallet.balance, assetUnit);
+  const displayAddressText = privacyMode ? '••••••••••••••••' : displayAddress;
+  const balanceParts = formattedBalance.match(/^(.*?)([.,]\d+)?$/);
+  const balanceMain = balanceParts?.[1] || formattedBalance;
+  const balanceFraction = balanceParts?.[2] || '';
+  const showPkValue = showPk || holdReveal === 'pk';
+  const showSeedValue = showSeed || holdReveal === 'seed';
+  const handleHoldRevealStart = (field: 'pk' | 'seed') => {
+    hapticTap();
+    setHoldReveal(field);
+  };
+  const handleHoldRevealEnd = () => setHoldReveal(null);
+  const runMoreAction = (action: () => void) => {
+    setMoreMenuOpen(false);
+    hapticTap();
+    action();
+  };
+  const handleSwipePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (selectionMode || expanded || editMode || renaming || event.pointerType === 'mouse') return;
+    swipeStartRef.current = { x: event.clientX, y: event.clientY, active: true };
+  };
+  const handleSwipePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    if (!start?.active) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
+      swipeStartRef.current = null;
+      setIsSwiping(false);
+      setSwipeOffset(0);
+      return;
+    }
+    if (Math.abs(dx) > 8) {
+      setIsSwiping(true);
+      setSwipeOffset(Math.max(-96, Math.min(96, dx)));
+    }
+  };
+  const finishSwipe = () => {
+    const offset = swipeOffset;
+    swipeStartRef.current = null;
+    setIsSwiping(false);
+    setSwipeOffset(0);
+    if (offset > 64 && onPin) {
+      hapticTap();
+      onPin();
+    } else if (offset < -64) {
+      hapticWarning();
+      onDelete();
+    }
+  };
+
   return (
-    <div className={`glass-card isolate overflow-hidden border transition-colors duration-150 relative ${isNewWallet ? 'wallet-new-card' : ''} ${
+    <div
+      className={`wallet-swipe-shell ${isSwiping ? 'is-swiping' : ''} glass-card isolate overflow-hidden border transition-colors duration-150 relative ${isNewWallet ? 'wallet-new-card' : ''} ${
       isSelected
         ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5'
         : isNewWallet
           ? 'border-emerald-400/70 shadow-[0_0_0_1px_rgba(52,211,153,0.35),0_0_28px_rgba(52,211,153,0.22)] bg-emerald-500/5'
           : 'border-surface-700 hover:border-brand-500/30'
-    }`}>
+    }`}
+      style={{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined }}
+      onPointerDown={handleSwipePointerDown}
+      onPointerMove={handleSwipePointerMove}
+      onPointerUp={finishSwipe}
+      onPointerCancel={finishSwipe}
+    >
       <div className={`${cardPadding} flex items-center justify-between cursor-pointer bg-surface-800/30 hover:bg-surface-800/50`}
         onClick={() => {
           if (selectionMode) {
@@ -295,7 +358,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 onBlur={() => { onRename(editName); setRenaming(false); }} onKeyDown={(e) => { if (e.key === 'Enter') { onRename(editName); setRenaming(false); } }} />
             ) : (
               <div className="flex items-center gap-2">
-                <h3 className={`min-w-0 text-white font-medium truncate ${titleClass}`}>{wallet.name || t('walletCard.unnamed')}</h3>
+                <h3 className={`min-w-0 text-white font-medium truncate ${titleClass} ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : (wallet.name || t('walletCard.unnamed'))}</h3>
                 {wallet.pinned && <Pin size={12} className="text-amber-400 flex-shrink-0" />}
                 {wallet.network && NETWORK_COLORS[wallet.network] && (
                   <button
@@ -323,24 +386,25 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   </span>
                 )}
                 {parseAmount(wallet.balance) > 0 && (
-                  <span className="ml-auto shrink-0 rounded-full border border-surface-700/70 bg-surface-950/35 px-2 py-0.5 text-[0.68rem] font-semibold leading-none text-white shadow-inner shadow-black/10">
-                    {formatAssetValue(wallet.balance, assetUnit)}
+                  <span className="wallet-balance-pill ml-auto shrink-0 rounded-full border border-brand-400/20 bg-surface-950/45 px-2.5 py-1 text-white shadow-inner shadow-black/10">
+                    <span className="wallet-balance-main">{privacyMode ? '••••••' : balanceMain}</span>
+                    {!privacyMode && balanceFraction && <span className="wallet-balance-fraction">{balanceFraction}</span>}
                   </span>
                 )}
               </div>
             )}
-            <p className={`max-w-full min-w-0 text-surface-400 font-mono ${showFullAddress ? 'text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : addressClass}`}>
+            <p className={`max-w-full min-w-0 text-surface-400 font-mono ${privacyMode ? 'privacy-mask-text' : ''} ${showFullAddress ? 'text-[clamp(0.5rem,1.9vw,0.875rem)] leading-tight' : addressClass}`}>
               {wallet.address ? (
-                showFullAddress || !vanityAddressNode ? (
+                showFullAddress || privacyMode || !vanityAddressNode ? (
                   <MiddleEllipsisAddress
-                    address={displayAddress}
+                    address={displayAddressText}
                     head={showFullAddress ? 22 : isUltraCompact ? 12 : 16}
                     tail={showFullAddress ? 18 : isUltraCompact ? 10 : 14}
                     minHead={isUltraCompact ? 5 : 6}
                     minTail={isUltraCompact ? 5 : 6}
                   />
                 ) : vanityAddressNode
-              ) : displayAddress}
+              ) : displayAddressText}
             </p>
             <div className="mt-0.5 flex min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden">
               {wallet.createdAt && (
@@ -458,13 +522,20 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
           ) : (
             <>
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button onClick={() => { hapticTap(); onPin && onPin(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-amber-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors">{wallet.pinned ? <PinOff size={12} /> : <Pin size={12} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}</button>
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Coins size={12} /> {t('walletCard.editBalance')}</button>
-                <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-cyan-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Settings2 size={12} /> {t('walletCard.edit')}</button>
-                {onMove && <button onClick={() => { hapticTap(); onMove(wallet); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><FolderInput size={12} /> {t('walletCard.moveBtn')}</button>}
-                <button onClick={() => { hapticWarning(); onDelete(); }} className="btn-glow btn-glow-danger flex items-center gap-1 text-xs text-surface-400 hover:text-red-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Trash2 size={12} /> {t('walletCard.delete')}</button>
+                <div className="relative">
+                  <button type="button" onClick={() => { hapticTap(); setMoreMenuOpen(v => !v); }} className="btn-icon-glow flex items-center justify-center text-surface-300 hover:text-white bg-surface-800 px-2.5 py-1.5 rounded-lg transition-colors" aria-label="More wallet actions" title="More wallet actions"><MoreHorizontal size={16} /></button>
+                  {moreMenuOpen && (
+                    <div className="wallet-more-menu absolute left-0 top-full z-20 mt-2 min-w-48 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-2xl shadow-black/40">
+                      <button type="button" onClick={() => runMoreAction(enterEditMode)} className="wallet-more-item text-surface-200 hover:bg-surface-800"><Settings2 size={14} /> {t('walletCard.edit')}</button>
+                      {onMove && <button type="button" onClick={() => runMoreAction(() => onMove(wallet))} className="wallet-more-item text-surface-200 hover:bg-surface-800"><FolderInput size={14} /> {t('walletCard.moveBtn')}</button>}
+                      <button type="button" onClick={() => { setMoreMenuOpen(false); hapticWarning(); onDelete(); }} className="wallet-more-item text-red-300 hover:bg-red-500/10"><Trash2 size={14} /> {t('walletCard.delete')}</button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {wallet.createdAt && <div className="text-xs text-surface-500">{t('walletCard.added')}: {formatDate(wallet.createdAt)}</div>}
@@ -496,14 +567,26 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {showPk && <span className="text-yellow-500/70 text-scale-2xs normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
-                    {showPk && secureDisplay.enabled ? (
+                    {showPkValue && secureDisplay.enabled ? (
                       <SecureGlyphText value={wallet.privateKey} className="flex-1 text-sm" />
                     ) : (
                       <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-all font-mono">
-                        {showPk ? wallet.privateKey : '•'.repeat(Math.min(wallet.privateKey.length, 64))}
+                        {showPkValue ? wallet.privateKey : '•'.repeat(Math.min(wallet.privateKey.length, 64))}
                       </code>
                     )}
                     <button onClick={() => handleShowSensitive('pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">{showPk ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    {!showPk && (
+                      <button
+                        type="button"
+                        onPointerDown={() => handleHoldRevealStart('pk')}
+                        onPointerUp={handleHoldRevealEnd}
+                        onPointerLeave={handleHoldRevealEnd}
+                        onPointerCancel={handleHoldRevealEnd}
+                        className="hold-reveal-btn px-2.5 py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 rounded text-scale-2xs font-bold uppercase tracking-wide transition-colors"
+                      >
+                        Hold
+                      </button>
+                    )}
                     <button onClick={() => handleShowSensitive('qr_pk')} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded transition-colors"><QrCode size={18} /></button>
                     <button onClick={() => handleShowSensitive('copy_pk')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
                       {copiedField === 'pk' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
@@ -520,14 +603,26 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {showSeed && <span className="text-yellow-500/70 text-scale-2xs normal-case">{t('walletCard.autoHide')}</span>}
                   </label>
                   <div className="flex items-center gap-2">
-                    {showSeed && secureDisplay.enabled ? (
+                    {showSeedValue && secureDisplay.enabled ? (
                       <SecureGlyphText value={wallet.seedPhrase} className="flex-1 text-sm" multiline />
                     ) : (
                       <code className="flex-1 bg-surface-800 text-surface-200 p-2 rounded text-sm break-words leading-relaxed">
-                        {showSeed ? wallet.seedPhrase : '• '.repeat(wallet.seedPhrase.split(' ').length)}
+                        {showSeedValue ? wallet.seedPhrase : '• '.repeat(wallet.seedPhrase.split(' ').length)}
                       </code>
                     )}
                     <button onClick={() => handleShowSensitive('seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">{showSeed ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    {!showSeed && (
+                      <button
+                        type="button"
+                        onPointerDown={() => handleHoldRevealStart('seed')}
+                        onPointerUp={handleHoldRevealEnd}
+                        onPointerLeave={handleHoldRevealEnd}
+                        onPointerCancel={handleHoldRevealEnd}
+                        className="hold-reveal-btn h-fit self-start px-2.5 py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 rounded text-scale-2xs font-bold uppercase tracking-wide transition-colors"
+                      >
+                        Hold
+                      </button>
+                    )}
                     <button onClick={() => handleShowSensitive('copy_seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">
                       {copiedField === 'seed' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                     </button>

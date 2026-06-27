@@ -1376,6 +1376,10 @@ export default {
     "saved": "保存済み",
     "sensitiveWarning": "このQRには機密ウォレットデータが含まれます。安全な場所でのみスキャンまたは共有してください。"
   },
+  "privacy": {
+    "showSensitiveValues": "機密情報を表示",
+    "hideSensitiveValues": "機密情報を非表示"
+  },
   "privacyShield": {
     "subtitle": "非アクティブ時に保護中"
   }

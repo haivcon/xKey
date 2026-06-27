@@ -28,6 +28,7 @@ type FolderTabsProps = {
   onSetDefaultFolder?: (folder: string) => void;
   onExportFolder?: (folder: string) => void;
   onReorderFolder?: (from: string, to: string) => void;
+  onWalletDrop?: (folder: string, walletId: string) => void;
   pinnedFolders?: string[];
   defaultFolder?: string;
   creatingFolder?: boolean;
@@ -44,7 +45,7 @@ export default function FolderTabs({
   folders, activeFolder, wallets,
   editingFolder, editFolderName,
   onSelectFolder, onStartEdit, onEditChange, onFinishEdit, onDeleteFolder,
-  onRemoveFolderOnly, onTogglePinFolder, onSetDefaultFolder, onExportFolder, onReorderFolder,
+  onRemoveFolderOnly, onTogglePinFolder, onSetDefaultFolder, onExportFolder, onReorderFolder, onWalletDrop,
   pinnedFolders = [], defaultFolder = '',
   creatingFolder, newFolderName, onStartCreate, onCreateChange, onFinishCreate,
   createFolderLabel = 'Create folder',
@@ -226,15 +227,18 @@ export default function FolderTabs({
             draggable={f !== 'All'}
             onDragStart={() => setDragFolder(f)}
             onDragOver={(e: DragEvent<HTMLDivElement>) => {
-              if (dragFolder && f !== 'All') e.preventDefault();
+              const hasWallet = Array.from(e.dataTransfer.types).includes('application/x-xkey-wallet-id');
+              if ((dragFolder && f !== 'All') || (hasWallet && f !== 'All')) e.preventDefault();
             }}
             onDrop={(e: DragEvent<HTMLDivElement>) => {
               e.preventDefault();
-              if (dragFolder && f !== 'All') onReorderFolder?.(dragFolder, f);
+              const walletId = e.dataTransfer.getData('application/x-xkey-wallet-id');
+              if (walletId && f !== 'All') onWalletDrop?.(f, walletId);
+              else if (dragFolder && f !== 'All') onReorderFolder?.(dragFolder, f);
               setDragFolder(null);
             }}
             onDragEnd={() => setDragFolder(null)}
-            className={isSidebar ? 'relative flex items-center gap-1' : 'relative flex items-center gap-1 flex-shrink-0'}
+            className={isSidebar ? 'relative flex items-center gap-1 transition-transform' : 'relative flex items-center gap-1 flex-shrink-0 transition-transform'}
           >
             <button
               onClick={() => onSelectFolder(f)}

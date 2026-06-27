@@ -1376,6 +1376,10 @@ export default {
     "saved": "Gespeichert",
     "sensitiveWarning": "Dieser QR-Code enthält sensible Wallet-Daten. Scanne oder teile ihn nur privat."
   },
+  "privacy": {
+    "showSensitiveValues": "Sensible Werte anzeigen",
+    "hideSensitiveValues": "Sensible Werte ausblenden"
+  },
   "privacyShield": {
     "subtitle": "Geschützt bei Inaktivität"
   }

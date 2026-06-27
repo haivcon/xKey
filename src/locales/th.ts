@@ -1376,6 +1376,10 @@ export default {
     "saved": "บันทึกแล้ว",
     "sensitiveWarning": "QR นี้มีข้อมูลกระเป๋าที่ละเอียดอ่อน โปรดสแกนหรือแชร์ในที่ส่วนตัวเท่านั้น"
   },
+  "privacy": {
+    "showSensitiveValues": "แสดงค่าที่ละเอียดอ่อน",
+    "hideSensitiveValues": "ซ่อนค่าที่ละเอียดอ่อน"
+  },
   "privacyShield": {
     "subtitle": "ป้องกันเมื่อไม่ได้ใช้งาน"
   }

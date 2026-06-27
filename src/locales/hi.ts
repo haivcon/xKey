@@ -1376,6 +1376,10 @@ export default {
     "saved": "सेव हुआ",
     "sensitiveWarning": "इस QR में संवेदनशील वॉलेट डेटा है। इसे केवल निजी स्थान पर स्कैन या शेयर करें।"
   },
+  "privacy": {
+    "showSensitiveValues": "संवेदनशील मान दिखाएँ",
+    "hideSensitiveValues": "संवेदनशील मान छिपाएँ"
+  },
   "privacyShield": {
     "subtitle": "निष्क्रिय होने पर सुरक्षित"
   }

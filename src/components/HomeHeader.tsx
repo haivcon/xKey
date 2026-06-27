@@ -1,5 +1,5 @@
 ﻿import type { RefObject } from 'react';
-import { Bell, Heart, Settings } from 'lucide-react';
+import { Bell, Eye, EyeOff, Heart, Settings } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { HEADER_SLOGAN_LETTERS } from '../app/constants';
@@ -9,20 +9,24 @@ type HomeHeaderProps = {
   headerRef: RefObject<HTMLElement | null>;
   brandReminders: boolean;
   keyHealthAttentionCount: number;
+  privacyMode: boolean;
   t: TranslationFn;
   onOpenKeyHealth: () => void;
   onOpenDonate: () => void;
   onOpenSettings: () => void;
+  onTogglePrivacyMode: () => void;
 };
 
 export default function HomeHeader({
   headerRef,
   brandReminders,
   keyHealthAttentionCount,
+  privacyMode,
   t,
   onOpenKeyHealth,
   onOpenDonate,
   onOpenSettings,
+  onTogglePrivacyMode,
 }: HomeHeaderProps) {
   const handleOpenKeyHealth = () => {
     hapticTap();
@@ -37,6 +41,11 @@ export default function HomeHeader({
   const handleOpenSettings = () => {
     hapticTap();
     onOpenSettings();
+  };
+
+  const handleTogglePrivacyMode = () => {
+    hapticTap();
+    onTogglePrivacyMode();
   };
 
   return (
@@ -82,6 +91,16 @@ export default function HomeHeader({
                   {Math.min(9, keyHealthAttentionCount)}
                 </span>
               )}
+            </button>
+            <button
+              onClick={handleTogglePrivacyMode}
+              className={`btn-icon-glow relative rounded-full p-2 transition-colors ${privacyMode ? 'bg-brand-500/20 text-brand-200 ring-1 ring-brand-400/30' : 'bg-surface-800 text-surface-400 hover:bg-surface-700 hover:text-white'}`}
+              title={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
+              aria-label={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')}
+              aria-pressed={privacyMode}
+            >
+              {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
+              {privacyMode && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border border-surface-900 bg-brand-300 shadow-[0_0_10px_rgba(125,211,252,0.9)]" />}
             </button>
             <button
               onClick={handleOpenDonate}

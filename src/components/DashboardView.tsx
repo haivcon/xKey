@@ -1,5 +1,6 @@
 ﻿import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatAssetValue, parseAmount } from '../utils/amountFormat';
 import type { Wallet as WalletType } from '../types';
 
@@ -16,6 +17,8 @@ type DashboardViewProps = {
 
 export default function DashboardView({ wallets, onBack, assetUnit = '$' }: DashboardViewProps) {
     const t = useT();
+    const { privacyMode } = useTheme();
+    const maskValue = (value: string) => privacyMode ? '••••••' : value;
 
     // Folder distribution
     const folderMap: Record<string, DistributionValue> = {};
@@ -88,35 +91,35 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div className="glass-card p-4 border border-surface-700">
+                    <div className="glass-card dashboard-card-enter p-4 border border-surface-700" style={{ animationDelay: '0ms' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <Wallet size={16} className="text-brand-400" />
                             <span className="text-xs text-surface-400">{t('dashboard.totalWallets')}</span>
                         </div>
                         <p className="text-2xl font-bold text-white">{wallets.length}</p>
                     </div>
-                    <div className="glass-card p-4 border border-surface-700">
+                    <div className="glass-card dashboard-card-enter p-4 border border-surface-700" style={{ animationDelay: '80ms' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <TrendingUp size={16} className="text-green-400" />
                             <span className="text-xs text-surface-400">{t('dashboard.activeBalance')}</span>
                         </div>
                         <p className="text-2xl font-bold text-green-400">{activeWallets}</p>
                     </div>
-                    <div className="glass-card p-4 border border-surface-700">
+                    <div className="glass-card dashboard-card-enter p-4 border border-surface-700" style={{ animationDelay: '160ms' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <AlertCircle size={16} className="text-surface-500" />
                             <span className="text-xs text-surface-400">{t('dashboard.emptyWallets')}</span>
                         </div>
                         <p className="text-2xl font-bold text-surface-400">{emptyWallets}</p>
                     </div>
-                    <div className="glass-card p-4 border border-surface-700">
+                    <div className="glass-card dashboard-card-enter p-4 border border-surface-700" style={{ animationDelay: '240ms' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <KeyRound size={16} className="text-cyan-400" />
                             <span className="text-xs text-surface-400">{t('dashboard.withPK')}</span>
                         </div>
                         <p className="text-2xl font-bold text-cyan-400">{walletsWithPK}</p>
                     </div>
-                    <div className="glass-card p-4 border border-surface-700 col-span-2 lg:col-span-1">
+                    <div className="glass-card dashboard-card-enter p-4 border border-surface-700 col-span-2 lg:col-span-1" style={{ animationDelay: '320ms' }}>
                         <div className="flex items-center gap-2 mb-2">
                             <Link size={16} className="text-purple-400" />
                             <span className="text-xs text-surface-400">{t('dashboard.withSeed')}</span>
@@ -127,12 +130,12 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
 
                 <div className="grid lg:grid-cols-2 gap-6">
                 {/* Folder Pie Chart */}
-                <div className="glass-card p-6 border border-surface-700">
+                <div className="glass-card dashboard-card-enter p-6 border border-surface-700" style={{ animationDelay: '400ms' }}>
                     <h3 className="text-white font-semibold mb-4">{t('dashboard.distribution')}</h3>
                     <div className="flex items-center gap-6">
                         <div
-                            className="w-28 h-28 rounded-full flex-shrink-0"
-                            style={{ background: buildPie(folderEntries, totalBalance) }}
+                            className="dashboard-chart-in w-28 h-28 rounded-full flex-shrink-0"
+                            style={{ background: buildPie(folderEntries, totalBalance), animationDelay: '480ms' }}
                         >
                             <div className="w-full h-full rounded-full flex items-center justify-center">
                                 <div className="w-16 h-16 rounded-full bg-surface-900 flex items-center justify-center">
@@ -146,7 +149,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }}></div>
                                     <span className="text-surface-300 truncate flex-1">{name}</span>
                                     <span className="text-surface-500 text-xs flex-shrink-0">{data.count}w</span>
-                                    <span className="text-white font-medium text-xs flex-shrink-0">{formatAssetValue(data.total, assetUnit)}</span>
+                                    <span className={`text-white font-medium text-xs flex-shrink-0 ${privacyMode ? 'privacy-mask-text' : ''}`}>{maskValue(formatAssetValue(data.total, assetUnit))}</span>
                                 </div>
                             ))}
                         </div>
@@ -154,12 +157,12 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                 </div>
 
                 {/* Chain Distribution */}
-                <div className="glass-card p-6 border border-surface-700">
+                <div className="glass-card dashboard-card-enter p-6 border border-surface-700" style={{ animationDelay: '480ms' }}>
                     <h3 className="text-white font-semibold mb-4">{t('dashboard.chainDistribution')}</h3>
                     <div className="flex items-center gap-6">
                         <div
-                            className="w-28 h-28 rounded-full flex-shrink-0"
-                            style={{ background: buildPie(chainEntries, totalBalance) }}
+                            className="dashboard-chart-in w-28 h-28 rounded-full flex-shrink-0"
+                            style={{ background: buildPie(chainEntries, totalBalance), animationDelay: '560ms' }}
                         >
                             <div className="w-full h-full rounded-full flex items-center justify-center">
                                 <div className="w-16 h-16 rounded-full bg-surface-900 flex items-center justify-center">
@@ -173,7 +176,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: chainColors[i % chainColors.length] }}></div>
                                     <span className="text-surface-300 truncate flex-1">{name}</span>
                                     <span className="text-surface-500 text-xs flex-shrink-0">{data.count}w</span>
-                                    <span className="text-white font-medium text-xs flex-shrink-0">{formatAssetValue(data.total, assetUnit)}</span>
+                                    <span className={`text-white font-medium text-xs flex-shrink-0 ${privacyMode ? 'privacy-mask-text' : ''}`}>{maskValue(formatAssetValue(data.total, assetUnit))}</span>
                                 </div>
                             ))}
                         </div>
@@ -243,7 +246,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                     const score = Math.round((pkRate * 40 + seedRate * 40 + taggedRate * 20) * 100);
                     const getColor = (s: number) => s >= 80 ? 'text-emerald-400' : s >= 50 ? 'text-amber-400' : 'text-red-400';
                     return (
-                        <div className="glass-card p-6 border border-surface-700">
+                        <div className="glass-card dashboard-card-enter p-6 border border-surface-700" style={{ animationDelay: '640ms' }}>
                             <h3 className="text-white font-semibold mb-4">{t('dashboard.securityScore') || 'Vault Health'}</h3>
                             <div className="flex items-center gap-6">
                                 <div className="relative w-24 h-24">
@@ -261,11 +264,11 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                                 </div>
                                 <div className="flex-1 space-y-2 text-xs">
                                     <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.withPK')}</span><span className="text-white">{Math.round(pkRate * 100)}%</span></div>
-                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-cyan-500 rounded-full" style={{ width: `${pkRate * 100}%` }} /></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="dashboard-progress-fill h-full bg-cyan-500 rounded-full" style={{ width: `${pkRate * 100}%` }} /></div>
                                     <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.withSeed')}</span><span className="text-white">{Math.round(seedRate * 100)}%</span></div>
-                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${seedRate * 100}%` }} /></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="dashboard-progress-fill h-full bg-purple-500 rounded-full" style={{ width: `${seedRate * 100}%` }} /></div>
                                     <div className="flex justify-between"><span className="text-surface-400">{t('dashboard.tagged') || 'Tagged'}</span><span className="text-white">{Math.round(taggedRate * 100)}%</span></div>
-                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="h-full bg-amber-500 rounded-full" style={{ width: `${taggedRate * 100}%` }} /></div>
+                                    <div className="w-full h-1.5 bg-surface-800 rounded-full"><div className="dashboard-progress-fill h-full bg-amber-500 rounded-full" style={{ width: `${taggedRate * 100}%` }} /></div>
                                 </div>
                             </div>
                         </div>
@@ -275,9 +278,9 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                 </div>
 
                 {/* Total */}
-                <div className="glass-card p-6 border border-brand-500/20 bg-brand-500/5">
+                <div className="glass-card dashboard-card-enter dashboard-total-glow p-6 border border-brand-500/20 bg-brand-500/5" style={{ animationDelay: '720ms' }}>
                     <p className="text-surface-400 text-xs uppercase tracking-wider mb-1">{t('dashboard.totalValue')}</p>
-                    <p className="text-3xl font-bold text-white">{formatAssetValue(totalBalance, assetUnit)}</p>
+                    <p className={`text-3xl font-bold text-white ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : formatAssetValue(totalBalance, assetUnit)}</p>
                 </div>
             </div>
         </div>

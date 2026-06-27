@@ -1376,6 +1376,10 @@ export default {
     "saved": "Guardado",
     "sensitiveWarning": "Este QR contiene datos sensibles de la wallet. Escanéalo o compártelo solo en privado."
   },
+  "privacy": {
+    "showSensitiveValues": "Mostrar valores sensibles",
+    "hideSensitiveValues": "Ocultar valores sensibles"
+  },
   "privacyShield": {
     "subtitle": "Protegido mientras está inactivo"
   }

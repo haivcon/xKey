@@ -97,7 +97,7 @@ export default function App() {
   const { showToast } = useToast() || {};
   const showConfirm = useConfirm();
   const appVersion = useAppVersion();
-  const { brandReminders } = useTheme();
+  const { brandReminders, privacyMode, togglePrivacyMode } = useTheme();
 
   useEffect(() => {
     tRef.current = t;
@@ -155,6 +155,14 @@ export default function App() {
     handleTogglePin, handleMoveWallet, handleReorderWallet,
     pinnedFolders, defaultFolder,
   } = useWallets(aesKey, isDecoyMode);
+
+
+  const handleWalletDropToFolder = useCallback((folder: string, walletId: string) => {
+    const wallet = wallets.find(w => String(w._id || w.address || '') === walletId);
+    if (!wallet) return;
+    hapticSuccess();
+    void handleMoveWallet(wallet, folder);
+  }, [wallets, handleMoveWallet]);
 
   useEffect(() => {
     setWalletsRef.current = setWallets;
@@ -406,10 +414,12 @@ export default function App() {
           headerRef={homeHeaderRef}
           brandReminders={brandReminders}
           keyHealthAttentionCount={keyHealthAttentionCount}
+          privacyMode={privacyMode}
           t={t}
           onOpenKeyHealth={() => setShowKeyHealth(true)}
           onOpenDonate={() => setShowDonate(true)}
           onOpenSettings={() => navigate('/settings')}
+          onTogglePrivacyMode={togglePrivacyMode}
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
@@ -534,6 +544,8 @@ export default function App() {
                       creatingFolder={creatingFolder} newFolderName={newFolderName}
                       onSelectFolder={(f) => { setActiveFolder(f); }}
                       onStartEdit={startEditFolder}
+                      onWalletDrop={handleWalletDropToFolder}
+
                       onEditChange={setEditFolderName}
                       onFinishEdit={(oldName, newName) => finishEditFolder(oldName, newName, handleRenameFolder)}
                       onDeleteFolder={handleDeleteFolder}
@@ -572,6 +584,7 @@ export default function App() {
                         onSetDefaultFolder={handleSetDefaultFolder}
                         onExportFolder={openExportFolder}
                         onReorderFolder={handleReorderFolder}
+                        onWalletDrop={handleWalletDropToFolder}
                         onStartCreate={startCreateFolder}
                         onCreateChange={setNewFolderName}
                         onFinishCreate={finishCreateFolder}
@@ -585,7 +598,7 @@ export default function App() {
                       className="w-auto max-w-[38vw] self-center flex-shrink-0 rounded-xl border border-brand-500/30 bg-surface-900 px-2.5 py-1.5 text-right shadow-sm hover:bg-surface-800"
                     >
                       <span className="block text-scale-3xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400">{t('home.totalAssets')}</span>
-                      <span className="block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200">{totalBalanceText}</span>
+                      <span className={`block truncate text-xs font-extrabold leading-none text-brand-700 dark:text-brand-200 ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : totalBalanceText}</span>
                     </button>
                   </div>
                   <ActionBar
