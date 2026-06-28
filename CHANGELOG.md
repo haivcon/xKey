@@ -2,6 +2,24 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.6] - 2026-06-28
+
+### Release Notes
+
+- Updated project files:
+- Changed android/app/build.gradle
+- Changed package-lock.json
+- Changed package.json
+- Changed scripts/release.mjs
+- Changed src/App.tsx
+
+### Release Metadata
+
+- `package.json`: `6.0.6`
+- `package-lock.json`: `6.0.6`
+- Android `versionName`: `6.0.6`
+- Android `versionCode`: `104`
+
 ## [6.0.5] - 2026-06-28
 
 ### Release Notes

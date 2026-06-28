@@ -110,7 +110,8 @@ try {
   const changelogPath = 'CHANGELOG.md';
   const changelog = readFileSync(changelogPath, 'utf8');
   const introPattern = /(All notable changes to xKey are summarized here\. Older details are intentionally compact so the current release remains easy to audit\.\r?\n\r?\n)/;
-  const note = (options.note.trim() || generateReleaseNote())
+  const releaseNoteText = options.note.trim() || generateReleaseNote();
+  const note = releaseNoteText
     .split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => `- ${line}`).join('\n');
   const entry = `## [${nextVersion}] - ${new Date().toISOString().slice(0, 10)}\n\n### Release Notes\n\n${note}\n\n### Release Metadata\n\n- \`package.json\`: \`${nextVersion}\`\n- \`package-lock.json\`: \`${nextVersion}\`\n- Android \`versionName\`: \`${nextVersion}\`\n- Android \`versionCode\`: \`${nextCode}\`\n\n`;
   if (!introPattern.test(changelog)) throw new Error('Cannot find CHANGELOG insertion point.');
@@ -125,8 +126,8 @@ try {
   }
 
   run('git', ['add', '-A']);
-  run('git', ['commit', '-m', `chore: release ${tag}`]);
-  run('git', ['tag', '-a', tag, '-m', `Release ${tag}`]);
+  run('git', ['commit', '-m', `chore: release ${tag}`, '-m', releaseNoteText]);
+  run('git', ['tag', '-a', tag, '-m', `Release ${tag}`, '-m', releaseNoteText]);
   if (options.push) {
     run('git', ['push', 'origin', branch]);
     run('git', ['push', 'origin', tag]);

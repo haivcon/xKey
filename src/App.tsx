@@ -477,7 +477,7 @@ export default function App() {
                   />
                 </div>
               )}
-              <div className="glass-card overflow-hidden p-5 text-center">
+              <div className="glass-card w-full overflow-hidden p-5 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-300 shadow-lg shadow-brand-500/10">
                   <FileKey2 size={28} />
                 </div>
@@ -490,9 +490,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
-                className="btn-glow group glass-card flex cursor-pointer flex-col items-center justify-center border-2 border-dashed border-surface-200/20 p-8 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/10 active:scale-[0.98]"
+                className="btn-glow group glass-card flex w-full min-h-[240px] cursor-pointer flex-col items-center justify-center border-2 border-dashed border-brand-400/25 bg-gradient-to-br from-brand-500/10 via-surface-900/70 to-emerald-500/10 p-8 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-brand-400/60 hover:shadow-xl hover:shadow-brand-500/10 focus:outline-none focus:ring-2 focus:ring-brand-400/40 active:scale-[0.98]"
               >
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-800 transition-transform duration-200 group-hover:scale-110 group-hover:bg-brand-500/10">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/10 text-brand-300 shadow-lg shadow-brand-500/10 transition-transform duration-200 group-hover:scale-110 group-hover:bg-brand-500/20">
                   {loading ? (
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
                   ) : (
@@ -513,11 +513,11 @@ export default function App() {
                 </p>
               </button>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid items-stretch gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={() => { hapticTap(); setShowCreateWallet(true); }}
-                  className="btn-glow glass-card group flex cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-surface-200/20 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10 active:scale-[0.98]"
+                  className="btn-glow glass-card group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-brand-400/25 bg-brand-500/5 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:bg-brand-500/10 hover:shadow-lg hover:shadow-brand-500/10 focus:outline-none focus:ring-2 focus:ring-brand-400/30 active:scale-[0.98]"
                 >
                   <Plus size={24} className="text-brand-400 transition-transform duration-200 group-hover:scale-110" />
                   <span className="font-semibold text-white">{t('home.addWallet')}</span>
@@ -525,23 +525,23 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => { hapticTap(); startCreateFolder(); }}
-                  className="btn-glow glass-card group flex cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-surface-200/20 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10 active:scale-[0.98]"
+                  className="btn-glow glass-card group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-sky-400/25 bg-sky-500/5 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-400/50 hover:bg-sky-500/10 hover:shadow-lg hover:shadow-sky-500/10 focus:outline-none focus:ring-2 focus:ring-sky-400/30 active:scale-[0.98]"
                 >
                   <FolderPlus size={23} className="text-brand-400 transition-transform duration-200 group-hover:scale-110" />
                   <span className="font-semibold text-white">{t('home.createFolder')}</span>
                 </button>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+              <div className="grid items-stretch gap-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-center transition-transform duration-200 hover:-translate-y-0.5">
                   <ShieldCheck size={20} className="mx-auto text-emerald-300" />
                   <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.localEncrypted')}</p>
                 </div>
-                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+                <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-3 text-center transition-transform duration-200 hover:-translate-y-0.5">
                   <ServerOff size={20} className="mx-auto text-sky-300" />
                   <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.noServer')}</p>
                 </div>
-                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+                <div className="rounded-2xl border border-brand-400/20 bg-brand-500/10 p-3 text-center transition-transform duration-200 hover:-translate-y-0.5">
                   <FileKey2 size={20} className="mx-auto text-brand-300" />
                   <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.xkeyBackup')}</p>
                 </div>
