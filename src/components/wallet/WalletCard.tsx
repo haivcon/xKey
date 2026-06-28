@@ -89,7 +89,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const isCompact = density === 'compact';
   const isUltraCompact = density === 'ultra';
   const cardPadding = isUltraCompact ? 'p-2.5' : isCompact ? 'p-3' : 'p-4';
-  const cardMinHeight = isUltraCompact ? 'min-h-[72px]' : isCompact ? 'min-h-[88px]' : 'min-h-[108px]';
+  const cardMinHeight = '';
   const scoreBadgeCompact = isCompact || isUltraCompact;
   const standardBadgeClass = `${isUltraCompact ? 'text-[0.5rem] px-1.5 py-px' : 'text-[0.55rem] px-1.5 py-[0.0625rem]'} inline-flex items-center gap-1 rounded-full border border-surface-500/25 bg-surface-700/25 font-black uppercase leading-none tracking-wide text-surface-400/80`;
   const rowGap = isUltraCompact ? 'gap-2' : 'gap-3';

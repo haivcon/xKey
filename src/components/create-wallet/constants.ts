@@ -3,11 +3,13 @@ import type { VanityExtraPatternKey } from '../../utils/vanity/vanityMatch';
 export const NETWORKS = ['XLAYER', 'ETH', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Solana', 'Tron', 'Base'];
 
 export const VANITY_PRESET_GROUPS = [
-  { key: 'lucky', labelKey: 'vanityPresetLucky', icon: '🍀', items: ['888', '999', '666', '168', '369'] },
-  { key: 'easy', labelKey: 'vanityPresetEasy', icon: '✨', items: ['123', '321', 'abc', 'cafe', 'babe'] },
-  { key: 'premium', labelKey: 'vanityPresetPremium', icon: '💎', items: ['0000', '1111', '8888'] },
-  { key: 'symmetry', labelKey: 'vanityPresetSymmetry', icon: '↔', items: ['aba', 'abba', 'c0c'] },
-  { key: 'crypto', labelKey: 'vanityPresetCrypto', icon: '₿', items: ['defi', 'b0b', 'bad', 'feed', 'dead'] },
+  { key: 'lucky', labelKey: 'vanityPresetLucky', icon: '🍀', items: ['888', '999', '666', '168', '369', '8888'] },
+  { key: 'easy', labelKey: 'vanityPresetEasy', icon: '✨', items: ['123', '321', 'abc', 'aaa', 'fff', '1234'] },
+  { key: 'hexword', labelKey: 'vanityPresetHexword', icon: '🔤', items: ['cafe', 'face', 'babe', 'beef', 'dead', 'fade'] },
+  { key: 'hexspeak', labelKey: 'vanityPresetHexspeak', icon: '💬', items: ['c0de', 'b055', 'f00d', '5afe', '600d', 'c001'] },
+  { key: 'premium', labelKey: 'vanityPresetPremium', icon: '💎', items: ['0000', '1111', '8888', 'aaaa', 'ffff'] },
+  { key: 'symmetry', labelKey: 'vanityPresetSymmetry', icon: '↔', items: ['abba', 'abab', 'c0c', 'a0a', 'f0f'] },
+  { key: 'combo', labelKey: 'vanityPresetCombo', icon: '🧩', items: ['cafebabe', 'deadbeef', '600df00d', 'b055c0de', '5afec0de', '1337c0de'] },
 ];
 
 export const VANITY_HEX_PATTERN = /^[0-9a-f]*$/i;

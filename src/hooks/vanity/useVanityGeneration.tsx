@@ -159,8 +159,9 @@ export function useVanityGeneration({
   const vanitySuffixRaw = vanitySuffix.trim();
   const vanityPrefixClean = vanityPrefixRaw.toLowerCase();
   const vanitySuffixClean = vanitySuffixRaw.toLowerCase();
-  const vanityInvalidChars =
-    !VANITY_HEX_PATTERN.test(vanityPrefixRaw) || !VANITY_HEX_PATTERN.test(vanitySuffixRaw);
+  const vanityPrefixInvalid = !VANITY_HEX_PATTERN.test(vanityPrefixRaw);
+  const vanitySuffixInvalid = !VANITY_HEX_PATTERN.test(vanitySuffixRaw);
+  const vanityInvalidChars = vanityPrefixInvalid || vanitySuffixInvalid;
   const vanityPatternLength = vanityPrefixClean.length + vanitySuffixClean.length;
   const vanityHasPattern = vanityPatternLength > 0;
   const vanitySafeTargetCount = Math.max(1, Math.floor(Number(vanityTargetCount) || 1));
@@ -1069,6 +1070,8 @@ export function useVanityGeneration({
     // Derived
     vanityPrefixClean,
     vanitySuffixClean,
+    vanityPrefixInvalid,
+    vanitySuffixInvalid,
     vanityInvalidChars,
     vanityPatternLength,
     vanityHasPattern,

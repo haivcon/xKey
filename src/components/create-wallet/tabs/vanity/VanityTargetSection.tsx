@@ -1,9 +1,61 @@
-﻿import { AlertCircle, BrainCircuit, ChevronDown, Gauge, ShieldCheck, Sparkles, Target, Timer, Trash2 } from 'lucide-react';
+import { AlertCircle, BrainCircuit, ChevronDown, Gauge, ShieldCheck, Sparkles, Target, Timer, Trash2 } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { VANITY_HEX_PATTERN } from '../../constants';
 import { formatCompactNumber } from '../../formatters';
 import type { VanityTabProps } from './VanityTabContent';
+
+
+const HEX_CHAR_PATTERN = /^[0-9a-f]$/i;
+
+function VanityHexInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  invalid,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  disabled: boolean;
+  invalid: boolean;
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-lg border bg-surface-50 transition-colors focus-within:outline-none dark:bg-surface-900 ${
+        invalid
+          ? 'border-red-500/60 focus-within:border-red-400'
+          : 'border-surface-200 focus-within:border-brand-500 dark:border-surface-700'
+      }`}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 flex items-center overflow-hidden px-4 py-3 font-mono text-sm font-semibold leading-5 whitespace-pre"
+      >
+        {value.split('').map((char, index) => (
+          <span
+            key={`${char}-${index}`}
+            className={HEX_CHAR_PATTERN.test(char) ? 'text-sky-500 dark:text-cyan-300' : 'text-red-600 dark:text-red-300'}
+          >
+            {char}
+          </span>
+        ))}
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\s/g, '').slice(0, 12))}
+        placeholder={placeholder}
+        disabled={disabled}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        className="relative z-10 w-full bg-transparent px-4 py-3 font-mono text-sm text-transparent caret-brand-500 placeholder:text-surface-400 focus:outline-none disabled:opacity-50 dark:placeholder:text-surface-500"
+      />
+    </div>
+  );
+}
 
 type VanityTargetSectionProps = {
   t: TranslationFn;
@@ -13,7 +65,8 @@ type VanityTargetSectionProps = {
   vanitySuffix: VanityTabProps['vanitySuffix'];
   setVanitySuffix: Dispatch<SetStateAction<VanityTabProps['vanitySuffix']>>;
   vanityGenerating: boolean;
-  vanityInvalidChars: VanityTabProps['vanityInvalidChars'];
+  vanityPrefixInvalid: VanityTabProps['vanityPrefixInvalid'];
+  vanitySuffixInvalid: VanityTabProps['vanitySuffixInvalid'];
   vanityPresetsExpanded: VanityTabProps['vanityPresetsExpanded'];
   setVanityPresetsExpanded: Dispatch<SetStateAction<VanityTabProps['vanityPresetsExpanded']>>;
   vanityHiddenPresetCount: VanityTabProps['vanityHiddenPresetCount'];
@@ -38,7 +91,8 @@ export function VanityTargetSection({
   vanitySuffix,
   setVanitySuffix,
   vanityGenerating,
-  vanityInvalidChars,
+  vanityPrefixInvalid,
+  vanitySuffixInvalid,
   vanityPresetsExpanded,
   setVanityPresetsExpanded,
   vanityHiddenPresetCount,
@@ -72,15 +126,39 @@ export function VanityTargetSection({
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-surface-400">{t('createWallet.vanityPrefix') || 'Prefix'}</label>
-              <input type="text" value={vanityPrefix} onChange={(e) => setVanityPrefix(e.target.value.replace(/\s/g, '').slice(0, 12))} placeholder="e.g. 123" disabled={vanityGenerating}
-                className={`w-full rounded-lg border bg-surface-50 px-4 py-3 font-mono text-sm text-surface-950 focus:outline-none disabled:opacity-50 dark:bg-surface-900 dark:text-white ${vanityInvalidChars ? 'border-red-500/60 focus:border-red-400' : 'border-surface-200 focus:border-brand-500 dark:border-surface-700'}`} />
-              <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanityPrefixHint')}</p>
+              <VanityHexInput
+                value={vanityPrefix}
+                onChange={setVanityPrefix}
+                placeholder="e.g. c0de"
+                disabled={vanityGenerating}
+                invalid={vanityPrefixInvalid}
+              />
+              {vanityPrefixInvalid ? (
+                <p className="mt-1 flex items-start gap-1.5 text-scale-xs font-medium text-red-600 dark:text-red-300">
+                  <AlertCircle size={13} className="mt-0.5 shrink-0" />
+                  {t('createWallet.vanityInvalidChars')}
+                </p>
+              ) : (
+                <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanityPrefixHint')}</p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-surface-400">{t('createWallet.vanitySuffix') || 'Suffix'}</label>
-              <input type="text" value={vanitySuffix} onChange={(e) => setVanitySuffix(e.target.value.replace(/\s/g, '').slice(0, 12))} placeholder="e.g. abc" disabled={vanityGenerating}
-                className={`w-full rounded-lg border bg-surface-50 px-4 py-3 font-mono text-sm text-surface-950 focus:outline-none disabled:opacity-50 dark:bg-surface-900 dark:text-white ${vanityInvalidChars ? 'border-red-500/60 focus:border-red-400' : 'border-surface-200 focus:border-brand-500 dark:border-surface-700'}`} />
-              <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanitySuffixHint')}</p>
+              <VanityHexInput
+                value={vanitySuffix}
+                onChange={setVanitySuffix}
+                placeholder="e.g. babe"
+                disabled={vanityGenerating}
+                invalid={vanitySuffixInvalid}
+              />
+              {vanitySuffixInvalid ? (
+                <p className="mt-1 flex items-start gap-1.5 text-scale-xs font-medium text-red-600 dark:text-red-300">
+                  <AlertCircle size={13} className="mt-0.5 shrink-0" />
+                  {t('createWallet.vanityInvalidChars')}
+                </p>
+              ) : (
+                <p className="mt-1 text-scale-xs text-surface-500">{t('createWallet.vanitySuffixHint')}</p>
+              )}
             </div>
           </div>
 

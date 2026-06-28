@@ -1,4 +1,4 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import type { useVanityGeneration } from '../../../../hooks/vanity/useVanityGeneration';
@@ -78,7 +78,8 @@ export function VanityTabContent(props: VanityTabProps) {
     hasRecoverableVanitySession,
     vanityPrefixClean,
     vanitySuffixClean,
-    vanityInvalidChars,
+    vanityPrefixInvalid,
+    vanitySuffixInvalid,
     vanityPatternLength,
     vanityHasPattern,
     vanitySafeTargetCount,
@@ -154,7 +155,8 @@ export function VanityTabContent(props: VanityTabProps) {
                   vanitySuffix={vanitySuffix}
                   setVanitySuffix={setVanitySuffix}
                   vanityGenerating={vanityGenerating}
-                  vanityInvalidChars={vanityInvalidChars}
+                  vanityPrefixInvalid={vanityPrefixInvalid}
+                  vanitySuffixInvalid={vanitySuffixInvalid}
                   vanityPresetsExpanded={vanityPresetsExpanded}
                   setVanityPresetsExpanded={setVanityPresetsExpanded}
                   vanityHiddenPresetCount={vanityHiddenPresetCount}
@@ -233,12 +235,6 @@ export function VanityTabContent(props: VanityTabProps) {
                   onToggle={() => toggleVanitySection('extraFilters')}
                 />
 
-                {vanityInvalidChars ? (
-                  <div className="danger-note">
-                    <AlertTriangle size={16} className="danger-note-icon" />
-                    <span className="danger-note-body">{t('createWallet.vanityInvalidChars')}</span>
-                  </div>
-                ) : null}
               </div>
 
               {!vanityGenerating && !vanityPaused && allVanityWallets.length === 0 ? (

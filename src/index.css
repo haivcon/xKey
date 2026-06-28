@@ -1517,7 +1517,7 @@ html {
 }
 
 .home-header-slogan-space {
-  width: 0.12em;
+  width: 0.55em;
 }
 
 @media (max-width: 360px) {
@@ -1528,7 +1528,7 @@ html {
   }
 
   .home-header-slogan-space {
-    width: 0.1em;
+    width: 0.5em;
   }
 }
 
@@ -1540,7 +1540,7 @@ html {
   }
 
   .home-header-slogan-space {
-    width: 0.14em;
+    width: 0.6em;
   }
 }
 

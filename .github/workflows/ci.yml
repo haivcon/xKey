@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build web app with ephemeral integrity key
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { generateKeyPairSync } = require('node:crypto');
+          const { writeFileSync } = require('node:fs');
+          const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+          writeFileSync('/tmp/xkey-integrity-private.pem', privateKey.export({ type: 'pkcs8', format: 'pem' }));
+          writeFileSync('/tmp/xkey-integrity-public.pem', publicKey.export({ type: 'spki', format: 'pem' }));
+          NODE
+          XKEY_INTEGRITY_PRIVATE_KEY_PEM="$(cat /tmp/xkey-integrity-private.pem)" \
+            XKEY_INTEGRITY_PUBLIC_KEY_PEM="$(cat /tmp/xkey-integrity-public.pem)" \
+            npm run build
+
+      - name: Scan built assets for bundled private key material
+        run: |
+          set -euo pipefail
+          if grep -R -E -- "-----BEGIN [A-Z ]*PRIVATE KEY-----" dist; then
+            echo "Private key material was found in dist."
+            exit 1
+          fi

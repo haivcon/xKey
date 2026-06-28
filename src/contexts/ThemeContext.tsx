@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import { getAndroidCurrentSwDp, getAndroidSystemSwDp, resetAndroidAppSwDp, setAndroidAppSwDp } from '../utils/dpiOverride';
 
@@ -17,6 +17,10 @@ type ThemeContextValue = {
   setTargetDpi: (next: number | string | null | undefined) => void;
   deviceDpi: number;
   effectiveDisplayScale: number;
+  rawEffectiveDisplayScale: number;
+  effectiveDisplayScaleClamped: boolean;
+  dpiScalePercent: number;
+  dpiNativeSupported: boolean;
   walletDensity: WalletDensity;
   setWalletDensity: (next: string | null | undefined) => void;
   brandReminders: boolean;
@@ -107,6 +111,10 @@ const calculateDpiScale = (targetSwDp: number, deviceSwDp: number): number => {
   return Math.round((safeDeviceSwDp / safeTargetSwDp) * 100);
 };
 
+const getEffectiveScaleForDpi = (manualScale: number, targetSwDp: number, deviceSwDp: number): number => (
+  normalizeDisplayScale(Math.round((manualScale * calculateDpiScale(targetSwDp, deviceSwDp)) / 100))
+);
+
 const applyDisplayScale = (scale: number) => {
   document.documentElement.style.setProperty('--app-display-scale', String(scale / 100));
 };
@@ -120,18 +128,13 @@ const getEffectiveDeviceDpi = async (): Promise<number> => {
   return getDeviceSwDp();
 };
 
-const applyNativeDpiIfAvailable = async (targetSwDp: number, fallbackDeviceSwDp: number, manualScale: number) => {
+const applyNativeDpiIfAvailable = async (targetSwDp: number, fallbackDeviceSwDp: number) => {
   const native = await setAndroidAppSwDp(targetSwDp);
   const deviceDpi = native.supported && Number.isFinite(native.systemSwDp)
     ? native.systemSwDp as number
     : native.supported && Number.isFinite(native.systemDpi)
       ? native.systemDpi as number
       : fallbackDeviceSwDp;
-  const fallbackScale = normalizeDisplayScale(Math.round((manualScale * calculateDpiScale(targetSwDp, deviceDpi)) / 100));
-  // Android's app configuration override changes native resource qualifiers, but WebView CSS
-  // viewport/font sizing does not reliably follow smallestScreenWidthDp on modern Android.
-  // Always apply the effective WebView scale so the visible UI matches the selected app dp.
-  applyDisplayScale(fallbackScale);
   return { deviceDpi, nativeSupported: native.supported };
 };
 
@@ -154,6 +157,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [showWalletScores, setShowWalletScoresState] = useState(false);
   const [compactBalance, setCompactBalanceState] = useState(false);
   const [privacyMode, setPrivacyModeState] = useState(false);
+  const [dpiNativeSupported, setDpiNativeSupported] = useState(false);
+  const dpiRequestIdRef = useRef(0);
+
+  const nextDpiRequestId = useCallback(() => {
+    dpiRequestIdRef.current += 1;
+    return dpiRequestIdRef.current;
+  }, []);
+
+  const isLatestDpiRequest = useCallback((requestId: number) => requestId === dpiRequestIdRef.current, []);
 
   useEffect(() => {
     applyThemeClass('dark');
@@ -186,9 +198,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (scaleResult.value == null) Preferences.set({ key: DISPLAY_SCALE_KEY, value: String(nextScale) }).catch(() => {});
 
       if (nextDpiMode) {
-        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi, nextScale);
+        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
         nextDeviceDpi = applied.deviceDpi;
         setDeviceDpi(nextDeviceDpi);
+        setDpiNativeSupported(applied.nativeSupported);
+        applyDisplayScale(getEffectiveScaleForDpi(nextScale, nextTargetDpi, nextDeviceDpi));
       } else {
         const current = await getAndroidCurrentSwDp();
         if (current.supported && current.overrideEnabled) {
@@ -234,25 +248,32 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setDisplayScale = useCallback((next: number | string | null | undefined) => {
+    const requestId = nextDpiRequestId();
     const nextScale = normalizeDisplayScale(next);
-    const nextAppliedScale = dpiMode
-      ? normalizeDisplayScale(Math.round((nextScale * calculateDpiScale(targetDpi, deviceDpi)) / 100))
-      : nextScale;
 
     setDisplayScaleState(nextScale);
-    applyDisplayScale(nextAppliedScale);
     Preferences.set({ key: DISPLAY_SCALE_KEY, value: String(nextScale) }).catch(() => {});
 
-    if (dpiMode) {
-      void (async () => {
-        const nextDeviceDpi = await getEffectiveDeviceDpi();
-        setDeviceDpi(nextDeviceDpi);
-        await applyNativeDpiIfAvailable(targetDpi, nextDeviceDpi, nextScale);
-      })();
+    if (!dpiMode) {
+      applyDisplayScale(nextScale);
+      return;
     }
-  }, [deviceDpi, dpiMode, targetDpi]);
+
+    void (async () => {
+      const nextDeviceDpi = await getEffectiveDeviceDpi();
+      if (!isLatestDpiRequest(requestId)) return;
+      setDeviceDpi(nextDeviceDpi);
+
+      const applied = await applyNativeDpiIfAvailable(targetDpi, nextDeviceDpi);
+      if (!isLatestDpiRequest(requestId)) return;
+      setDeviceDpi(applied.deviceDpi);
+      setDpiNativeSupported(applied.nativeSupported);
+      applyDisplayScale(getEffectiveScaleForDpi(nextScale, targetDpi, applied.deviceDpi));
+    })();
+  }, [dpiMode, isLatestDpiRequest, nextDpiRequestId, targetDpi]);
 
   const setDpiMode = useCallback((next: boolean) => {
+    const requestId = nextDpiRequestId();
     const nextTargetDpi = next ? DEFAULT_TARGET_DPI : targetDpi;
     if (next) setTargetDpiState(nextTargetDpi);
     setDpiModeState(next);
@@ -261,31 +282,44 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     void (async () => {
       const nextDeviceDpi = await getEffectiveDeviceDpi();
+      if (!isLatestDpiRequest(requestId)) return;
       setDeviceDpi(nextDeviceDpi);
+
       if (next) {
-        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi, displayScale);
+        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
+        if (!isLatestDpiRequest(requestId)) return;
         setDeviceDpi(applied.deviceDpi);
+        setDpiNativeSupported(applied.nativeSupported);
+        applyDisplayScale(getEffectiveScaleForDpi(displayScale, nextTargetDpi, applied.deviceDpi));
       } else {
         const restoredDpi = await resetNativeDpiIfAvailable(displayScale);
+        if (!isLatestDpiRequest(requestId)) return;
         setDeviceDpi(restoredDpi);
+        setDpiNativeSupported(false);
       }
     })();
-  }, [displayScale, targetDpi]);
+  }, [displayScale, isLatestDpiRequest, nextDpiRequestId, targetDpi]);
 
   const setTargetDpi = useCallback((next: number | string | null | undefined) => {
+    const requestId = nextDpiRequestId();
     const nextTargetDpi = normalizeTargetDpi(next);
     setTargetDpiState(nextTargetDpi);
     Preferences.set({ key: TARGET_DPI_KEY, value: String(nextTargetDpi) }).catch(() => {});
 
+    if (!dpiMode) return;
+
     void (async () => {
       const nextDeviceDpi = await getEffectiveDeviceDpi();
+      if (!isLatestDpiRequest(requestId)) return;
       setDeviceDpi(nextDeviceDpi);
-      if (dpiMode) {
-        const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi, displayScale);
-        setDeviceDpi(applied.deviceDpi);
-      }
+
+      const applied = await applyNativeDpiIfAvailable(nextTargetDpi, nextDeviceDpi);
+      if (!isLatestDpiRequest(requestId)) return;
+      setDeviceDpi(applied.deviceDpi);
+      setDpiNativeSupported(applied.nativeSupported);
+      applyDisplayScale(getEffectiveScaleForDpi(displayScale, nextTargetDpi, applied.deviceDpi));
     })();
-  }, [displayScale, dpiMode]);
+  }, [displayScale, dpiMode, isLatestDpiRequest, nextDpiRequestId]);
 
   const setWalletDensity = useCallback((next: string | null | undefined) => {
     const normalized: WalletDensity = isWalletDensity(next) ? next : 'comfortable';
@@ -330,12 +364,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const effectiveDisplayScale = dpiMode
-    ? normalizeDisplayScale(Math.round((displayScale * calculateDpiScale(targetDpi, deviceDpi)) / 100))
+  const dpiScalePercent = calculateDpiScale(targetDpi, deviceDpi);
+  const rawEffectiveDisplayScale = dpiMode
+    ? Math.round((displayScale * dpiScalePercent) / 100)
     : displayScale;
+  const effectiveDisplayScale = normalizeDisplayScale(rawEffectiveDisplayScale);
+  const effectiveDisplayScaleClamped = rawEffectiveDisplayScale !== effectiveDisplayScale;
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance, privacyMode, setPrivacyMode, togglePrivacyMode }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, rawEffectiveDisplayScale, effectiveDisplayScaleClamped, dpiScalePercent, dpiNativeSupported, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance, privacyMode, setPrivacyMode, togglePrivacyMode }}>
       {children}
     </ThemeContext.Provider>
   );

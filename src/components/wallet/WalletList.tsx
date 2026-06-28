@@ -53,14 +53,14 @@ function WalletList({
   activeFolder = 'All', searchQuery = '', onAddWallet, onImport
 }: WalletListProps) {
   const isDndEnabled = sortOrder === 'custom' && !selectionMode;
-  const { displayScale, walletDensity, brandReminders } = useTheme();
+  const { effectiveDisplayScale, walletDensity, brandReminders } = useTheme();
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const [listOffset, setListOffset] = useState(0);
   const [columnCount, setColumnCount] = useState(getColumnCount);
   const effectiveColumns = isDndEnabled ? 1 : columnCount;
   const rowCount = Math.ceil(filteredWallets.length / effectiveColumns);
-  const densityRowSize = walletDensity === 'ultra' ? 78 : walletDensity === 'compact' ? 92 : 112;
+  const densityRowSize = walletDensity === 'ultra' ? 50 : walletDensity === 'compact' ? 60 : 72;
 
   const measureListOffset = useCallback(() => {
     if (!listRef.current) return;
@@ -72,7 +72,7 @@ function WalletList({
     measureListOffset();
     const raf = requestAnimationFrame(measureListOffset);
     return () => cancelAnimationFrame(raf);
-  }, [measureListOffset, displayScale, walletDensity, filteredWallets.length, effectiveColumns]);
+  }, [measureListOffset, effectiveDisplayScale, walletDensity, filteredWallets.length, effectiveColumns]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -93,7 +93,7 @@ function WalletList({
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () => Math.max(28, densityRowSize * (displayScale / 100)),
+    estimateSize: () => Math.max(28, densityRowSize * (effectiveDisplayScale / 100)),
     overscan: 4,
     scrollMargin: listOffset,
   });
@@ -105,7 +105,7 @@ function WalletList({
 
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [rowVirtualizer, displayScale, walletDensity, effectiveColumns, filteredWallets.length]);
+  }, [rowVirtualizer, effectiveDisplayScale, walletDensity, effectiveColumns, filteredWallets.length]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;

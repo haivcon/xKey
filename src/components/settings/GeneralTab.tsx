@@ -111,7 +111,7 @@ export default function GeneralTab() {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const { theme, setTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, rawEffectiveDisplayScale, effectiveDisplayScaleClamped, dpiNativeSupported, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance } = useTheme();
   const t = useT();
   const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
@@ -364,24 +364,30 @@ export default function GeneralTab() {
               <ZoomIn size={20} className="text-brand-400" />
             </div>
             <div className="min-w-0 text-left">
-              <p className="text-[13px] font-semibold leading-tight text-white">{t('settings.displayScale')}</p>
-              <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1 text-[11px] font-medium leading-tight text-surface-400">
+              <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
+              <p className="text-xs text-surface-400">
                 <span>{displayScale}%</span>
                 <span aria-hidden="true" className="text-surface-500">·</span>
-                <span className="min-w-0 break-words">{t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</span>
+                <span>{t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</span>
               </p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
         </button>
 
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[520px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'scale' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
             <p className="text-xs text-surface-400 leading-relaxed mb-4">{t('settings.displayScaleDesc')}</p>
 
             {dpiMode && (
               <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100">
                 {t('settings.displayScalePausedByDpi')}
+              </div>
+            )}
+
+            {effectiveDisplayScaleClamped && (
+              <div className="mb-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 p-3 text-xs leading-relaxed text-orange-100">
+                {t('settings.effectiveScaleClamped', { raw: rawEffectiveDisplayScale, applied: effectiveDisplayScale })}
               </div>
             )}
 
@@ -493,7 +499,7 @@ export default function GeneralTab() {
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'dpi' ? 'rotate-180' : ''}`} />
         </button>
 
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'dpi' ? 'max-h-[760px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedSection === 'dpi' ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-4 pb-4 border-t border-surface-700/50 pt-4">
             <div className="mb-4 flex items-start justify-between gap-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3">
               <div className="min-w-0">
@@ -509,6 +515,18 @@ export default function GeneralTab() {
                 <span className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${dpiMode ? 'translate-x-7' : 'translate-x-1'}`} />
               </button>
             </div>
+
+            {dpiMode && !dpiNativeSupported && (
+              <div className="mb-4 rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3 text-xs leading-relaxed text-sky-100">
+                {t('settings.dpiFallbackMode')}
+              </div>
+            )}
+
+            {effectiveDisplayScaleClamped && (
+              <div className="mb-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 p-3 text-xs leading-relaxed text-orange-100">
+                {t('settings.effectiveScaleClamped', { raw: rawEffectiveDisplayScale, applied: effectiveDisplayScale })}
+              </div>
+            )}
 
             <div className="mb-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
