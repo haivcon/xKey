@@ -55,6 +55,7 @@ export type BackupDescriptor = {
     format?: string;
     app?: string;
     source?: string;
+    appVersion?: string;
     backupId?: string;
     createdAt?: string;
     createdBy?: {
@@ -110,6 +111,7 @@ export type BackupInspection = {
     metadata?: {
         app?: string;
         source?: string;
+        appVersion?: string;
         backupId: string;
         containerHash: string;
         createdAt?: string;

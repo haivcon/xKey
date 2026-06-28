@@ -1,5 +1,6 @@
 import { appendAuditLog } from '../auditLog';
 import {
+  BACKUP_SOURCE,
   V4_BEGIN,
   V4_END,
   V4_PAYLOAD,
@@ -19,6 +20,13 @@ const invalidInspection = (title: string, message: string, messageKey: string): 
   message,
   messageKey,
 });
+
+
+const formatBackupSource = (source?: string, appVersion?: string): string => {
+  const normalizedSource = source || BACKUP_SOURCE;
+  const normalizedVersion = (appVersion || '').trim();
+  return normalizedVersion ? `${normalizedSource} + v${normalizedVersion.replace(/^v/i, '')}` : normalizedSource;
+};
 
 export const inspectBackupFile = async (base64Data: string): Promise<BackupInspection> => {
   const rawText = decodeBackupFileData(base64Data);
@@ -87,7 +95,8 @@ export const inspectBackupFile = async (base64Data: string): Promise<BackupInspe
     footerRecovered: !!container.footerRecovered,
     metadata: {
       app: container.app,
-      source: container.source,
+      source: formatBackupSource(container.source, container.appVersion),
+      appVersion: container.appVersion,
       backupId,
       containerHash,
       createdAt: container.createdAt,

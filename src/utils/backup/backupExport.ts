@@ -7,6 +7,25 @@ import type { Wallet } from '../../types';
 import { createPortableBackupText } from './backupCrypto';
 import { recordBackupExport } from './backupHistory';
 
+const XKEY_APP_VERSION = typeof __XKEY_APP_VERSION__ !== 'undefined' ? __XKEY_APP_VERSION__ : '0.0.0';
+
+const formatBackupTimestamp = (date: Date): string => {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+    '-',
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+  ].join('');
+};
+
+const createDefaultBackupFileName = (walletCount: number, date = new Date()): string => (
+  `xKey-backup(${walletCount})-${formatBackupTimestamp(date)}-v${XKEY_APP_VERSION}`
+);
+
 export const getBackupDeviceInfo = async () => {
   try {
     const info = await Device.getInfo();
@@ -52,7 +71,7 @@ export const exportPortableBackup = async (
 ): Promise<boolean> => {
   try {
     const encryptedData = await createPortableBackupText(wallets, config, userPassword);
-    const fileName = createExportFileName(requestedFileName, 'xkey', `xkey_portable_${new Date().getTime()}`);
+    const fileName = createExportFileName(requestedFileName, 'xKey', createDefaultBackupFileName(wallets.length));
 
     const savedFile = await saveTextFile(fileName, 'application/x-xkey', encryptedData);
 

@@ -21,6 +21,8 @@ import {
 import type { Wallet } from '../../types';
 import { getBackupDeviceInfo } from './backupExport';
 
+const XKEY_APP_VERSION = typeof __XKEY_APP_VERSION__ !== 'undefined' ? __XKEY_APP_VERSION__ : '0.0.0';
+
 export const encryptBackup = async (data: BackupPayload, key: string): Promise<string> => {
   return encryptEnvelope(data, key);
 };
@@ -56,6 +58,7 @@ export const createPortableBackupText = async (
     format: BACKUP_FORMAT_V4,
     app: 'xKey',
     source: BACKUP_SOURCE,
+    appVersion: XKEY_APP_VERSION,
     backupId,
     createdAt: backupPayload.timestamp,
     createdBy: await getBackupDeviceInfo(),

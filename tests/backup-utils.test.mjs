@@ -4,6 +4,7 @@ const {
   createPortableBackupText,
   encryptBackup,
   inspectBackupFile,
+  createExportFileName,
   parseEncryptedBackupText,
   parseVaultBackupFile,
 } = await import('../src/utils/backup/backupUtils.ts');
@@ -113,6 +114,10 @@ assert.equal(inspection.status, 'ok');
 assert.equal(inspection.integrity, 'verified');
 assert.equal(inspection.metadata?.walletCount, 1);
 assert.equal(inspection.metadata?.scope, 'test-suite');
+assert.match(inspection.metadata?.appVersion || '', /^\d+\.\d+\.\d+/);
+assert.equal(inspection.metadata?.source, `github.com/haivcon/xKey + v${inspection.metadata?.appVersion}`);
+assert.equal(createExportFileName('', 'xKey', `xKey-backup(1)-20260627-131817-v${inspection.metadata?.appVersion}`), `xKey-backup(1)-20260627-131817-v${inspection.metadata?.appVersion}.xKey`);
+assert.equal(createExportFileName('custom-name.xkey', 'xKey', 'fallback'), 'custom-name.xKey');
 
 const parsedWithUserPassword = await parseEncryptedBackupText(backupText, 'device-key-does-not-match', password);
 assert.equal(parsedWithUserPassword.wallets?.length, 1);
@@ -127,6 +132,7 @@ const missingMetadataBackupText = mutateDescriptor(backupText, (descriptor) => {
   delete descriptor.summary;
   delete descriptor.configSummary;
   delete descriptor.createdBy;
+  delete descriptor.appVersion;
   return descriptor;
 });
 const missingMetadataInspection = await inspectBackupFile(missingMetadataBackupText);
@@ -134,6 +140,7 @@ assert.equal(missingMetadataInspection.status, 'ok');
 assert.equal(missingMetadataInspection.metadata?.walletCount, 0);
 assert.equal(missingMetadataInspection.metadata?.scope, 'vault');
 assert.equal(missingMetadataInspection.metadata?.platform, 'unknown');
+assert.equal(missingMetadataInspection.metadata?.source, 'github.com/haivcon/xKey');
 const parsedMissingMetadata = await parseEncryptedBackupText(missingMetadataBackupText, 'device-key-does-not-match', password);
 assert.equal(parsedMissingMetadata.wallets?.[0]?.address, wallet.address);
 
