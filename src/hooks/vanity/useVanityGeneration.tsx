@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { APP_ACTIVITY_EVENT } from '../security/useAutoLock';
+import { useCpuTemperature } from '../useCpuTemperature';
 import {
   DEFAULT_VANITY_EXTRA_FILTERS,
   normalizeVanityExtraFilters,
@@ -136,6 +137,12 @@ export function useVanityGeneration({
   const [vanityPresetsExpanded, setVanityPresetsExpanded] = useState(false);
   const [vanityCustomPattern, setVanityCustomPattern] = useState('');
   const [vanityCustomPatterns, setVanityCustomPatterns] = useState<string[]>([]);
+  const [vanityThermalMonitorEnabled, setVanityThermalMonitorEnabled] = useState(true);
+  const [vanityThermalPauseEnabled, setVanityThermalPauseEnabled] = useState(true);
+  const [vanityThermalWarningC, setVanityThermalWarningC] = useState(70);
+  const [vanityThermalPauseC, setVanityThermalPauseC] = useState(82);
+  const [vanityThermalCriticalC, setVanityThermalCriticalC] = useState(90);
+
   const [hasRecoverableVanitySession, setHasRecoverableVanitySession] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────
@@ -153,6 +160,7 @@ export function useVanityGeneration({
   const vanitySessionGenerationRef = useRef(0);
   const vanitySessionPersistNowRef = useRef<() => Promise<void>>(async () => {});
   const closingRef = useRef(false);
+  const vanityThermalPauseTriggeredRef = useRef(false);
 
   // ── Derived values ─────────────────────────────────────────────────────
   const vanityPrefixRaw = vanityPrefix.trim();
@@ -172,7 +180,7 @@ export function useVanityGeneration({
   const vanityTooLong = vanityPatternLength > VANITY_MAX_SAFE_LENGTH;
   const vanityCanStart = vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
   const vanityCanResume = vanityPaused && vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
-  const vanitySafeExtraLimit = Math.max(0, Math.min(500, Number(vanityExtraLimit) || 0));
+  const vanitySafeExtraLimit = Math.max(0, Math.floor(Number(vanityExtraLimit) || 0));
   const vanitySafeExtraMinRun = Math.max(3, Math.min(6, Number(vanityExtraMinRun) || 4));
   const vanitySafeExtraFilters = useMemo(
     () => normalizeVanityExtraFilters(vanityExtraFilters, vanitySafeExtraMinRun),
@@ -211,6 +219,13 @@ export function useVanityGeneration({
   const vanityEtaSeconds = vanitySpeed > 0 ? vanityEstimatedRemainingTries / vanitySpeed : 0;
   const vanityProgressPercentLabel = `${Math.min(99.9999, Math.max(0, vanityCompletionRatio * 100)).toFixed(vanityCompletionRatio < 0.01 ? 4 : 2)}%`;
   const vanityEffectiveThroughput = vanityWorkerCount * vanityBatchSize;
+  const vanityCpuTemperature = useCpuTemperature({
+    active: vanityRunActive,
+    enabled: vanityThermalMonitorEnabled,
+    warningC: vanityThermalWarningC,
+    pauseC: vanityThermalPauseC,
+    criticalC: vanityThermalCriticalC,
+  });
   const allVanityWallets = useMemo(
     () => [
       ...generatedWallets.filter(w => !!w.vanityMatchType),
@@ -374,6 +389,12 @@ export function useVanityGeneration({
       extraFilters: vanitySafeExtraFilters,
       extraFolder: vanityExtraFolder,
       tags: vanityTags,
+      thermalMonitorEnabled: vanityThermalMonitorEnabled,
+      thermalPauseEnabled: vanityThermalPauseEnabled,
+      thermalWarningC: vanityThermalWarningC,
+      thermalPauseC: vanityThermalPauseC,
+      thermalCriticalC: vanityThermalCriticalC,
+
       performanceMode: vanityPerformanceMode,
       generationMode: vanityGenerationMode,
       mnemonicWords: vanityMnemonicWords,
@@ -447,6 +468,12 @@ export function useVanityGeneration({
         setVanityCaptureExtras,
         setVanityExtraMinRun,
         setVanityExtraLimit,
+        setVanityThermalMonitorEnabled,
+        setVanityThermalPauseEnabled,
+        setVanityThermalWarningC,
+        setVanityThermalPauseC,
+        setVanityThermalCriticalC,
+
         setVanityExtraFilters,
         setVanityExtraFolder,
         setVanityPerformanceMode,
@@ -496,6 +523,12 @@ export function useVanityGeneration({
       generationMode: vanityGenerationMode,
       mnemonicWords: vanityMnemonicWords,
       customPatterns: vanityCustomPatterns,
+      thermalMonitorEnabled: vanityThermalMonitorEnabled,
+      thermalPauseEnabled: vanityThermalPauseEnabled,
+      thermalWarningC: vanityThermalWarningC,
+      thermalPauseC: vanityThermalPauseC,
+      thermalCriticalC: vanityThermalCriticalC,
+
     }).catch(() => {});
   }, [
     vanitySafeTargetCount,
@@ -505,6 +538,12 @@ export function useVanityGeneration({
     vanityCaptureExtras,
     vanitySafeExtraMinRun,
     vanitySafeExtraLimit,
+    vanityThermalMonitorEnabled,
+    vanityThermalPauseEnabled,
+    vanityThermalWarningC,
+    vanityThermalPauseC,
+    vanityThermalCriticalC,
+
     vanitySafeExtraFilters,
     vanityExtraFolder,
     vanityPerformanceMode,
@@ -774,7 +813,7 @@ export function useVanityGeneration({
       setVanityExtraMinRun(
         VANITY_EXTRA_MIN_RUNS.includes(state.extraMinRun) ? state.extraMinRun : 4
       );
-      setVanityExtraLimit(Math.max(1, Math.min(500, Number(state.extraLimit) || 50)));
+      setVanityExtraLimit(Math.max(1, Math.floor(Number(state.extraLimit) || 50)));
       if (state.extraFilters)
         setVanityExtraFilters(
           normalizeVanityExtraFilters(state.extraFilters, state.extraMinRun || 4)
@@ -790,6 +829,11 @@ export function useVanityGeneration({
         setVanityGenerationMode(state.generationMode);
       if (state.mnemonicWords === 12 || state.mnemonicWords === 24)
         setVanityMnemonicWords(state.mnemonicWords);
+      if (typeof state.thermalMonitorEnabled === 'boolean') setVanityThermalMonitorEnabled(state.thermalMonitorEnabled);
+      if (typeof state.thermalPauseEnabled === 'boolean') setVanityThermalPauseEnabled(state.thermalPauseEnabled);
+      if (typeof state.thermalWarningC === 'number') setVanityThermalWarningC(Math.max(30, Math.min(120, Math.floor(state.thermalWarningC))));
+      if (typeof state.thermalPauseC === 'number') setVanityThermalPauseC(Math.max(35, Math.min(125, Math.floor(state.thermalPauseC))));
+      if (typeof state.thermalCriticalC === 'number') setVanityThermalCriticalC(Math.max(40, Math.min(130, Math.floor(state.thermalCriticalC))));
       setVanityCandidates(Array.isArray(state.candidates) ? state.candidates.slice(-12) : []);
       vanityFoundRef.current = restored.wallets;
       vanityExtraRef.current = Array.isArray(state.extraWallets) ? state.extraWallets : [];
@@ -826,6 +870,7 @@ export function useVanityGeneration({
       if (!ok) return;
     }
 
+    vanityThermalPauseTriggeredRef.current = false;
     isVanityRunningRef.current = true;
     setVanityGenerating(true);
     setVanityPaused(false);
@@ -985,7 +1030,7 @@ export function useVanityGeneration({
   };
 
   // ── Controls ───────────────────────────────────────────────────────────
-  const pauseVanity = async () => {
+  const pauseVanity = async (reason?: string) => {
     isVanityRunningRef.current = false;
     vanityWorkerRef.current.forEach(w => {
       w.postMessage({ type: 'stop' });
@@ -996,13 +1041,38 @@ export function useVanityGeneration({
     vanityActivityRef.current = null;
     setVanityGenerating(false);
     setVanityPaused(true);
-    setVanityStopReason(t('createWallet.vanityPaused'));
+    setVanityStopReason(reason || t('createWallet.vanityPaused'));
     await enqueueVanitySessionPersist().catch(() => {});
   };
 
   const stopVanity = async () => {
     await finishVanityRun({ reason: t('createWallet.vanityStopped'), saveFound: false });
   };
+
+  // Thermal guard → pause before the device overheats
+  useEffect(() => {
+    if (!vanityGenerating || !vanityThermalMonitorEnabled || !vanityThermalPauseEnabled) return;
+    if (!vanityCpuTemperature.available || typeof vanityCpuTemperature.temperatureC !== 'number') return;
+    if (vanityCpuTemperature.temperatureC < vanityThermalPauseC) {
+      vanityThermalPauseTriggeredRef.current = false;
+      return;
+    }
+    if (vanityThermalPauseTriggeredRef.current) return;
+    vanityThermalPauseTriggeredRef.current = true;
+    void pauseVanity(t('createWallet.vanityThermalPaused', {
+      temp: Math.round(vanityCpuTemperature.temperatureC),
+      limit: vanityThermalPauseC,
+    }));
+  }, [
+    vanityGenerating,
+    vanityThermalMonitorEnabled,
+    vanityThermalPauseEnabled,
+    vanityCpuTemperature.available,
+    vanityCpuTemperature.temperatureC,
+    vanityThermalPauseC,
+    pauseVanity,
+    t,
+  ]);
 
   const toggleVanitySelection = (address: string) => {
     setSelectedVanityAddresses(current => {
@@ -1066,6 +1136,11 @@ export function useVanityGeneration({
     vanityPresetsExpanded, setVanityPresetsExpanded,
     vanityCustomPattern, setVanityCustomPattern,
     vanityCustomPatterns, setVanityCustomPatterns,
+    vanityThermalMonitorEnabled, setVanityThermalMonitorEnabled,
+    vanityThermalPauseEnabled, setVanityThermalPauseEnabled,
+    vanityThermalWarningC, setVanityThermalWarningC,
+    vanityThermalPauseC, setVanityThermalPauseC,
+    vanityThermalCriticalC, setVanityThermalCriticalC,
     hasRecoverableVanitySession,
     // Derived
     vanityPrefixClean,
@@ -1094,6 +1169,7 @@ export function useVanityGeneration({
     vanityEtaSeconds,
     vanityProgressPercentLabel,
     vanityEffectiveThroughput,
+    vanityCpuTemperature,
     allVanityWallets,
     hasSelectedUnsavedVanityWallets,
     vanityDifficultyAnalyzer,

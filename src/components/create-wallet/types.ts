@@ -45,6 +45,12 @@ export type VanitySettings = {
   generationMode?: 'privateKey' | 'mnemonic';
   mnemonicWords?: 12 | 24;
   customPatterns?: string[];
+  thermalMonitorEnabled?: boolean;
+  thermalPauseEnabled?: boolean;
+  thermalWarningC?: number;
+  thermalPauseC?: number;
+  thermalCriticalC?: number;
+
 };
 
 export type VanitySessionState = {
@@ -63,6 +69,12 @@ export type VanitySessionState = {
   extraFolder: string;
   tags: string[];
   performanceMode: VanityPerformanceMode;
+  thermalMonitorEnabled?: boolean;
+  thermalPauseEnabled?: boolean;
+  thermalWarningC?: number;
+  thermalPauseC?: number;
+  thermalCriticalC?: number;
+
   generationMode?: 'privateKey' | 'mnemonic';
   mnemonicWords?: 12 | 24;
   candidates: VanityCandidate[];

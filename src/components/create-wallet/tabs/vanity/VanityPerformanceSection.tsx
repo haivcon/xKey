@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, ChevronDown, Gauge, ShieldCheck, Timer } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Gauge, ShieldCheck, Thermometer, Timer } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { VANITY_TIME_LIMITS } from '../../constants';
 import { formatCompactNumber, formatVanitySeconds } from '../../formatters';
@@ -14,6 +14,16 @@ type VanityPerformanceSectionProps = {
   vanityBatchSize: number;
   vanityTimeLimit: number;
   setVanityTimeLimit: (seconds: number) => void;
+  vanityThermalMonitorEnabled: boolean;
+  setVanityThermalMonitorEnabled: (enabled: boolean) => void;
+  vanityThermalPauseEnabled: boolean;
+  setVanityThermalPauseEnabled: (enabled: boolean) => void;
+  vanityThermalWarningC: number;
+  setVanityThermalWarningC: (value: number) => void;
+  vanityThermalPauseC: number;
+  setVanityThermalPauseC: (value: number) => void;
+  vanityThermalCriticalC: number;
+  setVanityThermalCriticalC: (value: number) => void;
   onToggle: () => void;
 };
 
@@ -27,6 +37,16 @@ export function VanityPerformanceSection({
   vanityBatchSize,
   vanityTimeLimit,
   setVanityTimeLimit,
+  vanityThermalMonitorEnabled,
+  setVanityThermalMonitorEnabled,
+  vanityThermalPauseEnabled,
+  setVanityThermalPauseEnabled,
+  vanityThermalWarningC,
+  setVanityThermalWarningC,
+  vanityThermalPauseC,
+  setVanityThermalPauseC,
+  vanityThermalCriticalC,
+  setVanityThermalCriticalC,
   onToggle,
 }: VanityPerformanceSectionProps) {
   return (
@@ -97,6 +117,61 @@ export function VanityPerformanceSection({
                 placeholder={t('createWallet.vanityCustomTimePlaceholder')}
               />
               <span className="shrink-0 text-scale-xs font-semibold text-surface-500">{t('createWallet.vanityTimeSeconds', { seconds: '' }).trim()}</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-3">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <Thermometer size={18} className="mt-0.5 flex-shrink-0 text-cyan-500" />
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-cyan-700 dark:text-cyan-100">{t('createWallet.vanityThermalProtection')}</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-cyan-700/85 dark:text-cyan-100/70">{t('createWallet.vanityThermalProtectionDesc')}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={vanityThermalMonitorEnabled}
+                disabled={vanityGenerating}
+                onClick={() => setVanityThermalMonitorEnabled(!vanityThermalMonitorEnabled)}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${vanityThermalMonitorEnabled ? 'bg-cyan-500' : 'bg-surface-300 dark:bg-surface-700'}`}
+              >
+                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${vanityThermalMonitorEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+            <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-cyan-700 dark:text-cyan-100">
+              <input
+                type="checkbox"
+                checked={vanityThermalPauseEnabled}
+                disabled={vanityGenerating || !vanityThermalMonitorEnabled}
+                onChange={(e) => setVanityThermalPauseEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-cyan-400 bg-transparent text-cyan-500"
+              />
+              {t('createWallet.vanityThermalAutoPause')}
+            </label>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {[
+                { label: t('createWallet.vanityThermalWarningThreshold'), value: vanityThermalWarningC, setValue: setVanityThermalWarningC, min: 30 },
+                { label: t('createWallet.vanityThermalPauseThreshold'), value: vanityThermalPauseC, setValue: setVanityThermalPauseC, min: 35 },
+                { label: t('createWallet.vanityThermalCriticalThreshold'), value: vanityThermalCriticalC, setValue: setVanityThermalCriticalC, min: 40 },
+              ].map(item => (
+                <label key={item.label} className="block rounded-lg border border-cyan-400/20 bg-white/70 p-2 dark:bg-surface-950/60">
+                  <span className="mb-1 block text-scale-2xs font-bold text-cyan-700 dark:text-cyan-200">{item.label}</span>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min={item.min}
+                      max="130"
+                      value={item.value}
+                      disabled={vanityGenerating || !vanityThermalMonitorEnabled}
+                      onChange={(e) => item.setValue(Math.max(item.min, Math.min(130, Math.floor(Number(e.target.value) || item.value))))}
+                      className="min-w-0 flex-1 rounded-md border border-cyan-400/25 bg-surface-50 px-2 py-1.5 text-xs font-bold text-surface-950 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:bg-surface-900 dark:text-white"
+                    />
+                    <span className="text-xs font-bold text-cyan-700 dark:text-cyan-200">°C</span>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 

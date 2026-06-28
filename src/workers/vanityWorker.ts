@@ -150,9 +150,9 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   let found = 0;
   let lastReport = 0;
   let lastCandidate = '';
-  const safeTargetCount = Math.max(1, Math.min(100, Number(targetCount) || 1));
+  const safeTargetCount = Math.max(1, Math.floor(Number(targetCount) || 1));
   const safeExtraMinRun = Math.max(3, Math.min(6, Number(extraMinRun) || 4));
-  const safeExtraLimit = Math.max(0, Math.min(500, Number(extraLimit) || 0));
+  const safeExtraLimit = Math.max(0, Math.floor(Number(extraLimit) || 0));
   const safeExtraFilters: VanityExtraFilterConfig = normalizeVanityExtraFilters(extraFilters, safeExtraMinRun);
   const extraWallets = initialExtraCandidates
     .filter(wallet => !!wallet.address)

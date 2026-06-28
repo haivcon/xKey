@@ -168,7 +168,7 @@ export function VanityExtraFiltersSection({
               <input
                 type="number"
                 min="1"
-                max="500"
+
                 value={vanityExtraLimit}
                 disabled={vanityGenerating || !vanityCaptureExtras}
                 onChange={(e) => {
@@ -177,7 +177,7 @@ export function VanityExtraFiltersSection({
                     setVanityExtraLimit('');
                     return;
                   }
-                  setVanityExtraLimit(Math.max(1, Math.min(500, Number(raw) || 1)));
+                  setVanityExtraLimit(Math.max(1, Math.floor(Number(raw) || 1)));
                 }}
                 onBlur={() => setVanityExtraLimit(vanitySafeExtraLimit)}
                 placeholder={t('common.custom')}

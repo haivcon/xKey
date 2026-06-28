@@ -29,6 +29,12 @@ export type VanitySettingsSnapshot = {
   generationMode: 'privateKey' | 'mnemonic';
   mnemonicWords: 12 | 24;
   customPatterns: string[];
+  thermalMonitorEnabled: boolean;
+  thermalPauseEnabled: boolean;
+  thermalWarningC: number;
+  thermalPauseC: number;
+  thermalCriticalC: number;
+
 };
 
 export type VanitySettingsSetters = {
@@ -39,6 +45,12 @@ export type VanitySettingsSetters = {
   setVanityCaptureExtras: (value: boolean) => void;
   setVanityExtraMinRun: (value: number) => void;
   setVanityExtraLimit: (value: number) => void;
+  setVanityThermalMonitorEnabled: (value: boolean) => void;
+  setVanityThermalPauseEnabled: (value: boolean) => void;
+  setVanityThermalWarningC: (value: number) => void;
+  setVanityThermalPauseC: (value: number) => void;
+  setVanityThermalCriticalC: (value: number) => void;
+
   setVanityExtraFilters: (value: VanityExtraFilterConfig) => void;
   setVanityExtraFolder: (value: string) => void;
   setVanityPerformanceMode: (value: VanityPerformanceMode) => void;
@@ -78,7 +90,7 @@ export const loadVanitySettings = async (
   if (settings.extraMinRun && VANITY_EXTRA_MIN_RUNS.includes(settings.extraMinRun))
     setters.setVanityExtraMinRun(settings.extraMinRun);
   if (settings.extraLimit)
-    setters.setVanityExtraLimit(Math.max(1, Math.min(500, settings.extraLimit)));
+    setters.setVanityExtraLimit(Math.max(1, Math.floor(Number(settings.extraLimit) || 1)));
   if (settings.extraFilters)
     setters.setVanityExtraFilters(
       normalizeVanityExtraFilters(settings.extraFilters, settings.extraMinRun || 4)
@@ -96,6 +108,17 @@ export const loadVanitySettings = async (
   if (settings.mnemonicWords === 12 || settings.mnemonicWords === 24)
     setters.setVanityMnemonicWords(settings.mnemonicWords);
   setters.setVanityCustomPatterns(sanitizeVanityCustomPatterns(settings.customPatterns));
+  if (typeof settings.thermalMonitorEnabled === 'boolean')
+    setters.setVanityThermalMonitorEnabled(settings.thermalMonitorEnabled);
+  if (typeof settings.thermalPauseEnabled === 'boolean')
+    setters.setVanityThermalPauseEnabled(settings.thermalPauseEnabled);
+  if (typeof settings.thermalWarningC === 'number')
+    setters.setVanityThermalWarningC(Math.max(30, Math.min(120, Math.floor(settings.thermalWarningC))));
+  if (typeof settings.thermalPauseC === 'number')
+    setters.setVanityThermalPauseC(Math.max(35, Math.min(125, Math.floor(settings.thermalPauseC))));
+  if (typeof settings.thermalCriticalC === 'number')
+    setters.setVanityThermalCriticalC(Math.max(40, Math.min(130, Math.floor(settings.thermalCriticalC))));
+
 };
 
 export const persistVanitySettings = async (
@@ -117,6 +140,12 @@ export const persistVanitySettings = async (
       generationMode: snapshot.generationMode,
       mnemonicWords: snapshot.mnemonicWords,
       customPatterns: snapshot.customPatterns,
+      thermalMonitorEnabled: snapshot.thermalMonitorEnabled,
+      thermalPauseEnabled: snapshot.thermalPauseEnabled,
+      thermalWarningC: snapshot.thermalWarningC,
+      thermalPauseC: snapshot.thermalPauseC,
+      thermalCriticalC: snapshot.thermalCriticalC,
+
     } satisfies VanitySettings),
   });
 };

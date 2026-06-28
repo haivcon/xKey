@@ -75,6 +75,17 @@ export function VanityTabContent(props: VanityTabProps) {
     setVanityPresetsExpanded,
     vanityCustomPattern,
     setVanityCustomPattern,
+    vanityThermalMonitorEnabled,
+    setVanityThermalMonitorEnabled,
+    vanityThermalPauseEnabled,
+    setVanityThermalPauseEnabled,
+    vanityThermalWarningC,
+    setVanityThermalWarningC,
+    vanityThermalPauseC,
+    setVanityThermalPauseC,
+    vanityThermalCriticalC,
+    setVanityThermalCriticalC,
+
     hasRecoverableVanitySession,
     vanityPrefixClean,
     vanitySuffixClean,
@@ -206,6 +217,16 @@ export function VanityTabContent(props: VanityTabProps) {
                   vanityBatchSize={vanityBatchSize}
                   vanityTimeLimit={vanityTimeLimit}
                   setVanityTimeLimit={setVanityTimeLimit}
+                  vanityThermalMonitorEnabled={vanityThermalMonitorEnabled}
+                  setVanityThermalMonitorEnabled={setVanityThermalMonitorEnabled}
+                  vanityThermalPauseEnabled={vanityThermalPauseEnabled}
+                  setVanityThermalPauseEnabled={setVanityThermalPauseEnabled}
+                  vanityThermalWarningC={vanityThermalWarningC}
+                  setVanityThermalWarningC={setVanityThermalWarningC}
+                  vanityThermalPauseC={vanityThermalPauseC}
+                  setVanityThermalPauseC={setVanityThermalPauseC}
+                  vanityThermalCriticalC={vanityThermalCriticalC}
+                  setVanityThermalCriticalC={setVanityThermalCriticalC}
                   onToggle={() => toggleVanitySection('performance')}
                 />
 

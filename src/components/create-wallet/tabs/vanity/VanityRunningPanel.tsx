@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, BrainCircuit, Check, ChevronDown, Copy, Gauge, Maximize2, Pause, Play, RefreshCw, Save, ShieldCheck, Sparkles, Square, Target, Timer, Trash2 } from 'lucide-react';
+import { AlertTriangle, BrainCircuit, Check, ChevronDown, Copy, Gauge, Maximize2, Pause, Play, RefreshCw, Save, ShieldCheck, Sparkles, Square, Target, Timer, Thermometer, Trash2 } from 'lucide-react';
 import { formatCompactNumber, formatVanitySeconds } from '../../formatters';
 import { VanityExtraWalletCard } from './VanityExtraWalletCard';
 import type { VanityTabProps } from './VanityTabContent';
@@ -12,6 +12,7 @@ export function VanityRunningPanel(props: VanityTabProps) {
     selectedVanityAddresses,
     vanityBatchSize,
     vanityCandidates,
+    vanityCpuTemperature,
     vanityCaptureExtras,
     vanityEffectiveThroughput,
     vanityEtaSeconds,
@@ -51,6 +52,16 @@ export function VanityRunningPanel(props: VanityTabProps) {
     toggleVanitySelection,
   } = props;
 
+  const cpuTone = vanityCpuTemperature.status === 'critical'
+    ? 'border-red-400/40 bg-red-500/15 text-red-700 dark:text-red-200'
+    : vanityCpuTemperature.status === 'hot'
+      ? 'border-rose-400/35 bg-rose-500/15 text-rose-700 dark:text-rose-200'
+      : vanityCpuTemperature.status === 'warm'
+        ? 'border-amber-400/35 bg-amber-500/15 text-amber-700 dark:text-amber-200'
+        : vanityCpuTemperature.status === 'normal'
+          ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200'
+          : 'border-surface-300 bg-surface-500/10 text-surface-500 dark:border-surface-700 dark:text-surface-400';
+
   return (
     <div className="space-y-3">
       <section className="rounded-xl border border-brand-200 bg-brand-50/80 p-4 shadow-sm dark:border-brand-500/25 dark:bg-brand-500/5">
@@ -65,6 +76,10 @@ export function VanityRunningPanel(props: VanityTabProps) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-bold ${cpuTone}`} title={vanityCpuTemperature.available ? t('createWallet.vanityCpuTemp', { temp: Math.round(vanityCpuTemperature.temperatureC || 0) }) : t('createWallet.vanityCpuTempUnavailable')}>
+              <Thermometer size={13} />
+              <span>{vanityCpuTemperature.label}</span>
+            </span>
             <span className="rounded-full border border-brand-400/25 bg-brand-500/10 px-2 py-1 text-xs font-bold text-brand-200">{generatedWallets.length}/{vanitySafeTargetCount}</span>
             <button
               type="button"
