@@ -2,6 +2,19 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.4] - 2026-06-28
+
+### Release Notes
+
+- update: fix bug font dp; add cpu mode; add ui/ux dashboard
+
+### Release Metadata
+
+- `package.json`: `6.0.4`
+- `package-lock.json`: `6.0.4`
+- Android `versionName`: `6.0.4`
+- Android `versionCode`: `102`
+
 ## [6.0.3] - Current Release
 
 ### Release Notes

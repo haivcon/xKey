@@ -6,7 +6,12 @@ const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 const run = (cmd, args, opts = {}) => {
   console.log(`\n> ${[cmd, ...args].join(' ')}`);
-  execFileSync(cmd, args, { stdio: 'inherit', windowsHide: true, ...opts });
+  execFileSync(cmd, args, {
+    stdio: 'inherit',
+    windowsHide: true,
+    shell: process.platform === 'win32' && cmd.endsWith('.cmd'),
+    ...opts,
+  });
 };
 const out = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', windowsHide: true }).trim();
 const json = (file) => JSON.parse(readFileSync(file, 'utf8'));
