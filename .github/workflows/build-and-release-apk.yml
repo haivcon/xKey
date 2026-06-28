@@ -79,19 +79,27 @@ jobs:
       - name: 📦 Install locked dependencies
         run: npm ci
 
-      - name: 🔖 Verify tag matches package version
-        if: github.event_name == 'push'
+      - name: 🔖 Verify release versions
         run: |
           set -euo pipefail
           APP_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          ANDROID_VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
 
-          if [ "$APP_VERSION" != "$TAG_VERSION" ]; then
-            echo "Tag version v$TAG_VERSION does not match package.json version v$APP_VERSION."
+          if [ "$ANDROID_VERSION" != "$APP_VERSION" ]; then
+            echo "Android versionName $ANDROID_VERSION does not match package.json version $APP_VERSION."
             exit 1
           fi
 
-          echo "Tag version matches package.json: v$APP_VERSION"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$APP_VERSION" != "$TAG_VERSION" ]; then
+              echo "Tag version v$TAG_VERSION does not match package.json version v$APP_VERSION."
+              exit 1
+            fi
+            echo "Tag version matches package.json: v$APP_VERSION"
+          fi
+
+          echo "Android versionName matches package.json: v$APP_VERSION"
 
       - name: 🏗️ Build Web App (Vite)
         env:

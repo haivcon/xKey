@@ -2,7 +2,22 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
-## [6.0.1] - Current Release
+## [6.0.2] - Current Release
+
+### Release Notes
+
+- Adds hardened GitHub release workflows, clearer Android release download guidance, and a reusable release automation script.
+- Synchronizes Android `versionName` with `package.json` to prevent APK metadata from lagging behind the GitHub release tag.
+
+### Release Metadata
+
+- `package.json`: `6.0.2`
+- `package-lock.json`: `6.0.2`
+- Android `versionName`: `6.0.2`
+- Android `versionCode`: `100`
+
+
+## [6.0.1] - Previous Release
 
 ### Release Focus
 
