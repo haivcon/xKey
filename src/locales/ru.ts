@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Выберите, насколько компактно показывать карточки кошельков.",
     "walletScores": "Оценка кошелька",
     "walletScoresDesc": "Показывать небольшую оценку прямо внутри значка каждого кошелька на главном экране.",
+    "compactBalance": "Компактный баланс",
+    "compactBalanceDesc": "Сокращать крупные суммы (например, 1 000 → 1K, 1 500 000 → 1,5M).",
     "walletDensityComfortable": "Обычная",
     "walletDensityCompact": "Компактная",
     "walletDensityUltra": "Очень компактная",

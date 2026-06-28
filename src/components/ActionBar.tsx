@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench, Bell } from 'lucide-react';
@@ -307,7 +307,15 @@ export default function ActionBar({
           </button>
         </div>
 
-        <div className="hidden gap-2 xl:grid xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="hidden gap-2 xl:grid xl:grid-cols-5 2xl:grid-cols-6">
+          <button
+            onClick={onAddWallet}
+            className="flex min-w-0 items-center justify-center gap-2 rounded-lg border border-brand-400 bg-brand-600 px-3 py-2 text-scale-xs font-semibold text-white shadow-lg shadow-brand-500/20 transition-colors hover:bg-brand-500"
+            title={t('home.addWallet')}
+          >
+            <Plus size={18} />
+            <span className="truncate">{t('home.addWallet')}</span>
+          </button>
           {desktopTools.map(item => {
             const Icon = item.icon;
             return (

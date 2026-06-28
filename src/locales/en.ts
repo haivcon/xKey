@@ -636,6 +636,8 @@ export default {
     "walletDensityDesc": "Choose how compact wallet cards appear on the home screen.",
     "walletScores": "Wallet score",
     "walletScoresDesc": "Show a compact underlined score for each wallet on the home screen.",
+    "compactBalance": "Compact balance",
+    "compactBalanceDesc": "Abbreviate large balances (e.g. 1,000 → 1K, 1,500,000 → 1.5M).",
     "walletDensityComfortable": "Comfort",
     "walletDensityCompact": "Compact",
     "walletDensityUltra": "Ultra",

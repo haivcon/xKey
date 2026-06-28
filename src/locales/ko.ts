@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "홈 화면 지갑 카드의 표시 밀도를 선택합니다.",
     "walletScores": "지갑 점수",
     "walletScoresDesc": "홈 화면에서 각 지갑 아이콘 안에 작은 점수를 표시합니다.",
+    "compactBalance": "잔액 축약",
+    "compactBalanceDesc": "큰 잔액을 축약합니다 (예: 1,000 → 1K, 1,500,000 → 1.5M).",
     "walletDensityComfortable": "편안함",
     "walletDensityCompact": "간결",
     "walletDensityUltra": "초간결",

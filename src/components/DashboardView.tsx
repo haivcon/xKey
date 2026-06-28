@@ -1,7 +1,7 @@
 ﻿import { ArrowLeft, Wallet, TrendingUp, AlertCircle, KeyRound, Link } from 'lucide-react';
-import { useT } from '../contexts/LanguageContext';
+import { useLanguage, useT } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { formatAssetValue, parseAmount } from '../utils/amountFormat';
+import { formatAssetValue, formatCompactAmount, parseAmount } from '../utils/amountFormat';
 import type { Wallet as WalletType } from '../types';
 
 type DistributionValue = {
@@ -17,7 +17,8 @@ type DashboardViewProps = {
 
 export default function DashboardView({ wallets, onBack, assetUnit = '$' }: DashboardViewProps) {
     const t = useT();
-    const { privacyMode } = useTheme();
+    const { lang } = useLanguage();
+    const { privacyMode, compactBalance } = useTheme();
     const maskValue = (value: string) => privacyMode ? '••••••' : value;
 
     // Folder distribution
@@ -280,7 +281,7 @@ export default function DashboardView({ wallets, onBack, assetUnit = '$' }: Dash
                 {/* Total */}
                 <div className="glass-card dashboard-card-enter dashboard-total-glow p-6 border border-brand-500/20 bg-brand-500/5" style={{ animationDelay: '720ms' }}>
                     <p className="text-surface-400 text-xs uppercase tracking-wider mb-1">{t('dashboard.totalValue')}</p>
-                    <p className={`text-3xl font-bold text-white ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : formatAssetValue(totalBalance, assetUnit)}</p>
+                    <p className={`text-3xl font-bold text-white ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : (compactBalance ? formatCompactAmount(totalBalance, assetUnit, lang) : formatAssetValue(totalBalance, assetUnit))}</p>
                 </div>
             </div>
         </div>

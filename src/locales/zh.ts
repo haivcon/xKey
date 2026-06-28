@@ -642,6 +642,8 @@ export default {
     "walletDensityDesc": "选择首页钱包卡片的紧凑程度。",
     "walletScores": "钱包评分",
     "walletScoresDesc": "在首页每个钱包的图标内直接显示紧凑评分。",
+    "compactBalance": "精简余额",
+    "compactBalanceDesc": "将大额余额缩写显示（例如 1,000 → 1K，1,500,000 → 1.5M）。",
     "walletDensityComfortable": "舒适",
     "walletDensityCompact": "紧凑",
     "walletDensityUltra": "超紧凑",

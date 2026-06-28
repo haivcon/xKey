@@ -23,6 +23,8 @@ type ThemeContextValue = {
   setBrandReminders: (next: boolean) => void;
   showWalletScores: boolean;
   setShowWalletScores: (next: boolean) => void;
+  compactBalance: boolean;
+  setCompactBalance: (next: boolean) => void;
   privacyMode: boolean;
   setPrivacyMode: (next: boolean) => void;
   togglePrivacyMode: () => void;
@@ -34,6 +36,7 @@ const DISPLAY_SCALE_KEY = 'xkey_display_scale';
 const DPI_MODE_KEY = 'xkey_dpi_mode';
 const TARGET_DPI_KEY = 'xkey_target_dpi';
 const WALLET_DENSITY_KEY = 'xkey_wallet_density';
+const COMPACT_BALANCE_KEY = 'xkey_compact_balance';
 const BRAND_REMINDERS_KEY = 'xkey_brand_reminders';
 const SHOW_WALLET_SCORES_KEY = 'xkey_show_wallet_scores';
 const PRIVACY_MODE_KEY = 'xkey_privacy_mode';
@@ -146,6 +149,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [walletDensity, setWalletDensityState] = useState<WalletDensity>('comfortable');
   const [brandReminders, setBrandRemindersState] = useState(true);
   const [showWalletScores, setShowWalletScoresState] = useState(false);
+  const [compactBalance, setCompactBalanceState] = useState(false);
   const [privacyMode, setPrivacyModeState] = useState(false);
 
   useEffect(() => {
@@ -207,6 +211,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.get({ key: SHOW_WALLET_SCORES_KEY }).then(({ value }) => {
       if (value === 'true') setShowWalletScoresState(true);
       else if (value === 'false') setShowWalletScoresState(false);
+    }).catch(() => {});
+
+    Preferences.get({ key: COMPACT_BALANCE_KEY }).then(({ value }) => {
+      if (value === 'true') setCompactBalanceState(true);
+      else if (value === 'false') setCompactBalanceState(false);
     }).catch(() => {});
 
     Preferences.get({ key: PRIVACY_MODE_KEY }).then(({ value }) => {
@@ -282,6 +291,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     Preferences.set({ key: BRAND_REMINDERS_KEY, value: String(next) }).catch(() => {});
   }, []);
 
+  const setCompactBalance = useCallback((next: boolean) => {
+    setCompactBalanceState(next);
+    Preferences.set({ key: COMPACT_BALANCE_KEY, value: String(next) }).catch(() => {});
+  }, []);
+
   const setShowWalletScores = useCallback((next: boolean) => {
     setShowWalletScoresState(next);
     Preferences.set({ key: SHOW_WALLET_SCORES_KEY, value: String(next) }).catch(() => {});
@@ -314,7 +328,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     : displayScale;
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, privacyMode, setPrivacyMode, togglePrivacyMode }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance, privacyMode, setPrivacyMode, togglePrivacyMode }}>
       {children}
     </ThemeContext.Provider>
   );

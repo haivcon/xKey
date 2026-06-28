@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Preferences } from '@capacitor/preferences';
 import { saveWallets } from '../utils/storage';
 import { hapticSuccess } from '../utils/haptics';
-import { formatAssetValue } from '../utils/amountFormat';
+import { formatAssetValue, formatCompactAmount } from '../utils/amountFormat';
 import { ASSET_UNIT_KEY } from '../app/constants';
 import type { AssetBalanceChange, AssetBalanceOptions } from '../app/types';
 import type { TranslationFn } from '../contexts/LanguageContext';
@@ -27,6 +29,7 @@ export default function useAssetBalanceSettings({
   showToast,
   t,
 }: UseAssetBalanceSettingsOptions) {
+  const { compactBalance } = useTheme();
   const [assetUnit, setAssetUnit] = useState('$');
 
   useEffect(() => {
@@ -35,7 +38,8 @@ export default function useAssetBalanceSettings({
     }).catch(() => {});
   }, []);
 
-  const totalBalanceText = useMemo(() => formatAssetValue(totalBalance, assetUnit), [assetUnit, totalBalance]);
+  const { lang } = useLanguage();
+  const totalBalanceText = useMemo(() => compactBalance ? formatCompactAmount(totalBalance, assetUnit, lang) : formatAssetValue(totalBalance, assetUnit), [assetUnit, totalBalance, compactBalance, lang]);
 
   const updateAssetUnit = useCallback((unit: string) => {
     const nextUnit = unit || '$';

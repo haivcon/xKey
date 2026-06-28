@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "होम स्क्रीन पर वॉलेट कार्ड कितने कॉम्पैक्ट दिखें चुनें।",
     "walletScores": "वॉलेट स्कोर",
     "walletScoresDesc": "होम स्क्रीन पर हर वॉलेट के आइकन के अंदर छोटा स्कोर दिखाएँ।",
+    "compactBalance": "संक्षिप्त बैलेंस",
+    "compactBalanceDesc": "बड़े बैलेंस को संक्षिप्त करें (उदा. 1,000 → 1K, 1,500,000 → 1.5M)।",
     "walletDensityComfortable": "आरामदायक",
     "walletDensityCompact": "कॉम्पैक्ट",
     "walletDensityUltra": "अल्ट्रा",

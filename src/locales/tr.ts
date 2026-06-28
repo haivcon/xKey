@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Ana ekranda cüzdan kartlarının ne kadar sıkı görüneceğini seçin.",
     "walletScores": "Cüzdan puanı",
     "walletScoresDesc": "Ana ekranda her cüzdanın simgesinin içinde küçük bir puan göster.",
+    "compactBalance": "Kompakt bakiye",
+    "compactBalanceDesc": "Büyük bakiyeleri kısalt (örn. 1.000 → 1K, 1.500.000 → 1,5M).",
     "walletDensityComfortable": "Rahat",
     "walletDensityCompact": "Kompakt",
     "walletDensityUltra": "Ultra",

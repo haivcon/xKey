@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Choisissez la compacité des cartes wallet sur l’accueil.",
     "walletScores": "Score du wallet",
     "walletScoresDesc": "Affiche un score compact directement dans l’icône de chaque wallet sur l’accueil.",
+    "compactBalance": "Solde compact",
+    "compactBalanceDesc": "Abréger les grands soldes (ex. 1 000 → 1K, 1 500 000 → 1,5M).",
     "walletDensityComfortable": "Confort",
     "walletDensityCompact": "Compact",
     "walletDensityUltra": "Ultra",

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
@@ -103,7 +103,7 @@ export default function App() {
     tRef.current = t;
   }, [t]);
 
-  // ─── Custom Hooks ───
+  // --- Custom Hooks ---
   const setWalletsRef = useRef<(wallets: Wallet[]) => void>(() => {});
   const setVaultLoadingRef = useRef<(loading: boolean) => void>(() => {});
 
@@ -352,7 +352,7 @@ export default function App() {
     openExportCSV(folderWallets);
   };
 
-  // ─── View Router ───
+  // --- View Router ---
   if (showOnboarding) {
     return <OnboardingScreen onComplete={() => setShowOnboarding(false)} />;
   }
@@ -405,7 +405,7 @@ export default function App() {
       </Suspense>
     );
   } else {
-    // ─── Home View ───
+    // --- Home View ---
     mainContent = (
       <>
       <div className={`app-scaled-icons min-h-screen bg-surface-950 text-surface-50 font-sans selection:bg-brand-500/30 ${!isAppActive ? 'blur-xl pointer-events-none' : ''}`}>
@@ -519,17 +519,7 @@ export default function App() {
                 <div className="sticky top-[calc(var(--home-header-height)+1rem)] space-y-3">
                   <div className="glass-card p-3">
                     <div className="flex items-center justify-between gap-3 px-2 pb-2">
-                      <span className="text-scale-2xs font-semibold uppercase tracking-wider text-surface-500">
-                        {t('home.folders') || 'Folders'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => { hapticTap(); setShowAssetBalance(true); }}
-                        className="rounded-full bg-surface-800 px-2.5 py-1 text-xs font-semibold text-surface-100 hover:bg-surface-700"
-                        title={t('assetBalance.title')}
-                      >
-                        {totalBalanceText}
-                      </button>
+                      <span className="text-scale-2xs font-semibold uppercase tracking-wider text-surface-500">{t('home.folders') || 'Folders'}</span><div className="flex items-center gap-1 rounded-lg border border-brand-500/20 bg-surface-900/50 px-2 py-1"><button type="button" onClick={() => { hapticTap(); setShowAssetBalance(true); }} className="min-w-0 text-right"><span className={`block truncate text-xs font-extrabold text-brand-400 hover:text-brand-300 transition-colors ${privacyMode ? 'privacy-mask-text' : ''}`}>{privacyMode ? '••••••' : totalBalanceText}</span></button><button type="button" onClick={() => { hapticTap(); togglePrivacyMode(); }} className={`ml-1 flex h-6 w-6 items-center justify-center rounded transition-colors ${privacyMode ? 'bg-brand-500/20 text-brand-300' : 'text-surface-400 hover:bg-surface-700 hover:text-white'}`} title={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')} aria-label={privacyMode ? t('privacy.showSensitiveValues') : t('privacy.hideSensitiveValues')} aria-pressed={privacyMode}>{privacyMode ? <EyeOff size={13} /> : <Eye size={13} />}</button></div>
                     </div>
                     <FolderTabs
                       variant="sidebar"

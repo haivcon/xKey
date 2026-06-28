@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Wähle, wie kompakt Wallet-Karten auf der Startseite erscheinen.",
     "walletScores": "Wallet-Punktzahl",
     "walletScoresDesc": "Zeige eine kleine Punktzahl direkt im Symbol jeder Wallet auf der Startseite.",
+    "compactBalance": "Kompakte Bilanz",
+    "compactBalanceDesc": "Große Beträge abkürzen (z. B. 1.000 → 1K, 1.500.000 → 1,5M).",
     "walletDensityComfortable": "Bequem",
     "walletDensityCompact": "Kompakt",
     "walletDensityUltra": "Sehr kompakt",

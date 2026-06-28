@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Chọn mức gọn của thẻ ví trên trang chủ.",
     "walletScores": "Điểm ví",
     "walletScoresDesc": "Hiển thị điểm gọn cho từng ví trên trang chủ bằng kiểu gạch chân đẹp.",
+    "compactBalance": "Rút gọn số dư",
+    "compactBalanceDesc": "Rút gọn số dư lớn (ví dụ 1.000 → 1K, 1.500.000 → 1,5M).",
     "walletDensityComfortable": "Dễ nhìn",
     "walletDensityCompact": "Gọn",
     "walletDensityUltra": "Rất gọn",

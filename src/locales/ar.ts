@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "اختر مدى ضغط بطاقات المحافظ في الصفحة الرئيسية.",
     "walletScores": "نقاط المحفظة",
     "walletScoresDesc": "اعرض نتيجة صغيرة داخل أيقونة كل محفظة على الشاشة الرئيسية.",
+    "compactBalance": "اختصار الرصيد",
+    "compactBalanceDesc": "اختصار الأرصدة الكبيرة (مثال: 1,000 → 1K و1,500,000 → 1.5M).",
     "walletDensityComfortable": "مريح",
     "walletDensityCompact": "مضغوط",
     "walletDensityUltra": "مضغوط جدا",

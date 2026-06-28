@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Escolha quão compactos ficam os cartões de carteira.",
     "walletScores": "Pontuação da carteira",
     "walletScoresDesc": "Mostre uma pontuação pequena diretamente no ícone de cada carteira na tela inicial.",
+    "compactBalance": "Saldo compacto",
+    "compactBalanceDesc": "Abreviar saldos grandes (ex.: 1.000 → 1K, 1.500.000 → 1,5M).",
     "walletDensityComfortable": "Conforto",
     "walletDensityCompact": "Compacto",
     "walletDensityUltra": "Ultra",

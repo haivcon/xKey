@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck, MoreHorizontal } from 'lucide-react';
-import { useT } from '../../contexts/LanguageContext';
+import { useLanguage, useT } from '../../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../../utils/haptics';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
 import { secureCopy } from '../../utils/clipboard';
@@ -11,7 +11,7 @@ import PasswordInput from '../shared/PasswordInput';
 import SecureTextarea from '../shared/SecureTextarea';
 import SecureGlyphText from '../shared/SecureGlyphText';
 import { TagBadge, TagEditor } from '../TagSystem';
-import { formatAmountInput, formatAssetValue, normalizeAmountInput, parseAmount } from '../../utils/amountFormat';
+import { formatAmountInput, formatAssetValue, formatCompactAmount, normalizeAmountInput, parseAmount } from '../../utils/amountFormat';
 import { useSecureDisplay } from '../../contexts/SecureDisplayContext';
 import { appendAuditLog } from '../../utils/auditLog';
 import { formatKeyAge, getWalletHealth } from '../../utils/keyHealth';
@@ -81,7 +81,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const fullAddressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
   const { showToast } = useToast();
-  const { brandReminders, showWalletScores, privacyMode } = useTheme();
+  const { brandReminders, showWalletScores, privacyMode, compactBalance } = useTheme();
   const { hasMasterPassword, verifyMasterPassword } = useMasterPassword();
   const secureDisplay = useSecureDisplay();
   const [showMPPrompt, setShowMPPrompt] = useState<SensitiveAction | null>(null);
@@ -262,7 +262,8 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     </div>
   );
 
-  const formattedBalance = formatAssetValue(wallet.balance, assetUnit);
+  const { lang } = useLanguage();
+  const formattedBalance = compactBalance ? formatCompactAmount(wallet.balance, assetUnit, lang) : formatAssetValue(wallet.balance, assetUnit);
   const displayAddressText = privacyMode ? '••••••••••••••••' : displayAddress;
   const balanceParts = formattedBalance.match(/^(.*?)([.,]\d+)?$/);
   const balanceMain = balanceParts?.[1] || formattedBalance;

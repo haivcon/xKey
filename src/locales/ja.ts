@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "ホーム画面のウォレットカードの詰め方を選択します。",
     "walletScores": "ウォレットスコア",
     "walletScoresDesc": "ホーム画面で各ウォレットのアイコン内に小さなスコアを表示します。",
+    "compactBalance": "残高を短縮表示",
+    "compactBalanceDesc": "大きな残高を省略表示します（例: 1,000 → 1K、1,500,000 → 1.5M）。",
     "walletDensityComfortable": "標準",
     "walletDensityCompact": "コンパクト",
     "walletDensityUltra": "超コンパクト",

@@ -111,7 +111,7 @@ export default function GeneralTab() {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const { theme, setTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores } = useTheme();
+  const { theme, setTheme, displayScale, setDisplayScale, dpiMode, setDpiMode, targetDpi, setTargetDpi, deviceDpi, effectiveDisplayScale, walletDensity, setWalletDensity, brandReminders, setBrandReminders, showWalletScores, setShowWalletScores, compactBalance, setCompactBalance } = useTheme();
   const t = useT();
   const showConfirm = useConfirm();
   const { lang, changeLang } = useLanguage();
@@ -686,6 +686,17 @@ export default function GeneralTab() {
               activeClass="bg-cyan-500"
               iconClass="bg-cyan-500/10 text-cyan-400"
               onToggle={() => { hapticTap(); setShowWalletScores(!showWalletScores); }}
+            />
+          </div>
+          <div className="p-4">
+            <ToggleRow
+              icon={SlidersHorizontal}
+              title={t('settings.compactBalance')}
+              description={t('settings.compactBalanceDesc')}
+              enabled={compactBalance}
+              activeClass="bg-violet-500"
+              iconClass="bg-violet-500/10 text-violet-400"
+              onToggle={() => { hapticTap(); setCompactBalance(!compactBalance); }}
             />
           </div>
         </div>

@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "Pilih seberapa ringkas kartu dompet di beranda.",
     "walletScores": "Skor dompet",
     "walletScoresDesc": "Tampilkan skor kecil langsung di ikon setiap dompet pada layar beranda.",
+    "compactBalance": "Saldo ringkas",
+    "compactBalanceDesc": "Singkat saldo besar (misal 1.000 → 1K, 1.500.000 → 1,5M).",
     "walletDensityComfortable": "Nyaman",
     "walletDensityCompact": "Ringkas",
     "walletDensityUltra": "Ultra",

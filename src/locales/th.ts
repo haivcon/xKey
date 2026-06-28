@@ -635,6 +635,8 @@ export default {
     "walletDensityDesc": "เลือกความกะทัดรัดของการ์ดกระเป๋าในหน้าแรก",
     "walletScores": "คะแนนกระเป๋า",
     "walletScoresDesc": "แสดงคะแนนขนาดเล็กในไอคอนของแต่ละกระเป๋าบนหน้าแรก",
+    "compactBalance": "ยอดเงินแบบย่อ",
+    "compactBalanceDesc": "ย่อยอดเงินจำนวนมาก (เช่น 1,000 → 1K, 1,500,000 → 1.5M)",
     "walletDensityComfortable": "สบายตา",
     "walletDensityCompact": "กะทัดรัด",
     "walletDensityUltra": "กะทัดรัดมาก",
