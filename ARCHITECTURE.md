@@ -102,7 +102,7 @@ tests/         Unit, focused, and smoke/regression tests
 
 ## 6. UI Interaction Architecture
 
-v5.22.1 keeps the custody/security model unchanged and updates the mobile interaction layer:
+v5.22.2 keeps the custody/security model unchanged and updates the mobile interaction layer:
 
 - `HomeHeader` is focused on brand, slogan, donate, and settings actions.
 - Key Health opens from the Tools menu with badge support.
@@ -121,11 +121,11 @@ The vanity generator runs as an offline CPU-bound workflow. Generated secrets mu
 
 ## 8. Android Build Metadata
 
-For v5.22.1:
+For v5.22.2:
 
-- `package.json` version: `5.22.1`
-- `package-lock.json` version: `5.22.1`
-- Android `versionName`: `5.22.1`
+- `package.json` version: `5.22.2`
+- `package-lock.json` version: `5.22.2`
+- Android `versionName`: `5.22.2`
 - Android `versionCode`: `96`
 - Android application ID/package: `com.haivcon.xkey`
 
@@ -151,7 +151,7 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v5.22.1`.
+5. Create an annotated tag such as `v5.22.2`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 

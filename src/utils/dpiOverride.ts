@@ -2,54 +2,82 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 
 export type DpiOverrideResult = {
   supported: boolean;
+  swDp?: number;
   dpi?: number;
+  systemSwDp?: number;
   systemDpi?: number;
   overrideEnabled?: boolean;
 };
 
 type DpiOverridePlugin = {
-  setDpi: (options: { dpi: number }) => Promise<DpiOverrideResult>;
-  resetDpi: () => Promise<DpiOverrideResult>;
-  getSystemDpi: () => Promise<DpiOverrideResult>;
-  getCurrentDpi: () => Promise<DpiOverrideResult>;
+  setSwDp: (options: { swDp: number }) => Promise<DpiOverrideResult>;
+  resetSwDp: () => Promise<DpiOverrideResult>;
+  getSystemSwDp: () => Promise<DpiOverrideResult>;
+  getCurrentSwDp: () => Promise<DpiOverrideResult>;
+  setDpi?: (options: { dpi: number }) => Promise<DpiOverrideResult>;
+  resetDpi?: () => Promise<DpiOverrideResult>;
+  getSystemDpi?: () => Promise<DpiOverrideResult>;
+  getCurrentDpi?: () => Promise<DpiOverrideResult>;
 };
 
 const DpiOverride = registerPlugin<DpiOverridePlugin>('DpiOverride');
 
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
-export async function setAndroidAppDpi(dpi: number): Promise<DpiOverrideResult> {
+export async function setAndroidAppSwDp(swDp: number): Promise<DpiOverrideResult> {
   if (!isAndroidNative()) return { supported: false };
   try {
-    return await DpiOverride.setDpi({ dpi });
+    return await DpiOverride.setSwDp({ swDp });
   } catch {
-    return { supported: false };
+    try {
+      return await DpiOverride.setDpi?.({ dpi: swDp }) ?? { supported: false };
+    } catch {
+      return { supported: false };
+    }
   }
 }
 
-export async function resetAndroidAppDpi(): Promise<DpiOverrideResult> {
+export async function resetAndroidAppSwDp(): Promise<DpiOverrideResult> {
   if (!isAndroidNative()) return { supported: false };
   try {
-    return await DpiOverride.resetDpi();
+    return await DpiOverride.resetSwDp();
   } catch {
-    return { supported: false };
+    try {
+      return await DpiOverride.resetDpi?.() ?? { supported: false };
+    } catch {
+      return { supported: false };
+    }
   }
 }
 
-export async function getAndroidSystemDpi(): Promise<DpiOverrideResult> {
+export async function getAndroidSystemSwDp(): Promise<DpiOverrideResult> {
   if (!isAndroidNative()) return { supported: false };
   try {
-    return await DpiOverride.getSystemDpi();
+    return await DpiOverride.getSystemSwDp();
   } catch {
-    return { supported: false };
+    try {
+      return await DpiOverride.getSystemDpi?.() ?? { supported: false };
+    } catch {
+      return { supported: false };
+    }
   }
 }
 
-export async function getAndroidCurrentDpi(): Promise<DpiOverrideResult> {
+export async function getAndroidCurrentSwDp(): Promise<DpiOverrideResult> {
   if (!isAndroidNative()) return { supported: false };
   try {
-    return await DpiOverride.getCurrentDpi();
+    return await DpiOverride.getCurrentSwDp();
   } catch {
-    return { supported: false };
+    try {
+      return await DpiOverride.getCurrentDpi?.() ?? { supported: false };
+    } catch {
+      return { supported: false };
+    }
   }
 }
+
+// Legacy exports kept so older imports still compile; values now represent smallest-width dp.
+export const setAndroidAppDpi = setAndroidAppSwDp;
+export const resetAndroidAppDpi = resetAndroidAppSwDp;
+export const getAndroidSystemDpi = getAndroidSystemSwDp;
+export const getAndroidCurrentDpi = getAndroidCurrentSwDp;

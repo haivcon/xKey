@@ -1,9 +1,16 @@
 package com.haivcon.xkey;
 
+import android.content.Context;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        Context overrideContext = DpiOverridePlugin.createOverrideContext(newBase);
+        super.attachBaseContext(overrideContext != null ? overrideContext : newBase);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceCredentialPlugin.class);
@@ -12,7 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DeviceIntegrityPlugin.class);
         registerPlugin(XKeyFileSaverPlugin.class);
         registerPlugin(DpiOverridePlugin.class);
-        DpiOverridePlugin.applyStoredDpi(this);
+        DpiOverridePlugin.applyStoredSwDp(this);
         super.onCreate(savedInstanceState);
     }
 }

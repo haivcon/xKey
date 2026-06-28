@@ -86,3 +86,6 @@ android/**/*.iml
 
 # Extra guard: never publish the local numbered scratch directory.
 /1/**
+
+# Custom ignores
+1/

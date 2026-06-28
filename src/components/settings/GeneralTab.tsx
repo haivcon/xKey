@@ -14,23 +14,23 @@ import useLiteMode from '../../hooks/useLiteMode';
 import { useConfirm } from '../../contexts/ConfirmContext';
 
 const THEME_OPTIONS = [
-  { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo', fallbackLabel: 'Tối chuyên nghiệp' },
-  { key: 'light', icon: Sun, label: 'settings.lightMode', color: 'amber', fallbackLabel: 'Sáng rõ nét' },
+  { key: 'dark', icon: Moon, label: 'settings.darkMode', color: 'indigo', fallbackLabel: 'Tá»‘i chuyÃªn nghiá»‡p' },
+  { key: 'light', icon: Sun, label: 'settings.lightMode', color: 'amber', fallbackLabel: 'SÃ¡ng rÃµ nÃ©t' },
   { key: 'amoled', icon: Monitor, label: 'settings.amoledMode', color: 'slate', fallbackLabel: 'AMOLED' },
-  { key: 'pink', icon: Heart, label: 'settings.pinkMode', color: 'pink', fallbackLabel: 'Hồng rose' },
+  { key: 'pink', icon: Heart, label: 'settings.pinkMode', color: 'pink', fallbackLabel: 'Há»“ng rose' },
   { key: 'blue', icon: Droplets, label: 'settings.blueMode', color: 'blue', fallbackLabel: 'Xanh sapphire' },
-  { key: 'red', icon: Flame, label: 'settings.redMode', color: 'red', fallbackLabel: 'Đỏ ruby' },
-  { key: 'purple', icon: Gem, label: 'settings.purpleMode', color: 'purple', fallbackLabel: 'Tím amethyst' },
-  { key: 'emerald', icon: ShieldCheck, label: 'settings.emeraldMode', color: 'emerald', fallbackLabel: 'Xanh ngọc bảo mật' },
+  { key: 'red', icon: Flame, label: 'settings.redMode', color: 'red', fallbackLabel: 'Äá» ruby' },
+  { key: 'purple', icon: Gem, label: 'settings.purpleMode', color: 'purple', fallbackLabel: 'TÃ­m amethyst' },
+  { key: 'emerald', icon: ShieldCheck, label: 'settings.emeraldMode', color: 'emerald', fallbackLabel: 'Xanh ngá»c báº£o máº­t' },
 ];
 
 const MIN_DISPLAY_SCALE = 5;
 const MAX_DISPLAY_SCALE = 200;
 const DISPLAY_SCALE_PRESETS = [50, 75, 100, 125, 150, 200];
-const MIN_TARGET_DPI = 120;
-const MAX_TARGET_DPI = 960;
-const DEFAULT_TARGET_DPI = 250;
-const TARGET_DPI_PRESETS = [160, 200, 250, 320, 420, 480];
+const MIN_TARGET_DPI = 240;
+const MAX_TARGET_DPI = 800;
+const DEFAULT_TARGET_DPI = 480;
+const TARGET_DPI_PRESETS = [320, 360, 400, 480, 520, 561];
 const DENSITY_OPTIONS = [
   { key: 'comfortable', label: 'settings.walletDensityComfortable' },
   { key: 'compact', label: 'settings.walletDensityCompact' },
@@ -186,7 +186,7 @@ export default function GeneralTab() {
     if (enabled === dpiMode) return;
 
     const nextDpi = enabled ? DEFAULT_TARGET_DPI : targetDpi;
-    const nextScale = enabled ? Math.round((nextDpi / Math.max(deviceDpi, 1)) * 100) : effectiveDisplayScale;
+    const nextScale = enabled ? Math.round((Math.max(deviceDpi, 1) / nextDpi) * displayScale) : effectiveDisplayScale;
 
     const ok = await showConfirm(
       t(enabled ? 'settings.dpiModeEnableConfirmMessage' : 'settings.dpiModeDisableConfirmMessage', { dpi: nextDpi, deviceDpi, scale: nextScale }),
@@ -214,7 +214,7 @@ export default function GeneralTab() {
     if (dpiConfirmingRef.current) return;
 
     dpiConfirmingRef.current = true;
-    const nextScale = Math.round((nextDpi / Math.max(deviceDpi, 1)) * 100);
+    const nextScale = Math.round((Math.max(deviceDpi, 1) / nextDpi) * displayScale);
     const ok = await showConfirm(
       t('settings.dpiConfirmMessage', { from: targetDpi, to: nextDpi, deviceDpi, scale: nextScale }),
       {
@@ -267,7 +267,7 @@ export default function GeneralTab() {
     <>
       <SettingsGroupLabel>{t('settings.language')}</SettingsGroupLabel>
 
-      {/* ═══ Language Picker ═══ */}
+      {/* â•â•â• Language Picker â•â•â• */}
       <div className="glass-card overflow-hidden">
         <button
           onClick={() => { hapticTap(); setShowLangPicker(!showLangPicker); }}
@@ -318,7 +318,7 @@ export default function GeneralTab() {
 
       <SettingsGroupLabel>{t('settings.appearance')}</SettingsGroupLabel>
 
-      {/* ═══ Theme Selector ═══ */}
+      {/* â•â•â• Theme Selector â•â•â• */}
       <div className="glass-card overflow-hidden">
         <button
           onClick={() => toggleSection('theme')}
@@ -353,7 +353,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Display Scale ═══ */}
+      {/* â•â•â• Display Scale â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <button
           onClick={() => toggleSection('scale')}
@@ -365,7 +365,7 @@ export default function GeneralTab() {
             </div>
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
-              <p className="text-xs text-surface-400">{displayScale}% · {t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</p>
+              <p className="text-xs text-surface-400">{displayScale}% Â· {t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
@@ -471,7 +471,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ DPI Balanced Display ═══ */}
+      {/* â•â•â• DPI Balanced Display â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <button
           onClick={() => toggleSection('dpi')}
@@ -483,7 +483,7 @@ export default function GeneralTab() {
             </div>
             <div className="text-left">
               <p className="text-white font-medium text-sm">{t('settings.dpiMode')}</p>
-              <p className="text-xs text-surface-400">{dpiMode ? `${targetDpi} DPI · ${effectiveDisplayScale}%` : t('settings.disabled')}</p>
+              <p className="text-xs text-surface-400">{dpiMode ? `${targetDpi} dp · ${effectiveDisplayScale}%` : t('settings.disabled')}</p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'dpi' ? 'rotate-180' : ''}`} />
@@ -546,7 +546,7 @@ export default function GeneralTab() {
                 {t('settings.targetDpiCustom')}
               </label>
               <span className="rounded-full border border-surface-700 bg-surface-800/50 px-2.5 py-1 text-xs font-semibold text-cyan-300">
-                {MIN_TARGET_DPI}-{MAX_TARGET_DPI} DPI
+                {MIN_TARGET_DPI}-{MAX_TARGET_DPI} dp
               </span>
             </div>
 
@@ -590,7 +590,7 @@ export default function GeneralTab() {
                     }}
                     className="w-14 bg-transparent text-right text-base font-bold leading-none text-white outline-none"
                   />
-                  <span className="text-xs font-semibold text-surface-400">DPI</span>
+                  <span className="text-xs font-semibold text-surface-400">dp</span>
                 </div>
               </div>
 
@@ -602,7 +602,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Wallet Density ═══ */}
+      {/* â•â•â• Wallet Density â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <button
           onClick={() => toggleSection('density')}
@@ -646,7 +646,7 @@ export default function GeneralTab() {
         </div>
       </div>
 
-      {/* ═══ Lite Mode — visible in Appearance/General settings ═══ */}
+      {/* â•â•â• Lite Mode â€” visible in Appearance/General settings â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <div className="p-4">
           <ToggleRow
@@ -663,7 +663,7 @@ export default function GeneralTab() {
 
       <SettingsGroupLabel>{t('settings.walletDisplay')}</SettingsGroupLabel>
 
-      {/* ═══ Wallet Display Options ═══ */}
+      {/* â•â•â• Wallet Display Options â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <div className="space-y-0 divide-y divide-surface-700/50">
           <div className="p-4">
@@ -693,7 +693,7 @@ export default function GeneralTab() {
 
       <SettingsGroupLabel>{t('settings.feedback')}</SettingsGroupLabel>
 
-      {/* ═══ Feedback Options ═══ */}
+      {/* â•â•â• Feedback Options â•â•â• */}
       <div className="glass-card overflow-hidden mt-4">
         <button
           onClick={() => toggleSection('feedback')}
@@ -762,3 +762,4 @@ export default function GeneralTab() {
     </>
   );
 }
+

@@ -82,4 +82,4 @@ For release work:
 - Confirm `git ls-files 1` is empty before committing.
 - Use annotated `v*` git tags for GitHub Actions release builds.
 
-Current release target: `v5.22.1`.
+Current release target: `v5.22.2`.

@@ -20,9 +20,9 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v5.22.1
+## Current Release Security Notes: v5.22.2
 
-v5.22.1 is a UI layout, release metadata, and documentation update. It does not replace the existing encryption, backup, authentication, or local-only data model.
+v5.22.2 is a UI layout, release metadata, and documentation update. It does not replace the existing encryption, backup, authentication, or local-only data model.
 
 Security-relevant notes:
 
@@ -30,7 +30,7 @@ Security-relevant notes:
 - Moving Key Health into Tools changes navigation only; health checks and proof-of-keys behavior are unchanged.
 - Combining sorting into the filter panel is UI-only and does not alter wallet data.
 - Header slogan resizing is display-only and does not affect security controls.
-- Android metadata is updated to `versionCode 96` and `versionName 5.22.1`.
+- Android metadata is updated to `versionCode 96` and `versionName 5.22.2`.
 
 ---
 

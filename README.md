@@ -12,19 +12,17 @@
 
 ---
 
-## Current Release: v5.22.1
+## Current Release: v5.22.2
 
-xKey v5.22.1 is a mobile layout and release-metadata update that keeps the vault local-only security model unchanged while making the home and settings screens more balanced on phones.
+xKey v5.22.2 upgrades the Android display scaling architecture to use `smallestScreenWidthDp` overrides instead of generic density overrides. This allows users to enforce a tablet-style layout (like 480dp minimum width) natively for just this app, without modifying system-wide Developer Options.
 
 ### What's New
 
-- **Cleaner home header:** moved Key Health alerts out of the header and into the Tools menu, leaving the header focused on logo, slogan, donate, and settings actions.
-- **Compact privacy control:** moved the privacy eye button into the Total Assets card with a smaller icon and preserved masked total rendering.
-- **Professional filter workflow:** merged sorting into the filter panel so the home action row only shows camera and filter controls.
-- **Balanced mobile controls:** aligned search/add-wallet widths with the camera/filter/tools column for a more consistent mobile grid.
-- **Settings display polish:** widened toggle rows for Brand Reminder and Wallet Score settings so icons, descriptions, and switches no longer feel cramped.
-- **Header slogan scaling:** reduced the mobile security slogan size to prevent overflow on narrow displays.
-- **Android release metadata:** `versionName 5.22.1`, `versionCode 96`.
+- **App-only Minimum Width:** On Android, xKey now overrides `smallestScreenWidthDp` (defaulting to 480dp) so the app renders using wide-screen breakpoints.
+- **Independent Configuration:** Modifying the minimum width inside the app does not affect the system's global Developer Options or DPI configuration.
+- **Flexible Scaling:** The minimum width feature works alongside the existing manual interface display scale to offer precise layout tuning.
+- **Updated Locales:** All 15 supported languages were updated to reflect the new "minimum width / dp" terminology over the older "density DPI" wording.
+- **Android release metadata:** `versionName 5.22.2`, `versionCode 97`.
 
 ---
 

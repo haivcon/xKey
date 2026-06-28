@@ -2,34 +2,35 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
-## [5.22.1] - Current Release
+## [5.22.2] - Current Release
 
 ### Release Focus
 
-v5.22.1 updates the mobile home layout, settings display rows, Android release metadata, and documentation for a clean tagged GitHub build.
+v5.22.2 refactors the Android display scaling approach to use `smallestScreenWidthDp` (minimum width override) instead of custom density DPI. This allows the app to request a wider tablet-like layout (defaulting to 480dp) independently of system-wide Developer Options.
 
 ### Added
 
-- Key Health is now available from the Tools menu with its existing attention badge.
-- The Total Assets card now includes a compact privacy eye toggle inside the card.
-- The filter panel now includes sorting options, replacing the separate sort button on the mobile home toolbar.
+- App-only Minimum Width (smallestScreenWidthDp override) setting for Android, allowing users to configure tablet-like layouts (240dp - 800dp).
+- Automatically applies 480dp minimum width on fresh installations.
+- Stores user preference to opt-out if disabled.
 
-### Improved
+### Changed
 
-- The home header is less crowded after moving Key Health and privacy controls out of the header action cluster.
-- Mobile search/add-wallet widths now align with the camera/filter/tools control column.
-- Brand Reminder and Wallet Score settings rows now provide more room for icons, descriptions, and switches.
-- The mobile slogan `NOT YOUR KEY, NOT YOUR CRYPTO` is scaled down for narrow screens.
+- Replaced the former "DPI-balanced display" mechanism which only scaled interface density, but did not trigger wider UI breakpoint logic on Android.
+- `ThemeContext` and `GeneralTab` UI labels, presets, and sliders now reflect "dp" instead of "DPI".
+- Updated all 15 localization files to clarify the minimum width feature.
+- Deprecated the old `add-dpi-locales.mjs` migration script to prevent accidental reversions.
 
 ### Release Metadata
 
-- `package.json`: `5.22.1`
-- `package-lock.json`: `5.22.1`
-- Android `versionName`: `5.22.1`
-- Android `versionCode`: `96`
+- `package.json`: `5.22.2`
+- `package-lock.json`: `5.22.2`
+- Android `versionName`: `5.22.2`
+- Android `versionCode`: `97`
 
 ## Previous Releases - Compact Summary
 
+- **5.22.1:** mobile layout balance, total assets privacy toggle, and header reorganization.
 - **5.22.0:** version metadata update before the mobile layout polish release.
 - **5.21.9:** privacy mode, wallet card, dashboard, empty-state, folder drag/drop, and transition polish.
 - **5.21.8:** Lite Mode relocation, tactile interaction effects, toast layout and slogan formatting polish.
