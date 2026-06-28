@@ -530,15 +530,15 @@ export default function GeneralTab() {
 
             <div className="mb-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
+                <p className="text-scale-2xs font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
                 <p className="mt-1 text-sm font-bold text-white">{deviceDpi}</p>
               </div>
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
+                <p className="text-scale-2xs font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
                 <p className="mt-1 text-sm font-bold text-cyan-200">{targetDpi}</p>
               </div>
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
+                <p className="text-scale-2xs font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
                 <p className="mt-1 text-sm font-bold text-brand-300">×{dpiScaleRatio.toFixed(2)}</p>
               </div>
             </div>
