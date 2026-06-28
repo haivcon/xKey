@@ -20,7 +20,7 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v5.22.2
+## Current Release Security Notes: v6.0.0
 
 v5.22.2 is a UI layout, release metadata, and documentation update. It does not replace the existing encryption, backup, authentication, or local-only data model.
 

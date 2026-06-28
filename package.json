@@ -1,7 +1,7 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "5.22.2",
+  "version": "6.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

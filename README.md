@@ -12,9 +12,9 @@
 
 ---
 
-## Current Release: v5.22.2
+## Current Release: v6.0.0
 
-xKey v5.22.2 upgrades the Android display scaling architecture to use `smallestScreenWidthDp` overrides instead of generic density overrides. This allows users to enforce a tablet-style layout (like 480dp minimum width) natively for just this app, without modifying system-wide Developer Options.
+xKey v6.0.0 upgrades the Android display scaling architecture to use `smallestScreenWidthDp` overrides instead of generic density overrides. This allows users to enforce a tablet-style layout (like 480dp minimum width) natively for just this app, without modifying system-wide Developer Options.
 
 ### What's New
 
