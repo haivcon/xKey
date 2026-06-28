@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
-  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell, Eye, EyeOff
+  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell, Eye, EyeOff, ShieldCheck, ServerOff, FileKey2
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -477,41 +477,75 @@ export default function App() {
                   />
                 </div>
               )}
-              {folders.length <= 1 && !creatingFolder && (
-                <div className="glass-card p-3">
-                  <button
-                    type="button"
-                    onClick={() => { hapticTap(); startCreateFolder(); }}
-                    className="btn-glow flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-surface-700 bg-surface-900 px-4 py-3 text-sm font-semibold text-surface-300 transition-colors hover:border-brand-400/60 hover:bg-brand-500/10 hover:text-brand-200"
-                  >
-                    <FolderPlus size={18} />
-                    {t('home.createFolder')}
-                  </button>
+              <div className="glass-card overflow-hidden p-5 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-300 shadow-lg shadow-brand-500/10">
+                  <FileKey2 size={28} />
                 </div>
-              )}
-              <div
-                onClick={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
-                className="btn-glow glass-card border-dashed border-2 border-surface-200/20 hover:border-brand-500/50 cursor-pointer p-8 flex flex-col items-center justify-center transition-all group"
-              >
-                <div className="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  {loading ? (
-                    <div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <UploadCloud size={32} className="text-brand-400" />
-                  )}
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{t('home.importCSV')}</h3>
-                <p className="text-surface-400 text-sm text-center">
-                  {t('home.importDesc')}
+                <h2 className="text-2xl font-black text-white">{t('home.welcomeTitle')}</h2>
+                <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-surface-400">
+                  {t('home.welcomeDesc')}
                 </p>
               </div>
+
               <button
-                onClick={() => { hapticTap(); setShowCreateWallet(true); }}
-                className="btn-glow w-full glass-card border-dashed border-2 border-surface-200/20 hover:border-brand-500/50 cursor-pointer p-6 flex items-center justify-center gap-3 transition-all group"
+                type="button"
+                onClick={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
+                className="btn-glow group glass-card flex cursor-pointer flex-col items-center justify-center border-2 border-dashed border-surface-200/20 p-8 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-brand-500/50 hover:shadow-xl hover:shadow-brand-500/10 active:scale-[0.98]"
               >
-                <Plus size={24} className="text-brand-400 group-hover:scale-110 transition-transform" />
-                <span className="text-white font-medium">{t('home.addWallet')}</span>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-800 transition-transform duration-200 group-hover:scale-110 group-hover:bg-brand-500/10">
+                  {loading ? (
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-400 border-t-transparent" />
+                  ) : (
+                    <UploadCloud size={32} className="text-brand-400 transition-transform duration-200 group-hover:-translate-y-0.5" />
+                  )}
+                </div>
+                <h3 className="mb-2 text-xl font-extrabold text-white">{t('home.importVaultFiles')}</h3>
+                <p className="max-w-xl text-sm leading-relaxed text-surface-400">
+                  {t('home.importVaultFilesDesc')}
+                </p>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-200">.CSV</span>
+                  <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-200">.XKEY</span>
+                  <span className="rounded-full border border-surface-700 bg-surface-900 px-3 py-1 text-xs font-bold text-surface-300">OFFLINE</span>
+                </div>
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-surface-500">
+                  {t('home.importVaultFilesHint')}
+                </p>
               </button>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => { hapticTap(); setShowCreateWallet(true); }}
+                  className="btn-glow glass-card group flex cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-surface-200/20 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10 active:scale-[0.98]"
+                >
+                  <Plus size={24} className="text-brand-400 transition-transform duration-200 group-hover:scale-110" />
+                  <span className="font-semibold text-white">{t('home.addWallet')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { hapticTap(); startCreateFolder(); }}
+                  className="btn-glow glass-card group flex cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-surface-200/20 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-500/50 hover:shadow-lg hover:shadow-brand-500/10 active:scale-[0.98]"
+                >
+                  <FolderPlus size={23} className="text-brand-400 transition-transform duration-200 group-hover:scale-110" />
+                  <span className="font-semibold text-white">{t('home.createFolder')}</span>
+                </button>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+                  <ShieldCheck size={20} className="mx-auto text-emerald-300" />
+                  <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.localEncrypted')}</p>
+                </div>
+                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+                  <ServerOff size={20} className="mx-auto text-sky-300" />
+                  <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.noServer')}</p>
+                </div>
+                <div className="rounded-2xl border border-surface-800 bg-surface-900/60 p-3 text-center">
+                  <FileKey2 size={20} className="mx-auto text-brand-300" />
+                  <p className="mt-2 text-xs font-semibold text-surface-200">{t('home.xkeyBackup')}</p>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">

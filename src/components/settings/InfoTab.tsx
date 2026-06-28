@@ -17,31 +17,31 @@ export default function InfoTab() {
     <>
       {/* ═══ App Version & Open Source ═══ */}
       <div className="glass-card p-4">
-        <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-300">
-                <BadgeInfo size={20} />
+        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:text-left">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-300">
+                <BadgeInfo size={21} />
             </div>
-            <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">{t('settings.appVersion')}</p>
-                <p className="mt-0.5 text-xs text-surface-400">{t('settings.appVersionDesc')}</p>
+            <div className="min-w-0 max-w-sm sm:text-center">
+                <p className="text-base font-bold text-white">{t('settings.appVersion')}</p>
+                <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.appVersionDesc')}</p>
             </div>
-            <div className="ml-auto rounded-full border border-brand-500/25 bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-200">
+            <div className="inline-flex min-w-[6.75rem] items-center justify-center whitespace-nowrap rounded-full border border-brand-500/25 bg-brand-500/10 px-4 py-2 text-center text-sm font-extrabold leading-none text-brand-200 shadow-sm shadow-brand-500/10">
                 {appVersion.fullLabel}
             </div>
         </div>
-        <div className="mt-4 rounded-xl border border-surface-700/70 bg-surface-950/30 p-3">
+        <div className="mt-4 rounded-xl border border-surface-700/70 bg-surface-950/30 p-3 text-center">
             <p className="text-sm font-bold text-white">{t('settings.openSourceTitle')}</p>
-            <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.openSourceDesc')}</p>
+            <p className="mx-auto mt-1 max-w-2xl text-xs leading-relaxed text-surface-400">{t('settings.openSourceDesc')}</p>
             <a
                 href={githubUrl}
                 target="_blank"
                 rel="noreferrer"
                 onClick={hapticTap}
-                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-900 px-3 py-2.5 text-sm font-semibold text-surface-200 transition-colors hover:border-brand-400/60 hover:bg-brand-500/10 hover:text-brand-100"
+                className="group mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-900 px-3 py-2.5 text-sm font-semibold text-surface-200 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-brand-400/60 hover:bg-brand-500/10 hover:text-brand-100 hover:shadow-lg hover:shadow-brand-500/15 active:scale-[0.97]"
             >
-                <GitBranch size={16} />
-                {t('settings.openGithub')}
-                <ExternalLink size={13} />
+                <GitBranch size={16} className="transition-transform duration-200 group-hover:scale-110" />
+                <span className="min-w-0 truncate">{t('settings.openGithub')}</span>
+                <ExternalLink size={13} className="transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </a>
         </div>
       </div>
@@ -55,19 +55,19 @@ export default function InfoTab() {
       </div>
 
       {/* ═══ Multi-chain Wallet Guide ═══ */}
-      <div className="glass-card p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="grid h-10 w-10 grid-cols-3 grid-rows-3 gap-0.5 rounded-xl bg-white p-1.5 flex-shrink-0">
+      <div className="glass-card p-4 text-center">
+        <div className="mb-3 flex flex-col items-center gap-3">
+          <div className="grid h-12 w-12 flex-shrink-0 grid-cols-3 grid-rows-3 gap-0.5 rounded-2xl bg-white p-2 shadow-lg shadow-black/10">
             {[0, 1, 3, 4, 5, 7, 8].map(item => (
               <span key={item} className="rounded-[2px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
             ))}
           </div>
-          <div>
-            <p className="text-white font-medium text-sm">{t('settings.okxGuideTitle')}</p>
-            <p className="text-xs text-surface-400">{t('settings.okxGuideDesc')}</p>
+          <div className="max-w-xl">
+            <p className="text-base font-bold text-white">{t('settings.okxGuideTitle')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.okxGuideDesc')}</p>
           </div>
         </div>
-        <div className="space-y-2 rounded-xl border border-surface-700/70 bg-surface-900/50 p-3">
+        <div className="space-y-2 rounded-xl border border-surface-700/70 bg-surface-900/50 p-3 text-left">
           <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep1')}</p>
           <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep2')}</p>
           <p className="text-xs leading-relaxed text-surface-300">{t('settings.okxGuideStep3')}</p>
@@ -76,15 +76,15 @@ export default function InfoTab() {
             target="_blank"
             rel="noreferrer"
             onClick={hapticTap}
-            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm font-semibold text-surface-100 transition-colors hover:border-white/50 hover:bg-white hover:text-black"
+            className="group mt-3 flex items-center justify-center gap-2 rounded-xl border border-surface-700 bg-surface-950 px-3 py-2.5 text-sm font-semibold text-surface-100 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-white/50 hover:bg-white hover:text-black hover:shadow-lg hover:shadow-white/10 active:scale-[0.97]"
           >
-            <span className="grid h-5 w-5 grid-cols-3 grid-rows-3 gap-[1px] rounded bg-white p-[2px]">
+            <span className="grid h-5 w-5 flex-shrink-0 grid-cols-3 grid-rows-3 gap-[1px] rounded bg-white p-[2px] transition-transform duration-200 group-hover:scale-110 group-hover:bg-black">
               {[0, 1, 3, 4, 5, 7, 8].map(item => (
-                <span key={item} className="rounded-[1px] bg-black" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
+                <span key={item} className="rounded-[1px] bg-black transition-colors duration-200 group-hover:bg-white" style={{ gridColumn: (item % 3) + 1, gridRow: Math.floor(item / 3) + 1 }} />
               ))}
             </span>
-            web3.okx.com/join/BANMAO
-            <ExternalLink size={14} />
+            <span className="min-w-0 truncate">web3.okx.com/join/BANMAO</span>
+            <ExternalLink size={14} className="flex-shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </a>
         </div>
       </div>

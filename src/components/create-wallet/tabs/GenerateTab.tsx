@@ -1,4 +1,4 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
+﻿import { useState, type Dispatch, type SetStateAction } from 'react';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
 import type { Wallet as WalletModel } from '../../../types';
 import { Check, ChevronDown, Copy, Info, Plus, RefreshCw, Sparkles, Wallet } from 'lucide-react';
@@ -61,6 +61,7 @@ export function GenerateTab(props: GenerateTabProps) {
     copiedField,
     setGeneratedWallets,
   } = props;
+  const [showMathSteps, setShowMathSteps] = useState(false);
 
   return (
             <div className="flex flex-col space-y-4">
@@ -155,56 +156,87 @@ export function GenerateTab(props: GenerateTabProps) {
                   <div className="mb-6 text-left">
                     <label className="block text-xs font-medium text-surface-400 mb-2">{t('createWallet.seedLength')}</label>
                     <div className="grid grid-cols-2 gap-2">
-                      {[12, 24].map(words => (
-                        <button
-                          key={words}
-                          type="button"
-                          onClick={() => setSeedWordCount(words)}
-                          className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all ${
-                            seedWordCount === words
-                              ? 'border-brand-500/50 bg-brand-500/15 text-white'
-                              : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
-                          }`}
-                        >
-                          {t(words === 24 ? 'createWallet.mnemonic24' : 'createWallet.mnemonic12')}
-                        </button>
-                      ))}
+                      {[12, 24].map(words => {
+                        const entropyBits = words === 24 ? 256 : 128;
+                        return (
+                          <button
+                            key={words}
+                            type="button"
+                            onClick={() => setSeedWordCount(words)}
+                            className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all ${
+                              seedWordCount === words
+                                ? 'border-brand-500/50 bg-brand-500/15 text-white shadow-[0_0_0_1px_rgba(14,165,233,0.15)]'
+                                : 'border-surface-700 bg-surface-800/60 text-surface-300 hover:border-surface-600 hover:text-white'
+                            }`}
+                          >
+                            <span className="block">{t(words === 24 ? 'createWallet.mnemonic24' : 'createWallet.mnemonic12')}</span>
+                            <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${seedWordCount === words ? 'bg-brand-400/20 text-brand-100' : 'bg-surface-700/70 text-surface-400'}`}>
+                              {t('createWallet.seedEntropyBadge', { bits: entropyBits })}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <p className="mt-2 text-scale-xs leading-relaxed text-surface-500">{t('createWallet.seedLengthHint')}</p>
+                    <p className="mt-2 text-scale-xs leading-relaxed text-surface-400">
+                      {t(seedWordCount === 24 ? 'createWallet.seedLengthHint24' : 'createWallet.seedLengthHint12')}
+                    </p>
+                    <p className="mt-1 text-scale-2xs leading-relaxed text-surface-500">{t('createWallet.seedChoiceSummary')}</p>
                   </div>
 
-                  <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-6 text-left">
-                    <p className="text-scale-xs text-surface-300 leading-relaxed flex items-start gap-1.5 mb-3">
+                  <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-4 text-left space-y-3">
+                    <p className="text-scale-xs text-surface-300 leading-relaxed flex items-start gap-1.5">
                       <Info size={12} className="text-brand-400 mt-0.5 flex-shrink-0" />
-                      {t('createWallet.generateExplain')}
+                      <span>{t('createWallet.generateExplain')}</span>
+                    </p>
+                    <p className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-scale-2xs leading-relaxed text-amber-200">
+                      {t('createWallet.backupReminder')}
                     </p>
 
                     {t('createWallet.mathSteps') && Array.isArray(mathStepItems) && (
-                      <div className="space-y-2 mt-2">
-                        {mathStepItems.map((step, idx) => {
-                          const theme = MATH_THEMES[idx % MATH_THEMES.length];
-                          const isExpanded = expandedStep === idx;
-                          return (
-                            <div key={idx} className={`border ${theme.border} ${theme.bg} rounded-lg overflow-hidden transition-all duration-300`}>
-                              <button onClick={() => setExpandedStep(isExpanded ? null : idx)} className="w-full px-3 py-2 flex items-center justify-between text-left focus:outline-none">
-                                <span className={`text-scale-xs font-semibold ${theme.text}`}>{step.title}</span>
-                                <ChevronDown size={14} className={`${theme.text} transition-transform ${isExpanded ? 'rotate-180' : ''} flex-shrink-0 ml-2`} />
-                              </button>
-                              {isExpanded && (
-                                <div className={`px-3 pb-3 text-scale-2xs text-surface-300 space-y-2 border-t ${theme.contentBorder} pt-2`}>
-                                  <div>
-                                    <span className={`font-semibold ${theme.label}`}>{t('createWallet.mathSteps.task')}: </span>
-                                    <span className="opacity-90">{step.task}</span>
-                                  </div>
-                                  <div>
-                                    <span className={`font-semibold ${theme.label}`}>{step.type === 'meaning' ? t('createWallet.mathSteps.meaning') : t('createWallet.mathSteps.result')}: </span>
-                                    <span className="opacity-90">{step.result}</span>
-                                  </div>
+                      <div className="rounded-lg border border-surface-700/70 bg-surface-900/25">
+                        <button
+                          type="button"
+                          onClick={() => setShowMathSteps(prev => !prev)}
+                          className="w-full px-3 py-2.5 flex items-center justify-between gap-3 text-left focus:outline-none"
+                        >
+                          <span>
+                            <span className="block text-scale-xs font-bold text-white">{t('createWallet.mathStepsTitle')}</span>
+                            <span className="mt-0.5 block text-scale-2xs text-surface-400">{t('createWallet.mathStepsIntro')}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-scale-2xs font-semibold text-brand-300">
+                            {t(showMathSteps ? 'createWallet.mathStepsHide' : 'createWallet.mathStepsShow')}
+                            <ChevronDown size={14} className={`transition-transform ${showMathSteps ? 'rotate-180' : ''}`} />
+                          </span>
+                        </button>
+
+                        {showMathSteps && (
+                          <div className="space-y-2 border-t border-surface-700/70 p-3">
+                            {mathStepItems.map((step, idx) => {
+                              const theme = MATH_THEMES[idx % MATH_THEMES.length];
+                              const isExpanded = expandedStep === idx;
+                              return (
+                                <div key={idx} className={`border ${theme.border} ${theme.bg} rounded-lg overflow-hidden transition-all duration-300`}>
+                                  <button onClick={() => setExpandedStep(isExpanded ? null : idx)} className="w-full px-3 py-2 flex items-center justify-between text-left focus:outline-none">
+                                    <span className={`text-scale-xs font-semibold ${theme.text}`}>{step.title}</span>
+                                    <ChevronDown size={14} className={`${theme.text} transition-transform ${isExpanded ? 'rotate-180' : ''} flex-shrink-0 ml-2`} />
+                                  </button>
+                                  {isExpanded && (
+                                    <div className={`px-3 pb-3 text-scale-2xs text-surface-300 space-y-2 border-t ${theme.contentBorder} pt-2`}>
+                                      <div>
+                                        <span className={`font-semibold ${theme.label}`}>{t('createWallet.mathSteps.task')}: </span>
+                                        <span className="opacity-90">{step.task}</span>
+                                      </div>
+                                      <div>
+                                        <span className={`font-semibold ${theme.label}`}>{step.type === 'meaning' ? t('createWallet.mathSteps.meaning') : t('createWallet.mathSteps.result')}: </span>
+                                        <span className="opacity-90">{step.result}</span>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
