@@ -1,7 +1,7 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "6.0.2",
+  "version": "6.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,7 +22,6 @@
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
-
     "locale:audit": "node scripts/locale-audit.mjs",
     "test:smoke": "playwright test",
     "preview": "vite preview",

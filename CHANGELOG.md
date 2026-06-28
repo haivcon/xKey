@@ -2,7 +2,21 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
-## [6.0.2] - Current Release
+## [6.0.3] - Current Release
+
+### Release Notes
+
+- update
+
+### Release Metadata
+
+- `package.json`: `6.0.3`
+- `package-lock.json`: `6.0.3`
+- Android `versionName`: `6.0.3`
+- Android `versionCode`: `101`
+
+
+## [6.0.2] - Previous Release
 
 ### Release Notes
 

@@ -65,12 +65,12 @@ try {
 
   const changelogPath = 'CHANGELOG.md';
   const changelog = readFileSync(changelogPath, 'utf8');
-  const marker = 'All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.\n\n';
+  const introPattern = /(All notable changes to xKey are summarized here\. Older details are intentionally compact so the current release remains easy to audit\.\r?\n\r?\n)/;
   const note = (options.note.trim() || 'Maintenance release with synchronized web and Android version metadata.')
     .split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => `- ${line}`).join('\n');
   const entry = `## [${nextVersion}] - ${new Date().toISOString().slice(0, 10)}\n\n### Release Notes\n\n${note}\n\n### Release Metadata\n\n- \`package.json\`: \`${nextVersion}\`\n- \`package-lock.json\`: \`${nextVersion}\`\n- Android \`versionName\`: \`${nextVersion}\`\n- Android \`versionCode\`: \`${nextCode}\`\n\n`;
-  if (!changelog.includes(marker)) throw new Error('Cannot find CHANGELOG insertion point.');
-  writeFileSync(changelogPath, changelog.replace(marker, `${marker}${entry}`));
+  if (!introPattern.test(changelog)) throw new Error('Cannot find CHANGELOG insertion point.');
+  writeFileSync(changelogPath, changelog.replace(introPattern, `$1${entry}`));
 
   console.log(`Prepared ${tag}: package ${nextVersion}, Android versionCode ${nextCode}.`);
   if (options.checks) {
