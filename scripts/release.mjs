@@ -14,6 +14,13 @@ const run = (cmd, args, opts = {}) => {
   });
 };
 const out = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', windowsHide: true }).trim();
+const safeOut = (cmd, args) => {
+  try {
+    return out(cmd, args);
+  } catch {
+    return '';
+  }
+};
 const json = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const writeJson = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 
@@ -41,6 +48,38 @@ const bump = (version, type) => {
 const ensureTagIsFree = (tag) => {
   if (out('git', ['tag', '--list', tag])) throw new Error(`Local tag exists: ${tag}`);
   if (out('git', ['ls-remote', '--tags', 'origin', tag])) throw new Error(`Remote tag exists: ${tag}`);
+};
+
+const commitToReleaseNote = (message) => message
+  .replace(/^(feat|fix|perf|refactor|style|docs|test|build|ci|chore)(\([^)]+\))?!?:\s*/i, '')
+  .replace(/^release\s+v?\d+\.\d+\.\d+$/i, '')
+  .trim();
+
+const generateReleaseNote = () => {
+  const latestTag = safeOut('git', ['describe', '--tags', '--abbrev=0']);
+  const range = latestTag ? `${latestTag}..HEAD` : 'HEAD';
+  const commits = safeOut('git', ['log', range, '--pretty=format:%s'])
+    .split(/\r?\n/)
+    .map((line) => commitToReleaseNote(line))
+    .filter(Boolean)
+    .filter((line) => !/^chore:\s*release\s+v?\d+\.\d+\.\d+$/i.test(line));
+
+  const uniqueCommits = [...new Set(commits)];
+  if (uniqueCommits.length) return uniqueCommits.join('\n');
+
+  const changedFiles = safeOut('git', ['diff', '--name-only', 'HEAD'])
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (changedFiles.length) {
+    return [
+      'Updated project files:',
+      ...changedFiles.map((file) => `Changed ${file}`),
+    ].join('\n');
+  }
+
+  return 'Maintenance release with synchronized web and Android version metadata.';
 };
 
 try {
@@ -71,7 +110,7 @@ try {
   const changelogPath = 'CHANGELOG.md';
   const changelog = readFileSync(changelogPath, 'utf8');
   const introPattern = /(All notable changes to xKey are summarized here\. Older details are intentionally compact so the current release remains easy to audit\.\r?\n\r?\n)/;
-  const note = (options.note.trim() || 'Maintenance release with synchronized web and Android version metadata.')
+  const note = (options.note.trim() || generateReleaseNote())
     .split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => `- ${line}`).join('\n');
   const entry = `## [${nextVersion}] - ${new Date().toISOString().slice(0, 10)}\n\n### Release Notes\n\n${note}\n\n### Release Metadata\n\n- \`package.json\`: \`${nextVersion}\`\n- \`package-lock.json\`: \`${nextVersion}\`\n- Android \`versionName\`: \`${nextVersion}\`\n- Android \`versionCode\`: \`${nextCode}\`\n\n`;
   if (!introPattern.test(changelog)) throw new Error('Cannot find CHANGELOG insertion point.');
