@@ -11,6 +11,8 @@ import {
   SHAKE_SETTINGS_CHANGED_EVENT,
   SHAKE_SENSITIVITY_KEY,
   SHAKE_TO_LOCK_KEY,
+  testShakeSensor,
+  type ShakeSensorTestResult,
 } from '../../../hooks/security/useShakeToLock';
 import { CLIPBOARD_TIMEOUT_KEY } from '../../../utils/clipboard';
 import { hapticTap, hapticSuccess } from '../../../utils/haptics';
@@ -83,7 +85,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
 
   // Shake to Lock
   const [shakeToLockEnabled, setShakeToLockEnabled] = useState(false);
-  const [shakeSensitivity, setShakeSensitivity] = useState(15);
+  const [shakeSensitivity, setShakeSensitivity] = useState(18);
+  const [isTestingShakeSensor, setIsTestingShakeSensor] = useState(false);
+  const [shakeSensorResult, setShakeSensorResult] = useState<ShakeSensorTestResult | null>(null);
 
   // Biometric
   const [hasBiometric, setHasBiometric] = useState(true);
@@ -437,6 +441,34 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     window.dispatchEvent(new Event(SHAKE_SETTINGS_CHANGED_EVENT));
   };
 
+  const getShakeSensorMessage = (result: ShakeSensorTestResult) => {
+    if (result.status === 'healthy') return t('settings.shakeSensorHealthy');
+    if (result.status === 'unstable') return t('settings.shakeSensorUnstable');
+    if (result.status === 'stuck') return t('settings.shakeSensorStuck');
+    if (result.status === 'denied') return t('settings.shakeSensorDenied');
+    if (result.status === 'unsupported') return t('settings.shakeSensorUnsupported');
+    return t('settings.shakeSensorNoData');
+  };
+
+  const handleTestShakeSensor = async () => {
+    if (isTestingShakeSensor) return;
+    setIsTestingShakeSensor(true);
+    setShakeSensorResult(null);
+    showToast(t('settings.shakeSensorTestingHint'), 'info');
+    try {
+      const result = await testShakeSensor();
+      setShakeSensorResult(result);
+      const toastType = result.status === 'healthy' ? 'success' : result.status === 'unstable' ? 'warning' : 'error';
+      showToast(getShakeSensorMessage(result), toastType);
+    } catch {
+      const fallback: ShakeSensorTestResult = { status: 'no-data', sampleCount: 0, maxDelta: 0, averageDelta: 0, recommendation: 'disable' };
+      setShakeSensorResult(fallback);
+      showToast(t('settings.shakeSensorNoData'), 'error');
+    } finally {
+      setIsTestingShakeSensor(false);
+    }
+  };
+
   return (
     <>
       <SettingsGroupLabel>{t('settings.securityStatusTitle')}</SettingsGroupLabel>
@@ -477,6 +509,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         handleToggleShakeToLock={handleToggleShakeToLock}
         shakeSensitivity={shakeSensitivity}
         handleChangeShakeSensitivity={handleChangeShakeSensitivity}
+        isTestingShakeSensor={isTestingShakeSensor}
+        shakeSensorResult={shakeSensorResult}
+        handleTestShakeSensor={handleTestShakeSensor}
         onTap={hapticTap}
       />
 

@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { ChevronDown, Lock, Monitor, RefreshCw, ShieldAlert, ShieldOff } from 'lucide-react';
 import PasswordInput from '../../shared/PasswordInput';
+import type { ShakeSensorTestResult } from '../../../hooks/security/useShakeToLock';
 import type { PinStep } from '../securityTabUtils';
 import type { TFunction } from './types';
 
@@ -30,6 +31,9 @@ type PinBiometricSectionProps = {
   handleToggleShakeToLock: () => void;
   shakeSensitivity: number;
   handleChangeShakeSensitivity: (event: ChangeEvent<HTMLInputElement>) => void;
+  isTestingShakeSensor: boolean;
+  shakeSensorResult: ShakeSensorTestResult | null;
+  handleTestShakeSensor: () => void;
   onTap: () => void;
 };
 
@@ -59,10 +63,28 @@ export function PinBiometricSection({
   handleToggleShakeToLock,
   shakeSensitivity,
   handleChangeShakeSensitivity,
+  isTestingShakeSensor,
+  shakeSensorResult,
+  handleTestShakeSensor,
   onTap,
 }: PinBiometricSectionProps) {
   const pinIconTone = hasBiometric ? 'text-emerald-400' : 'text-amber-400';
   const pinIconBg = hasBiometric ? 'bg-emerald-500/10' : 'bg-amber-500/10';
+  const shakeSensorTone = shakeSensorResult?.status === 'healthy'
+    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+    : shakeSensorResult?.status === 'unstable'
+      ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+      : 'border-red-500/30 bg-red-500/10 text-red-200';
+
+  const getShakeSensorResultText = () => {
+    if (!shakeSensorResult) return '';
+    if (shakeSensorResult.status === 'healthy') return t('settings.shakeSensorHealthy');
+    if (shakeSensorResult.status === 'unstable') return t('settings.shakeSensorUnstable');
+    if (shakeSensorResult.status === 'stuck') return t('settings.shakeSensorStuck');
+    if (shakeSensorResult.status === 'denied') return t('settings.shakeSensorDenied');
+    if (shakeSensorResult.status === 'unsupported') return t('settings.shakeSensorUnsupported');
+    return t('settings.shakeSensorNoData');
+  };
 
   return (
     <div className="glass-card overflow-hidden">
@@ -173,16 +195,45 @@ export function PinBiometricSection({
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between text-xs text-surface-400 mb-2">
               <span>{t('settings.shakeSensitivity')}</span>
-              <span>{shakeSensitivity <= 10 ? t('settings.high') : shakeSensitivity <= 15 ? t('settings.medium') : shakeSensitivity <= 20 ? t('settings.low') : t('settings.veryLow', { default: 'Very low' })}</span>
+              <span>{shakeSensitivity <= 12 ? t('settings.high') : shakeSensitivity <= 18 ? t('settings.medium') : shakeSensitivity <= 25 ? t('settings.low') : t('settings.veryLow')}</span>
             </div>
             <input
-              type="range" min="10" max="25" step="5"
+              type="range" min="12" max="32" step="1"
               value={shakeSensitivity} onChange={handleChangeShakeSensitivity}
               className="w-full h-1 bg-surface-700 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-[0.625rem] text-surface-500 mt-1">
               <span>{t('settings.high')}</span>
-              <span>{t('settings.low')}</span>
+              <span>{t('settings.veryLow')}</span>
+            </div>
+            <p className="mt-3 text-[0.7rem] leading-relaxed text-surface-500">{t('settings.shakeUnlockGraceDesc')}</p>
+            <div className="mt-3 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleTestShakeSensor}
+                disabled={isTestingShakeSensor}
+                className="rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-xs font-semibold text-surface-100 transition-colors hover:border-brand-400/60 hover:bg-brand-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isTestingShakeSensor ? t('settings.shakeSensorTesting') : t('settings.shakeSensorTest')}
+              </button>
+              {shakeSensorResult && (
+                <div className={`rounded-lg border px-3 py-2 text-xs leading-relaxed ${shakeSensorTone}`}>
+                  <p className="font-semibold">{getShakeSensorResultText()}</p>
+                  <p className="mt-1 opacity-80">
+                    {t('settings.shakeSensorStats', {
+                      samples: String(shakeSensorResult.sampleCount),
+                      max: shakeSensorResult.maxDelta.toFixed(1),
+                      avg: shakeSensorResult.averageDelta.toFixed(1),
+                    })}
+                  </p>
+                  {shakeSensorResult.recommendation === 'lower-sensitivity' && (
+                    <p className="mt-1 font-medium">{t('settings.shakeSensorRecommendationLow')}</p>
+                  )}
+                  {shakeSensorResult.recommendation === 'disable' && (
+                    <p className="mt-1 font-medium">{t('settings.shakeSensorRecommendationDisable')}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

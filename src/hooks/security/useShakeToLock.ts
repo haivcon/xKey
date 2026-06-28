@@ -30,6 +30,96 @@ export const requestMotionPermission = async (): Promise<boolean> => {
  */
 type MotionSnapshot = { x: number; y: number; z: number };
 
+export type ShakeSensorHealth = 'healthy' | 'no-data' | 'stuck' | 'unstable' | 'unsupported' | 'denied';
+
+export type ShakeSensorTestResult = {
+  status: ShakeSensorHealth;
+  sampleCount: number;
+  maxDelta: number;
+  averageDelta: number;
+  recommendation?: 'keep' | 'lower-sensitivity' | 'disable';
+};
+
+const DEFAULT_SHAKE_THRESHOLD = 18;
+const UNLOCK_GRACE_MS = 4000;
+const LOCK_COOLDOWN_MS = 2500;
+const SHAKE_WINDOW_MS = 900;
+const REQUIRED_SHAKE_HITS = 2;
+const MAX_PLAUSIBLE_DELTA = 120;
+const SENSOR_TEST_MS = 4000;
+const SENSOR_MIN_SAMPLES = 8;
+const SENSOR_STUCK_DELTA = 0.35;
+const SENSOR_UNSTABLE_AVG_DELTA = 10;
+const SENSOR_UNSTABLE_MAX_DELTA = 45;
+
+const readMotionSnapshot = (e: DeviceMotionEvent): MotionSnapshot | null => {
+  const acceleration = e.accelerationIncludingGravity || e.acceleration;
+  if (!acceleration) return null;
+
+  const x = Number(acceleration.x);
+  const y = Number(acceleration.y);
+  const z = Number(acceleration.z);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
+  return { x, y, z };
+};
+
+const calculateDelta = (last: MotionSnapshot, current: MotionSnapshot) => (
+  Math.abs(last.x - current.x) + Math.abs(last.y - current.y) + Math.abs(last.z - current.z)
+);
+
+export const testShakeSensor = async (durationMs = SENSOR_TEST_MS): Promise<ShakeSensorTestResult> => {
+  if (typeof window === 'undefined' || typeof DeviceMotionEvent === 'undefined') {
+    return { status: 'unsupported', sampleCount: 0, maxDelta: 0, averageDelta: 0, recommendation: 'disable' };
+  }
+
+  const hasPermission = await requestMotionPermission();
+  if (!hasPermission) {
+    return { status: 'denied', sampleCount: 0, maxDelta: 0, averageDelta: 0, recommendation: 'disable' };
+  }
+
+  return new Promise(resolve => {
+    const samples: MotionSnapshot[] = [];
+    const deltas: number[] = [];
+    let last: MotionSnapshot | null = null;
+
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const snapshot = readMotionSnapshot(e);
+      if (!snapshot) return;
+      samples.push(snapshot);
+      if (last) deltas.push(calculateDelta(last, snapshot));
+      last = snapshot;
+    };
+
+    const finish = () => {
+      window.removeEventListener('devicemotion', handleMotion);
+      const sampleCount = samples.length;
+      const maxDelta = deltas.length ? Math.max(...deltas) : 0;
+      const averageDelta = deltas.length ? deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length : 0;
+
+      if (sampleCount < SENSOR_MIN_SAMPLES) {
+        resolve({ status: 'no-data', sampleCount, maxDelta, averageDelta, recommendation: 'disable' });
+        return;
+      }
+
+      if (maxDelta < SENSOR_STUCK_DELTA) {
+        resolve({ status: 'stuck', sampleCount, maxDelta, averageDelta, recommendation: 'disable' });
+        return;
+      }
+
+      if (averageDelta > SENSOR_UNSTABLE_AVG_DELTA || maxDelta > SENSOR_UNSTABLE_MAX_DELTA) {
+        resolve({ status: 'unstable', sampleCount, maxDelta, averageDelta, recommendation: 'lower-sensitivity' });
+        return;
+      }
+
+      resolve({ status: 'healthy', sampleCount, maxDelta, averageDelta, recommendation: 'keep' });
+    };
+
+    window.addEventListener('devicemotion', handleMotion);
+    window.setTimeout(finish, durationMs);
+  });
+};
+
+
 export default function useShakeToLock(
   needsPinAuth: boolean,
   vaultLoading: boolean,
@@ -41,21 +131,34 @@ export default function useShakeToLock(
   const vaultLoadingRef = useRef(vaultLoading);
   const enabledRef = useRef(enabled);
   const shakeEnabledRef = useRef(false);
-  const thresholdRef = useRef(15);
+  const thresholdRef = useRef(DEFAULT_SHAKE_THRESHOLD);
   const lastMotionRef = useRef<MotionSnapshot | null>(null);
   const lastLockAtRef = useRef(0);
+  const ignoreMotionUntilRef = useRef(Date.now() + UNLOCK_GRACE_MS);
+  const shakeHitsRef = useRef<number[]>([]);
+  const previousNeedsPinAuthRef = useRef(needsPinAuth);
 
   needsPinAuthRef.current = needsPinAuth;
   vaultLoadingRef.current = vaultLoading;
   enabledRef.current = enabled;
+
+  useEffect(() => {
+    if (previousNeedsPinAuthRef.current && !needsPinAuth) {
+      ignoreMotionUntilRef.current = Date.now() + UNLOCK_GRACE_MS;
+      lastMotionRef.current = null;
+      shakeHitsRef.current = [];
+    }
+    previousNeedsPinAuthRef.current = needsPinAuth;
+  }, [needsPinAuth]);
 
   const loadShakeSettings = useCallback(async () => {
     const { value: en } = await Preferences.get({ key: SHAKE_TO_LOCK_KEY });
     shakeEnabledRef.current = en === 'true';
     const { value: sens } = await Preferences.get({ key: SHAKE_SENSITIVITY_KEY });
     const parsed = Number(sens);
-    thresholdRef.current = Number.isFinite(parsed) ? parsed : 15;
+    thresholdRef.current = Number.isFinite(parsed) ? parsed : DEFAULT_SHAKE_THRESHOLD;
     lastMotionRef.current = null;
+    shakeHitsRef.current = [];
   }, []);
 
   useEffect(() => {
@@ -70,23 +173,39 @@ export default function useShakeToLock(
     });
 
     const handleMotion = (e: DeviceMotionEvent) => {
-      const acceleration = e.accelerationIncludingGravity || e.acceleration;
-      if (!enabledRef.current || !shakeEnabledRef.current || needsPinAuthRef.current || vaultLoadingRef.current || !acceleration) return;
+      const now = Date.now();
+      const snapshot = readMotionSnapshot(e);
+      if (!enabledRef.current || !shakeEnabledRef.current || needsPinAuthRef.current || vaultLoadingRef.current || !snapshot) return;
 
-      const x = Number(acceleration.x) || 0;
-      const y = Number(acceleration.y) || 0;
-      const z = Number(acceleration.z) || 0;
+      if (now < ignoreMotionUntilRef.current || now - lastLockAtRef.current < LOCK_COOLDOWN_MS) {
+        lastMotionRef.current = snapshot;
+        shakeHitsRef.current = [];
+        return;
+      }
+
       const last = lastMotionRef.current;
-      lastMotionRef.current = { x, y, z };
+      lastMotionRef.current = snapshot;
       if (!last) return;
 
-      const delta = Math.abs(last.x - x) + Math.abs(last.y - y) + Math.abs(last.z - z);
-      const now = Date.now();
-      if (delta > thresholdRef.current && now - lastLockAtRef.current > 1500) {
-          lastLockAtRef.current = now;
-          lastMotionRef.current = null;
-          setNeedsPinAuth(true);
-          hapticSuccess();
+      const delta = calculateDelta(last, snapshot);
+      if (delta > MAX_PLAUSIBLE_DELTA) {
+        shakeHitsRef.current = [];
+        return;
+      }
+
+      if (delta > thresholdRef.current) {
+        shakeHitsRef.current = [...shakeHitsRef.current, now].filter(hitAt => now - hitAt <= SHAKE_WINDOW_MS);
+      } else {
+        shakeHitsRef.current = shakeHitsRef.current.filter(hitAt => now - hitAt <= SHAKE_WINDOW_MS);
+      }
+
+      if (shakeHitsRef.current.length >= REQUIRED_SHAKE_HITS) {
+        lastLockAtRef.current = now;
+        ignoreMotionUntilRef.current = now + LOCK_COOLDOWN_MS;
+        lastMotionRef.current = null;
+        shakeHitsRef.current = [];
+        setNeedsPinAuth(true);
+        hapticSuccess();
       }
     };
 
