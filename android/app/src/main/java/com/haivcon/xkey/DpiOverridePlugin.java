@@ -164,7 +164,7 @@ public class DpiOverridePlugin extends Plugin {
 
     private static void applySwDpToConfiguration(Configuration configuration, int swDp) {
         configuration.smallestScreenWidthDp = swDp;
-        if (configuration.screenWidthDp > 0 && configuration.screenWidthDp < swDp) {
+        if (configuration.screenWidthDp > 0) {
             configuration.screenWidthDp = swDp;
         }
     }

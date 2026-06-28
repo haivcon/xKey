@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{field} copié pour {wallet}",
     "secretCopiedSafety": "{field} copié pour {wallet}. Gardez-le hors ligne et effacez-le après utilisation.",
     "moveBtn": "Bouger",
+    "standardBadge": "Standard",
     "new": "NOUVEAU"
   },
   "actionBar": {

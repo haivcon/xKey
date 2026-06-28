@@ -2,7 +2,20 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
-## [6.0.0] - Current Release
+## [6.0.1] - Current Release
+
+### Release Focus
+
+This update fixes the Android-specific App-only Minimum Width (smallestScreenWidthDp override) to apply correctly on API 30+, fixes early clamping logic that caused inaccurate "Effective scale" calculations, and corrects UI styling issues (double-scaling and mojibake characters) in the settings menu.
+
+### Release Metadata
+
+- `package.json`: `6.0.1`
+- `package-lock.json`: `6.0.1`
+- Android `versionName`: `6.0.1`
+- Android `versionCode`: `99`
+
+## [6.0.0] - Previous Release
 
 ### Release Focus
 

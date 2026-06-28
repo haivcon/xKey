@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck, MoreHorizontal } from 'lucide-react';
+import { Wallet as WalletIcon, Check, Copy, Eye, EyeOff, ChevronDown, ChevronUp, QrCode, Pencil, Trash2, Save, X, Settings2, Pin, PinOff, FolderInput, FolderPlus, Square, CheckSquare, Coins, ShieldCheck, MoreHorizontal, Sparkles } from 'lucide-react';
 import { useLanguage, useT } from '../../contexts/LanguageContext';
 import { hapticTap, hapticSuccess, hapticWarning } from '../../utils/haptics';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
@@ -89,6 +89,9 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const isCompact = density === 'compact';
   const isUltraCompact = density === 'ultra';
   const cardPadding = isUltraCompact ? 'p-2.5' : isCompact ? 'p-3' : 'p-4';
+  const cardMinHeight = isUltraCompact ? 'min-h-[72px]' : isCompact ? 'min-h-[88px]' : 'min-h-[108px]';
+  const scoreBadgeCompact = isCompact || isUltraCompact;
+  const standardBadgeClass = `${isUltraCompact ? 'text-[0.5rem] px-1.5 py-px' : 'text-[0.55rem] px-1.5 py-[0.0625rem]'} inline-flex items-center gap-1 rounded-full border border-surface-500/25 bg-surface-700/25 font-black uppercase leading-none tracking-wide text-surface-400/80`;
   const rowGap = isUltraCompact ? 'gap-2' : 'gap-3';
   const iconBox = isUltraCompact ? 'w-8 h-8' : isCompact ? 'w-9 h-9' : 'w-10 h-10';
   const iconSize = isUltraCompact ? 16 : isCompact ? 18 : 20;
@@ -320,7 +323,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   return (
     <div
-      className={`wallet-swipe-shell ${isSwiping ? 'is-swiping' : ''} glass-card isolate overflow-hidden border transition-colors duration-150 relative ${isNewWallet ? 'wallet-new-card' : ''} ${
+      className={`wallet-swipe-shell ${isSwiping ? 'is-swiping' : ''} glass-card isolate overflow-hidden border transition-colors duration-150 relative ${cardMinHeight} ${isNewWallet ? 'wallet-new-card' : ''} ${
       isSelected
         ? 'border-brand-500 shadow-[0_0_15px_rgba(139,92,246,0.15)] bg-brand-500/5'
         : isNewWallet
@@ -390,6 +393,18 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     {NETWORK_COLORS[wallet.network].label}
                   </button>
                 )}
+                {!selectionMode && showWalletScores && (
+                  showVanityScore ? (
+                    <span className="flex-shrink-0">
+                      <VanityScoreBadge wallet={wallet} compact={scoreBadgeCompact} />
+                    </span>
+                  ) : (
+                    <span className={standardBadgeClass} title={t('walletCard.standardBadge')} aria-label={t('walletCard.standardBadge')}>
+                      <Sparkles size={scoreBadgeCompact ? 8 : 9} className="opacity-70" />
+                      {t('walletCard.standardBadge')}
+                    </span>
+                  )
+                )}
                 {isNewWallet && (
                   <span className={`${isUltraCompact ? 'text-[0.5rem] px-1.5 py-px' : 'text-[0.55rem] px-1.5 py-[0.0625rem]'} rounded-full border border-emerald-400/60 bg-emerald-500/12 font-black uppercase leading-none tracking-wide text-emerald-300 shadow-[0_0_14px_rgba(52,211,153,0.18)]`}>
                     {t('walletCard.new')}
@@ -426,11 +441,6 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <span className={`inline-flex min-w-0 max-w-full items-center gap-1 whitespace-nowrap text-scale-3xs leading-none ${keyHealth.level === 'due' ? 'text-red-300' : keyHealth.level === 'soon' ? 'text-amber-300' : 'text-surface-500'}`}>
                   <span className="shrink-0 opacity-75">{t('keyHealth.age')}:</span>
                   <span className="min-w-0 truncate font-medium">{formatKeyAge(wallet.createdAt, nowTick)}</span>
-                </span>
-              )}
-              {showVanityScore && (
-                <span className="flex-shrink-0">
-                  <VanityScoreBadge wallet={wallet} compact={isCompact || isUltraCompact} />
                 </span>
               )}
             </div>

@@ -1,6 +1,7 @@
 package com.haivcon.xkey;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
@@ -21,5 +22,11 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DpiOverridePlugin.class);
         DpiOverridePlugin.applyStoredSwDp(this);
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        DpiOverridePlugin.applyStoredSwDp(this);
     }
 }

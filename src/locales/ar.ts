@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "تم نسخ {field} لـ {wallet}",
     "secretCopiedSafety": "تم نسخ {field} لـ {wallet}. احتفظ به دون اتصال وامسحه عند الانتهاء.",
     "moveBtn": "يتحرك",
+    "standardBadge": "قياسي",
     "new": "جديد"
   },
   "actionBar": {

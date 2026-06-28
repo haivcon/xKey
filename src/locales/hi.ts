@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{wallet} के लिए {field} कॉपी हुआ",
     "secretCopiedSafety": "{wallet} के लिए {field} कॉपी किया गया। इसे offline रखें और काम पूरा होने पर साफ करें।",
     "moveBtn": "चलें",
+    "standardBadge": "मानक",
     "new": "नया"
   },
   "actionBar": {

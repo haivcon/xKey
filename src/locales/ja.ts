@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{wallet} の {field} をコピーしました",
     "secretCopiedSafety": "{wallet} の {field} をコピーしました。オフラインで保管し、使い終わったら消去してください。",
     "moveBtn": "動く",
+    "standardBadge": "標準",
     "new": "新規"
   },
   "actionBar": {

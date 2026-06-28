@@ -102,7 +102,7 @@ tests/         Unit, focused, and smoke/regression tests
 
 ## 6. UI Interaction Architecture
 
-v6.0.0 keeps the custody/security model unchanged and updates the mobile interaction layer:
+v6.0.1 keeps the custody/security model unchanged and updates the mobile interaction layer:
 
 - `HomeHeader` is focused on brand, slogan, donate, and settings actions.
 - Key Health opens from the Tools menu with badge support.
@@ -121,11 +121,11 @@ The vanity generator runs as an offline CPU-bound workflow. Generated secrets mu
 
 ## 8. Android Build Metadata
 
-For v6.0.0:
+For v6.0.1:
 
-- `package.json` version: `6.0.0`
-- `package-lock.json` version: `6.0.0`
-- Android `versionName`: `6.0.0`
+- `package.json` version: `6.0.1`
+- `package-lock.json` version: `6.0.1`
+- Android `versionName`: `6.0.1`
 - Android `versionCode`: `98`
 - Android application ID/package: `com.haivcon.xkey`
 

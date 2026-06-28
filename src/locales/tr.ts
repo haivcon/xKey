@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{wallet} için {field} kopyalandı",
     "secretCopiedSafety": "{wallet} için {field} kopyalandı. Çevrimdışı saklayın ve işiniz bitince silin.",
     "moveBtn": "Hareket et",
+    "standardBadge": "Standart",
     "new": "YENİ"
   },
   "actionBar": {

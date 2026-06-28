@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{field} copiado para {wallet}",
     "secretCopiedSafety": "{field} copiado para {wallet}. Guárdalo sin conexión y bórralo al terminar.",
     "moveBtn": "Mover",
+    "standardBadge": "Estándar",
     "new": "NUEVO"
   },
   "actionBar": {

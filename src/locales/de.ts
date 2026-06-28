@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{field} für {wallet} kopiert",
     "secretCopiedSafety": "{field} für {wallet} kopiert. Offline aufbewahren und nach der Nutzung löschen.",
     "moveBtn": "Bewegen",
+    "standardBadge": "Standard",
     "new": "NEU"
   },
   "actionBar": {

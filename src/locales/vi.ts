@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "Đã sao chép {field} của {wallet}",
     "secretCopiedSafety": "Đã sao chép {field} của {wallet}. Hãy giữ ngoại tuyến và xóa khi dùng xong.",
     "moveBtn": "Di chuyển",
+    "standardBadge": "Cơ bản",
     "new": "MỚI"
   },
   "actionBar": {

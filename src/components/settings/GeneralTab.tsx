@@ -363,9 +363,13 @@ export default function GeneralTab() {
             <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
               <ZoomIn size={20} className="text-brand-400" />
             </div>
-            <div className="text-left">
-              <p className="text-white font-medium text-sm">{t('settings.displayScale')}</p>
-              <p className="text-xs text-surface-400">{displayScale}% Â· {t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</p>
+            <div className="min-w-0 text-left">
+              <p className="text-[13px] font-semibold leading-tight text-white">{t('settings.displayScale')}</p>
+              <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1 text-[11px] font-medium leading-tight text-surface-400">
+                <span>{displayScale}%</span>
+                <span aria-hidden="true" className="text-surface-500">·</span>
+                <span className="min-w-0 break-words">{t(dpiMode ? 'settings.manualScalePaused' : 'settings.manualScaleActive')}</span>
+              </p>
             </div>
           </div>
           <ChevronDown size={18} className={`text-surface-500 transition-transform duration-200 ${expandedSection === 'scale' ? 'rotate-180' : ''}`} />
@@ -508,15 +512,15 @@ export default function GeneralTab() {
 
             <div className="mb-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
+                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.deviceDpi')}</p>
                 <p className="mt-1 text-sm font-bold text-white">{deviceDpi}</p>
               </div>
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
+                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.targetDpi')}</p>
                 <p className="mt-1 text-sm font-bold text-cyan-200">{targetDpi}</p>
               </div>
               <div className="rounded-xl border border-surface-700/70 bg-surface-950/50 px-2 py-2">
-                <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
+                <p className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-surface-500">{t('settings.effectiveScale')}</p>
                 <p className="mt-1 text-sm font-bold text-brand-300">×{dpiScaleRatio.toFixed(2)}</p>
               </div>
             </div>

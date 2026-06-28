@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "คัดลอก {field} ของ {wallet} แล้ว",
     "secretCopiedSafety": "คัดลอก {field} ของ {wallet} แล้ว เก็บแบบออฟไลน์และลบเมื่อใช้งานเสร็จ",
     "moveBtn": "ย้าย",
+    "standardBadge": "มาตรฐาน",
     "new": "ใหม่"
   },
   "actionBar": {

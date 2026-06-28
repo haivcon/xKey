@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{wallet}의 {field}을(를) 복사했습니다",
     "secretCopiedSafety": "{wallet}의 {field}이(가) 복사되었습니다. 오프라인에 보관하고 사용 후 지우세요.",
     "moveBtn": "움직이다",
+    "standardBadge": "표준",
     "new": "NEW"
   },
   "actionBar": {

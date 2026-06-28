@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{field} untuk {wallet} disalin",
     "secretCopiedSafety": "{field} untuk {wallet} telah disalin. Simpan offline dan hapus setelah selesai.",
     "moveBtn": "Gerak",
+    "standardBadge": "Standar",
     "new": "BARU"
   },
   "actionBar": {

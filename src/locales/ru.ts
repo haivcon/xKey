@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "{field} для {wallet} скопировано",
     "secretCopiedSafety": "{field} для {wallet} скопирован. Храните офлайн и очистите после использования.",
     "moveBtn": "Двигаться",
+    "standardBadge": "Стандарт",
     "new": "НОВОЕ"
   },
   "actionBar": {

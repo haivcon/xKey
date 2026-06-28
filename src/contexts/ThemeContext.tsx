@@ -104,7 +104,7 @@ const normalizeTargetDpi = (value: number | string | null | undefined): number =
 const calculateDpiScale = (targetSwDp: number, deviceSwDp: number): number => {
   const safeDeviceSwDp = Number.isFinite(deviceSwDp) && deviceSwDp > 0 ? deviceSwDp : DEFAULT_TARGET_DPI;
   const safeTargetSwDp = Number.isFinite(targetSwDp) && targetSwDp > 0 ? targetSwDp : DEFAULT_TARGET_DPI;
-  return normalizeDisplayScale(Math.round((safeDeviceSwDp / safeTargetSwDp) * 100));
+  return Math.round((safeDeviceSwDp / safeTargetSwDp) * 100);
 };
 
 const applyDisplayScale = (scale: number) => {
@@ -128,7 +128,10 @@ const applyNativeDpiIfAvailable = async (targetSwDp: number, fallbackDeviceSwDp:
       ? native.systemDpi as number
       : fallbackDeviceSwDp;
   const fallbackScale = normalizeDisplayScale(Math.round((manualScale * calculateDpiScale(targetSwDp, deviceDpi)) / 100));
-  applyDisplayScale(native.supported ? manualScale : fallbackScale);
+  // Android's app configuration override changes native resource qualifiers, but WebView CSS
+  // viewport/font sizing does not reliably follow smallestScreenWidthDp on modern Android.
+  // Always apply the effective WebView scale so the visible UI matches the selected app dp.
+  applyDisplayScale(fallbackScale);
   return { deviceDpi, nativeSupported: native.supported };
 };
 
@@ -232,8 +235,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setDisplayScale = useCallback((next: number | string | null | undefined) => {
     const nextScale = normalizeDisplayScale(next);
+    const nextAppliedScale = dpiMode
+      ? normalizeDisplayScale(Math.round((nextScale * calculateDpiScale(targetDpi, deviceDpi)) / 100))
+      : nextScale;
+
     setDisplayScaleState(nextScale);
-    applyDisplayScale(nextScale);
+    applyDisplayScale(nextAppliedScale);
     Preferences.set({ key: DISPLAY_SCALE_KEY, value: String(nextScale) }).catch(() => {});
 
     if (dpiMode) {
@@ -243,7 +250,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         await applyNativeDpiIfAvailable(targetDpi, nextDeviceDpi, nextScale);
       })();
     }
-  }, [dpiMode, targetDpi]);
+  }, [deviceDpi, dpiMode, targetDpi]);
 
   const setDpiMode = useCallback((next: boolean) => {
     const nextTargetDpi = next ? DEFAULT_TARGET_DPI : targetDpi;

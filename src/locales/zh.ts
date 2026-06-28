@@ -1041,6 +1041,7 @@ export default {
     "fieldCopied": "已复制 {wallet} 的{field}",
     "secretCopiedSafety": "已复制 {wallet} 的 {field}。请离线保存，用完后清除。",
     "moveBtn": "移动",
+    "standardBadge": "标准",
     "new": "新"
   },
   "actionBar": {
