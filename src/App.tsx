@@ -60,6 +60,7 @@ import { useToast } from './contexts/ToastContext';
 import { useConfirm } from './contexts/ConfirmContext';
 import { useTheme } from './contexts/ThemeContext';
 import { appendAuditLog } from './utils/auditLog';
+import { clearClipboardNow } from './utils/clipboard';
 import type { WalletSaveInput } from './app/types';
 import type { QrModalData, Wallet } from './types';
 
@@ -322,6 +323,27 @@ export default function App() {
     window.location.reload();
   };
 
+  const handleEmergencyLock = useCallback(() => {
+    clearClipboardNow().catch(() => {});
+    setQrModalData(prev => ({ ...prev, isOpen: false, data: '', title: '', subtitle: '' }));
+    setShowExportCSV(false);
+    setExportWalletsOverride(null);
+    setShowAdvancedTools(false);
+    setShowCreateWallet(false);
+    setShowDuplicates(false);
+    setShowBulkNetworkModal(false);
+    setMovingWallet(null);
+    setShowDonate(false);
+    setShowAssetBalance(false);
+    setShowKeyHealth(false);
+    closeBackupExport();
+    dismissPasswordPrompt();
+    setWallets([]);
+    resetVaultLock();
+    navigate('/');
+    appendAuditLog('security.emergency_lock').catch(() => {});
+  }, [closeBackupExport, dismissPasswordPrompt, navigate, resetVaultLock, setWallets]);
+
   // Wipe vault
   const handleWipe = () => {
     setWallets([]);
@@ -416,6 +438,7 @@ export default function App() {
           t={t}
           onOpenDonate={() => setShowDonate(true)}
           onOpenSettings={() => navigate('/settings')}
+          onEmergencyLock={handleEmergencyLock}
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">

@@ -43,6 +43,7 @@ import { AdvancedSecuritySection } from './AdvancedSecuritySection';
 import { SecurityStatusSection } from './SecurityStatusSection';
 import { PinBiometricSection } from './PinBiometricSection';
 import { SecurityAutomationSection } from './SecurityAutomationSection';
+import { isSensitivePinEnabled, removeSensitivePin, setSensitivePin } from '../../../features/security/sensitivePin';
 
 export type SecurityTabProps = {
   aesKey: string;
@@ -118,6 +119,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [deviceIntegrityGuard, setDeviceIntegrityGuard] = useState(false);
   const [deviceIntegrityBusy, setDeviceIntegrityBusy] = useState(false);
   const [deviceRiskInfo, setDeviceRiskInfo] = useState<DeviceIntegrityRisk | null>(null);
+  const [sensitivePinEnabled, setSensitivePinEnabled] = useState(false);
 
   const { showToast } = useToast();
   const showConfirm = useConfirm();
@@ -180,6 +182,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       setCurrentClipboardMs(Number.isFinite(clipboardTimeout) && clipboardTimeout >= 0 ? clipboardTimeout : 30000);
       const { value: secretCopyOff } = await Preferences.get({ key: SECRET_COPY_DISABLED_KEY });
       setSecretCopyDisabled(secretCopyOff === 'true');
+      setSensitivePinEnabled(await isSensitivePinEnabled());
     };
     loadSettings();
   }, []);
@@ -591,6 +594,82 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     }
   };
 
+  const enableHighSecuritySession = async () => {
+    hapticTap();
+    const confirmed = await showConfirm('Enable high-security session? This turns on no-copy for secrets, short auto-lock, screen protection when supported, secure display rendering, and strict reveal/copy auto-lock behavior.', {
+      danger: true,
+      title: 'High-security session',
+      confirmText: t('common.confirm'),
+    });
+    if (!confirmed) return;
+
+    const paranoidPolicy = PRESET_SETTINGS.paranoid;
+    await Promise.all([
+      Preferences.set({ key: AUTOLOCK_KEY, value: String(60 * 1000) }),
+      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'paranoid' }),
+      Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(paranoidPolicy.backgroundMs) }),
+      Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(paranoidPolicy.blurMs) }),
+      Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(paranoidPolicy.afterRevealMs) }),
+      Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: 'true' }),
+      Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: 'true' }),
+      Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(5 * 1000) }),
+      Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: 'true' }),
+    ]);
+
+    setCurrentAutoLockMs(60 * 1000);
+    setContextAutoLockPreset('paranoid');
+    setContextBackgroundSeconds(String(Math.round(paranoidPolicy.backgroundMs / 1000)));
+    setContextSwitchSeconds(String(Math.round(paranoidPolicy.blurMs / 1000)));
+    setContextRevealSeconds(String(Math.round(paranoidPolicy.afterRevealMs / 1000)));
+    setContextLockAfterCopy(true);
+    setContextScreenOffLock(true);
+    setCurrentClipboardMs(5 * 1000);
+    setSecretCopyDisabled(true);
+    secureDisplay.setEnabled(true);
+    if (screenSecurity.supported && !screenSecurity.blocked) {
+      await screenSecurity.setBlocked(true).catch(() => undefined);
+    }
+
+    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
+    showToast('High-security session enabled', 'success');
+  };
+
+  const handleToggleSensitivePin = async () => {
+    hapticTap();
+
+    if (sensitivePinEnabled) {
+      const confirmed = await showConfirm('Disable the extra sensitive-action PIN?', {
+        danger: true,
+        title: 'Disable sensitive PIN',
+      });
+      if (!confirmed) return;
+
+      await removeSensitivePin();
+      setSensitivePinEnabled(false);
+      showToast('Sensitive-action PIN disabled', 'info');
+      return;
+    }
+
+    const pin = window.prompt('Create a 6-digit PIN required after device authentication for reveal/export/import overwrite/Shamir actions:');
+    if (pin === null) return;
+
+    const confirmPin = window.prompt('Confirm the 6-digit sensitive-action PIN:');
+    if (confirmPin === null) return;
+
+    if (pin.trim() !== confirmPin.trim()) {
+      showToast('Sensitive PIN confirmation does not match', 'error');
+      return;
+    }
+
+    try {
+      await setSensitivePin(pin.trim());
+      setSensitivePinEnabled(true);
+      showToast('Sensitive-action PIN enabled', 'success');
+    } catch (error) {
+      showToast(getErrorMessage(error) || 'Sensitive PIN must be 6 digits', 'error');
+    }
+  };
+
   return (
     <>
       <SettingsGroupLabel>{t('settings.securityStatusTitle')}</SettingsGroupLabel>
@@ -703,6 +782,31 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           )}
         </div>
 
+        <div className="border-b border-surface-700/30">
+          <div className="flex items-start justify-between gap-3 p-4">
+            <button
+              type="button"
+              onClick={enableHighSecuritySession}
+              className="flex min-w-0 flex-1 gap-3 text-left"
+            >
+              <ShieldAlert size={16} className="mt-1 flex-shrink-0 text-amber-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">High-security session preset</p>
+                <p className="mt-1 text-xs text-surface-500">
+                  One tap enables no-copy, 1-minute idle lock, paranoid context auto-lock, 5-second clipboard clearing, screen protection and secure secret rendering.
+                </p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={enableHighSecuritySession}
+              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200 transition hover:bg-amber-500/15"
+            >
+              Enable
+            </button>
+          </div>
+        </div>
+
         <SecurityAutomationSection
           t={t}
           showAutoLock={showAutoLock}
@@ -741,6 +845,37 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           settingStatus={settingStatus}
           onTap={hapticTap}
         />
+
+        <div className="border-b border-surface-700/30">
+          <div className="flex items-start justify-between gap-3 p-4">
+            <button
+              type="button"
+              onClick={handleToggleSensitivePin}
+              className="flex min-w-0 flex-1 gap-3 text-left"
+            >
+              <ShieldCheck size={16} className={`mt-1 flex-shrink-0 ${sensitivePinEnabled ? 'text-brand-400' : 'text-surface-400'}`} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">Extra PIN for sensitive actions</p>
+                <p className="mt-1 text-xs text-surface-500">
+                  {sensitivePinEnabled
+                    ? 'Required after device verification for reveal, export, overwrite import and Shamir shares.'
+                    : 'Add a local 6-digit PIN for reveal/export/import overwrite/Shamir actions.'}
+                </p>
+              </div>
+            </button>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              {settingStatus(sensitivePinEnabled ? t('settings.enabled') : t('settings.disabled'), sensitivePinEnabled)}
+              <button
+                type="button"
+                onClick={handleToggleSensitivePin}
+                className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors ${sensitivePinEnabled ? 'bg-brand-500' : 'bg-surface-700'}`}
+                aria-label="Extra PIN for sensitive actions"
+              >
+                <span className={`h-5 w-5 rounded-full bg-white transition-transform ${sensitivePinEnabled ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+          </div>
+        </div>
 
         <AdvancedSecuritySection
           t={t}

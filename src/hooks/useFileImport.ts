@@ -9,6 +9,7 @@ import { appendAuditLog } from '../utils/auditLog';
 import { saveTextFile } from '../utils/fileSaver';
 import { deleteInternalText, parseInternalTextRef, readInternalText, serializeInternalTextRef, writeInternalText } from '../utils/internalTextStore';
 import { withTimeout } from '../utils/asyncTimeout';
+import { requireSensitiveAction } from '../features/security/sensitiveActions';
 import type { Wallet } from '../types';
 import { analyzeBackupImport, type BackupImportAnalysis } from '../features/import/backupImportAnalysis';
 import { decodeBase64Text, dedupeWallets, detectImportFormat, getImportFolderName, parseCsvWallets, parseJsonWallets, parseTextWallets } from '../features/import/fileImportParsers';
@@ -245,6 +246,22 @@ export default function useFileImport(
         () => new Error(t('restore.wrongPassword')),
       );
       const { uniqueWallets: uniqueBackup, skippedCount: skipped } = dedupeWallets(wallets, backup.wallets);
+
+      if (backupImportMode === 'replace') {
+        const verified = await requireSensitiveAction({
+          action: 'backup.import_replace',
+          reason: t('restore.replaceMode'),
+          metadata: {
+            walletCount: backup.wallets.length,
+            decoy: isDecoyMode,
+            integrity: backupPreview?.integrity || 'unknown',
+          },
+        });
+        if (!verified) {
+          showToast(t('common.cancel'), 'warning');
+          return;
+        }
+      }
 
       let sensitiveUpdated = 0;
       if (backupImportMode === 'replace') {

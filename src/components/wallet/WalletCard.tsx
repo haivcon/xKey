@@ -24,6 +24,7 @@ import { shouldShowVanityScore } from '../../utils/vanity/vanityScoreGrade';
 import type { SecretKind } from '../../utils/dataSensitivity';
 import { detectSecretInText, getSecretPlacementWarning } from '../../utils/secretDetection';
 import { SECRET_COPIED_EVENT, SECRET_REVEALED_EVENT } from '../../hooks/security/useAutoLock';
+import { requireSensitiveAction } from '../../features/security/sensitiveActions';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -184,6 +185,22 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   };
   const formatDate = (ts?: number) => { if (!ts) return null; const d = new Date(ts); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
 
+  const requiresReauth = (actionType: SensitiveAction) => (
+    actionType === 'pk'
+    || actionType === 'seed'
+    || actionType === 'qr_pk'
+    || actionType === 'copy_pk'
+    || actionType === 'copy_seed'
+    || actionType === 'sensitive_note'
+    || actionType === 'copy_sensitive_note'
+  );
+
+  const sensitiveActionReason = (actionType: SensitiveAction) => {
+    if (actionType === 'seed' || actionType === 'copy_seed') return t('walletCard.seedPhrase');
+    if (actionType === 'sensitive_note' || actionType === 'copy_sensitive_note') return t('walletCard.sensitiveNote');
+    return t('walletCard.privateKey');
+  };
+
   const executeSensitiveAction = (actionType: SensitiveAction) => {
     if (actionType === 'pk') {
       appendAuditLog('wallet.secret_revealed', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
@@ -213,7 +230,19 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     if (actionType === 'pk' && showPk) { setShowPk(false); return; }
     if (actionType === 'seed' && showSeed) { setShowSeed(false); return; }
     if (actionType === 'sensitive_note' && showSensitiveNotes) { setShowSensitiveNotes(false); return; }
-    
+
+    if (requiresReauth(actionType)) {
+      const ok = await requireSensitiveAction({
+        action: 'secret.reveal',
+        reason: sensitiveActionReason(actionType),
+        metadata: {
+          wallet: wallet.name || t('walletCard.unnamed'),
+          actionType,
+        },
+      });
+      if (!ok) return;
+    }
+
     if (hasMasterPassword) {
       setShowMPPrompt(actionType);
     } else {

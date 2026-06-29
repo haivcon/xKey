@@ -12,14 +12,14 @@
 
 ---
 
-## Current Release: v6.0.10
+## Current Release: v6.0.11
 
-xKey v6.0.10 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.11 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- Added context-aware auto-lock presets, custom trigger timing, copy/screen-off lock controls, audit metadata, and localized security settings.
-- **Android release metadata:** `versionName 6.0.10`, `versionCode 108`.
+- Security update: added re-authentication for high-risk actions, extra optional PIN for sensitive reveal/export/import flows, emergency lock button with clipboard clearing, stronger PIN lockout tiers, and a high-security session preset enabling no-copy, short auto-lock, screen protection, and stricter secret handling.
+- **Android release metadata:** `versionName 6.0.11`, `versionCode 109`.
 ---
 
 ## Core Features

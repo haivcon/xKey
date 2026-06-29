@@ -2,6 +2,19 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.11] - 2026-06-29
+
+### Release Notes
+
+- Security update: added re-authentication for high-risk actions, extra optional PIN for sensitive reveal/export/import flows, emergency lock button with clipboard clearing, stronger PIN lockout tiers, and a high-security session preset enabling no-copy, short auto-lock, screen protection, and stricter secret handling.
+
+### Release Metadata
+
+- `package.json`: `6.0.11`
+- `package-lock.json`: `6.0.11`
+- Android `versionName`: `6.0.11`
+- Android `versionCode`: `109`
+
 ## [6.0.10] - 2026-06-29
 
 ### Release Notes

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { loadWallets } from '../../utils/storage';
 import { exportPortableBackup } from '../../utils/backup/backupUtils';
 import { hapticSuccess } from '../../utils/haptics';
+import { requireSensitiveAction } from '../../features/security/sensitiveActions';
 import type { TranslationFn } from '../../contexts/LanguageContext';
 
 interface UseBackupExportOptions {
@@ -38,6 +39,16 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
 
     setBackupExporting(true);
     try {
+      const verified = await requireSensitiveAction({
+        action: 'backup.export',
+        reason: t('settings.exportBackup'),
+        metadata: { decoy: isDecoyMode },
+      });
+      if (!verified) {
+        showToast?.(t('common.cancel'), 'warning');
+        return;
+      }
+
       const currentWallets = await loadWallets(aesKey, isDecoyMode);
       const success = await exportPortableBackup(currentWallets || [], null, backupPassword, backupFileName);
       if (success) {

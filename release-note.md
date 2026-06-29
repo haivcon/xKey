@@ -1,1 +1,1 @@
-Added context-aware auto-lock presets, custom trigger timing, copy/screen-off lock controls, audit metadata, and localized security settings.
+Security update: added re-authentication for high-risk actions, extra optional PIN for sensitive reveal/export/import flows, emergency lock button with clipboard clearing, stronger PIN lockout tiers, and a high-security session preset enabling no-copy, short auto-lock, screen protection, and stricter secret handling.

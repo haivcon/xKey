@@ -1,5 +1,5 @@
 ﻿import type { RefObject } from 'react';
-import { Heart, Settings } from 'lucide-react';
+import { Heart, Lock, Settings } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { HEADER_SLOGAN_LETTERS } from '../app/constants';
@@ -11,6 +11,7 @@ type HomeHeaderProps = {
   t: TranslationFn;
   onOpenDonate: () => void;
   onOpenSettings: () => void;
+  onEmergencyLock: () => void;
 };
 
 export default function HomeHeader({
@@ -19,6 +20,7 @@ export default function HomeHeader({
   t,
   onOpenDonate,
   onOpenSettings,
+  onEmergencyLock,
 }: HomeHeaderProps) {
   const handleOpenDonate = () => {
     hapticTap();
@@ -28,6 +30,11 @@ export default function HomeHeader({
   const handleOpenSettings = () => {
     hapticTap();
     onOpenSettings();
+  };
+
+  const handleEmergencyLock = () => {
+    hapticTap();
+    onEmergencyLock();
   };
 
   return (
@@ -68,6 +75,14 @@ export default function HomeHeader({
               aria-label={t('donate.button')}
             >
               <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
+            </button>
+            <button
+              onClick={handleEmergencyLock}
+              className="p-2 text-rose-200 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 rounded-full transition-colors"
+              title={t('security.emergencyLock')}
+              aria-label={t('security.emergencyLock')}
+            >
+              <Lock size={20} />
             </button>
             <button
               onClick={handleOpenSettings}

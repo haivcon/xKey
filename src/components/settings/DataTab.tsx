@@ -16,6 +16,7 @@ import { AutoBackupSection, type AutoBackupInterval } from './data/AutoBackupSec
 import { VaultBackupSection } from './data/VaultBackupSection';
 import { BackupHistorySection } from './data/BackupHistorySection';
 import { ShamirSection } from './data/ShamirSection';
+import { requireSensitiveAction } from '../../features/security/sensitiveActions';
 
 type DataTabProps = {
   aesKey: string;
@@ -95,6 +96,12 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   };
 
   const handleExportPortable = async () => {
+    const allowed = await requireSensitiveAction({
+      action: 'backup.export',
+      reason: t('settings.exportBackup'),
+    });
+    if (!allowed) return;
+
     if (!backupPassword || backupPassword.length < 6) {
       showToast(t('settings.passwordMinError'), 'warning');
       return;
@@ -125,6 +132,13 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
   const handleWipe = async () => {
     const ok = await showConfirm(t('settings.wipeConfirm'), { danger: true });
     if (!ok) return;
+
+    const allowed = await requireSensitiveAction({
+      action: 'vault.delete',
+      reason: t('settings.wipeAll'),
+    });
+    if (!allowed) return;
+
     const { wipeAllData } = await import('../../utils/storage');
     await wipeAllData();
     onWipe?.();
@@ -205,6 +219,12 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
       <ShamirSection
         t={t}
         onCreateBackup={async () => {
+          const allowed = await requireSensitiveAction({
+            action: 'shamir.create_shares',
+            reason: t('shamir.create'),
+          });
+          if (!allowed) return;
+
           const w = await loadWallets(aesKey);
           setShamirWallets(w || []);
           setShowShamirBackup(true);

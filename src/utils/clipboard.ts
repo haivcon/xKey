@@ -59,6 +59,14 @@ const resolveTimeout = async (clearAfterMs: number | null | undefined, kind: Sec
   return getClipboardPolicy(kind).defaultClearAfterMs;
 };
 
+export const clearClipboardNow = async (): Promise<boolean> => {
+  if (clearTimer) {
+    clearTimeout(clearTimer);
+    clearTimer = null;
+  }
+  return overwriteClipboardInLayers();
+};
+
 const overwriteClipboardInLayers = async (): Promise<boolean> => {
   const noise = `xkey-cleared-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
   const steps = [noise, '', ' '];

@@ -19,6 +19,8 @@ const PIN_LENGTH = 6;
 const LOCKOUT_TIERS = [
   { after: 5, lockSeconds: 30 },
   { after: 8, lockSeconds: 300 },
+  { after: 10, lockSeconds: 900 },
+  { after: 12, lockSeconds: 3600 },
 ];
 const KILL_SWITCH_THRESHOLD = 10;
 
@@ -94,6 +96,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
         const lockSeconds = LOCKOUT_TIERS[i].lockSeconds;
         const lockUntil = Date.now() + lockSeconds * 1000;
         await Preferences.set({ key: PIN_LOCKOUT_KEY, value: String(lockUntil) });
+        await appendAuditLog('pin.lockout_started', { attempts, lockSeconds });
         startCountdown(lockSeconds);
         return;
       }
