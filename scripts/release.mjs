@@ -1,11 +1,17 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
+const quoteArg = (arg) => {
+  const value = String(arg);
+  if (!/[\s"`';&|<>()[\]{}$]/.test(value)) return value;
+  return `"${value.replace(/(["\\])/g, '\\$1').replace(/\r?\n/g, '\\n')}"`;
+};
+
 const run = (cmd, args, opts = {}) => {
-  console.log(`\n> ${[cmd, ...args].join(' ')}`);
+  console.log(`\n> ${[cmd, ...args].map(quoteArg).join(' ')}`);
   execFileSync(cmd, args, {
     stdio: 'inherit',
     windowsHide: true,
@@ -25,15 +31,26 @@ const json = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const writeJson = (file, value) => writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 
 const args = process.argv.slice(2);
-const options = { bump: 'patch', note: '', push: true, checks: true };
+const options = { bump: 'patch', note: '', noteFile: '', push: true, checks: true };
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
   if (['patch', 'minor', 'major'].includes(arg)) options.bump = arg;
   else if (arg === '--note' || arg === '-n') options.note = args[++i] || '';
   else if (arg.startsWith('--note=')) options.note = arg.slice(7);
+  else if (arg === '--note-file' || arg === '-N') options.noteFile = args[++i] || '';
+  else if (arg.startsWith('--note-file=')) options.noteFile = arg.slice(12);
   else if (arg === '--no-push') options.push = false;
   else if (arg === '--skip-checks') options.checks = false;
   else throw new Error(`Unknown argument: ${arg}`);
+}
+
+if (options.note && options.noteFile) {
+  throw new Error('Use either --note or --note-file, not both.');
+}
+
+if (options.noteFile) {
+  if (!existsSync(options.noteFile)) throw new Error(`Note file does not exist: ${options.noteFile}`);
+  options.note = readFileSync(options.noteFile, 'utf8');
 }
 
 const bump = (version, type) => {
