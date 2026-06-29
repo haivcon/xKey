@@ -38,7 +38,7 @@ import { useSecureDisplay } from '../../../contexts/SecureDisplayContext';
 import { useScreenSecurity } from '../../../contexts/ScreenSecurityContext';
 import Notice from '../../shared/Notice';
 import PasswordInput from '../../shared/PasswordInput';
-import { getErrorMessage, hashPin, parseStoredInt, type PinStep } from '../securityTabUtils';
+import { getErrorMessage, hashPin, isSixDigitPin, parseStoredInt, sanitizePinInput, type PinStep } from '../securityTabUtils';
 import { AdvancedSecuritySection } from './AdvancedSecuritySection';
 import { SecurityStatusSection } from './SecurityStatusSection';
 import { PinBiometricSection } from './PinBiometricSection';
@@ -358,14 +358,17 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       showToast(t('settings.hardwareBoundDeviceLockRequired'), 'warning');
       return;
     }
-    if (next) {
-      const confirmed = await showConfirm(t('settings.hardwareBoundBackupConfirm'), {
+    const confirmed = await showConfirm(
+      next
+        ? t('settings.hardwareBoundBackupConfirm')
+        : t('settings.hardwareBoundDisableConfirm', { default: 'Tắt khóa vault theo phần cứng có thể làm giảm bảo vệ khóa trên thiết bị này. Bạn có chắc chắn muốn tiếp tục?' }),
+      {
         danger: true,
         title: t('settings.hardwareBoundConfirmTitle'),
         confirmText: t('common.confirm'),
-      });
-      if (!confirmed) return;
-    }
+      },
+    );
+    if (!confirmed) return;
     setHardwareBoundBusy(true);
     try {
       await setHardwareBoundOnlyMode(next, aesKey);
@@ -396,14 +399,15 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         showToast(t('settings.deviceIntegrityCannotEnable', { reasons: formatDeviceRiskReasons(riskInfo) }), 'error');
         return;
       }
-      if (next) {
-        const confirmed = await showConfirm(t('settings.deviceIntegrityConfirm'), {
+      const confirmed = await showConfirm(
+        next ? t('settings.deviceIntegrityConfirm') : t('settings.deviceIntegrityDisableConfirm'),
+        {
           danger: true,
           title: t('settings.deviceIntegrityConfirmTitle'),
           confirmText: t('common.confirm'),
-        });
-        if (!confirmed) return;
-      }
+        },
+      );
+      if (!confirmed) return;
       await setDeviceIntegrityGuardEnabled(next);
       setDeviceIntegrityGuard(next);
       showToast(next ? t('settings.deviceIntegrityEnabled') : t('settings.deviceIntegrityDisabled'), next ? 'success' : 'info');
@@ -500,15 +504,23 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       if (hashPin(pinCurrent) !== stored) { setPinError(t('settings.incorrectCurrentPin')); return; }
       setPinStep('new'); setPinError('');
     } else if (pinStep === 'new') {
-      if (pinNew.length < 6) { setPinError(t('pinLock.enter6Digits')); return; }
+      const nextPin = sanitizePinInput(pinNew);
+      if (!isSixDigitPin(nextPin)) { setPinError(t('pinLock.enter6Digits')); return; }
+      setPinNew(nextPin);
       setPinStep('confirm'); setPinError('');
     } else if (pinStep === 'confirm') {
-      if (pinConfirmVal !== pinNew) {
+      const nextPin = sanitizePinInput(pinNew);
+      const confirmPin = sanitizePinInput(pinConfirmVal);
+      if (!isSixDigitPin(nextPin) || !isSixDigitPin(confirmPin)) {
+        setPinError(t('pinLock.enter6Digits'));
+        return;
+      }
+      if (confirmPin !== nextPin) {
         setPinError(t('settings.pinsNotMatch'));
         setPinStep('new'); setPinNew(''); setPinConfirmVal('');
         return;
       }
-      await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(pinNew) });
+      await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(nextPin) });
       hapticSuccess();
       showToast(t('settings.pinChangedSuccess'), 'success');
       setShowChangePin(false);
@@ -518,10 +530,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
 
   const handleToggleKillSwitch = async () => {
     const newVal = !killSwitchEnabled;
-    if (newVal) {
-      const confirm = await showConfirm(t('settings.killSwitchConfirm'), { danger: true });
-      if (!confirm) return;
-    }
+    const confirm = await showConfirm(
+      newVal ? t('settings.killSwitchConfirm') : t('settings.killSwitchDisableConfirm'),
+      { danger: true },
+    );
+    if (!confirm) return;
     await Preferences.set({ key: KILL_SWITCH_KEY, value: String(newVal) });
     setKillSwitchEnabled(newVal);
     showToast(newVal ? t('settings.killSwitchEnabled') : t('settings.killSwitchDisabled'), newVal ? 'warning' : 'info');
@@ -544,10 +557,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   };
 
   const handleSetDecoyPin = async () => {
-    if (decoyPinInput.length !== 6) { showToast(t('pinLock.enter6Digits'), 'error'); return; }
+    const decoyPin = sanitizePinInput(decoyPinInput);
+    if (!isSixDigitPin(decoyPin)) { showToast(t('pinLock.enter6Digits'), 'error'); return; }
     const { value: mainPinHash } = await Preferences.get({ key: PIN_HASH_KEY });
-    if (hashPin(decoyPinInput) === mainPinHash) { showToast(t('settings.decoySameAsMain'), 'error'); return; }
-    await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: hashPin(decoyPinInput) });
+    if (hashPin(decoyPin) === mainPinHash) { showToast(t('settings.decoySameAsMain'), 'error'); return; }
+    await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: hashPin(decoyPin) });
     setHasDecoyPin(true); setShowDecoyPinInput(false); setDecoyPinInput('');
     showToast(t('settings.decoyEnabled'), 'success');
   };
@@ -789,8 +803,13 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const handleSaveSensitivePin = async () => {
     if (sensitivePinBusy) return;
 
-    const pin = sensitivePinInput.trim();
-    const confirmPin = sensitivePinConfirm.trim();
+    const pin = sanitizePinInput(sensitivePinInput);
+    const confirmPin = sanitizePinInput(sensitivePinConfirm);
+
+    if (!isSixDigitPin(pin) || !isSixDigitPin(confirmPin)) {
+      showToast(t('pinLock.enter6Digits'), 'error');
+      return;
+    }
 
     if (pin !== confirmPin) {
       showToast(t('settings.sensitivePinMismatch'), 'error');
@@ -831,11 +850,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         setShowChangePin={setShowChangePin}
         pinStep={pinStep}
         pinCurrent={pinCurrent}
-        setPinCurrent={setPinCurrent}
+        setPinCurrent={(value) => setPinCurrent(sanitizePinInput(value))}
         pinNew={pinNew}
-        setPinNew={setPinNew}
+        setPinNew={(value) => setPinNew(sanitizePinInput(value))}
         pinConfirmVal={pinConfirmVal}
-        setPinConfirmVal={setPinConfirmVal}
+        setPinConfirmVal={(value) => setPinConfirmVal(sanitizePinInput(value))}
         pinError={pinError}
         handleChangePin={handleChangePin}
         killSwitchEnabled={killSwitchEnabled}
@@ -843,7 +862,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         hasDecoyPin={hasDecoyPin}
         showDecoyPinInput={showDecoyPinInput}
         decoyPinInput={decoyPinInput}
-        setDecoyPinInput={setDecoyPinInput}
+        setDecoyPinInput={(value) => setDecoyPinInput(sanitizePinInput(value))}
         handleToggleDecoy={handleToggleDecoy}
         handleSetDecoyPin={handleSetDecoyPin}
         shakeToLockEnabled={shakeToLockEnabled}
@@ -1235,7 +1254,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                       <div className="space-y-2">
                         <PasswordInput
                           value={sensitivePinInput}
-                          onChange={e => setSensitivePinInput(e.target.value.replace(/[^0-9]/g, ''))}
+                          onChange={e => setSensitivePinInput(sanitizePinInput(e.target.value))}
                           onKeyDown={e => e.key === 'Enter' && handleSaveSensitivePin()}
                           placeholder={t('settings.sensitivePinCreatePlaceholder', { default: 'Nhập PIN phụ 6 chữ số' })}
                           maxLength={6}
@@ -1244,7 +1263,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                         />
                         <PasswordInput
                           value={sensitivePinConfirm}
-                          onChange={e => setSensitivePinConfirm(e.target.value.replace(/[^0-9]/g, ''))}
+                          onChange={e => setSensitivePinConfirm(sanitizePinInput(e.target.value))}
                           onKeyDown={e => e.key === 'Enter' && handleSaveSensitivePin()}
                           placeholder={t('settings.sensitivePinConfirmPlaceholder', { default: 'Nhập lại PIN phụ' })}
                           maxLength={6}

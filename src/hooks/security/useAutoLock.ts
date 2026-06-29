@@ -158,19 +158,19 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
       const autolockEnabled = enabledValue === 'true';
       const preset = parsePreset(presetValue);
       const idleMs = parseStoredMs(idleValue, DEFAULT_MS, 60 * 1000);
-      const isHighSecurityPreset = preset === 'strict' || preset === 'paranoid';
-      const presetDefaults = isHighSecurityPreset ? PRESET_SETTINGS[preset] : PRESET_SETTINGS[DEFAULT_PRESET];
+      const usesContextTimings = preset === 'strict' || preset === 'paranoid' || preset === 'custom';
+      const presetDefaults = preset === 'custom' ? PRESET_SETTINGS[DEFAULT_PRESET] : PRESET_SETTINGS[preset];
       const unifiedMs = idleMs;
 
       settingsRef.current = {
         enabled: autolockEnabled,
         idleMs,
         preset,
-        backgroundMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(backgroundValue, presetDefaults.backgroundMs) : unifiedMs,
-        blurMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(blurValue, presetDefaults.blurMs) : unifiedMs,
-        afterRevealMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(afterRevealValue, presetDefaults.afterRevealMs) : unifiedMs,
-        lockAfterSecretCopy: autolockEnabled && isHighSecurityPreset && (copyValue === null ? presetDefaults.lockAfterSecretCopy : copyValue === 'true'),
-        screenOffLock: autolockEnabled && isHighSecurityPreset && (screenOffValue === null ? presetDefaults.screenOffLock : screenOffValue === 'true'),
+        backgroundMs: autolockEnabled && usesContextTimings ? parseStoredMs(backgroundValue, presetDefaults.backgroundMs) : unifiedMs,
+        blurMs: autolockEnabled && usesContextTimings ? parseStoredMs(blurValue, presetDefaults.blurMs) : unifiedMs,
+        afterRevealMs: autolockEnabled && usesContextTimings ? parseStoredMs(afterRevealValue, presetDefaults.afterRevealMs) : unifiedMs,
+        lockAfterSecretCopy: autolockEnabled && usesContextTimings && (copyValue === null ? presetDefaults.lockAfterSecretCopy : copyValue === 'true'),
+        screenOffLock: autolockEnabled && usesContextTimings && (screenOffValue === null ? presetDefaults.screenOffLock : screenOffValue === 'true'),
       };
     } catch {
       settingsRef.current = {

@@ -2,6 +2,24 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.13] - 2026-06-29
+
+### Release Notes
+
+- 🔐 Security settings hardened.
+- • Added confirmations before disabling key protections.
+- • Improved 6-digit PIN validation for main, decoy, and sensitive-action PINs.
+- • Fixed custom auto-lock timing behavior.
+- • Added utility tests.
+- ✅ Type-check, lint, tests, and production build passed.
+
+### Release Metadata
+
+- `package.json`: `6.0.13`
+- `package-lock.json`: `6.0.13`
+- Android `versionName`: `6.0.13`
+- Android `versionCode`: `111`
+
 ## [6.0.12] - 2026-06-29
 
 ### Release Notes

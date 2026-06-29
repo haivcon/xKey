@@ -1,2 +1,8 @@
-1.Backup restore safety upgrade: added backup health scoring, sandbox restore dry-run, offline vault diff, duplicate secret/conflict detection, safer import blocking/override checks, restore report export.
-2.Added a configurable Logo Lock option in Security settings. The header lock button is now hidden inside the xKey logo, with a red glow when enabled. Improved auto-lock timer handling to prevent early unintended locks. Completed i18n coverage for key Security settings strings across 15 languages.
+🔐 Security settings hardened.
+
+• Added confirmations before disabling key protections.
+• Improved 6-digit PIN validation for main, decoy, and sensitive-action PINs.
+• Fixed custom auto-lock timing behavior.
+• Added utility tests.
+
+✅ Type-check, lint, tests, and production build passed.

@@ -12,15 +12,19 @@
 
 ---
 
-## Current Release: v6.0.12
+## Current Release: v6.0.13
 
-xKey v6.0.12 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.13 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- 1.Backup restore safety upgrade: added backup health scoring, sandbox restore dry-run, offline vault diff, duplicate secret/conflict detection, safer import blocking/override checks, restore report export.
-- 2.Added a configurable Logo Lock option in Security settings. The header lock button is now hidden inside the xKey logo, with a red glow when enabled. Improved auto-lock timer handling to prevent early unintended locks. Completed i18n coverage for key Security settings strings across 15 languages.
-- **Android release metadata:** `versionName 6.0.12`, `versionCode 110`.
+- 🔐 Security settings hardened.
+- • Added confirmations before disabling key protections.
+- • Improved 6-digit PIN validation for main, decoy, and sensitive-action PINs.
+- • Fixed custom auto-lock timing behavior.
+- • Added utility tests.
+- ✅ Type-check, lint, tests, and production build passed.
+- **Android release metadata:** `versionName 6.0.13`, `versionCode 111`.
 ---
 
 ## Core Features

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { APP_ACTIVITY_EVENT } from '../security/useAutoLock';
 import { useCpuTemperature } from '../useCpuTemperature';
@@ -353,13 +353,13 @@ export function useVanityGeneration({
   });
 
   // ── Session persistence helpers ────────────────────────────────────────
-  const scheduleVanitySessionPersist = () => {
+  const scheduleVanitySessionPersist = useCallback(() => {
     if (vanitySessionPersistTimerRef.current) return;
     vanitySessionPersistTimerRef.current = setTimeout(() => {
       vanitySessionPersistTimerRef.current = null;
       void vanitySessionPersistNowRef.current().catch(() => {});
     }, 1500);
-  };
+  }, []);
 
   const clearVanitySession = async () => {
     vanitySessionGenerationRef.current += 1;
@@ -372,7 +372,7 @@ export function useVanityGeneration({
     await clearStoredVanitySession();
   };
 
-  const persistVanitySession = async () => {
+  const persistVanitySession = useCallback(async () => {
     if (!vanityFoundRef.current.length && !vanityExtraRef.current.length) return;
     const state: VanitySessionState = {
       prefix: vanityPrefix,
@@ -409,9 +409,34 @@ export function useVanityGeneration({
       aesKey,
     });
     setHasRecoverableVanitySession(true);
-  };
+  }, [
+    aesKey,
+    vanityCandidates,
+    vanityCaptureExtras,
+    vanityExtraFolder,
+    vanityFolder,
+    vanityGenerationMode,
+    vanityMnemonicWords,
+    vanityNetwork,
+    vanityPerformanceMode,
+    vanityPrefix,
+    vanitySafeExtraFilters,
+    vanitySafeExtraLimit,
+    vanitySafeExtraMinRun,
+    vanitySafeTargetCount,
+    vanitySuffix,
+    vanityTags,
+    vanityThermalCriticalC,
+    vanityThermalMonitorEnabled,
+    vanityThermalPauseC,
+    vanityThermalPauseEnabled,
+    vanityThermalWarningC,
+    vanityTime,
+    vanityTimeLimit,
+    vanityScanned,
+  ]);
 
-  const enqueueVanitySessionPersist = async () => {
+  const enqueueVanitySessionPersist = useCallback(async () => {
     const generation = vanitySessionGenerationRef.current;
     const nextWrite = vanitySessionPersistQueueRef.current
       .catch(() => {})
@@ -420,7 +445,7 @@ export function useVanityGeneration({
       );
     vanitySessionPersistQueueRef.current = nextWrite;
     await nextWrite;
-  };
+  }, [persistVanitySession]);
   vanitySessionPersistNowRef.current = enqueueVanitySessionPersist;
 
   // ── Close handler ──────────────────────────────────────────────────────
@@ -504,6 +529,7 @@ export function useVanityGeneration({
     vanityTime,
     vanityCandidates,
     vanityGenerating,
+    scheduleVanitySessionPersist,
   ]);
 
   // Persist settings on change
@@ -1030,7 +1056,7 @@ export function useVanityGeneration({
   };
 
   // ── Controls ───────────────────────────────────────────────────────────
-  const pauseVanity = async (reason?: string) => {
+  const pauseVanity = useCallback(async (reason?: string) => {
     isVanityRunningRef.current = false;
     vanityWorkerRef.current.forEach(w => {
       w.postMessage({ type: 'stop' });
@@ -1043,7 +1069,7 @@ export function useVanityGeneration({
     setVanityPaused(true);
     setVanityStopReason(reason || t('createWallet.vanityPaused'));
     await enqueueVanitySessionPersist().catch(() => {});
-  };
+  }, [enqueueVanitySessionPersist, t]);
 
   const stopVanity = async () => {
     await finishVanityRun({ reason: t('createWallet.vanityStopped'), saveFound: false });

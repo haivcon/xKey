@@ -18,4 +18,10 @@ export const parseStoredInt = (value: string | null, fallback = 0): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+export const sanitizePinInput = (value: string, maxLength = 6): string => (
+  value.replace(/\D/g, '').slice(0, maxLength)
+);
+
+export const isSixDigitPin = (value: string): boolean => /^\d{6}$/.test(value);
+
 export const hashPin = (p: string) => CryptoJS.SHA256(p + 'xkey_pin_salt_v1').toString();
