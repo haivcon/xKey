@@ -1,5 +1,5 @@
 ﻿import type { RefObject } from 'react';
-import { Heart, Lock, Settings } from 'lucide-react';
+import { Heart, Settings } from 'lucide-react';
 import { hapticTap } from '../utils/haptics';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { HEADER_SLOGAN_LETTERS } from '../app/constants';
@@ -12,6 +12,7 @@ type HomeHeaderProps = {
   onOpenDonate: () => void;
   onOpenSettings: () => void;
   onEmergencyLock: () => void;
+  logoLockEnabled: boolean;
 };
 
 export default function HomeHeader({
@@ -21,6 +22,7 @@ export default function HomeHeader({
   onOpenDonate,
   onOpenSettings,
   onEmergencyLock,
+  logoLockEnabled,
 }: HomeHeaderProps) {
   const handleOpenDonate = () => {
     hapticTap();
@@ -45,7 +47,15 @@ export default function HomeHeader({
       <div className="max-w-[140rem] mx-auto w-full">
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-[clamp(0.25rem,1.8vw,0.5rem)]">
           <div className="flex min-w-0 items-center gap-[clamp(0.25rem,1.5vw,0.5rem)]">
-            <img src="/logo.png" alt="xKey" className="home-header-logo rounded-lg logo-animated" />
+            <button
+              type="button"
+              onClick={logoLockEnabled ? handleEmergencyLock : undefined}
+              className={`rounded-xl transition-all ${logoLockEnabled ? 'cursor-pointer ring-2 ring-rose-500/80 shadow-[0_0_18px_rgba(244,63,94,0.8)] hover:ring-rose-300' : 'cursor-default'}`}
+              title={logoLockEnabled ? t('security.emergencyLock') : 'xKey'}
+              aria-label={logoLockEnabled ? t('security.emergencyLock') : 'xKey'}
+            >
+              <img src="/logo.png" alt="xKey" className="home-header-logo rounded-lg logo-animated" />
+            </button>
             <div className="flex min-w-0 items-baseline">
               <h1 className="home-header-title font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-surface-400 leading-tight">
                 xKey
@@ -75,14 +85,6 @@ export default function HomeHeader({
               aria-label={t('donate.button')}
             >
               <Heart size={20} className="text-fuchsia-400 fill-fuchsia-400/50 group-hover:fill-fuchsia-400 group-hover:scale-110 transition-all drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
-            </button>
-            <button
-              onClick={handleEmergencyLock}
-              className="p-2 text-rose-200 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 rounded-full transition-colors"
-              title={t('security.emergencyLock')}
-              aria-label={t('security.emergencyLock')}
-            >
-              <Lock size={20} />
             </button>
             <button
               onClick={handleOpenSettings}

@@ -12,6 +12,8 @@ import { withTimeout } from '../utils/asyncTimeout';
 import { requireSensitiveAction } from '../features/security/sensitiveActions';
 import type { Wallet } from '../types';
 import { analyzeBackupImport, type BackupImportAnalysis } from '../features/import/backupImportAnalysis';
+import { runRestoreSandbox, type RestoreSandboxResult } from '../features/backup/restoreSandbox';
+import { buildBackupRestoreReport } from '../features/backup/backupRestoreReport';
 import { decodeBase64Text, dedupeWallets, detectImportFormat, getImportFolderName, parseCsvWallets, parseJsonWallets, parseTextWallets } from '../features/import/fileImportParsers';
 
 export type BackupPreview = {
@@ -44,6 +46,7 @@ type UseFileImportResult = {
   backupPreview: BackupPreview | null;
   importPassword: string;
   backupAnalysis: BackupImportAnalysis | null;
+  restoreSandbox: RestoreSandboxResult | null;
   backupImportMode: BackupImportMode;
   setBackupImportMode: Dispatch<SetStateAction<BackupImportMode>>;
   updateMissingSensitive: boolean;
@@ -53,6 +56,7 @@ type UseFileImportResult = {
   handleExternalBackupFile: (file: ExternalBackupFile) => Promise<boolean>;
   handleImportWithPassword: () => Promise<void>;
   previewBackupWithPassword: () => Promise<void>;
+  saveRestoreReport: () => Promise<void>;
   dismissPasswordPrompt: () => void;
 };
 
@@ -72,6 +76,7 @@ export default function useFileImport(
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
   const [importPassword, setImportPassword] = useState('');
   const [backupAnalysis, setBackupAnalysis] = useState<BackupImportAnalysis | null>(null);
+  const [restoreSandbox, setRestoreSandbox] = useState<RestoreSandboxResult | null>(null);
   const [backupImportMode, setBackupImportMode] = useState<BackupImportMode>('merge');
   const [updateMissingSensitive, setUpdateMissingSensitive] = useState(false);
   const lastExternalFileRef = useRef<{ fingerprint: string; ts: number } | null>(null);
@@ -129,6 +134,8 @@ export default function useFileImport(
           );
           setPendingBackupData(fileData);
           setBackupPreview({ ...preview, fileName: file.name });
+          setBackupAnalysis(null);
+          setRestoreSandbox(null);
           setShowPasswordPrompt(true);
           setLoading(false);
           setFileOperationKey('');
@@ -211,6 +218,8 @@ export default function useFileImport(
       );
       setPendingBackupData(fileData);
       setBackupPreview({ ...preview, fileName, openedFromExternal: true });
+      setBackupAnalysis(null);
+      setRestoreSandbox(null);
       setShowPasswordPrompt(true);
       await appendAuditLog('backup.opened_from_android', {
         fileName,
@@ -234,6 +243,18 @@ export default function useFileImport(
     }
   }, [showToast, t]);
 
+  const saveRestoreReport = useCallback(async () => {
+    if (!restoreSandbox) return;
+    const report = buildBackupRestoreReport({
+      mode: backupImportMode,
+      backupId: String(backupPreview?.backupId || backupPreview?.metadata?.backupId || ''),
+      fileHash: String(backupPreview?.containerHash || backupPreview?.metadata?.containerHash || ''),
+      integrity: String(backupPreview?.integrity || 'unknown'),
+      sandbox: restoreSandbox,
+    });
+    await saveTextFile(`xkey_restore_report_${Date.now()}.txt`, 'text/plain', report);
+  }, [backupImportMode, backupPreview, restoreSandbox]);
+
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
     try {
@@ -246,6 +267,38 @@ export default function useFileImport(
         () => new Error(t('restore.wrongPassword')),
       );
       const { uniqueWallets: uniqueBackup, skippedCount: skipped } = dedupeWallets(wallets, backup.wallets);
+      const sandbox = runRestoreSandbox({
+        currentWallets: wallets,
+        backupWallets: backup.wallets,
+        inspection: backupPreview,
+      });
+      setRestoreSandbox(sandbox);
+
+      if (!sandbox.canRestore) {
+        showToast(t('restoreSandbox.blocked'), 'error');
+        await appendAuditLog('backup.import_blocked_by_sandbox', {
+          healthScore: sandbox.health.score,
+          healthGrade: sandbox.health.grade,
+          recommendation: sandbox.health.recommendation,
+          criticalConflicts: sandbox.diff.summary.criticalConflicts,
+          warnings: sandbox.warnings.map(warning => warning.code),
+        });
+        return;
+      }
+
+      if (sandbox.recommendedMode !== 'cancel' && backupImportMode !== sandbox.recommendedMode) {
+        const overrideAllowed = await requireSensitiveAction({
+          action: 'backup.import_override_sandbox',
+          reason: t('restoreSandbox.overrideConfirm'),
+          metadata: {
+            selectedMode: backupImportMode,
+            recommendedMode: sandbox.recommendedMode,
+            healthScore: sandbox.health.score,
+            healthGrade: sandbox.health.grade,
+          },
+        });
+        if (!overrideAllowed) return;
+      }
 
       if (backupImportMode === 'replace') {
         const verified = await requireSensitiveAction({
@@ -295,17 +348,16 @@ export default function useFileImport(
       await saveWallets(newWallets, aesKey, isDecoyMode);
       let msg = t('home.backupImported', { count: backupImportMode === 'replace' ? backup.wallets.length : uniqueBackup.length });
       if (backupImportMode === 'merge' && skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
-      const report = [
-        'xKey backup import report',
-        `Time: ${new Date().toISOString()}`,
-        `Mode: ${backupImportMode}`,
-        `Backup ID: ${String(backupPreview?.backupId || backupPreview?.metadata?.backupId || '')}`,
-        `File hash: ${String(backupPreview?.containerHash || backupPreview?.metadata?.containerHash || '')}`,
-        `Imported wallets: ${backupImportMode === 'replace' ? backup.wallets.length : uniqueBackup.length}`,
-        `Skipped duplicates: ${skipped}`,
-        `Sensitive fields filled: ${sensitiveUpdated}`,
-        `Integrity: ${String(backupPreview?.integrity || 'unknown')}`,
-      ].join('\n');
+      const report = buildBackupRestoreReport({
+        mode: backupImportMode,
+        backupId: String(backupPreview?.backupId || backupPreview?.metadata?.backupId || ''),
+        fileHash: String(backupPreview?.containerHash || backupPreview?.metadata?.containerHash || ''),
+        integrity: String(backupPreview?.integrity || 'unknown'),
+        importedWallets: backupImportMode === 'replace' ? backup.wallets.length : uniqueBackup.length,
+        skippedDuplicates: skipped,
+        sensitiveFieldsFilled: sensitiveUpdated,
+        sandbox,
+      });
       showToast(msg, 'success', 8000, {
         label: backupImportMode === 'replace' ? t('common.undo') : t('common.save'),
         onClick: backupImportMode === 'replace'
@@ -351,12 +403,27 @@ export default function useFileImport(
         () => new Error(t('restore.wrongPassword')),
       );
       const analysis = analyzeBackupImport(wallets, backup.wallets);
+      const sandbox = runRestoreSandbox({
+        currentWallets: wallets,
+        backupWallets: backup.wallets,
+        inspection: backupPreview,
+      });
       setBackupAnalysis(analysis);
+      setRestoreSandbox(sandbox);
+      if (sandbox.recommendedMode !== 'cancel') {
+        setBackupImportMode(sandbox.recommendedMode);
+      }
       await appendAuditLog('backup.decrypted_previewed', {
         walletCount: backup.wallets.length,
-        duplicates: analysis.duplicates,
-        changed: analysis.changed,
-        missingSensitive: analysis.missingSensitive,
+          duplicates: analysis.duplicates,
+          changed: analysis.changed,
+          missingSensitive: analysis.missingSensitive,
+          healthScore: sandbox.health.score,
+          healthGrade: sandbox.health.grade,
+          newInBackup: sandbox.diff.summary.newInBackup,
+          missingFromBackup: sandbox.diff.summary.missingFromBackup,
+          criticalConflicts: sandbox.diff.summary.criticalConflicts,
+          recommendedMode: sandbox.recommendedMode,
       });
     } catch {
       showToast({ key: 'restore.wrongPassword', category: 'backup' }, 'error');
@@ -364,15 +431,16 @@ export default function useFileImport(
       setLoading(false);
       setFileOperationKey('');
     }
-  }, [pendingBackupData, aesKey, importPassword, wallets, showToast, t]);
+  }, [pendingBackupData, aesKey, importPassword, wallets, showToast, t, backupPreview]);
 
   const dismissPasswordPrompt = useCallback(() => {
     setShowPasswordPrompt(false);
     setPendingBackupData(null);
     setBackupPreview(null);
-    setImportPassword('');
-    setBackupAnalysis(null);
-    setBackupImportMode('merge');
+      setImportPassword('');
+      setBackupAnalysis(null);
+      setRestoreSandbox(null);
+      setBackupImportMode('merge');
     setUpdateMissingSensitive(false);
     setLoading(false);
     setFileOperationKey('');
@@ -380,12 +448,13 @@ export default function useFileImport(
 
   return {
     loading, fileOperationKey,
-    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive,
+    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive,
     importPassword, setImportPassword,
     handleFileUpload,
     handleExternalBackupFile,
     handleImportWithPassword,
     previewBackupWithPassword,
+    saveRestoreReport,
     dismissPasswordPrompt,
   };
 }

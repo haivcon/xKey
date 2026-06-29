@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { ChevronDown, Lock, Monitor, RefreshCw, ShieldAlert, ShieldOff } from 'lucide-react';
 import PasswordInput from '../../shared/PasswordInput';
 import type { ShakeSensorTestResult } from '../../../hooks/security/useShakeToLock';
@@ -35,6 +35,14 @@ type PinBiometricSectionProps = {
   shakeSensorResult: ShakeSensorTestResult | null;
   handleTestShakeSensor: () => void;
   onTap: () => void;
+  settingStatus: (text: ReactNode, active?: boolean) => ReactNode;
+  toggleSwitch: (
+    active: boolean,
+    onClick: () => void,
+    ariaLabel: string,
+    color?: string,
+    disabled?: boolean,
+  ) => ReactNode;
 };
 
 export function PinBiometricSection({
@@ -67,6 +75,8 @@ export function PinBiometricSection({
   shakeSensorResult,
   handleTestShakeSensor,
   onTap,
+  settingStatus,
+  toggleSwitch,
 }: PinBiometricSectionProps) {
   const pinIconTone = hasBiometric ? 'text-emerald-400' : 'text-amber-400';
   const pinIconBg = hasBiometric ? 'bg-emerald-500/10' : 'bg-amber-500/10';
@@ -100,16 +110,38 @@ export function PinBiometricSection({
         </div>
       </div>
 
-      <button onClick={() => { onTap(); setShowChangePin(!showChangePin); }}
-        className="w-full flex items-center justify-between p-4 hover:bg-surface-800/30 transition-colors border-b border-surface-700/30">
-        <div className="flex items-center gap-3">
-          <RefreshCw size={16} className="text-surface-400" />
-          <span className="text-sm font-medium">{t('settings.changePin')}</span>
+      <div className="border-b border-surface-700/30">
+        <div className="flex items-start justify-between gap-3 p-4">
+          <button
+            type="button"
+            onClick={() => { onTap(); setShowChangePin(!showChangePin); }}
+            className="flex min-w-0 flex-1 gap-3 text-left"
+          >
+            <RefreshCw size={16} className={`mt-1 flex-shrink-0 ${showChangePin ? 'text-brand-400' : 'text-surface-400'}`} />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white">{t('settings.changePin')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-surface-500">{t('settings.changePinSummary')}</p>
+            </div>
+          </button>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button type="button" onClick={() => { onTap(); setShowChangePin(!showChangePin); }} className="p-1 text-surface-500" aria-label={t('settings.expandDetails')}>
+              <ChevronDown size={16} className={`transition-transform ${showChangePin ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
         </div>
-        <ChevronDown size={16} className={`text-surface-500 transition-transform ${showChangePin ? 'rotate-180' : ''}`} />
-      </button>
+      </div>
       {showChangePin && (
-        <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
+        <div className="px-4 py-3 border-b border-surface-700/30 space-y-3">
+          <div className="rounded-xl border border-brand-500/15 bg-brand-500/5 p-3 text-xs leading-relaxed text-brand-100/85">
+            <p className="font-semibold">{t('settings.changePinDetailsTitle')}</p>
+            <ul className="mt-2 list-disc space-y-1 pl-4">
+              <li>{t('settings.changePinDetailCurrent')}</li>
+              <li>{t('settings.changePinDetailLength')}</li>
+              <li>{t('settings.changePinDetailConfirm')}</li>
+              <li>{t('settings.changePinDetailDataSafe')}</li>
+              <li>{t('settings.changePinDetailBackup')}</li>
+            </ul>
+          </div>
           {pinStep === 'current' && (
             <PasswordInput value={pinCurrent} onChange={e => setPinCurrent(e.target.value)}
               placeholder={t('settings.currentPin')} maxLength={6}
@@ -147,21 +179,26 @@ export function PinBiometricSection({
         </div>
       </button>
 
-      <div className="border-t border-surface-800 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <ShieldAlert size={16} className={hasDecoyPin ? 'text-amber-400' : 'text-surface-400'} />
-            <div>
-              <h3 className="text-white font-medium">{t('settings.decoyVaultTitle')}</h3>
-              <p className="text-xs text-surface-400">{t('settings.decoyVaultDesc')}</p>
+      <div className="border-t border-surface-800">
+        <div className="flex items-start justify-between gap-3 p-4">
+          <button
+            type="button"
+            onClick={handleToggleDecoy}
+            className="flex min-w-0 flex-1 gap-3 text-left"
+          >
+            <ShieldAlert size={16} className={`mt-1 flex-shrink-0 ${hasDecoyPin ? 'text-amber-400' : 'text-surface-400'}`} />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-white">{t('settings.decoyVaultTitle')}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-surface-500">{hasDecoyPin ? t('settings.decoyVaultSummaryOn') : t('settings.decoyVaultDesc')}</p>
             </div>
-          </div>
-          <button onClick={handleToggleDecoy} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${hasDecoyPin ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-surface-700 text-white hover:bg-surface-600'}`}>
-            {hasDecoyPin ? t('settings.removeDecoyPin') : t('settings.setDecoyPin')}
           </button>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {settingStatus(hasDecoyPin ? t('settings.enabled') : t('settings.disabled'), hasDecoyPin)}
+            {toggleSwitch(hasDecoyPin, handleToggleDecoy, t('settings.decoyVaultTitle'), 'bg-amber-500')}
+          </div>
         </div>
         {showDecoyPinInput && !hasDecoyPin && (
-          <div className="flex items-center gap-2 mt-2 bg-surface-900/50 p-2 rounded-lg">
+          <div className="mx-4 mb-4 flex items-center gap-2 rounded-lg bg-surface-900/50 p-2">
             <PasswordInput
               value={decoyPinInput}
               onChange={(e) => setDecoyPinInput(e.target.value.replace(/[^0-9]/g, ''))}

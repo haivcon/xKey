@@ -20,14 +20,15 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.11
+## Current Release Security Notes: v6.0.12
 
-v6.0.11 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.12 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- Security update: added re-authentication for high-risk actions, extra optional PIN for sensitive reveal/export/import flows, emergency lock button with clipboard clearing, stronger PIN lockout tiers, and a high-security session preset enabling no-copy, short auto-lock, screen protection, and stricter secret handling.
-- Android metadata is updated to `versionCode 109` and `versionName 6.0.11`.
+- 1.Backup restore safety upgrade: added backup health scoring, sandbox restore dry-run, offline vault diff, duplicate secret/conflict detection, safer import blocking/override checks, restore report export.
+- 2.Added a configurable Logo Lock option in Security settings. The header lock button is now hidden inside the xKey logo, with a red glow when enabled. Improved auto-lock timer handling to prevent early unintended locks. Completed i18n coverage for key Security settings strings across 15 languages.
+- Android metadata is updated to `versionCode 110` and `versionName 6.0.12`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

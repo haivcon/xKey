@@ -61,6 +61,7 @@ import { useConfirm } from './contexts/ConfirmContext';
 import { useTheme } from './contexts/ThemeContext';
 import { appendAuditLog } from './utils/auditLog';
 import { clearClipboardNow } from './utils/clipboard';
+import { LOGO_LOCK_ENABLED_KEY, LOGO_LOCK_SETTINGS_CHANGED_EVENT } from './features/security/logoLock';
 import type { WalletSaveInput } from './app/types';
 import type { QrModalData, Wallet } from './types';
 
@@ -83,6 +84,7 @@ export default function App() {
   const [showDonate, setShowDonate] = useState(false);
   const [showAssetBalance, setShowAssetBalance] = useState(false);
   const [showKeyHealth, setShowKeyHealth] = useState(false);
+  const [logoLockEnabled, setLogoLockEnabled] = useState(false);
   const homeHeaderRef = useRef<HTMLElement | null>(null);
   const createWalletCloseHandlerRef = useRef<(() => void | Promise<void>) | null>(null);
 
@@ -254,8 +256,8 @@ export default function App() {
 
   const {
     loading, fileOperationKey,
-    showPasswordPrompt, backupPreview, backupAnalysis, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
-    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, dismissPasswordPrompt,
+    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
+    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, saveRestoreReport, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
 
   const {
@@ -312,6 +314,17 @@ export default function App() {
   useEffect(() => {
     appendAuditLog('app.opened', { version: appVersion.label }).catch(() => {});
   }, [appVersion.label]);
+
+  useEffect(() => {
+    const loadLogoLockSetting = async () => {
+      const { value } = await Preferences.get({ key: LOGO_LOCK_ENABLED_KEY });
+      setLogoLockEnabled(value === 'true');
+    };
+
+    loadLogoLockSetting();
+    window.addEventListener(LOGO_LOCK_SETTINGS_CHANGED_EVENT, loadLogoLockSetting);
+    return () => window.removeEventListener(LOGO_LOCK_SETTINGS_CHANGED_EVENT, loadLogoLockSetting);
+  }, []);
 
   useGlobalInputFocus();
 
@@ -439,6 +452,7 @@ export default function App() {
           onOpenDonate={() => setShowDonate(true)}
           onOpenSettings={() => navigate('/settings')}
           onEmergencyLock={handleEmergencyLock}
+          logoLockEnabled={logoLockEnabled}
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
@@ -807,6 +821,7 @@ export default function App() {
             fileOperationKey={fileOperationKey}
             backupPreview={backupPreview}
             backupAnalysis={backupAnalysis}
+            restoreSandbox={restoreSandbox}
             backupImportMode={backupImportMode}
             updateMissingSensitive={updateMissingSensitive}
             importPassword={importPassword}
@@ -816,6 +831,7 @@ export default function App() {
             onCancel={dismissPasswordPrompt}
             onPreview={previewBackupWithPassword}
             onImport={handleImportWithPassword}
+            onSaveRestoreReport={saveRestoreReport}
             onVerifyOnly={handleVerifyBackupOnly}
             onCopyVerificationReport={handleCopyVerificationReport}
             onCopyPreviewValue={handleCopyBackupPreviewValue}

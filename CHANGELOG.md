@@ -2,6 +2,20 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.12] - 2026-06-29
+
+### Release Notes
+
+- 1.Backup restore safety upgrade: added backup health scoring, sandbox restore dry-run, offline vault diff, duplicate secret/conflict detection, safer import blocking/override checks, restore report export.
+- 2.Added a configurable Logo Lock option in Security settings. The header lock button is now hidden inside the xKey logo, with a red glow when enabled. Improved auto-lock timer handling to prevent early unintended locks. Completed i18n coverage for key Security settings strings across 15 languages.
+
+### Release Metadata
+
+- `package.json`: `6.0.12`
+- `package-lock.json`: `6.0.12`
+- Android `versionName`: `6.0.12`
+- Android `versionCode`: `110`
+
 ## [6.0.11] - 2026-06-29
 
 ### Release Notes

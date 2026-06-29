@@ -4,6 +4,7 @@ import BrandSlogan from '../shared/BrandSlogan';
 import PasswordInput from '../shared/PasswordInput';
 import { asNumber, asText } from '../../app/valueFormatters';
 import type { BackupImportAnalysis } from '../../features/import/backupImportAnalysis';
+import type { RestoreSandboxResult } from '../../features/backup/restoreSandbox';
 import type { BackupPreview } from '../../hooks/useFileImport';
 import type { TranslationFn } from '../../contexts/LanguageContext';
 
@@ -116,6 +117,7 @@ type BackupImportPasswordModalProps = {
   fileOperationKey: string;
   backupPreview: BackupPreview | null;
   backupAnalysis: BackupImportAnalysis | null;
+  restoreSandbox: RestoreSandboxResult | null;
   backupImportMode: BackupImportMode;
   updateMissingSensitive: boolean;
   importPassword: string;
@@ -125,6 +127,7 @@ type BackupImportPasswordModalProps = {
   onCancel: () => void;
   onPreview: () => Promise<void>;
   onImport: () => void;
+  onSaveRestoreReport: () => Promise<void>;
   onVerifyOnly: () => void;
   onCopyVerificationReport: () => void;
   onCopyPreviewValue: (label: string, value: string) => void;
@@ -141,6 +144,7 @@ export default function BackupImportPasswordModal({
   fileOperationKey,
   backupPreview,
   backupAnalysis,
+  restoreSandbox,
   backupImportMode,
   updateMissingSensitive,
   importPassword,
@@ -150,6 +154,7 @@ export default function BackupImportPasswordModal({
   onCancel,
   onPreview,
   onImport,
+  onSaveRestoreReport,
   onVerifyOnly,
   onCopyVerificationReport,
   onCopyPreviewValue,
@@ -349,6 +354,127 @@ export default function BackupImportPasswordModal({
           className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600"
         />
 
+        {restoreSandbox && (
+          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-surface-200">
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="text-scale-xs font-bold uppercase tracking-wide text-emerald-200">{t('restoreSandbox.title')}</div>
+                <div className="mt-1 text-surface-400">{t('restoreSandbox.subtitle')}</div>
+              </div>
+              <div className={`rounded-full px-2.5 py-1 text-xs font-black ${restoreSandbox.canRestore ? 'bg-emerald-500/15 text-emerald-100' : 'bg-red-500/15 text-red-100'}`}>
+                {restoreSandbox.health.score}/100 · {restoreSandbox.health.grade}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                { key: 'newInBackup', label: t('restoreSandbox.newInBackup'), value: restoreSandbox.diff.summary.newInBackup, className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100' },
+                { key: 'missingFromBackup', label: t('restoreSandbox.missingFromBackup'), value: restoreSandbox.diff.summary.missingFromBackup, className: 'border-amber-500/20 bg-amber-500/10 text-amber-100' },
+                { key: 'changed', label: t('restoreSandbox.changed'), value: restoreSandbox.diff.summary.changed, className: 'border-sky-500/20 bg-sky-500/10 text-sky-100' },
+                { key: 'duplicateSecrets', label: t('restoreSandbox.duplicateSecrets'), value: restoreSandbox.diff.summary.duplicateSecrets, className: 'border-red-500/20 bg-red-500/10 text-red-100' },
+              ].map(item => (
+                <div key={item.key} className={`rounded-lg border px-2.5 py-2 ${item.className}`}>
+                  <span className="block text-scale-2xs font-semibold uppercase tracking-wide opacity-80">{item.label}</span>
+                  <span className="block text-sm font-bold">{item.value}</span>
+                </div>
+              ))}
+            </div>
+             <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
+               <div className="font-semibold text-surface-100">{t('restoreSandbox.recommendation')}: {t(`restoreSandbox.mode_${restoreSandbox.recommendedMode}`)}</div>
+               <div className="mt-1 leading-relaxed text-surface-400">{t(`restoreSandbox.recommendation_${restoreSandbox.health.recommendation}`)}</div>
+             </div>
+             <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
+               <div className="mb-2 font-semibold text-surface-100">{t('restoreSandbox.restorePlan')}</div>
+               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                 {[
+                   { key: 'willAdd', label: t('restoreSandbox.willAdd'), value: restoreSandbox.restorePlan.totals.willAdd, className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100' },
+                   { key: 'willSkip', label: t('restoreSandbox.willSkip'), value: restoreSandbox.restorePlan.totals.willSkip, className: 'border-surface-500/20 bg-surface-500/10 text-surface-100' },
+                   { key: 'willUpdate', label: t('restoreSandbox.willUpdate'), value: restoreSandbox.restorePlan.totals.willUpdate, className: 'border-sky-500/20 bg-sky-500/10 text-sky-100' },
+                   { key: 'willUpdateSensitive', label: t('restoreSandbox.willUpdateSensitive'), value: restoreSandbox.restorePlan.totals.willUpdateSensitive, className: 'border-amber-500/20 bg-amber-500/10 text-amber-100' },
+                   { key: 'willDeleteIfReplace', label: t('restoreSandbox.willDeleteIfReplace'), value: restoreSandbox.restorePlan.totals.willDeleteIfReplace, className: 'border-orange-500/20 bg-orange-500/10 text-orange-100' },
+                   { key: 'blockedConflicts', label: t('restoreSandbox.blockedConflicts'), value: restoreSandbox.restorePlan.totals.blockedConflicts, className: 'border-red-500/20 bg-red-500/10 text-red-100' },
+                 ].map(item => (
+                   <div key={item.key} className={`rounded-lg border px-2.5 py-2 ${item.className}`}>
+                     <span className="block text-scale-2xs font-semibold uppercase tracking-wide opacity-80">{item.label}</span>
+                     <span className="block text-sm font-bold">{item.value}</span>
+                   </div>
+                 ))}
+               </div>
+               <div className="mt-2 text-scale-2xs leading-relaxed text-surface-400">
+                 {t('restoreSandbox.safeToMerge')}: {restoreSandbox.restorePlan.safeToMerge ? t('common.yes') : t('common.no')} · {t('restoreSandbox.safeToReplace')}: {restoreSandbox.restorePlan.safeToReplace ? t('common.yes') : t('common.no')}
+               </div>
+             </div>
+             {restoreSandbox.restorePlan.blockingOperations.length > 0 && (
+               <div className="mt-3 rounded-lg border border-red-500/25 bg-red-500/10 p-2 text-red-100">
+                 <div className="mb-1 font-semibold">{t('restoreSandbox.blockingOperations')}</div>
+                 <div className="space-y-1">
+                   {restoreSandbox.restorePlan.blockingOperations.slice(0, 3).map(operation => (
+                     <div key={`${operation.type}-${operation.walletId}`} className="text-scale-2xs leading-relaxed">
+                       {operation.walletName}: {operation.reason}
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+            <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
+              <div className="mb-2 font-semibold text-surface-100">{t('restoreSandbox.healthBreakdown')}</div>
+              <div className="space-y-2">
+                {restoreSandbox.health.factors.map((factor) => (
+                  <div key={factor.key}>
+                    <div className="mb-1 flex items-center justify-between gap-2 text-scale-2xs font-semibold uppercase tracking-wide text-surface-400">
+                      <span>{factor.label}</span>
+                      <span>{factor.score}/{factor.max}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-surface-800">
+                      <div
+                        className={`h-full rounded-full ${factor.score / factor.max >= 0.75 ? 'bg-emerald-400' : factor.score / factor.max >= 0.5 ? 'bg-amber-400' : 'bg-red-400'}`}
+                        style={{ width: `${Math.max(4, Math.round((factor.score / factor.max) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
+              <div className="mb-2 font-semibold text-surface-100">{t('restoreSandbox.offlineDiff')}</div>
+              <div className="space-y-1.5">
+                {restoreSandbox.diff.items
+                  .filter(item => item.status !== 'unchanged')
+                  .slice(0, 6)
+                  .map((item) => (
+                    <div key={item.id} className="rounded-lg border border-white/10 bg-surface-900/50 px-2.5 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate font-semibold text-surface-100">{item.name || item.address || item.id}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-scale-2xs font-bold uppercase ${item.status === 'new_in_backup' ? 'bg-emerald-500/15 text-emerald-100' : item.status === 'missing_from_backup' ? 'bg-amber-500/15 text-amber-100' : 'bg-sky-500/15 text-sky-100'}`}>
+                          {t(`restoreSandbox.status_${item.status}`)}
+                        </span>
+                      </div>
+                      {item.changes.length > 0 && (
+                        <div className="mt-1 text-scale-2xs leading-relaxed text-surface-400">
+                          {item.changes.slice(0, 3).map(change => `${change.field}: ${change.currentLabel} → ${change.backupLabel}`).join(' · ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                {restoreSandbox.diff.items.filter(item => item.status !== 'unchanged').length === 0 && (
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-2 text-emerald-100">{t('restoreSandbox.noDiff')}</div>
+                )}
+              </div>
+            </div>
+            {restoreSandbox.warnings.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {restoreSandbox.warnings.map((warning, index) => (
+                  <div key={`${warning.code}-${index}`} className={`rounded-lg border px-2.5 py-2 ${warning.severity === 'critical' ? 'border-red-500/25 bg-red-500/10 text-red-100' : warning.severity === 'warning' ? 'border-amber-500/25 bg-amber-500/10 text-amber-100' : 'border-sky-500/25 bg-sky-500/10 text-sky-100'}`}>
+                    {t(warning.messageKey, warning.params) || warning.message}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button type="button" onClick={() => { onHapticTap(); onSaveRestoreReport(); }} className="mt-3 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 font-semibold text-surface-100 transition-colors hover:bg-surface-700">
+              {t('restoreSandbox.saveReport')}
+            </button>
+          </div>
+        )}
+
         {backupAnalysis && (
           <div className="mb-4 rounded-lg border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-surface-200">
             <div className="mb-3">
@@ -421,7 +547,7 @@ export default function BackupImportPasswordModal({
               className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-surface-200 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.copyVerificationReport')}</button>
           )}
           <button onClick={handleImportClick}
-            disabled={loading || backupPreview?.status === 'tampered' || (backupImportMode === 'replace' && !backupAnalysis)}
+            disabled={loading || backupPreview?.status === 'tampered' || !restoreSandbox?.canRestore || (backupImportMode === 'replace' && !backupAnalysis)}
             className="btn-glow btn-glow-success min-w-28 flex-1 whitespace-normal rounded-lg bg-brand-600 py-2.5 font-medium text-white transition-colors hover:bg-brand-500 disabled:opacity-50">{t('restore.button')}</button>
         </div>
       </div>

@@ -2,7 +2,6 @@ import { Clipboard, Timer, ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { CLIPBOARD_OPTIONS } from '../../../utils/clipboard';
 import { AUTOLOCK_OPTIONS } from '../securityTabUtils';
-import type { AutoLockPreset, BuiltInAutoLockPreset, ContextAutoLockSettings } from '../../../hooks/security/useAutoLock';
 import type { TFunction } from './types';
 
 type Props = {
@@ -11,22 +10,8 @@ type Props = {
   setShowAutoLock: (show: boolean) => void;
   showClipboard: boolean;
   setShowClipboard: (show: boolean) => void;
+  autoLockEnabled: boolean;
   currentAutoLockMs: number;
-  contextAutoLockPreset: AutoLockPreset;
-  contextAutoLockPresets: AutoLockPreset[];
-  presetSettings: Record<BuiltInAutoLockPreset, Omit<ContextAutoLockSettings, 'idleMs' | 'preset'>>;
-  saveContextAutoLockPreset: (preset: AutoLockPreset) => void;
-  contextBackgroundSeconds: string;
-  setContextBackgroundSeconds: (value: string) => void;
-  contextSwitchSeconds: string;
-  setContextSwitchSeconds: (value: string) => void;
-  contextRevealSeconds: string;
-  setContextRevealSeconds: (value: string) => void;
-  contextLockAfterCopy: boolean;
-  setContextLockAfterCopy: (value: boolean) => void;
-  contextScreenOffLock: boolean;
-  setContextScreenOffLock: (value: boolean) => void;
-  saveCustomContextAutoLock: () => void;
   currentClipboardMs: number;
   secretCopyDisabled: boolean;
   toggleSecretCopyDisabled: () => void;
@@ -34,6 +19,7 @@ type Props = {
   setCustomAutoLock: (value: string) => void;
   customClipboard: string;
   setCustomClipboard: (value: string) => void;
+  setAutoLockPreference: (enabled: boolean, ms?: number) => void;
   saveAutoLock: (ms: number | string) => void;
   saveCustomAutoLock: () => void;
   saveClipboard: (ms: number | string) => void;
@@ -42,6 +28,13 @@ type Props = {
   formatClipboardTimeout: (ms: number) => string;
   settingStatus: (text: ReactNode, active?: boolean) => ReactNode;
   onTap: () => void;
+  toggleSwitch: (
+    active: boolean,
+    onClick: () => void,
+    ariaLabel: string,
+    color?: string,
+    disabled?: boolean,
+  ) => ReactNode;
 };
 
 export function SecurityAutomationSection({
@@ -50,22 +43,8 @@ export function SecurityAutomationSection({
   setShowAutoLock,
   showClipboard,
   setShowClipboard,
+  autoLockEnabled,
   currentAutoLockMs,
-  contextAutoLockPreset,
-  contextAutoLockPresets,
-  presetSettings,
-  saveContextAutoLockPreset,
-  contextBackgroundSeconds,
-  setContextBackgroundSeconds,
-  contextSwitchSeconds,
-  setContextSwitchSeconds,
-  contextRevealSeconds,
-  setContextRevealSeconds,
-  contextLockAfterCopy,
-  setContextLockAfterCopy,
-  contextScreenOffLock,
-  setContextScreenOffLock,
-  saveCustomContextAutoLock,
   currentClipboardMs,
   secretCopyDisabled,
   toggleSecretCopyDisabled,
@@ -73,6 +52,7 @@ export function SecurityAutomationSection({
   setCustomAutoLock,
   customClipboard,
   setCustomClipboard,
+  setAutoLockPreference,
   saveAutoLock,
   saveCustomAutoLock,
   saveClipboard,
@@ -81,6 +61,7 @@ export function SecurityAutomationSection({
   formatClipboardTimeout,
   settingStatus,
   onTap,
+  toggleSwitch,
 }: Props) {
   return (
     <>
@@ -90,25 +71,37 @@ export function SecurityAutomationSection({
           <Timer size={16} className="text-surface-400" />
           <div className="min-w-0">
             <span className="block text-sm text-white">{t('settings.autoLock')}</span>
-            <span className="block truncate text-xs text-surface-500">{t('settings.autoLockSummary', { value: formatAutoLock(currentAutoLockMs) })}</span>
+            <span className="block truncate text-xs text-surface-500">
+              {autoLockEnabled
+                ? t('settings.autoLockSummary', { value: formatAutoLock(currentAutoLockMs) })
+                : t('settings.disabled')}
+            </span>
           </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2">
-          {settingStatus(formatAutoLock(currentAutoLockMs), true)}
+          {settingStatus(autoLockEnabled ? formatAutoLock(currentAutoLockMs) : t('settings.disabled'), autoLockEnabled)}
           <ChevronDown size={16} className={`text-surface-500 transition-transform ${showAutoLock ? 'rotate-180' : ''}`} />
+          {toggleSwitch(
+            autoLockEnabled,
+            () => setAutoLockPreference(!autoLockEnabled),
+            t('settings.autoLock'),
+            'bg-brand-500',
+          )}
         </div>
       </button>
       {showAutoLock && (
         <div className="px-4 py-3 border-b border-surface-700/30 space-y-2">
           <div className="flex items-center justify-between rounded-xl border border-surface-700/60 bg-surface-900/70 px-3 py-2">
             <span className="text-xs text-surface-400">{t('settings.autoLockCurrent')}</span>
-            <span className="text-sm font-semibold text-brand-300">{formatAutoLock(currentAutoLockMs)}</span>
+              <span className="text-sm font-semibold text-brand-300">
+                {autoLockEnabled ? formatAutoLock(currentAutoLockMs) : t('settings.disabled')}
+              </span>
           </div>
           <p className="text-xs leading-relaxed text-surface-400">{t('settings.autoLockDesc')}</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {AUTOLOCK_OPTIONS.map(opt => (
               <button key={opt.value} onClick={() => saveAutoLock(opt.value)}
-                className={`btn-glow px-4 py-2 text-xs rounded-lg transition-colors ${currentAutoLockMs === opt.value ? 'bg-brand-500/20 text-brand-200 border border-brand-500/50' : 'bg-surface-800 hover:bg-surface-700 text-surface-300 border border-transparent'}`}>
+                  className={`btn-glow px-4 py-2 text-xs rounded-lg transition-colors ${autoLockEnabled && currentAutoLockMs === opt.value ? 'bg-brand-500/20 text-brand-200 border border-brand-500/50' : 'bg-surface-800 hover:bg-surface-700 text-surface-300 border border-transparent'}`}>
                 {opt.label}
               </button>
             ))}
@@ -122,125 +115,20 @@ export function SecurityAutomationSection({
               className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
           </div>
 
-          <div className="rounded-xl border border-surface-700/60 bg-surface-950/40 p-3">
-            <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="rounded-xl border border-brand-500/20 bg-brand-500/10 p-3">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold text-white">{t('settings.contextAutoLockTitle')}</p>
-                <p className="text-xs leading-relaxed text-surface-400">{t('settings.contextAutoLockDesc')}</p>
+                <p className="text-xs font-semibold text-brand-100">{t('settings.contextAutoLockTitle')}</p>
+                <p className="mt-1 text-xs leading-relaxed text-brand-100/75">
+                  {autoLockEnabled
+                    ? t('settings.autoLockSummary', { value: formatAutoLock(currentAutoLockMs) })
+                    : t('settings.disabled')}
+                </p>
+                <p className="mt-2 text-[0.65rem] leading-relaxed text-surface-400">
+                  {t('settings.contextAutoLockDesc')}
+                </p>
               </div>
-              {settingStatus(contextAutoLockPreset, true)}
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {contextAutoLockPresets.map(preset => {
-                const isCustom = preset === 'custom';
-                const policy = isCustom ? null : presetSettings[preset];
-                return (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => saveContextAutoLockPreset(preset)}
-                    className={`rounded-lg border p-2 text-left transition-colors ${
-                      contextAutoLockPreset === preset
-                        ? 'border-brand-500/60 bg-brand-500/15 text-brand-100'
-                        : 'border-surface-700 bg-surface-900 text-surface-300 hover:bg-surface-800'
-                    }`}
-                  >
-                    <span className="block text-xs font-bold">{t(`settings.contextAutoLockPreset_${preset}`)}</span>
-                    {policy ? (
-                      <>
-                        <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-400">
-                          {t('settings.contextAutoLockPresetSummary', {
-                            background: formatAutoLock(policy.backgroundMs),
-                            switchTime: formatAutoLock(policy.blurMs),
-                            reveal: formatAutoLock(policy.afterRevealMs),
-                          })}
-                        </span>
-                        <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-500">
-                          {t('settings.contextAutoLockPresetFlags', {
-                            copy: policy.lockAfterSecretCopy ? t('settings.on') : t('settings.off'),
-                            screen: policy.screenOffLock ? t('settings.on') : t('settings.off'),
-                          })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-400">
-                        {t('settings.contextAutoLockCustomDesc')}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-3 rounded-xl border border-surface-700/60 bg-surface-900/60 p-3">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-white">{t('settings.contextAutoLockCustomTitle')}</p>
-                  <p className="text-[0.65rem] leading-relaxed text-surface-400">{t('settings.contextAutoLockCustomHelp')}</p>
-                </div>
-                {settingStatus(t('settings.advanced'), contextAutoLockPreset === 'custom')}
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
-                  {t('settings.contextAutoLockBackground')}
-                  <input
-                    type="number"
-                    value={contextBackgroundSeconds}
-                    onChange={e => setContextBackgroundSeconds(e.target.value)}
-                    min="0"
-                    max="86400"
-                    inputMode="numeric"
-                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
-                  />
-                </label>
-                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
-                  {t('settings.contextAutoLockAppSwitch')}
-                  <input
-                    type="number"
-                    value={contextSwitchSeconds}
-                    onChange={e => setContextSwitchSeconds(e.target.value)}
-                    min="0"
-                    max="86400"
-                    inputMode="numeric"
-                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
-                  />
-                </label>
-                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
-                  {t('settings.contextAutoLockAfterReveal')}
-                  <input
-                    type="number"
-                    value={contextRevealSeconds}
-                    onChange={e => setContextRevealSeconds(e.target.value)}
-                    min="0"
-                    max="86400"
-                    inputMode="numeric"
-                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
-                  />
-                </label>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setContextLockAfterCopy(!contextLockAfterCopy)}
-                  className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${contextLockAfterCopy ? 'border-brand-500/60 bg-brand-500/15 text-brand-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
-                >
-                  {t('settings.contextAutoLockCopyToggle', { state: contextLockAfterCopy ? t('settings.on') : t('settings.off') })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContextScreenOffLock(!contextScreenOffLock)}
-                  className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${contextScreenOffLock ? 'border-brand-500/60 bg-brand-500/15 text-brand-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
-                >
-                  {t('settings.contextAutoLockScreenOffToggle', { state: contextScreenOffLock ? t('settings.on') : t('settings.off') })}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={saveCustomContextAutoLock}
-                className="btn-glow mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white"
-              >
-                {t('settings.contextAutoLockSaveCustom')}
-              </button>
+              {settingStatus(autoLockEnabled ? t('settings.enabled') : t('settings.disabled'), autoLockEnabled)}
             </div>
           </div>
         </div>
@@ -258,6 +146,12 @@ export function SecurityAutomationSection({
         <div className="flex flex-shrink-0 items-center gap-2">
           {settingStatus(formatClipboardTimeout(currentClipboardMs), currentClipboardMs > 0)}
           <ChevronDown size={16} className={`text-surface-500 transition-transform ${showClipboard ? 'rotate-180' : ''}`} />
+          {toggleSwitch(
+            currentClipboardMs > 0,
+            () => saveClipboard(currentClipboardMs > 0 ? 0 : 30 * 1000),
+            t('settings.clipboardClear'),
+            'bg-emerald-500',
+          )}
         </div>
       </button>
       {showClipboard && (
@@ -283,19 +177,18 @@ export function SecurityAutomationSection({
             <button onClick={saveCustomClipboard}
               className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
           </div>
-          <button
-            type="button"
-            onClick={toggleSecretCopyDisabled}
-            className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${secretCopyDisabled ? 'border-red-500/40 bg-red-500/10' : 'border-surface-700/60 bg-surface-900/70 hover:bg-surface-800'}`}
-          >
+          <div className={`rounded-xl border px-3 py-2 transition-colors ${secretCopyDisabled ? 'border-red-500/40 bg-red-500/10' : 'border-surface-700/60 bg-surface-900/70 hover:bg-surface-800'}`}>
             <span className="flex items-center justify-between gap-3">
-              <span>
+              <button type="button" onClick={toggleSecretCopyDisabled} className="min-w-0 text-left">
                 <span className="block text-xs font-semibold text-white">{t('settings.disableSecretCopy')}</span>
                 <span className="block text-xs text-surface-400">{t('settings.disableSecretCopyDesc')}</span>
+              </button>
+              <span className="flex flex-shrink-0 items-center gap-2">
+                {settingStatus(secretCopyDisabled ? t('settings.enabled') : t('settings.disabled'), secretCopyDisabled)}
+                {toggleSwitch(secretCopyDisabled, toggleSecretCopyDisabled, t('settings.disableSecretCopy'), 'bg-red-500')}
               </span>
-              {settingStatus(secretCopyDisabled ? t('settings.enabled') : t('settings.disabled'), secretCopyDisabled)}
             </span>
-          </button>
+          </div>
         </div>
       )}
     </>

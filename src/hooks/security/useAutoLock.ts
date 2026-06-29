@@ -4,6 +4,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { appendAuditLog } from '../../utils/auditLog';
 
 const AUTOLOCK_KEY = 'xkey_autolock_ms';
+const AUTOLOCK_ENABLED_KEY = 'xkey_autolock_enabled';
 const DEFAULT_MS = 5 * 60 * 1000; // 5 minutes
 const AUTOLOCK_SETTINGS_CHANGED_EVENT = 'xkey-autolock-settings-changed';
 const APP_ACTIVITY_EVENT = 'xkey-app-activity';
@@ -23,6 +24,7 @@ type BuiltInAutoLockPreset = Exclude<AutoLockPreset, 'custom'>;
 type LockReason = 'idle' | 'background' | 'blur' | 'afterReveal' | 'afterSecretCopy' | 'screenOff';
 
 type ContextAutoLockSettings = {
+  enabled: boolean;
   idleMs: number;
   backgroundMs: number;
   blurMs: number;
@@ -32,7 +34,7 @@ type ContextAutoLockSettings = {
   preset: AutoLockPreset;
 };
 
-const PRESET_SETTINGS: Record<BuiltInAutoLockPreset, Omit<ContextAutoLockSettings, 'idleMs' | 'preset'>> = {
+const PRESET_SETTINGS: Record<BuiltInAutoLockPreset, Omit<ContextAutoLockSettings, 'enabled' | 'idleMs' | 'preset'>> = {
   balanced: {
     backgroundMs: 30 * 1000,
     blurMs: 15 * 1000,
@@ -77,12 +79,16 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onLockRef = useRef(onLock);
   const settingsRef = useRef<ContextAutoLockSettings>({
+    enabled: false,
     idleMs: DEFAULT_MS,
     preset: DEFAULT_PRESET,
     ...PRESET_SETTINGS[DEFAULT_PRESET],
+    lockAfterSecretCopy: false,
+    screenOffLock: false,
   });
   const backgroundAtRef = useRef(0);
   const blurAtRef = useRef(0);
+  const contextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lockedRef = useRef(false);
   onLockRef.current = onLock;
 
@@ -100,11 +106,19 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     }
   }, []);
 
+  const clearContextTimer = useCallback(() => {
+    if (contextTimerRef.current) {
+      clearTimeout(contextTimerRef.current);
+      contextTimerRef.current = null;
+    }
+  }, []);
+
   const lockNow = useCallback((reason: LockReason) => {
     if (!enabled || lockedRef.current) return;
     lockedRef.current = true;
     clearIdleTimer();
     clearRevealTimer();
+    clearContextTimer();
     window.dispatchEvent(new CustomEvent('xkey-autolock-fired', { detail: { reason } }));
     void appendAuditLog('app.auto_lock', {
       reason,
@@ -117,11 +131,12 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
       screenOffLock: settingsRef.current.screenOffLock,
     });
     onLockRef.current();
-  }, [clearIdleTimer, clearRevealTimer, enabled]);
+  }, [clearContextTimer, clearIdleTimer, clearRevealTimer, enabled]);
 
   const loadSettings = useCallback(async () => {
     try {
       const [
+        { value: enabledValue },
         { value: idleValue },
         { value: presetValue },
         { value: backgroundValue },
@@ -130,6 +145,7 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
         { value: copyValue },
         { value: screenOffValue },
       ] = await Promise.all([
+        Preferences.get({ key: AUTOLOCK_ENABLED_KEY }),
         Preferences.get({ key: AUTOLOCK_KEY }),
         Preferences.get({ key: AUTOLOCK_PRESET_KEY }),
         Preferences.get({ key: AUTOLOCK_BACKGROUND_KEY }),
@@ -139,49 +155,61 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
         Preferences.get({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY }),
       ]);
 
+      const autolockEnabled = enabledValue === 'true';
       const preset = parsePreset(presetValue);
-      const presetDefaults = preset === 'custom' ? PRESET_SETTINGS[DEFAULT_PRESET] : PRESET_SETTINGS[preset];
+      const idleMs = parseStoredMs(idleValue, DEFAULT_MS, 60 * 1000);
+      const isHighSecurityPreset = preset === 'strict' || preset === 'paranoid';
+      const presetDefaults = isHighSecurityPreset ? PRESET_SETTINGS[preset] : PRESET_SETTINGS[DEFAULT_PRESET];
+      const unifiedMs = idleMs;
+
       settingsRef.current = {
-        idleMs: parseStoredMs(idleValue, DEFAULT_MS, 60 * 1000),
+        enabled: autolockEnabled,
+        idleMs,
         preset,
-        backgroundMs: parseStoredMs(backgroundValue, presetDefaults.backgroundMs),
-        blurMs: parseStoredMs(blurValue, presetDefaults.blurMs),
-        afterRevealMs: parseStoredMs(afterRevealValue, presetDefaults.afterRevealMs),
-        lockAfterSecretCopy: copyValue === null ? presetDefaults.lockAfterSecretCopy : copyValue === 'true',
-        screenOffLock: screenOffValue === null ? presetDefaults.screenOffLock : screenOffValue === 'true',
+        backgroundMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(backgroundValue, presetDefaults.backgroundMs) : unifiedMs,
+        blurMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(blurValue, presetDefaults.blurMs) : unifiedMs,
+        afterRevealMs: autolockEnabled && isHighSecurityPreset ? parseStoredMs(afterRevealValue, presetDefaults.afterRevealMs) : unifiedMs,
+        lockAfterSecretCopy: autolockEnabled && isHighSecurityPreset && (copyValue === null ? presetDefaults.lockAfterSecretCopy : copyValue === 'true'),
+        screenOffLock: autolockEnabled && isHighSecurityPreset && (screenOffValue === null ? presetDefaults.screenOffLock : screenOffValue === 'true'),
       };
     } catch {
       settingsRef.current = {
+        enabled: false,
         idleMs: DEFAULT_MS,
         preset: DEFAULT_PRESET,
         ...PRESET_SETTINGS[DEFAULT_PRESET],
+        lockAfterSecretCopy: false,
+        screenOffLock: false,
       };
     }
   }, []);
 
   const resetTimer = useCallback(() => {
     lockedRef.current = false;
+    clearContextTimer();
     clearIdleTimer();
-    if (enabled) {
+    if (enabled && settingsRef.current.enabled) {
       idleTimerRef.current = setTimeout(() => lockNow('idle'), settingsRef.current.idleMs);
     }
-  }, [clearIdleTimer, enabled, lockNow]);
+  }, [clearContextTimer, clearIdleTimer, enabled, lockNow]);
 
   const scheduleContextLock = useCallback((reason: LockReason, ms: number) => {
-    if (!enabled) return;
+    if (!enabled || !settingsRef.current.enabled) return;
     if (ms <= 0) {
       lockNow(reason);
       return;
     }
+    clearContextTimer();
     clearIdleTimer();
-    idleTimerRef.current = setTimeout(() => lockNow(reason), ms);
-  }, [clearIdleTimer, enabled, lockNow]);
+    contextTimerRef.current = setTimeout(() => lockNow(reason), ms);
+  }, [clearContextTimer, clearIdleTimer, enabled, lockNow]);
 
   useEffect(() => {
     if (!enabled) {
       lockedRef.current = false;
       clearIdleTimer();
       clearRevealTimer();
+      clearContextTimer();
       return undefined;
     }
 
@@ -196,6 +224,7 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     };
 
     const handleVisibilityChange = () => {
+      if (!settingsRef.current.enabled) return;
       if (document.visibilityState === 'hidden') {
         blurAtRef.current = Date.now();
         scheduleContextLock('blur', settingsRef.current.blurMs);
@@ -212,11 +241,13 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     };
 
     const handleBlur = () => {
+      if (!settingsRef.current.enabled) return;
       blurAtRef.current = Date.now();
       scheduleContextLock('blur', settingsRef.current.blurMs);
     };
 
     const handleFocus = () => {
+      if (!settingsRef.current.enabled) return;
       const blurredAt = blurAtRef.current;
       blurAtRef.current = 0;
       if (blurredAt && Date.now() - blurredAt >= settingsRef.current.blurMs) {
@@ -227,6 +258,7 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     };
 
     const handleSecretRevealed = () => {
+      if (!settingsRef.current.enabled) return;
       clearRevealTimer();
       const revealMs = settingsRef.current.afterRevealMs;
       if (revealMs <= 0) {
@@ -237,7 +269,9 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     };
 
     const handleSecretCopied = () => {
+      if (!settingsRef.current.enabled) return;
       if (settingsRef.current.lockAfterSecretCopy) lockNow('afterSecretCopy');
+      else resetTimer();
     };
 
     events.forEach(e => window.addEventListener(e, handleActivity, { passive: true }));
@@ -251,6 +285,7 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
 
     const appStateListener = CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
       if (!isActive) {
+        if (!settingsRef.current.enabled) return;
         backgroundAtRef.current = Date.now();
         const reason: LockReason = settingsRef.current.screenOffLock ? 'screenOff' : 'background';
         scheduleContextLock(reason, settingsRef.current.backgroundMs);
@@ -272,6 +307,7 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
     return () => {
       clearIdleTimer();
       clearRevealTimer();
+      clearContextTimer();
       events.forEach(e => window.removeEventListener(e, handleActivity));
       window.removeEventListener(APP_ACTIVITY_EVENT, handleActivity);
       window.removeEventListener(AUTOLOCK_SETTINGS_CHANGED_EVENT, reloadSettings);
@@ -282,11 +318,12 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       appStateListener.then(listener => listener.remove());
     };
-  }, [clearIdleTimer, clearRevealTimer, enabled, loadSettings, lockNow, resetTimer, scheduleContextLock]);
+  }, [clearContextTimer, clearIdleTimer, clearRevealTimer, enabled, loadSettings, lockNow, resetTimer, scheduleContextLock]);
 }
 
 export {
   AUTOLOCK_KEY,
+  AUTOLOCK_ENABLED_KEY,
   DEFAULT_MS,
   AUTOLOCK_SETTINGS_CHANGED_EVENT,
   APP_ACTIVITY_EVENT,

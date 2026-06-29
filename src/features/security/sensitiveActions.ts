@@ -5,6 +5,7 @@ import { requireSensitivePin } from './sensitivePin';
 export type SensitiveAction =
   | 'backup.export'
   | 'backup.import_replace'
+  | 'backup.import_override_sandbox'
   | 'secret.reveal'
   | 'vault.delete'
   | 'shamir.create_shares'
