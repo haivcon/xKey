@@ -23,6 +23,7 @@ import VanityScoreBadge from '../vanity/VanityScoreBadge';
 import { shouldShowVanityScore } from '../../utils/vanity/vanityScoreGrade';
 import type { SecretKind } from '../../utils/dataSensitivity';
 import { detectSecretInText, getSecretPlacementWarning } from '../../utils/secretDetection';
+import { SECRET_COPIED_EVENT, SECRET_REVEALED_EVENT } from '../../hooks/security/useAutoLock';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -39,6 +40,14 @@ const NETWORK_COLORS: Record<string, NetworkColor> = {
 };
 
 const NETWORK_KEYS = Object.keys(NETWORK_COLORS);
+
+const notifySecretRevealed = (kind: 'privateKey' | 'seedPhrase' | 'sensitiveNote') => {
+  window.dispatchEvent(new CustomEvent(SECRET_REVEALED_EVENT, { detail: { kind } }));
+};
+
+const notifySecretCopied = (kind: 'privateKey' | 'seedPhrase' | 'sensitiveNote') => {
+  window.dispatchEvent(new CustomEvent(SECRET_COPIED_EVENT, { detail: { kind } }));
+};
 
 export { NETWORK_COLORS, NETWORK_KEYS };
 
@@ -161,6 +170,13 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
     if (field === 'pk' || field === 'seed') {
       appendAuditLog('wallet.secret_copied', { wallet: walletName, field }).catch(() => {});
+      notifySecretCopied(field === 'pk' ? 'privateKey' : 'seedPhrase');
+      showToast(`${brandReminders ? `${XKEY_SLOGAN}\n` : ''}${t('walletCard.secretCopiedSafety', { field: label, wallet: walletName })}`, 'warning');
+      return;
+    }
+    if (field === 'sensitive-note') {
+      appendAuditLog('wallet.secret_copied', { wallet: walletName, field: 'sensitiveNote' }).catch(() => {});
+      notifySecretCopied('sensitiveNote');
       showToast(`${brandReminders ? `${XKEY_SLOGAN}\n` : ''}${t('walletCard.secretCopiedSafety', { field: label, wallet: walletName })}`, 'warning');
       return;
     }
@@ -171,10 +187,12 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const executeSensitiveAction = (actionType: SensitiveAction) => {
     if (actionType === 'pk') {
       appendAuditLog('wallet.secret_revealed', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
+      if (!showPk) notifySecretRevealed('privateKey');
       setShowPk(!showPk);
     }
     else if (actionType === 'seed') {
       appendAuditLog('wallet.secret_revealed', { wallet: wallet.name || t('walletCard.unnamed'), field: 'seedPhrase' }).catch(() => {});
+      if (!showSeed) notifySecretRevealed('seedPhrase');
       setShowSeed(!showSeed);
     }
     else if (actionType === 'qr_pk') {
@@ -185,6 +203,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
     else if (actionType === 'sensitive_note') {
       appendAuditLog('wallet.sensitive_note_revealed', { wallet: wallet.name || t('walletCard.unnamed') }).catch(() => {});
+      if (!showSensitiveNotes) notifySecretRevealed('sensitiveNote');
       setShowSensitiveNotes(!showSensitiveNotes);
     }
     else if (actionType === 'copy_sensitive_note') handleCopy(wallet.sensitiveNotes, 'sensitive-note', t('walletCard.sensitiveNote'), { kind: 'sensitiveNote' });

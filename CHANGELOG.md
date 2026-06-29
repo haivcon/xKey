@@ -2,6 +2,19 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.10] - 2026-06-29
+
+### Release Notes
+
+- Added context-aware auto-lock presets, custom trigger timing, copy/screen-off lock controls, audit metadata, and localized security settings.
+
+### Release Metadata
+
+- `package.json`: `6.0.10`
+- `package-lock.json`: `6.0.10`
+- Android `versionName`: `6.0.10`
+- Android `versionCode`: `108`
+
 ## [6.0.9] - 2026-06-29
 
 ### Release Notes

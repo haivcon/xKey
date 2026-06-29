@@ -5,7 +5,21 @@ import { useToast } from '../../../contexts/ToastContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useT } from '../../../contexts/LanguageContext';
 import { useMasterPassword } from '../../../contexts/MasterPasswordContext';
-import { AUTOLOCK_KEY, DEFAULT_MS, AUTOLOCK_SETTINGS_CHANGED_EVENT } from '../../../hooks/security/useAutoLock';
+import {
+  AUTOLOCK_AFTER_REVEAL_KEY,
+  AUTOLOCK_BACKGROUND_KEY,
+  AUTOLOCK_BLUR_KEY,
+  AUTOLOCK_KEY,
+  AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY,
+  AUTOLOCK_PRESET_KEY,
+  AUTOLOCK_SCREEN_OFF_LOCK_KEY,
+  AUTOLOCK_SETTINGS_CHANGED_EVENT,
+  CONTEXT_AUTOLOCK_PRESETS,
+  DEFAULT_MS,
+  PRESET_SETTINGS,
+  type AutoLockPreset,
+  type BuiltInAutoLockPreset,
+} from '../../../hooks/security/useAutoLock';
 import {
   requestMotionPermission,
   SHAKE_SETTINGS_CHANGED_EVENT,
@@ -56,6 +70,12 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [showMasterPasswordDetails, setShowMasterPasswordDetails] = useState(false);
   const [showScreenCapture, setShowScreenCapture] = useState(false);
   const [currentAutoLockMs, setCurrentAutoLockMs] = useState(DEFAULT_MS);
+  const [contextAutoLockPreset, setContextAutoLockPreset] = useState<AutoLockPreset>('balanced');
+  const [contextBackgroundSeconds, setContextBackgroundSeconds] = useState('30');
+  const [contextSwitchSeconds, setContextSwitchSeconds] = useState('15');
+  const [contextRevealSeconds, setContextRevealSeconds] = useState('30');
+  const [contextLockAfterCopy, setContextLockAfterCopy] = useState(false);
+  const [contextScreenOffLock, setContextScreenOffLock] = useState(true);
   const [currentClipboardMs, setCurrentClipboardMs] = useState(30000);
   const [secretCopyDisabled, setSecretCopyDisabled] = useState(false);
   const [customAutoLock, setCustomAutoLock] = useState('');
@@ -130,6 +150,31 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       const { value: autoLockMs } = await Preferences.get({ key: AUTOLOCK_KEY });
       const ms = parseStoredInt(autoLockMs);
       setCurrentAutoLockMs(Number.isFinite(ms) && ms > 0 ? ms : DEFAULT_MS);
+      const [
+        { value: presetValue },
+        { value: backgroundMs },
+        { value: blurMs },
+        { value: revealMs },
+        { value: lockAfterCopy },
+        { value: screenOffLock },
+      ] = await Promise.all([
+        Preferences.get({ key: AUTOLOCK_PRESET_KEY }),
+        Preferences.get({ key: AUTOLOCK_BACKGROUND_KEY }),
+        Preferences.get({ key: AUTOLOCK_BLUR_KEY }),
+        Preferences.get({ key: AUTOLOCK_AFTER_REVEAL_KEY }),
+        Preferences.get({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY }),
+        Preferences.get({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY }),
+      ]);
+      const safePreset: AutoLockPreset = presetValue === 'strict' || presetValue === 'paranoid' || presetValue === 'balanced' || presetValue === 'custom'
+        ? presetValue
+        : 'balanced';
+      const presetDefaults = safePreset === 'custom' ? PRESET_SETTINGS.balanced : PRESET_SETTINGS[safePreset];
+      setContextAutoLockPreset(safePreset);
+      setContextBackgroundSeconds(String(Math.round((parseStoredInt(backgroundMs) || presetDefaults.backgroundMs) / 1000)));
+      setContextSwitchSeconds(String(Math.round((parseStoredInt(blurMs) || presetDefaults.blurMs) / 1000)));
+      setContextRevealSeconds(String(Math.round((parseStoredInt(revealMs) || presetDefaults.afterRevealMs) / 1000)));
+      setContextLockAfterCopy(lockAfterCopy === null ? presetDefaults.lockAfterSecretCopy : lockAfterCopy === 'true');
+      setContextScreenOffLock(screenOffLock === null ? presetDefaults.screenOffLock : screenOffLock === 'true');
       const { value: clipboardMs } = await Preferences.get({ key: CLIPBOARD_TIMEOUT_KEY });
       const clipboardTimeout = parseStoredInt(clipboardMs);
       setCurrentClipboardMs(Number.isFinite(clipboardTimeout) && clipboardTimeout >= 0 ? clipboardTimeout : 30000);
@@ -167,16 +212,78 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     await Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: next ? 'true' : 'false' });
     setSecretCopyDisabled(next);
     showToast(
-      next ? 'High security mode enabled: private keys, seed phrases and sensitive notes can only be revealed, not copied.' : 'Secret copy is enabled again.',
+      next ? t('settings.secretCopyDisabledToast') : t('settings.secretCopyEnabledToast'),
       'success',
     );
   };
 
   const formatAutoLock = (ms: number) => {
+    if (ms <= 0) return t('settings.immediately');
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) return `${seconds} s`;
     const minutes = Math.round(ms / 60000);
     if (minutes < 60) return `${minutes} ${t('settings.autoLockMinutes')}`;
     const hours = minutes / 60;
     return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
+  };
+
+  const saveContextAutoLockPreset = async (preset: AutoLockPreset) => {
+    const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
+    if (!ok) return;
+    hapticTap();
+
+    if (preset === 'custom') {
+      await Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: preset });
+    } else {
+      const policy = PRESET_SETTINGS[preset as BuiltInAutoLockPreset];
+      await Promise.all([
+        Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: preset }),
+        Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(policy.backgroundMs) }),
+        Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(policy.blurMs) }),
+        Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(policy.afterRevealMs) }),
+        Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: policy.lockAfterSecretCopy ? 'true' : 'false' }),
+        Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: policy.screenOffLock ? 'true' : 'false' }),
+      ]);
+    }
+
+    if (preset !== 'custom') {
+      const policy = PRESET_SETTINGS[preset as BuiltInAutoLockPreset];
+      setContextBackgroundSeconds(String(Math.round(policy.backgroundMs / 1000)));
+      setContextSwitchSeconds(String(Math.round(policy.blurMs / 1000)));
+      setContextRevealSeconds(String(Math.round(policy.afterRevealMs / 1000)));
+      setContextLockAfterCopy(policy.lockAfterSecretCopy);
+      setContextScreenOffLock(policy.screenOffLock);
+    }
+
+    setContextAutoLockPreset(preset);
+    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
+    showToast(t('settings.contextAutoLockPresetSaved', { preset: t(`settings.contextAutoLockPreset_${preset}`) }), 'success');
+  };
+
+  const saveCustomContextAutoLock = async () => {
+    const backgroundMs = Number.parseInt(contextBackgroundSeconds, 10) * 1000;
+    const blurMs = Number.parseInt(contextSwitchSeconds, 10) * 1000;
+    const afterRevealMs = Number.parseInt(contextRevealSeconds, 10) * 1000;
+    const validMs = [backgroundMs, blurMs, afterRevealMs].every(ms => Number.isFinite(ms) && ms >= 0 && ms <= 24 * 60 * 60 * 1000);
+    if (!validMs) {
+      showToast(t('settings.autoLockRangeError'), 'warning');
+      return;
+    }
+
+    const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
+    if (!ok) return;
+    hapticTap();
+    await Promise.all([
+      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'custom' }),
+      Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(backgroundMs) }),
+      Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(blurMs) }),
+      Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(afterRevealMs) }),
+      Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: contextLockAfterCopy ? 'true' : 'false' }),
+      Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: contextScreenOffLock ? 'true' : 'false' }),
+    ]);
+    setContextAutoLockPreset('custom');
+    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
+    showToast(t('settings.contextAutoLockCustomSaved'), 'success');
   };
 
   const saveClipboard = async (ms: number | string) => {
@@ -603,6 +710,21 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           showClipboard={showClipboard}
           setShowClipboard={setShowClipboard}
           currentAutoLockMs={currentAutoLockMs}
+          contextAutoLockPreset={contextAutoLockPreset}
+          contextAutoLockPresets={CONTEXT_AUTOLOCK_PRESETS}
+          presetSettings={PRESET_SETTINGS}
+          saveContextAutoLockPreset={saveContextAutoLockPreset}
+          contextBackgroundSeconds={contextBackgroundSeconds}
+          setContextBackgroundSeconds={setContextBackgroundSeconds}
+          contextSwitchSeconds={contextSwitchSeconds}
+          setContextSwitchSeconds={setContextSwitchSeconds}
+          contextRevealSeconds={contextRevealSeconds}
+          setContextRevealSeconds={setContextRevealSeconds}
+          contextLockAfterCopy={contextLockAfterCopy}
+          setContextLockAfterCopy={setContextLockAfterCopy}
+          contextScreenOffLock={contextScreenOffLock}
+          setContextScreenOffLock={setContextScreenOffLock}
+          saveCustomContextAutoLock={saveCustomContextAutoLock}
           currentClipboardMs={currentClipboardMs}
           secretCopyDisabled={secretCopyDisabled}
           toggleSecretCopyDisabled={toggleSecretCopyDisabled}

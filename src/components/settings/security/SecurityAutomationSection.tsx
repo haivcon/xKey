@@ -2,6 +2,7 @@ import { Clipboard, Timer, ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { CLIPBOARD_OPTIONS } from '../../../utils/clipboard';
 import { AUTOLOCK_OPTIONS } from '../securityTabUtils';
+import type { AutoLockPreset, BuiltInAutoLockPreset, ContextAutoLockSettings } from '../../../hooks/security/useAutoLock';
 import type { TFunction } from './types';
 
 type Props = {
@@ -11,6 +12,21 @@ type Props = {
   showClipboard: boolean;
   setShowClipboard: (show: boolean) => void;
   currentAutoLockMs: number;
+  contextAutoLockPreset: AutoLockPreset;
+  contextAutoLockPresets: AutoLockPreset[];
+  presetSettings: Record<BuiltInAutoLockPreset, Omit<ContextAutoLockSettings, 'idleMs' | 'preset'>>;
+  saveContextAutoLockPreset: (preset: AutoLockPreset) => void;
+  contextBackgroundSeconds: string;
+  setContextBackgroundSeconds: (value: string) => void;
+  contextSwitchSeconds: string;
+  setContextSwitchSeconds: (value: string) => void;
+  contextRevealSeconds: string;
+  setContextRevealSeconds: (value: string) => void;
+  contextLockAfterCopy: boolean;
+  setContextLockAfterCopy: (value: boolean) => void;
+  contextScreenOffLock: boolean;
+  setContextScreenOffLock: (value: boolean) => void;
+  saveCustomContextAutoLock: () => void;
   currentClipboardMs: number;
   secretCopyDisabled: boolean;
   toggleSecretCopyDisabled: () => void;
@@ -35,6 +51,21 @@ export function SecurityAutomationSection({
   showClipboard,
   setShowClipboard,
   currentAutoLockMs,
+  contextAutoLockPreset,
+  contextAutoLockPresets,
+  presetSettings,
+  saveContextAutoLockPreset,
+  contextBackgroundSeconds,
+  setContextBackgroundSeconds,
+  contextSwitchSeconds,
+  setContextSwitchSeconds,
+  contextRevealSeconds,
+  setContextRevealSeconds,
+  contextLockAfterCopy,
+  setContextLockAfterCopy,
+  contextScreenOffLock,
+  setContextScreenOffLock,
+  saveCustomContextAutoLock,
   currentClipboardMs,
   secretCopyDisabled,
   toggleSecretCopyDisabled,
@@ -90,6 +121,128 @@ export function SecurityAutomationSection({
             <button onClick={saveCustomAutoLock}
               className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
           </div>
+
+          <div className="rounded-xl border border-surface-700/60 bg-surface-950/40 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-white">{t('settings.contextAutoLockTitle')}</p>
+                <p className="text-xs leading-relaxed text-surface-400">{t('settings.contextAutoLockDesc')}</p>
+              </div>
+              {settingStatus(contextAutoLockPreset, true)}
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {contextAutoLockPresets.map(preset => {
+                const isCustom = preset === 'custom';
+                const policy = isCustom ? null : presetSettings[preset];
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => saveContextAutoLockPreset(preset)}
+                    className={`rounded-lg border p-2 text-left transition-colors ${
+                      contextAutoLockPreset === preset
+                        ? 'border-brand-500/60 bg-brand-500/15 text-brand-100'
+                        : 'border-surface-700 bg-surface-900 text-surface-300 hover:bg-surface-800'
+                    }`}
+                  >
+                    <span className="block text-xs font-bold">{t(`settings.contextAutoLockPreset_${preset}`)}</span>
+                    {policy ? (
+                      <>
+                        <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-400">
+                          {t('settings.contextAutoLockPresetSummary', {
+                            background: formatAutoLock(policy.backgroundMs),
+                            switchTime: formatAutoLock(policy.blurMs),
+                            reveal: formatAutoLock(policy.afterRevealMs),
+                          })}
+                        </span>
+                        <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-500">
+                          {t('settings.contextAutoLockPresetFlags', {
+                            copy: policy.lockAfterSecretCopy ? t('settings.on') : t('settings.off'),
+                            screen: policy.screenOffLock ? t('settings.on') : t('settings.off'),
+                          })}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="mt-1 block text-[0.65rem] leading-relaxed text-surface-400">
+                        {t('settings.contextAutoLockCustomDesc')}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 rounded-xl border border-surface-700/60 bg-surface-900/60 p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-white">{t('settings.contextAutoLockCustomTitle')}</p>
+                  <p className="text-[0.65rem] leading-relaxed text-surface-400">{t('settings.contextAutoLockCustomHelp')}</p>
+                </div>
+                {settingStatus(t('settings.advanced'), contextAutoLockPreset === 'custom')}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
+                  {t('settings.contextAutoLockBackground')}
+                  <input
+                    type="number"
+                    value={contextBackgroundSeconds}
+                    onChange={e => setContextBackgroundSeconds(e.target.value)}
+                    min="0"
+                    max="86400"
+                    inputMode="numeric"
+                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
+                  {t('settings.contextAutoLockAppSwitch')}
+                  <input
+                    type="number"
+                    value={contextSwitchSeconds}
+                    onChange={e => setContextSwitchSeconds(e.target.value)}
+                    min="0"
+                    max="86400"
+                    inputMode="numeric"
+                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-[0.65rem] font-semibold uppercase tracking-wide text-surface-500">
+                  {t('settings.contextAutoLockAfterReveal')}
+                  <input
+                    type="number"
+                    value={contextRevealSeconds}
+                    onChange={e => setContextRevealSeconds(e.target.value)}
+                    min="0"
+                    max="86400"
+                    inputMode="numeric"
+                    className="mt-1 w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm normal-case tracking-normal text-white focus:border-brand-500 focus:outline-none"
+                  />
+                </label>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setContextLockAfterCopy(!contextLockAfterCopy)}
+                  className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${contextLockAfterCopy ? 'border-brand-500/60 bg-brand-500/15 text-brand-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
+                >
+                  {t('settings.contextAutoLockCopyToggle', { state: contextLockAfterCopy ? t('settings.on') : t('settings.off') })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContextScreenOffLock(!contextScreenOffLock)}
+                  className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${contextScreenOffLock ? 'border-brand-500/60 bg-brand-500/15 text-brand-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
+                >
+                  {t('settings.contextAutoLockScreenOffToggle', { state: contextScreenOffLock ? t('settings.on') : t('settings.off') })}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={saveCustomContextAutoLock}
+                className="btn-glow mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white"
+              >
+                {t('settings.contextAutoLockSaveCustom')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -137,8 +290,8 @@ export function SecurityAutomationSection({
           >
             <span className="flex items-center justify-between gap-3">
               <span>
-                <span className="block text-xs font-semibold text-white">Disable secret copy</span>
-                <span className="block text-xs text-surface-400">High security: allow hold-to-reveal, block copy for private key, seed phrase and sensitive notes.</span>
+                <span className="block text-xs font-semibold text-white">{t('settings.disableSecretCopy')}</span>
+                <span className="block text-xs text-surface-400">{t('settings.disableSecretCopyDesc')}</span>
               </span>
               {settingStatus(secretCopyDisabled ? t('settings.enabled') : t('settings.disabled'), secretCopyDisabled)}
             </span>
