@@ -21,6 +21,8 @@ import { MiddleEllipsisAddress } from '../create-wallet/components';
 import { createVanityAddressRenderer } from '../../hooks/vanity/vanityRenderHelpers';
 import VanityScoreBadge from '../vanity/VanityScoreBadge';
 import { shouldShowVanityScore } from '../../utils/vanity/vanityScoreGrade';
+import type { SecretKind } from '../../utils/dataSensitivity';
+import { detectSecretInText, getSecretPlacementWarning } from '../../utils/secretDetection';
 
 const AUTO_HIDE_MS = 30000;
 
@@ -42,8 +44,8 @@ export { NETWORK_COLORS, NETWORK_KEYS };
 
 type WalletCardModel = Wallet & { newUntil?: number };
 type WalletDensity = 'comfortable' | 'compact' | 'ultra';
-type SensitiveAction = 'pk' | 'seed' | 'qr_pk' | 'copy_pk' | 'copy_seed';
-type CopyOptions = { revealAddress?: boolean };
+type SensitiveAction = 'pk' | 'seed' | 'qr_pk' | 'copy_pk' | 'copy_seed' | 'sensitive_note' | 'copy_sensitive_note';
+type CopyOptions = { revealAddress?: boolean; kind?: SecretKind };
 type EditFields = Partial<Wallet> & { tags?: string[] };
 
 type WalletCardProps = {
@@ -65,6 +67,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [expanded, setExpanded] = useState(false);
   const [showPk, setShowPk] = useState(false);
   const [showSeed, setShowSeed] = useState(false);
+  const [showSensitiveNotes, setShowSensitiveNotes] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [editName, setEditName] = useState(wallet.name || '');
@@ -105,6 +108,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   useEffect(() => { if (!showPk) return; const tm = setTimeout(() => setShowPk(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showPk]);
   useEffect(() => { if (!showSeed) return; const tm = setTimeout(() => setShowSeed(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSeed]);
+  useEffect(() => { if (!showSensitiveNotes) return; const tm = setTimeout(() => setShowSensitiveNotes(false), AUTO_HIDE_MS); return () => clearTimeout(tm); }, [showSensitiveNotes]);
   useEffect(() => {
     if (!wallet.newUntil || wallet.newUntil <= Date.now()) return undefined;
     const timeout = window.setTimeout(() => setNowTick(Date.now()), Math.min(wallet.newUntil - Date.now() + 1000, 24 * 60 * 60 * 1000));
@@ -127,10 +131,19 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
       return;
     }
 
-    const copied = await secureCopy(text);
+    let copyBlocked = false;
+    const copied = await secureCopy(text, {
+      kind: options.kind || (field === 'address' || field === 'address-card' ? 'address' : field === 'pk' ? 'privateKey' : field === 'seed' ? 'mnemonic' : 'generic'),
+      onBlocked: () => {
+        copyBlocked = true;
+        hapticWarning();
+        showToast(t('walletCard.secretCopyDisabled'), 'warning');
+      },
+      onClear: () => showToast(t('walletCard.clipboardClearedMultiStep'), 'info'),
+    });
     if (!copied) {
       hapticWarning();
-      showToast(t('walletCard.copyFailed'), 'error');
+      if (!copyBlocked) showToast(t('walletCard.copyFailed'), 'error');
       return;
     }
 
@@ -170,11 +183,17 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     }
     else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk', t('walletCard.privateKey'));
     else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
+    else if (actionType === 'sensitive_note') {
+      appendAuditLog('wallet.sensitive_note_revealed', { wallet: wallet.name || t('walletCard.unnamed') }).catch(() => {});
+      setShowSensitiveNotes(!showSensitiveNotes);
+    }
+    else if (actionType === 'copy_sensitive_note') handleCopy(wallet.sensitiveNotes, 'sensitive-note', t('walletCard.sensitiveNote'), { kind: 'sensitiveNote' });
   };
 
   const handleShowSensitive = async (actionType: SensitiveAction) => {
     if (actionType === 'pk' && showPk) { setShowPk(false); return; }
     if (actionType === 'seed' && showSeed) { setShowSeed(false); return; }
+    if (actionType === 'sensitive_note' && showSensitiveNotes) { setShowSensitiveNotes(false); return; }
     
     if (hasMasterPassword) {
       setShowMPPrompt(actionType);
@@ -203,13 +222,49 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
       seedPhrase: wallet.seedPhrase || '',
       balance: wallet.balance || '',
       notes: wallet.notes || '',
+      sensitiveNotes: wallet.sensitiveNotes || '',
       network: wallet.network || 'ETH',
       tags: wallet.tags || [],
     });
     setEditMode(true);
   };
 
+  const moveMisplacedSecretFromNotes = () => {
+    const notes = editFields.notes || '';
+    const detected = detectSecretInText(notes);
+    if (!detected) return;
+
+    setEditFields(p => ({
+      ...p,
+      notes: '',
+      privateKey: detected === 'privateKey' ? notes.trim() : p.privateKey,
+      seedPhrase: detected === 'mnemonic' ? notes.trim() : p.seedPhrase,
+    }));
+    hapticSuccess();
+    showToast(t('walletCard.secretMovedToSecretField'), 'success');
+  };
+
+  const moveNotesToSensitiveNotes = () => {
+    const notes = (editFields.notes || '').trim();
+    if (!notes) return;
+
+    setEditFields(p => ({
+      ...p,
+      notes: '',
+      sensitiveNotes: [p.sensitiveNotes, notes].filter(Boolean).join('\n\n'),
+    }));
+    hapticSuccess();
+    showToast(t('walletCard.notesMovedToSensitiveNote'), 'success');
+  };
+
   const saveEdit = () => {
+    const nameWarning = getSecretPlacementWarning(editFields.name || '', 'name');
+    const notesWarning = getSecretPlacementWarning(editFields.notes || '', 'notes');
+    if (nameWarning || notesWarning) {
+      hapticWarning();
+      showToast(`${nameWarning || notesWarning} ${t('walletCard.moveItBeforeSaving')}`, 'warning');
+      return;
+    }
     hapticSuccess();
     if (onEdit) onEdit({ ...editFields, balance: normalizeAmountInput(editFields.balance || '') });
     setEditMode(false);
@@ -503,6 +558,28 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
               {editInput('seedPhrase', t('walletCard.seedPhrase'), 'text', true)}
               {editBalanceInput()}
               {editInput('notes', t('walletCard.notes'), 'text', true)}
+              {getSecretPlacementWarning(editFields.notes || '', 'notes') && (
+                <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-100">
+                  <p>{getSecretPlacementWarning(editFields.notes || '', 'notes')}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={moveMisplacedSecretFromNotes}
+                      className="rounded bg-yellow-400/20 px-2.5 py-1 font-semibold text-yellow-100 hover:bg-yellow-400/30"
+                    >
+                      {t('walletCard.moveToSecretField')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={moveNotesToSensitiveNotes}
+                      className="rounded bg-red-400/20 px-2.5 py-1 font-semibold text-red-100 hover:bg-red-400/30"
+                    >
+                      {t('walletCard.moveToSensitiveNote')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {editInput('sensitiveNotes', t('walletCard.sensitiveNote'), 'text', true)}
               <TagEditor
                 tags={editFields.tags || []}
                 onChange={(newTags: string[]) => setEditFields(p => ({ ...p, tags: newTags }))}
@@ -660,6 +737,24 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                   <label className="text-xs text-surface-400 uppercase tracking-wider mb-1 block">{t('walletCard.notes')}</label>
                   <div className="bg-surface-800 p-3 rounded-lg border border-surface-700/50">
                     <MarkdownRenderer text={wallet.notes} />
+                  </div>
+                </div>
+              )}
+
+              {wallet.sensitiveNotes && (
+                <div>
+                  <label className="text-xs text-red-300 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    {t('walletCard.sensitiveNote')}
+                    {showSensitiveNotes && <span className="text-yellow-500/70 text-scale-2xs normal-case">{t('walletCard.autoHide')}</span>}
+                  </label>
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1 bg-surface-800 p-3 rounded-lg border border-red-500/20 text-sm text-surface-200">
+                      {showSensitiveNotes ? <MarkdownRenderer text={wallet.sensitiveNotes} /> : <span className="font-mono text-surface-500">{'•'.repeat(Math.min(wallet.sensitiveNotes.length, 96))}</span>}
+                    </div>
+                    <button onClick={() => handleShowSensitive('sensitive_note')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">{showSensitiveNotes ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    <button onClick={() => handleShowSensitive('copy_sensitive_note')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors">
+                      {copiedField === 'sensitive-note' ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                    </button>
                   </div>
                 </div>
               )}

@@ -12,18 +12,14 @@
 
 ---
 
-## Current Release: v6.0.1
+## Current Release: v6.0.7
 
-xKey v6.0.1 upgrades the Android display scaling architecture to use `smallestScreenWidthDp` overrides instead of generic density overrides. This allows users to enforce a tablet-style layout (like 480dp minimum width) natively for just this app, without modifying system-wide Developer Options.
+xKey v6.0.7 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- **App-only Minimum Width:** On Android, xKey now overrides `smallestScreenWidthDp` (defaulting to 480dp) so the app renders using wide-screen breakpoints.
-- **Independent Configuration:** Modifying the minimum width inside the app does not affect the system's global Developer Options or DPI configuration.
-- **Flexible Scaling:** The minimum width feature works alongside the existing manual interface display scale to offer precise layout tuning.
-- **Updated Locales:** All 15 supported languages were updated to reflect the new "minimum width / dp" terminology over the older "density DPI" wording.
-- **Android release metadata:** `versionName 5.22.2`, `versionCode 97`.
-
+- Summary of implemented changes:
+- **Android release metadata:** `versionName 6.0.7`, `versionCode 105`.
 ---
 
 ## Core Features

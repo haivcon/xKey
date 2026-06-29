@@ -12,6 +12,8 @@ type Props = {
   setShowClipboard: (show: boolean) => void;
   currentAutoLockMs: number;
   currentClipboardMs: number;
+  secretCopyDisabled: boolean;
+  toggleSecretCopyDisabled: () => void;
   customAutoLock: string;
   setCustomAutoLock: (value: string) => void;
   customClipboard: string;
@@ -34,6 +36,8 @@ export function SecurityAutomationSection({
   setShowClipboard,
   currentAutoLockMs,
   currentClipboardMs,
+  secretCopyDisabled,
+  toggleSecretCopyDisabled,
   customAutoLock,
   setCustomAutoLock,
   customClipboard,
@@ -126,6 +130,19 @@ export function SecurityAutomationSection({
             <button onClick={saveCustomClipboard}
               className="btn-glow bg-brand-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">{t('common.save')}</button>
           </div>
+          <button
+            type="button"
+            onClick={toggleSecretCopyDisabled}
+            className={`w-full rounded-xl border px-3 py-2 text-left transition-colors ${secretCopyDisabled ? 'border-red-500/40 bg-red-500/10' : 'border-surface-700/60 bg-surface-900/70 hover:bg-surface-800'}`}
+          >
+            <span className="flex items-center justify-between gap-3">
+              <span>
+                <span className="block text-xs font-semibold text-white">Disable secret copy</span>
+                <span className="block text-xs text-surface-400">High security: allow hold-to-reveal, block copy for private key, seed phrase and sensitive notes.</span>
+              </span>
+              {settingStatus(secretCopyDisabled ? t('settings.enabled') : t('settings.disabled'), secretCopyDisabled)}
+            </span>
+          </button>
         </div>
       )}
     </>

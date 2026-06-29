@@ -15,6 +15,7 @@ import {
   type ShakeSensorTestResult,
 } from '../../../hooks/security/useShakeToLock';
 import { CLIPBOARD_TIMEOUT_KEY } from '../../../utils/clipboard';
+import { SECRET_COPY_DISABLED_KEY } from '../../../utils/dataSensitivity';
 import { hapticTap, hapticSuccess } from '../../../utils/haptics';
 import { PIN_HASH_KEY, KILL_SWITCH_KEY, DECOY_PIN_HASH_KEY } from '../../auth/PinLockScreen';
 import { getVaultSecurityStatus, isBiometricAvailable, setHardwareBoundOnlyMode } from '../../../utils/storage';
@@ -56,6 +57,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [showScreenCapture, setShowScreenCapture] = useState(false);
   const [currentAutoLockMs, setCurrentAutoLockMs] = useState(DEFAULT_MS);
   const [currentClipboardMs, setCurrentClipboardMs] = useState(30000);
+  const [secretCopyDisabled, setSecretCopyDisabled] = useState(false);
   const [customAutoLock, setCustomAutoLock] = useState('');
   const [customClipboard, setCustomClipboard] = useState('');
   const [screenCapturePassword, setScreenCapturePassword] = useState('');
@@ -131,6 +133,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       const { value: clipboardMs } = await Preferences.get({ key: CLIPBOARD_TIMEOUT_KEY });
       const clipboardTimeout = parseStoredInt(clipboardMs);
       setCurrentClipboardMs(Number.isFinite(clipboardTimeout) && clipboardTimeout >= 0 ? clipboardTimeout : 30000);
+      const { value: secretCopyOff } = await Preferences.get({ key: SECRET_COPY_DISABLED_KEY });
+      setSecretCopyDisabled(secretCopyOff === 'true');
     };
     loadSettings();
   }, []);
@@ -155,6 +159,17 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const saveCustomAutoLock = () => {
     const minutes = Number.parseInt(customAutoLock, 10);
     saveAutoLock(minutes * 60000);
+  };
+
+  const toggleSecretCopyDisabled = async () => {
+    const next = !secretCopyDisabled;
+    hapticTap();
+    await Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: next ? 'true' : 'false' });
+    setSecretCopyDisabled(next);
+    showToast(
+      next ? 'High security mode enabled: private keys, seed phrases and sensitive notes can only be revealed, not copied.' : 'Secret copy is enabled again.',
+      'success',
+    );
   };
 
   const formatAutoLock = (ms: number) => {
@@ -589,6 +604,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           setShowClipboard={setShowClipboard}
           currentAutoLockMs={currentAutoLockMs}
           currentClipboardMs={currentClipboardMs}
+          secretCopyDisabled={secretCopyDisabled}
+          toggleSecretCopyDisabled={toggleSecretCopyDisabled}
           customAutoLock={customAutoLock}
           setCustomAutoLock={setCustomAutoLock}
           customClipboard={customClipboard}

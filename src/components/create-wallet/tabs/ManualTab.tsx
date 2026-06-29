@@ -5,6 +5,7 @@ import PasswordInput from '../../shared/PasswordInput';
 import SecureTextarea from '../../shared/SecureTextarea';
 import { formatAmountInput, normalizeAmountInput } from '../../../utils/amountFormat';
 import { NETWORKS } from '../constants';
+import { getSecretPlacementWarning } from '../../../utils/secretDetection';
 
 export type ManualTabProps = {
   t: TranslationFn;
@@ -57,12 +58,32 @@ export function ManualTab(props: ManualTabProps) {
     setManualNotes,
   } = props;
 
+  const nameSecretWarning = getSecretPlacementWarning(walletName, 'name');
+  const notesSecretWarning = getSecretPlacementWarning(manualNotes, 'notes');
+
+  const moveMisplacedSecret = (from: 'name' | 'notes') => {
+    const value = from === 'name' ? walletName : manualNotes;
+    if (getSecretPlacementWarning(value, from)?.includes('seed phrase')) {
+      setManualSeed(value);
+    } else {
+      setManualPK(value);
+    }
+    if (from === 'name') setWalletName('');
+    if (from === 'notes') setManualNotes('');
+  };
+
   return (
             <div className="grid gap-4 lg:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.walletName')}</label>
-                <input type="text" value={walletName} onChange={(e) => setWalletName(e.target.value)} placeholder={t('createWallet.walletNamePlaceholder')}
-                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600" />
+                  <input type="text" value={walletName} onChange={(e) => setWalletName(e.target.value)} placeholder={t('createWallet.walletNamePlaceholder')}
+                    className={`w-full bg-surface-800 border rounded-lg px-4 py-3 text-sm text-white focus:outline-none placeholder:text-surface-600 ${nameSecretWarning ? 'border-red-500/60 focus:border-red-500' : 'border-surface-700 focus:border-brand-500'}`} />
+                  {nameSecretWarning && (
+                    <button type="button" onClick={() => moveMisplacedSecret('name')} className="mt-1.5 flex items-start gap-1 text-left text-xs text-red-300">
+                      <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
+                      <span>{nameSecretWarning} Tap to move.</span>
+                    </button>
+                  )}
               </div>
 
               <div>
@@ -138,7 +159,13 @@ export function ManualTab(props: ManualTabProps) {
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">{t('createWallet.notes')} <span className="text-surface-600">{t('createWallet.optional')}</span></label>
                 <textarea value={manualNotes} onChange={(e) => setManualNotes(e.target.value)} placeholder={t('createWallet.notesPlaceholder')} rows={2}
-                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 placeholder:text-surface-600 resize-none" />
+                  className={`w-full bg-surface-800 border rounded-lg px-4 py-3 text-sm text-white focus:outline-none placeholder:text-surface-600 resize-none ${notesSecretWarning ? 'border-red-500/60 focus:border-red-500' : 'border-surface-700 focus:border-brand-500'}`} />
+                {notesSecretWarning && (
+                  <button type="button" onClick={() => moveMisplacedSecret('notes')} className="mt-1.5 flex items-start gap-1 text-left text-xs text-red-300">
+                    <AlertTriangle size={12} className="mt-0.5 flex-shrink-0" />
+                    <span>{notesSecretWarning} Tap to move.</span>
+                  </button>
+                )}
               </div>
             </div>
   );

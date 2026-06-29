@@ -3,6 +3,7 @@ import type { Wallet, HDRoot } from '../types';
 
 type EncryptedWallet = Wallet & {
     _fieldEncrypted?: boolean;
+    _sensitiveNotesEncrypted?: boolean;
 };
 
 type CryptoWorkerRequest =
@@ -42,8 +43,8 @@ const generateRandomKey = (): string => {
 /**
  * Derive a secondary key from the primary key for per-field encryption.
  */
-const deriveFieldKey = (primaryKey: string): string => {
-    return CryptoJS.HmacSHA256(primaryKey, 'xkey_field_salt_v1').toString();
+const deriveFieldKey = (primaryKey: string, purpose = 'default'): string => {
+    return CryptoJS.HmacSHA256(primaryKey, `xkey_field_salt_v1:${purpose}`).toString();
 };
 
 /**
@@ -102,13 +103,16 @@ self.onmessage = (e: MessageEvent<CryptoWorkerRequest>) => {
             case 'ENCRYPT_WALLETS': {
                 const { wallets, key } = payload;
                 const fieldKey = deriveFieldKey(key);
+                const noteFieldKey = deriveFieldKey(key, 'sensitive_notes');
                 
                 // Double-encrypt sensitive fields
                 const protected_ = wallets.map(w => ({
                     ...w,
                     privateKey: encryptField(w.privateKey, fieldKey),
                     seedPhrase: encryptField(w.seedPhrase, fieldKey),
+                    sensitiveNotes: encryptField(w.sensitiveNotes, noteFieldKey),
                     _fieldEncrypted: true,
+                    _sensitiveNotesEncrypted: !!w.sensitiveNotes,
                 }));
                 
                 const encrypted = encryptData(protected_, key);
@@ -121,10 +125,12 @@ self.onmessage = (e: MessageEvent<CryptoWorkerRequest>) => {
                 let wallets = decryptData(cipherText, key);
                 
                 const fieldKey = deriveFieldKey(key);
+                const noteFieldKey = deriveFieldKey(key, 'sensitive_notes');
                 wallets = wallets.map(w => ({
                     ...w,
                     privateKey: decryptField(w.privateKey, fieldKey),
                     seedPhrase: decryptField(w.seedPhrase, fieldKey),
+                    sensitiveNotes: decryptField(w.sensitiveNotes, noteFieldKey),
                 }));
                 
                 self.postMessage({ id, success: true, result: wallets });

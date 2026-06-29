@@ -20,6 +20,11 @@ export interface Wallet {
   network?: string;
   groupId?: string;
   notes?: string;
+  /**
+   * Optional protected note that should be treated like a secret: hidden by
+   * default, copied with secret clipboard policy, and revealed intentionally.
+   */
+  sensitiveNotes?: string;
   pinned?: boolean;
   tags?: string[];
   createdAt?: number;
