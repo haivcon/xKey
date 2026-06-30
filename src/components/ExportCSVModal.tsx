@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Download, Copy, Check, ShieldAlert } from 'lucide-react';
-import { reauthenticate } from '../hooks/security/useReauth';
+import { requireSensitivePin } from '../features/security/sensitivePin';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import type { Wallet } from '../types';
@@ -46,7 +46,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     const col = COLUMNS.find(c => c.key === key);
     if (!col) return;
     if (col.sensitive && !selected.has(key)) {
-      const ok = await reauthenticate(t('exportCSV.authPrompt') || 'Authenticate to include sensitive data');
+      const ok = await requireSensitivePin(t('exportCSV.authPrompt') || 'Authenticate to include sensitive data');
       if (!ok) { showToast({ key: 'authError.vaultLocked', category: 'warning' }, 'warning'); return; }
     }
     const next = new Set(selected);
@@ -61,8 +61,23 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     return [header, ...rows].join('\n');
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(buildCSV());
+  const requireExportPinIfNeeded = async (action: 'copy' | 'download') => {
+    if (!hasSensitive) return true;
+    return requireSensitivePin(
+      action === 'copy'
+        ? t('exportCSV.copySensitiveAuthPrompt', { default: 'Xác minh PIN phụ trước khi sao chép CSV có khóa riêng/seed phrase.' })
+        : t('exportCSV.downloadSensitiveAuthPrompt', { default: 'Xác minh PIN phụ trước khi xuất CSV có khóa riêng/seed phrase.' }),
+    );
+  };
+
+  const handleCopy = async () => {
+    const ok = await requireExportPinIfNeeded('copy');
+    if (!ok) {
+      showToast({ key: 'authError.vaultLocked', category: 'warning' }, 'warning');
+      return;
+    }
+
+    await navigator.clipboard.writeText(buildCSV());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     showToast({ key: 'exportCSV.copySuccess', vars: { count: wallets.length }, category: 'copy' }, 'success');
@@ -70,6 +85,12 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
 
   const handleDownload = async () => {
     try {
+      const ok = await requireExportPinIfNeeded('download');
+      if (!ok) {
+        showToast({ key: 'authError.vaultLocked', category: 'warning' }, 'warning');
+        return;
+      }
+
       const csv = buildCSV();
       const safeBaseName = fileName.trim()
         .split('').map(character => character.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(character) ? '-' : character).join('')

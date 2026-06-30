@@ -1,5 +1,4 @@
 import { appendAuditLog } from '../../utils/auditLog';
-import { reauthenticate } from '../../hooks/security/useReauth';
 import { requireSensitivePin } from './sensitivePin';
 
 export type SensitiveAction =
@@ -22,16 +21,7 @@ export async function requireSensitiveAction({
   reason,
   metadata = {},
 }: RequireSensitiveActionOptions): Promise<boolean> {
-  await appendAuditLog('security.reauth_requested', { action, ...metadata }).catch(() => {});
-
-  const deviceOk = await reauthenticate(reason);
-
-  await appendAuditLog(deviceOk ? 'security.reauth_success' : 'security.reauth_failed', {
-    action,
-    ...metadata,
-  }).catch(() => {});
-
-  if (!deviceOk) return false;
+  await appendAuditLog('security.sensitive_pin_required', { action, ...metadata }).catch(() => {});
 
   const pinOk = await requireSensitivePin(reason);
 

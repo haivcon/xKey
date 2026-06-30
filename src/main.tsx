@@ -11,6 +11,7 @@ import { MasterPasswordProvider } from './contexts/MasterPasswordContext';
 import { ScrambledKeyboardProvider } from './contexts/ScrambledKeyboardContext';
 import { SecureDisplayProvider } from './contexts/SecureDisplayContext';
 import { ScreenSecurityProvider } from './contexts/ScreenSecurityContext';
+import { SensitivePinModalProvider } from './components/security/SensitivePinModalProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 
 const hideNativeSplash = () => {
@@ -114,7 +115,9 @@ createRoot(root).render(
                     <ScreenSecurityProvider>
                       <ToastProvider>
                         <ConfirmProvider>
-                          <Boot />
+                          <SensitivePinModalProvider>
+                            <Boot />
+                          </SensitivePinModalProvider>
                         </ConfirmProvider>
                       </ToastProvider>
                     </ScreenSecurityProvider>

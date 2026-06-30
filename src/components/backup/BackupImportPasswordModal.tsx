@@ -168,12 +168,15 @@ export default function BackupImportPasswordModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const [backupIdExpanded, setBackupIdExpanded] = useState(false);
   const [fileHashExpanded, setFileHashExpanded] = useState(false);
+  const [showAllOfflineDiff, setShowAllOfflineDiff] = useState(false);
   const backupId = asText(backupPreview?.backupId) || asText(backupPreview?.metadata?.backupId);
   const fileHash = asText(backupPreview?.containerHash) || asText(backupPreview?.metadata?.containerHash);
   const metadata = backupPreview?.metadata;
   const integrity = asText(backupPreview?.integrity) || 'unknown';
   const integrityPresentation = getIntegrityPresentation(integrity, backupPreview?.status);
   const IntegrityIcon = integrityPresentation.icon;
+  const offlineDiffItems = restoreSandbox?.diff.items.filter(item => item.status !== 'unchanged') || [];
+  const visibleOfflineDiffItems = showAllOfflineDiff ? offlineDiffItems : offlineDiffItems.slice(0, 6);
   const createdAtText = asText(metadata?.createdAt) ? new Date(asText(metadata?.createdAt)).toLocaleString() : '';
   const metadataItems = metadata
     ? [
@@ -266,7 +269,11 @@ export default function BackupImportPasswordModal({
           <IntegrityIcon size={22} className={integrityPresentation.iconClass} />
         </div>
         <h3 id="restore-backup-title" className="text-white font-bold text-center mb-1">{t('restore.title')}</h3>
-        <p className="text-surface-400 text-sm text-center mb-4">{t('restore.desc')}</p>
+        <p className="text-surface-300 text-sm text-center mb-4">{t('restore.desc')}</p>
+        <div className="mb-4 rounded-xl border border-sky-500/25 bg-sky-500/10 p-3 text-xs leading-relaxed text-sky-100">
+          <div className="font-bold uppercase tracking-wide text-sky-50">{t('restore.previewFirst')}</div>
+          <div className="mt-1">{t('restore.stepGuide')}</div>
+        </div>
         {brandReminders && <BrandSlogan note={t('brand.restoreNote')} tone="brand" className="mb-4 text-center" />}
 
         {backupPreview && (
@@ -291,7 +298,7 @@ export default function BackupImportPasswordModal({
               </div>
             )}
             {backupPreview.metadata ? (
-              <div className="space-y-2 text-surface-200">
+                <div className="space-y-2 text-surface-100">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {metadataItems.map(({ label, value, icon: Icon }) => (
                     <div key={label} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-2.5 py-2">
@@ -299,7 +306,7 @@ export default function BackupImportPasswordModal({
                         <Icon size={14} aria-hidden="true" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-scale-2xs font-semibold uppercase tracking-wide text-surface-400">{label}</span>
+                        <span className="block text-scale-2xs font-semibold uppercase tracking-wide text-surface-300">{label}</span>
                         <span className="block truncate text-scale-xs font-semibold text-surface-100">{value || '-'}</span>
                       </span>
                     </div>
@@ -355,11 +362,11 @@ export default function BackupImportPasswordModal({
         />
 
         {restoreSandbox && (
-          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-surface-200">
+            <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-surface-100">
             <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div>
                 <div className="text-scale-xs font-bold uppercase tracking-wide text-emerald-200">{t('restoreSandbox.title')}</div>
-                <div className="mt-1 text-surface-400">{t('restoreSandbox.subtitle')}</div>
+                <div className="mt-1 text-surface-300">{t('restoreSandbox.subtitle')}</div>
               </div>
               <div className={`rounded-full px-2.5 py-1 text-xs font-black ${restoreSandbox.canRestore ? 'bg-emerald-500/15 text-emerald-100' : 'bg-red-500/15 text-red-100'}`}>
                 {restoreSandbox.health.score}/100 · {restoreSandbox.health.grade}
@@ -380,7 +387,7 @@ export default function BackupImportPasswordModal({
             </div>
              <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
                <div className="font-semibold text-surface-100">{t('restoreSandbox.recommendation')}: {t(`restoreSandbox.mode_${restoreSandbox.recommendedMode}`)}</div>
-               <div className="mt-1 leading-relaxed text-surface-400">{t(`restoreSandbox.recommendation_${restoreSandbox.health.recommendation}`)}</div>
+               <div className="mt-1 leading-relaxed text-surface-300">{t(`restoreSandbox.recommendation_${restoreSandbox.health.recommendation}`)}</div>
              </div>
              <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
                <div className="mb-2 font-semibold text-surface-100">{t('restoreSandbox.restorePlan')}</div>
@@ -399,7 +406,7 @@ export default function BackupImportPasswordModal({
                    </div>
                  ))}
                </div>
-               <div className="mt-2 text-scale-2xs leading-relaxed text-surface-400">
+                <div className="mt-2 text-scale-2xs leading-relaxed text-surface-300">
                  {t('restoreSandbox.safeToMerge')}: {restoreSandbox.restorePlan.safeToMerge ? t('common.yes') : t('common.no')} · {t('restoreSandbox.safeToReplace')}: {restoreSandbox.restorePlan.safeToReplace ? t('common.yes') : t('common.no')}
                </div>
              </div>
@@ -420,7 +427,7 @@ export default function BackupImportPasswordModal({
               <div className="space-y-2">
                 {restoreSandbox.health.factors.map((factor) => (
                   <div key={factor.key}>
-                    <div className="mb-1 flex items-center justify-between gap-2 text-scale-2xs font-semibold uppercase tracking-wide text-surface-400">
+                    <div className="mb-1 flex items-center justify-between gap-2 text-scale-2xs font-semibold uppercase tracking-wide text-surface-300">
                       <span>{factor.label}</span>
                       <span>{factor.score}/{factor.max}</span>
                     </div>
@@ -435,11 +442,10 @@ export default function BackupImportPasswordModal({
               </div>
             </div>
             <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-2">
-              <div className="mb-2 font-semibold text-surface-100">{t('restoreSandbox.offlineDiff')}</div>
+              <div className="mb-1 font-semibold text-surface-100">{t('restoreSandbox.offlineDiff')}</div>
+              <div className="mb-2 text-scale-2xs leading-relaxed text-surface-300">{t('restoreSandbox.offlineDiffDesc')}</div>
               <div className="space-y-1.5">
-                {restoreSandbox.diff.items
-                  .filter(item => item.status !== 'unchanged')
-                  .slice(0, 6)
+                {visibleOfflineDiffItems
                   .map((item) => (
                     <div key={item.id} className="rounded-lg border border-white/10 bg-surface-900/50 px-2.5 py-2">
                       <div className="flex items-center justify-between gap-2">
@@ -449,16 +455,27 @@ export default function BackupImportPasswordModal({
                         </span>
                       </div>
                       {item.changes.length > 0 && (
-                        <div className="mt-1 text-scale-2xs leading-relaxed text-surface-400">
+                        <div className="mt-1 text-scale-2xs leading-relaxed text-surface-300">
                           {item.changes.slice(0, 3).map(change => `${change.field}: ${change.currentLabel} → ${change.backupLabel}`).join(' · ')}
                         </div>
                       )}
                     </div>
                   ))}
-                {restoreSandbox.diff.items.filter(item => item.status !== 'unchanged').length === 0 && (
+                {offlineDiffItems.length === 0 && (
                   <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-2 text-emerald-100">{t('restoreSandbox.noDiff')}</div>
                 )}
               </div>
+              {offlineDiffItems.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => { onHapticTap(); setShowAllOfflineDiff((visible) => !visible); }}
+                  className="mt-2 rounded-lg border border-surface-600 bg-surface-800 px-3 py-2 text-scale-2xs font-semibold text-surface-100 transition-colors hover:bg-surface-700"
+                >
+                  {showAllOfflineDiff
+                    ? t('restoreSandbox.showLessDiff')
+                    : t('restoreSandbox.showAllDiff', { count: offlineDiffItems.length })}
+                </button>
+              )}
             </div>
             {restoreSandbox.warnings.length > 0 && (
               <div className="mt-3 space-y-1.5">
@@ -546,9 +563,11 @@ export default function BackupImportPasswordModal({
             <button onClick={() => { onHapticTap(); onCopyVerificationReport(); }} disabled={loading}
               className="btn-glow min-w-28 flex-1 whitespace-normal rounded-lg bg-surface-800 py-2.5 font-medium text-surface-200 transition-colors hover:bg-surface-700 disabled:opacity-50">{t('restore.copyVerificationReport')}</button>
           )}
-          <button onClick={handleImportClick}
-            disabled={loading || backupPreview?.status === 'tampered' || !restoreSandbox?.canRestore || (backupImportMode === 'replace' && !backupAnalysis)}
-            className="btn-glow btn-glow-success min-w-28 flex-1 whitespace-normal rounded-lg bg-brand-600 py-2.5 font-medium text-white transition-colors hover:bg-brand-500 disabled:opacity-50">{t('restore.button')}</button>
+          {restoreSandbox && (
+            <button onClick={handleImportClick}
+              disabled={loading || backupPreview?.status === 'tampered' || !restoreSandbox.canRestore || (backupImportMode === 'replace' && !backupAnalysis)}
+              className="btn-glow btn-glow-success min-w-28 flex-1 whitespace-normal rounded-lg bg-brand-600 py-2.5 font-medium text-white transition-colors hover:bg-brand-500 disabled:opacity-50">{t('restore.button')}</button>
+          )}
         </div>
       </div>
     </div>

@@ -69,12 +69,19 @@ export const clearClipboardNow = async (): Promise<boolean> => {
 
 const overwriteClipboardInLayers = async (): Promise<boolean> => {
   const noise = `xkey-cleared-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
-  const steps = [noise, '', ' '];
+  const steps = [noise, ' ', ''];
 
   let ok = false;
   for (const value of steps) {
     ok = (await writeClipboard(value)) || ok;
   }
+
+  // Some Android/WebView clipboard providers ignore an empty-string write if it
+  // immediately follows other writes. Make one final empty write on the next
+  // tick so the visible clipboard value ends empty instead of containing the
+  // intermediate blank-space wipe value.
+  await new Promise(resolve => setTimeout(resolve, 0));
+  ok = (await writeClipboard('')) || ok;
 
   return ok;
 };
@@ -123,7 +130,11 @@ export async function secureCopy(
         let cleared = false;
         try {
           const current = await readClipboard();
-          if (current === text) {
+          // If we can read the clipboard and the user has copied something else,
+          // leave it intact. On Android/WebView clipboard reads can return null
+          // after a delay even though writes are still allowed, so treat unreadable
+          // clipboard as a signal to attempt the scheduled secure wipe.
+          if (current === text || current === null || current.trim() === text.trim()) {
             cleared = await overwriteClipboardInLayers();
           }
         } catch {

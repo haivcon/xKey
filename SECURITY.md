@@ -20,19 +20,44 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.13
+## Current Release Security Notes: v6.0.14
 
-v6.0.13 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.14 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- 🔐 Security settings hardened.
-- • Added confirmations before disabling key protections.
-- • Improved 6-digit PIN validation for main, decoy, and sensitive-action PINs.
-- • Fixed custom auto-lock timing behavior.
-- • Added utility tests.
-- ✅ Type-check, lint, tests, and production build passed.
-- Android metadata is updated to `versionCode 111` and `versionName 6.0.13`.
+- Updated android/app/build.gradle (+2/-2): bumped Android versionName/versionCode so the APK/AAB can be published as a new build.
+- Updated package-lock.json (+2/-2): kept the locked dependency metadata aligned with package.json.
+- Updated package.json (+1/-1): synchronized the app version and npm package metadata for this release.
+- Updated src/components/ExportCSVModal.tsx (+25/-4): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/backup/BackupImportPasswordModal.tsx (+36/-17): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/settings/security/AdvancedSecuritySection.tsx (+92/-71): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/settings/security/PinBiometricSection.tsx (+188/-58): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/settings/security/SecurityAutomationSection.tsx (+45/-36): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/settings/security/SecurityStatusSection.tsx (+75/-64): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/components/settings/security/SecurityTabContent.tsx (+345/-465): updated a reusable UI component or settings/dashboard screen behavior.
+- Updated src/features/security/sensitiveActions.ts (+1/-11): updated feature-specific application logic.
+- Updated src/features/security/sensitivePin.ts (+14/-23): updated feature-specific application logic.
+- Updated src/hooks/useWalletGeneration.ts (+15/-2): updated shared React hook behavior used by the app.
+- Updated src/index.css (+229/-1): updated the main app shell, styling, routing, or startup behavior.
+- Updated src/locales/ar.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/de.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/en.ts (+102/-2): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/es.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/fr.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/hi.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/id.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/ja.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/ko.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/pt.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/ru.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/th.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/tr.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/vi.ts (+102/-2): refreshed translation/localization content shown in the app UI.
+- Updated src/locales/zh.ts (+98/-0): refreshed translation/localization content shown in the app UI.
+- Updated src/main.tsx (+4/-1): updated the main app shell, styling, routing, or startup behavior.
+- Updated src/utils/clipboard.ts (+13/-2): updated shared utility logic used across the app.
+- Android metadata is updated to `versionCode 112` and `versionName 6.0.14`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

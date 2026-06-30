@@ -667,10 +667,27 @@ body.keyboard-open .keyboard-scroll-target {
   color: #0f172a !important;
 }
 
+.theme-light .text-surface-950,
+.theme-light .text-surface-900,
+.theme-light .text-surface-800,
+.theme-light .text-surface-700,
+.theme-light .text-surface-600,
+.theme-light .text-surface-500,
 .theme-light .text-surface-400,
 .theme-light .text-surface-300,
-.theme-light .text-surface-200 {
+.theme-light .text-surface-200,
+.theme-light .text-surface-100,
+.theme-light .text-surface-50 {
   color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.theme-light .text-surface-950,
+.theme-light .text-surface-900,
+.theme-light .text-surface-100,
+.theme-light .text-surface-50 {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
 /* Keep status content readable on light backgrounds. */
@@ -758,6 +775,217 @@ body.keyboard-open .keyboard-scroll-target {
 .theme-light .restore-backup-modal code {
   color: #047857 !important;
   -webkit-text-fill-color: #047857 !important;
+}
+
+/* Security settings: semantic premium surface that adapts cleanly to every theme. */
+.security-tab-theme-scope {
+  --security-accent: var(--color-brand-500);
+  --security-accent-strong: var(--color-brand-400);
+  --security-text: var(--color-surface-50);
+  --security-muted: var(--color-surface-300);
+  --security-card-bg: linear-gradient(145deg, rgba(15, 23, 42, 0.86), rgba(2, 6, 23, 0.78));
+  --security-card-border: color-mix(in srgb, var(--security-accent) 20%, rgba(148, 163, 184, 0.22));
+  --security-row-divider: color-mix(in srgb, var(--security-accent) 16%, rgba(148, 163, 184, 0.2));
+  --security-row-bg: rgba(15, 23, 42, 0.34);
+  --security-row-hover: color-mix(in srgb, var(--security-accent) 10%, rgba(15, 23, 42, 0.72));
+  --security-panel-bg: linear-gradient(145deg, color-mix(in srgb, var(--security-accent) 9%, rgba(2, 6, 23, 0.82)), rgba(15, 23, 42, 0.64));
+  --security-icon-bg: linear-gradient(135deg, color-mix(in srgb, var(--security-accent) 22%, rgba(15, 23, 42, 0.92)), rgba(15, 23, 42, 0.76));
+  --security-shadow: 0 18px 46px rgba(2, 6, 23, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--security-text);
+}
+
+.theme-light .security-tab-theme-scope {
+  --security-text: #0f172a;
+  --security-muted: #475569;
+  --security-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.98), color-mix(in srgb, var(--security-accent) 5%, #f8fafc));
+  --security-card-border: color-mix(in srgb, var(--security-accent) 18%, #dbeafe);
+  --security-row-divider: color-mix(in srgb, var(--security-accent) 14%, #e2e8f0);
+  --security-row-bg: rgba(255, 255, 255, 0.72);
+  --security-row-hover: color-mix(in srgb, var(--security-accent) 8%, #f8fafc);
+  --security-panel-bg: linear-gradient(145deg, color-mix(in srgb, var(--security-accent) 8%, #ffffff), #f8fafc);
+  --security-icon-bg: linear-gradient(135deg, color-mix(in srgb, var(--security-accent) 13%, #ffffff), #f8fafc);
+  --security-shadow: 0 14px 38px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  color: var(--security-text) !important;
+}
+
+.security-tab-theme-scope .security-settings-tab,
+.security-tab-theme-scope .security-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--security-card-border) !important;
+  background: var(--security-card-bg) !important;
+  box-shadow: var(--security-shadow);
+}
+
+.security-tab-theme-scope .security-settings-tab::before,
+.security-tab-theme-scope .security-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--security-accent) 18%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 34%);
+  opacity: 0.8;
+}
+
+.security-tab-theme-scope .security-settings-tab > *,
+.security-tab-theme-scope .security-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.security-group-label {
+  margin: 2rem 0 0.75rem;
+  padding: 0 0.25rem;
+  color: color-mix(in srgb, var(--security-accent-strong) 58%, var(--security-muted));
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.security-group-label:first-child {
+  margin-top: 0;
+}
+
+.security-subgroup-label {
+  margin-top: 1rem;
+  border-top: 1px solid var(--security-card-border) !important;
+  border-bottom: 1px solid var(--security-card-border) !important;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--security-accent) 10%, transparent), transparent) !important;
+  color: color-mix(in srgb, var(--security-accent-strong) 45%, var(--security-muted)) !important;
+  -webkit-text-fill-color: color-mix(in srgb, var(--security-accent-strong) 45%, var(--security-muted)) !important;
+}
+
+.security-subgroup-label:first-child {
+  margin-top: 0;
+}
+
+.security-row {
+  border-color: var(--security-row-divider) !important;
+  background: var(--security-row-bg);
+  transition: background-color 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+.security-row:hover {
+  background: var(--security-row-hover);
+}
+
+.security-row-icon {
+  border: 1px solid var(--security-card-border) !important;
+  background: var(--security-icon-bg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.security-expanded-panel {
+  border-color: var(--security-card-border) !important;
+  background: var(--security-panel-bg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.security-status-pill {
+  border: 1px solid color-mix(in srgb, var(--security-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--security-accent) 9%, transparent);
+  color: color-mix(in srgb, var(--security-accent-strong) 58%, var(--security-text));
+}
+
+.security-tab-theme-scope input,
+.security-tab-theme-scope textarea,
+.security-tab-theme-scope select {
+  border-color: var(--security-card-border) !important;
+  background: color-mix(in srgb, var(--security-row-bg) 76%, transparent) !important;
+  color: var(--security-text) !important;
+}
+
+.security-tab-theme-scope button[aria-pressed="false"][class*="bg-surface-700"],
+.security-tab-theme-scope button[aria-pressed="false"][class*="bg-surface-200"] {
+  background-color: color-mix(in srgb, var(--security-muted) 30%, transparent) !important;
+}
+
+.security-tab-theme-scope button[aria-pressed="false"] > span {
+  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.2);
+}
+
+.theme-light .security-tab-theme-scope [class*="border-surface-200"],
+.theme-light .security-tab-theme-scope [class*="border-surface-300"],
+.theme-light .security-tab-theme-scope [class*="dark:border-surface-200"],
+.theme-light .security-tab-theme-scope [class*="dark:border-surface-700"] {
+  border-color: var(--security-row-divider) !important;
+}
+
+.theme-light .security-tab-theme-scope .security-settings-tab,
+.theme-light .security-tab-theme-scope .security-card,
+.theme-light .security-tab-theme-scope .security-row-icon,
+.theme-light .security-tab-theme-scope .security-expanded-panel {
+  border-color: var(--security-card-border) !important;
+}
+
+.theme-light .security-tab-theme-scope .security-row,
+.theme-light .security-tab-theme-scope .security-subgroup-label {
+  border-color: var(--security-row-divider) !important;
+}
+
+.theme-light .security-tab-theme-scope .btn-glow {
+  border-color: color-mix(in srgb, var(--security-accent) 30%, #dbeafe) !important;
+}
+
+/* Light security tab: prevent dark-theme utility colors from leaking into badges,
+   inactive switches, chevrons and nested panels when `.dark` is still present. */
+.theme-light .security-tab-theme-scope .security-status-pill,
+.theme-light .security-tab-theme-scope span[class*="bg-surface-100"],
+.theme-light .security-tab-theme-scope span[class*="bg-surface-800"] {
+  border-color: #cbd5e1 !important;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  box-shadow: none !important;
+}
+
+.theme-light .security-tab-theme-scope span[class*="bg-emerald-50"],
+.theme-light .security-tab-theme-scope span[class*="bg-emerald-500"] {
+  border-color: #bbf7d0 !important;
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  -webkit-text-fill-color: #047857 !important;
+}
+
+.theme-light .security-tab-theme-scope button[aria-pressed="false"] {
+  background-color: #cbd5e1 !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+}
+
+.theme-light .security-tab-theme-scope button[aria-pressed="false"] > span {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18) !important;
+}
+
+.theme-light .security-tab-theme-scope button[aria-pressed="true"] > span {
+  background-color: #ffffff !important;
+}
+
+.theme-light .security-tab-theme-scope [class*="bg-surface-950"],
+.theme-light .security-tab-theme-scope [class*="bg-surface-900"],
+.theme-light .security-tab-theme-scope [class*="bg-surface-800"],
+.theme-light .security-tab-theme-scope [class*="bg-surface-700"],
+.theme-light .security-tab-theme-scope [class*="dark:bg-surface-950"],
+.theme-light .security-tab-theme-scope [class*="dark:bg-surface-900"],
+.theme-light .security-tab-theme-scope [class*="dark:bg-surface-800"],
+.theme-light .security-tab-theme-scope [class*="dark:bg-surface-700"] {
+  background-color: rgba(248, 250, 252, 0.86) !important;
+}
+
+.theme-light .security-tab-theme-scope [class*="bg-black/10"],
+.theme-light .security-tab-theme-scope [class*="bg-black/15"],
+.theme-light .security-tab-theme-scope [class*="bg-black/20"],
+.theme-light .security-tab-theme-scope [class*="bg-black/30"] {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+.theme-light .security-tab-theme-scope button[class*="text-surface-"],
+.theme-light .security-tab-theme-scope svg[class*="text-surface-"] {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
 }
 
 .danger-note {

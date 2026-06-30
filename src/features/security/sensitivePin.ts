@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
 import { Preferences } from '@capacitor/preferences';
 import { appendAuditLog } from '../../utils/auditLog';
+import { requestSensitivePinPrompt } from './sensitivePinPrompt';
 
 export const SENSITIVE_PIN_HASH_KEY = 'xkey_sensitive_pin_hash';
 export const SENSITIVE_PIN_ATTEMPTS_KEY = 'xkey_sensitive_pin_attempts';
@@ -47,20 +48,24 @@ export async function removeSensitivePin(): Promise<void> {
   await appendAuditLog('security.sensitive_pin_disabled').catch(() => {});
 }
 
-async function getAttempts(): Promise<number> {
+export function getSensitivePinRemainingAttempts(attempts: number): number {
+  return Math.max(0, MAX_ATTEMPTS_BEFORE_LOCK - attempts);
+}
+
+export async function getSensitivePinAttempts(): Promise<number> {
   const { value } = await Preferences.get({ key: SENSITIVE_PIN_ATTEMPTS_KEY });
   const attempts = Number.parseInt(value || '0', 10);
   return Number.isFinite(attempts) ? attempts : 0;
 }
 
-async function getLockUntil(): Promise<number> {
+export async function getSensitivePinLockUntil(): Promise<number> {
   const { value } = await Preferences.get({ key: SENSITIVE_PIN_LOCK_UNTIL_KEY });
   const lockUntil = Number.parseInt(value || '0', 10);
   return Number.isFinite(lockUntil) ? lockUntil : 0;
 }
 
 export async function verifySensitivePin(pin: string): Promise<boolean> {
-  const lockUntil = await getLockUntil();
+  const lockUntil = await getSensitivePinLockUntil();
   if (lockUntil > Date.now()) {
     await appendAuditLog('security.sensitive_pin_locked').catch(() => {});
     return false;
@@ -79,7 +84,7 @@ export async function verifySensitivePin(pin: string): Promise<boolean> {
     return true;
   }
 
-  const attempts = await getAttempts() + 1;
+  const attempts = await getSensitivePinAttempts() + 1;
   const writes = [
     Preferences.set({ key: SENSITIVE_PIN_ATTEMPTS_KEY, value: String(attempts) }),
   ];
@@ -99,23 +104,9 @@ export async function verifySensitivePin(pin: string): Promise<boolean> {
 export async function requireSensitivePin(reason = 'Confirm sensitive action'): Promise<boolean> {
   if (!await isSensitivePinEnabled()) return true;
 
-  const lockUntil = await getLockUntil();
-  if (lockUntil > Date.now()) {
-    const seconds = Math.ceil((lockUntil - Date.now()) / 1000);
-    window.alert(`Sensitive PIN is temporarily locked. Try again in ${seconds} seconds.`);
-    return false;
-  }
+  const modalResult = requestSensitivePinPrompt({ reason });
+  if (modalResult) return modalResult;
 
-  const pin = window.prompt(`${reason}\n\nEnter your 6-digit sensitive PIN:`);
-  if (pin === null) {
-    await appendAuditLog('security.sensitive_pin_cancelled').catch(() => {});
-    return false;
-  }
-
-  const ok = await verifySensitivePin(pin.trim());
-  if (!ok) {
-    window.alert('Sensitive PIN verification failed.');
-  }
-
-  return ok;
+  await appendAuditLog('security.sensitive_pin_unavailable').catch(() => {});
+  return false;
 }

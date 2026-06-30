@@ -1,23 +1,15 @@
 import { useState, useEffect, type ChangeEvent, type ReactNode } from 'react';
-import { ShieldCheck, ShieldAlert, ChevronDown } from 'lucide-react';
+import { ChevronDown, Download, Fingerprint, Import, ScanSearch, ShieldCheck, Siren } from 'lucide-react';
 import { Preferences } from '@capacitor/preferences';
 import { useToast } from '../../../contexts/ToastContext';
 import { useConfirm } from '../../../contexts/ConfirmContext';
 import { useT } from '../../../contexts/LanguageContext';
 import { useMasterPassword } from '../../../contexts/MasterPasswordContext';
 import {
-  AUTOLOCK_AFTER_REVEAL_KEY,
-  AUTOLOCK_BACKGROUND_KEY,
-  AUTOLOCK_BLUR_KEY,
   AUTOLOCK_ENABLED_KEY,
   AUTOLOCK_KEY,
-  AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY,
-  AUTOLOCK_PRESET_KEY,
-  AUTOLOCK_SCREEN_OFF_LOCK_KEY,
   AUTOLOCK_SETTINGS_CHANGED_EVENT,
   DEFAULT_MS,
-  PRESET_SETTINGS,
-  type AutoLockPreset,
 } from '../../../hooks/security/useAutoLock';
 import {
   requestMotionPermission,
@@ -43,7 +35,9 @@ import { AdvancedSecuritySection } from './AdvancedSecuritySection';
 import { SecurityStatusSection } from './SecurityStatusSection';
 import { PinBiometricSection } from './PinBiometricSection';
 import { SecurityAutomationSection } from './SecurityAutomationSection';
-import { isSensitivePinEnabled, removeSensitivePin, setSensitivePin } from '../../../features/security/sensitivePin';
+import { SecurityRecommendationsSection } from './SecurityRecommendationsSection';
+import { calculateSecurityScore, type SecurityScoreItem } from './securityScore';
+import { isSensitivePinEnabled, removeSensitivePin, requireSensitivePin, setSensitivePin } from '../../../features/security/sensitivePin';
 import { LOGO_LOCK_ENABLED_KEY, LOGO_LOCK_SETTINGS_CHANGED_EVENT } from '../../../features/security/logoLock';
 
 export type SecurityTabProps = {
@@ -54,7 +48,7 @@ type VaultSecurityStatus = Awaited<ReturnType<typeof getVaultSecurityStatus>>;
 
 function SettingsGroupLabel({ children }: { children: string }) {
   return (
-    <div className="mb-3 mt-8 px-1 text-[0.625rem] font-bold uppercase tracking-[0.16em] text-surface-500 first:mt-0">
+    <div className="security-group-label">
       {children}
     </div>
   );
@@ -62,7 +56,7 @@ function SettingsGroupLabel({ children }: { children: string }) {
 
 function SettingsSubGroupLabel({ children }: { children: string }) {
   return (
-    <div className="mt-4 border-y border-surface-700/30 bg-surface-950/35 px-4 py-2.5 text-[0.625rem] font-bold uppercase tracking-[0.14em] text-surface-500 first:mt-0">
+    <div className="security-subgroup-label mt-4 border-y border-surface-200 bg-surface-50 px-4 py-2.5 text-[0.625rem] font-bold uppercase tracking-[0.14em] text-surface-600 first:mt-0 dark:border-surface-700/30 dark:bg-surface-950/35 dark:text-surface-300">
       {children}
     </div>
   );
@@ -73,7 +67,6 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [showSecurityStatus, setShowSecurityStatus] = useState(false);
   const [showAutoLock, setShowAutoLock] = useState(false);
   const [showClipboard, setShowClipboard] = useState(false);
-  const [showHighSecurityDetails, setShowHighSecurityDetails] = useState(false);
   const [showSecureDisplay, setShowSecureDisplay] = useState(false);
   const [showDeviceIntegrityGuard, setShowDeviceIntegrityGuard] = useState(false);
   const [showHardwareBound, setShowHardwareBound] = useState(false);
@@ -81,14 +74,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [showMasterPasswordDetails, setShowMasterPasswordDetails] = useState(false);
   const [showScreenCapture, setShowScreenCapture] = useState(false);
   const [showSensitivePinDetails, setShowSensitivePinDetails] = useState(false);
+  const [showLogoLockDetails, setShowLogoLockDetails] = useState(false);
   const [autoLockEnabled, setAutoLockEnabled] = useState(false);
   const [currentAutoLockMs, setCurrentAutoLockMs] = useState(DEFAULT_MS);
-  const [contextAutoLockPreset, setContextAutoLockPreset] = useState<AutoLockPreset>('balanced');
-  const [contextBackgroundSeconds, setContextBackgroundSeconds] = useState('30');
-  const [contextSwitchSeconds, setContextSwitchSeconds] = useState('15');
-  const [contextRevealSeconds, setContextRevealSeconds] = useState('30');
-  const [contextLockAfterCopy, setContextLockAfterCopy] = useState(false);
-  const [contextScreenOffLock, setContextScreenOffLock] = useState(false);
   const [currentClipboardMs, setCurrentClipboardMs] = useState(0);
   const [secretCopyDisabled, setSecretCopyDisabled] = useState(false);
   const [customAutoLock, setCustomAutoLock] = useState('');
@@ -111,6 +99,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const [pinNew, setPinNew] = useState('');
   const [pinConfirmVal, setPinConfirmVal] = useState('');
   const [pinError, setPinError] = useState('');
+  const [pinFailedAttempts, setPinFailedAttempts] = useState(0);
+  const [pinBackoffUntil, setPinBackoffUntil] = useState(0);
 
   // Kill Switch & Decoy
   const [killSwitchEnabled, setKillSwitchEnabled] = useState(false);
@@ -171,31 +161,6 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       const { value: autoLockMs } = await Preferences.get({ key: AUTOLOCK_KEY });
       const ms = parseStoredInt(autoLockMs);
       setCurrentAutoLockMs(Number.isFinite(ms) && ms > 0 ? ms : DEFAULT_MS);
-      const [
-        { value: presetValue },
-        { value: backgroundMs },
-        { value: blurMs },
-        { value: revealMs },
-        { value: lockAfterCopy },
-        { value: screenOffLock },
-      ] = await Promise.all([
-        Preferences.get({ key: AUTOLOCK_PRESET_KEY }),
-        Preferences.get({ key: AUTOLOCK_BACKGROUND_KEY }),
-        Preferences.get({ key: AUTOLOCK_BLUR_KEY }),
-        Preferences.get({ key: AUTOLOCK_AFTER_REVEAL_KEY }),
-        Preferences.get({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY }),
-        Preferences.get({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY }),
-      ]);
-      const safePreset: AutoLockPreset = presetValue === 'strict' || presetValue === 'paranoid' || presetValue === 'balanced' || presetValue === 'custom'
-        ? presetValue
-        : 'balanced';
-      const presetDefaults = safePreset === 'custom' ? PRESET_SETTINGS.balanced : PRESET_SETTINGS[safePreset];
-      setContextAutoLockPreset(safePreset);
-      setContextBackgroundSeconds(String(Math.round((parseStoredInt(backgroundMs) || presetDefaults.backgroundMs) / 1000)));
-      setContextSwitchSeconds(String(Math.round((parseStoredInt(blurMs) || presetDefaults.blurMs) / 1000)));
-      setContextRevealSeconds(String(Math.round((parseStoredInt(revealMs) || presetDefaults.afterRevealMs) / 1000)));
-      setContextLockAfterCopy(lockAfterCopy === 'true');
-      setContextScreenOffLock(screenOffLock === 'true');
       const { value: clipboardMs } = await Preferences.get({ key: CLIPBOARD_TIMEOUT_KEY });
       const clipboardTimeout = parseStoredInt(clipboardMs);
       setCurrentClipboardMs(Number.isFinite(clipboardTimeout) && clipboardTimeout >= 0 ? clipboardTimeout : 0);
@@ -208,8 +173,21 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     loadSettings();
   }, []);
 
+  const warnSecurityDowngrade = async (title: string) => showConfirm(
+    t('settings.securityDowngradeWarning', { title }),
+    {
+      danger: true,
+      title: t('settings.securityDowngradeTitle'),
+      confirmText: t('common.confirm'),
+    },
+  );
+
   const setAutoLockPreference = async (enabled: boolean, ms = currentAutoLockMs) => {
     hapticTap();
+    if (!enabled && autoLockEnabled) {
+      const ok = await warnSecurityDowngrade(t('settings.autoLock'));
+      if (!ok) return;
+    }
     await Promise.all([
       Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: enabled ? 'true' : 'false' }),
       Preferences.set({ key: AUTOLOCK_KEY, value: String(ms > 0 ? ms : DEFAULT_MS) }),
@@ -217,7 +195,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     setAutoLockEnabled(enabled);
     setCurrentAutoLockMs(ms > 0 ? ms : DEFAULT_MS);
     window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(enabled ? t('settings.autoLockSaved') : t('settings.autoLockDisabledToast', { default: 'Đã tắt tự khóa' }), enabled ? 'success' : 'info');
+    showToast(enabled ? t('settings.autoLockSaved') : t('settings.autoLockDisabledToast'), enabled ? 'success' : 'info');
   };
 
   const saveAutoLock = async (ms: number | string) => {
@@ -226,27 +204,15 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       showToast(t('settings.autoLockRangeError'), 'warning');
       return;
     }
-    const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
+    const ok = await showConfirm(t('settings.changeConfirm'));
     if (!ok) return;
     hapticTap();
     await Promise.all([
       Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: 'true' }),
       Preferences.set({ key: AUTOLOCK_KEY, value: String(safeMs) }),
-      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'balanced' }),
-      Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(safeMs) }),
-      Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(safeMs) }),
-      Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(safeMs) }),
-      Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: 'false' }),
-      Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: 'false' }),
     ]);
     setAutoLockEnabled(true);
     setCurrentAutoLockMs(safeMs);
-    setContextAutoLockPreset('balanced');
-    setContextBackgroundSeconds(String(Math.round(safeMs / 1000)));
-    setContextSwitchSeconds(String(Math.round(safeMs / 1000)));
-    setContextRevealSeconds(String(Math.round(safeMs / 1000)));
-    setContextLockAfterCopy(false);
-    setContextScreenOffLock(false);
     setCustomAutoLock('');
     window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
     showToast(t('settings.autoLockSaved'), 'success');
@@ -285,7 +251,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       showToast(t('settings.clipboardRangeError'), 'warning');
       return;
     }
-    const ok = await showConfirm(t('settings.changeConfirm', { default: 'Are you sure you want to change this setting?' }));
+    const ok = await showConfirm(t('settings.changeConfirm'));
     if (!ok) return;
     hapticTap();
     await Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(safeMs) });
@@ -309,7 +275,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   };
 
   const settingStatus = (text: ReactNode, active = false) => (
-    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ${active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-surface-800 text-surface-400'}`}>
+    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[0.625rem] font-semibold ring-1 ${active ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-transparent' : 'bg-surface-100 text-surface-700 ring-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:ring-transparent'}`}>
       {text}
     </span>
   );
@@ -325,7 +291,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${active ? color : 'bg-surface-700'}`}
+      className={`flex h-7 w-12 items-center rounded-full px-1 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${active ? color : 'bg-surface-200 dark:bg-surface-700'}`}
       aria-label={ariaLabel}
       aria-pressed={active}
     >
@@ -361,7 +327,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     const confirmed = await showConfirm(
       next
         ? t('settings.hardwareBoundBackupConfirm')
-        : t('settings.hardwareBoundDisableConfirm', { default: 'Tắt khóa vault theo phần cứng có thể làm giảm bảo vệ khóa trên thiết bị này. Bạn có chắc chắn muốn tiếp tục?' }),
+        : t('settings.hardwareBoundDisableConfirm'),
       {
         danger: true,
         title: t('settings.hardwareBoundConfirmTitle'),
@@ -438,7 +404,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const requestScreenCaptureToggle = () => {
     hapticTap();
     if (!screenSecurity.supported) {
-      showToast(t('settings.screenCaptureUnsupported', { default: 'Screen capture protection is only supported on native devices.' }), 'warning');
+      showToast(t('settings.screenCaptureUnsupported'), 'warning');
       return;
     }
     if (!mp.hasMasterPassword) {
@@ -448,7 +414,6 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       return;
     }
     setShowScreenCapture(true);
-    setShowMasterPasswordDetails(true);
     setScreenCaptureTarget(!screenSecurity.blocked);
     setScreenCapturePassword('');
   };
@@ -486,13 +451,33 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       setMpRemoveInput('');
       showToast(t('settings.masterPasswordRemoved'), 'success');
     } catch (err) {
-      showToast(getErrorMessage(err) || t('settings.masterPasswordRemoveError', { default: 'Could not remove master password.' }), 'error');
+      showToast(getErrorMessage(err) || t('settings.masterPasswordRemoveError'), 'error');
     } finally {
       setMpBusy(false);
     }
   };
 
+  const handleBackPinStep = () => {
+    setPinError('');
+    if (pinStep === 'confirm') {
+      setPinStep('new');
+      setPinConfirmVal('');
+      return;
+    }
+    if (pinStep === 'new') {
+      setPinStep('current');
+      setPinNew('');
+    }
+  };
+
   const handleChangePin = async () => {
+    if (pinBackoffUntil > Date.now()) {
+      setPinError(t('settings.pinBackoffWait', {
+        seconds: String(Math.ceil((pinBackoffUntil - Date.now()) / 1000)),
+      }));
+      return;
+    }
+
     if (pinStep === 'current') {
       const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
       if (!stored) {
@@ -501,7 +486,20 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         setPinCurrent('');
         return;
       }
-      if (hashPin(pinCurrent) !== stored) { setPinError(t('settings.incorrectCurrentPin')); return; }
+      if (hashPin(pinCurrent) !== stored) {
+        const nextAttempts = pinFailedAttempts + 1;
+        const delaySeconds = nextAttempts >= 5 ? 30 : nextAttempts >= 3 ? 10 : 0;
+        setPinFailedAttempts(nextAttempts);
+        if (delaySeconds) setPinBackoffUntil(Date.now() + delaySeconds * 1000);
+        setPinError(delaySeconds
+          ? t('settings.incorrectCurrentPinWithDelay', {
+            seconds: String(delaySeconds),
+          })
+          : t('settings.incorrectCurrentPin'));
+        return;
+      }
+      setPinFailedAttempts(0);
+      setPinBackoffUntil(0);
       setPinStep('new'); setPinError('');
     } else if (pinStep === 'new') {
       const nextPin = sanitizePinInput(pinNew);
@@ -525,6 +523,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       showToast(t('settings.pinChangedSuccess'), 'success');
       setShowChangePin(false);
       setPinCurrent(''); setPinNew(''); setPinConfirmVal(''); setPinStep('current');
+      setPinFailedAttempts(0); setPinBackoffUntil(0); setPinError('');
     }
   };
 
@@ -617,153 +616,6 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     }
   };
 
-  const enableHighSecuritySession = async () => {
-    hapticTap();
-    const confirmed = await showConfirm(t('settings.highSecuritySessionConfirmDesc'), {
-      danger: true,
-      title: t('settings.highSecuritySessionConfirmTitle'),
-      confirmText: t('common.confirm'),
-    });
-    if (!confirmed) return;
-
-    const paranoidPolicy = PRESET_SETTINGS.paranoid;
-    await Promise.all([
-      Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: 'true' }),
-      Preferences.set({ key: AUTOLOCK_KEY, value: String(60 * 1000) }),
-      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'paranoid' }),
-      Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(paranoidPolicy.backgroundMs) }),
-      Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(paranoidPolicy.blurMs) }),
-      Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(paranoidPolicy.afterRevealMs) }),
-      Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: 'true' }),
-      Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: 'true' }),
-      Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(5 * 1000) }),
-      Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: 'true' }),
-    ]);
-
-    setAutoLockEnabled(true);
-    setCurrentAutoLockMs(60 * 1000);
-    setContextAutoLockPreset('paranoid');
-    setContextBackgroundSeconds(String(Math.round(paranoidPolicy.backgroundMs / 1000)));
-    setContextSwitchSeconds(String(Math.round(paranoidPolicy.blurMs / 1000)));
-    setContextRevealSeconds(String(Math.round(paranoidPolicy.afterRevealMs / 1000)));
-    setContextLockAfterCopy(true);
-    setContextScreenOffLock(true);
-    setCurrentClipboardMs(5 * 1000);
-    setSecretCopyDisabled(true);
-    secureDisplay.setEnabled(true);
-    if (screenSecurity.supported && !screenSecurity.blocked) {
-      await screenSecurity.setBlocked(true).catch(() => undefined);
-    }
-
-    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(t('settings.highSecuritySessionEnabledToast'), 'success');
-  };
-
-  const saveHighSecurityAutoLockParam = async (key: string, seconds: string, setter: (value: string) => void) => {
-    const safeSeconds = Number.parseInt(seconds, 10);
-    if (!Number.isFinite(safeSeconds) || safeSeconds < 0 || safeSeconds > 24 * 60 * 60) {
-      showToast(t('settings.highSecuritySecondsRangeError'), 'warning');
-      return;
-    }
-
-    hapticTap();
-    await Promise.all([
-      Preferences.set({ key, value: String(safeSeconds * 1000) }),
-      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'custom' }),
-    ]);
-    setter(String(safeSeconds));
-    setContextAutoLockPreset('custom');
-    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(t('settings.highSecurityParamSaved'), 'success');
-  };
-
-  const saveHighSecurityIdleParam = async (minutes: string) => {
-    const safeMinutes = Number.parseInt(minutes, 10);
-    if (!Number.isFinite(safeMinutes) || safeMinutes < 1 || safeMinutes > 24 * 60) {
-      showToast(t('settings.autoLockRangeError'), 'warning');
-      return;
-    }
-
-    const safeMs = safeMinutes * 60 * 1000;
-    hapticTap();
-    await Promise.all([
-      Preferences.set({ key: AUTOLOCK_KEY, value: String(safeMs) }),
-      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'custom' }),
-    ]);
-    setCurrentAutoLockMs(safeMs);
-    setContextAutoLockPreset('custom');
-    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(t('settings.highSecurityParamSaved'), 'success');
-  };
-
-  const saveHighSecurityClipboardParam = async (seconds: string) => {
-    const safeSeconds = Number.parseInt(seconds, 10);
-    if (!Number.isFinite(safeSeconds) || safeSeconds < 0 || (safeSeconds > 0 && safeSeconds < 5) || safeSeconds > 24 * 60 * 60) {
-      showToast(t('settings.clipboardRangeError'), 'warning');
-      return;
-    }
-
-    const safeMs = safeSeconds * 1000;
-    hapticTap();
-    await Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(safeMs) });
-    setCurrentClipboardMs(safeMs);
-    showToast(t('settings.highSecurityParamSaved'), 'success');
-  };
-
-  const setHighSecurityBooleanParam = async (
-    key: string,
-    value: boolean,
-    setter: (value: boolean) => void,
-    markCustom = true,
-  ) => {
-    hapticTap();
-    await Preferences.set({ key, value: value ? 'true' : 'false' });
-    if (markCustom) {
-      await Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'custom' });
-      setContextAutoLockPreset('custom');
-    }
-    setter(value);
-    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(t('settings.highSecurityParamSaved'), 'success');
-  };
-
-  const disableHighSecuritySession = async () => {
-    hapticTap();
-    const confirmed = await showConfirm(t('settings.highSecuritySessionDisableConfirmDesc', {
-      default: 'Tắt phiên bảo mật cao và đưa tự khóa về chế độ thường 5 phút?',
-    }), {
-      title: t('settings.highSecuritySessionConfirmTitle'),
-      confirmText: t('common.confirm'),
-    });
-    if (!confirmed) return;
-
-    await Promise.all([
-      Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: 'false' }),
-      Preferences.set({ key: AUTOLOCK_KEY, value: String(DEFAULT_MS) }),
-      Preferences.set({ key: AUTOLOCK_PRESET_KEY, value: 'balanced' }),
-      Preferences.set({ key: AUTOLOCK_BACKGROUND_KEY, value: String(DEFAULT_MS) }),
-      Preferences.set({ key: AUTOLOCK_BLUR_KEY, value: String(DEFAULT_MS) }),
-      Preferences.set({ key: AUTOLOCK_AFTER_REVEAL_KEY, value: String(DEFAULT_MS) }),
-      Preferences.set({ key: AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, value: 'false' }),
-      Preferences.set({ key: AUTOLOCK_SCREEN_OFF_LOCK_KEY, value: 'false' }),
-      Preferences.set({ key: CLIPBOARD_TIMEOUT_KEY, value: String(30 * 1000) }),
-      Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: 'false' }),
-    ]);
-
-    setAutoLockEnabled(false);
-    setCurrentAutoLockMs(DEFAULT_MS);
-    setContextAutoLockPreset('balanced');
-    setContextBackgroundSeconds(String(Math.round(DEFAULT_MS / 1000)));
-    setContextSwitchSeconds(String(Math.round(DEFAULT_MS / 1000)));
-    setContextRevealSeconds(String(Math.round(DEFAULT_MS / 1000)));
-    setContextLockAfterCopy(false);
-    setContextScreenOffLock(false);
-    setCurrentClipboardMs(30 * 1000);
-    setSecretCopyDisabled(false);
-    window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
-    showToast(t('settings.highSecuritySessionDisabledToast', { default: 'Đã tắt phiên bảo mật cao' }), 'success');
-  };
-
   const handleToggleLogoLock = async () => {
     const next = !logoLockEnabled;
     hapticTap();
@@ -783,6 +635,14 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     hapticTap();
 
     if (sensitivePinEnabled) {
+      const verified = await requireSensitivePin(
+        t('settings.sensitivePinDisableAuthPrompt'),
+      );
+      if (!verified) {
+        showToast(t('settings.sensitivePinWrongOrCancelled'), 'warning');
+        return;
+      }
+
       const confirmed = await showConfirm(t('settings.sensitivePinDisableConfirmDesc'), {
         danger: true,
         title: t('settings.sensitivePinDisableConfirmTitle'),
@@ -798,6 +658,23 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
 
     setShowSensitivePinDetails(true);
     setShowSensitivePinSetup(true);
+  };
+
+  const handleChangeSensitivePin = async () => {
+    if (!sensitivePinEnabled || sensitivePinBusy) return;
+
+    const verified = await requireSensitivePin(
+      t('settings.sensitivePinChangeAuthPrompt'),
+    );
+    if (!verified) {
+      showToast(t('settings.sensitivePinWrongOrCancelled'), 'warning');
+      return;
+    }
+
+    setShowSensitivePinDetails(true);
+    setShowSensitivePinSetup(true);
+    setSensitivePinInput('');
+    setSensitivePinConfirm('');
   };
 
   const handleSaveSensitivePin = async () => {
@@ -819,9 +696,15 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     setSensitivePinBusy(true);
     try {
       await setSensitivePin(pin);
+      const wasEnabled = sensitivePinEnabled;
       setSensitivePinEnabled(true);
       resetSensitivePinSetup();
-      showToast(t('settings.sensitivePinEnabledToast'), 'success');
+      showToast(
+        wasEnabled
+          ? t('settings.sensitivePinChangedToast')
+          : t('settings.sensitivePinEnabledToast'),
+        'success',
+      );
     } catch (error) {
       showToast(getErrorMessage(error) || t('settings.sensitivePinInvalid'), 'error');
     } finally {
@@ -829,9 +712,132 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     }
   };
 
+  const scrollToSecuritySetting = (key: string) => {
+    hapticTap();
+    const expanders: Record<string, () => void> = {
+      'master-password': () => setShowMasterPasswordDetails(true),
+      'sensitive-pin': () => setShowSensitivePinDetails(true),
+      'auto-lock': () => setShowAutoLock(true),
+      'screen-capture': () => setShowScreenCapture(true),
+      'hardware-bound': () => setShowHardwareBound(true),
+      'secret-copy': () => setShowClipboard(true),
+      'decoy-vault': () => setShowDecoyPinInput(true),
+      'device-integrity': () => setShowDeviceIntegrityGuard(true),
+    };
+    expanders[key]?.();
+
+    window.setTimeout(() => {
+      const target = document.getElementById(`security-setting-${key}`);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('ring-2', 'ring-brand-400', 'ring-offset-2', 'ring-offset-white', 'dark:ring-brand-300', 'dark:ring-offset-surface-950');
+      window.setTimeout(() => {
+        target.classList.remove('ring-2', 'ring-brand-400', 'ring-offset-2', 'ring-offset-white', 'dark:ring-brand-300', 'dark:ring-offset-surface-950');
+      }, 2400);
+    }, 120);
+  };
+
+  const scoreItems: SecurityScoreItem[] = [
+    { key: 'master-password', label: t('settings.masterPasswordTitle'), active: mp.hasMasterPassword, weight: 3, severity: 'high', desc: t('settings.checkupMasterPasswordDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('master-password') },
+    { key: 'sensitive-pin', label: t('settings.sensitivePinTitle'), active: sensitivePinEnabled, weight: 3, severity: 'high', desc: t('settings.checkupSensitivePinDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('sensitive-pin') },
+    { key: 'auto-lock', label: t('settings.autoLock'), active: autoLockEnabled, weight: 2, severity: 'high', desc: t('settings.checkupAutoLockDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('auto-lock') },
+    { key: 'screen-capture', label: t('settings.screenCaptureTitle'), active: !screenSecurity.supported || screenSecurity.blocked, weight: 2, severity: 'medium', desc: t('settings.checkupScreenCaptureDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('screen-capture') },
+    { key: 'hardware-bound', label: t('settings.hardwareBoundTitle'), active: !!securityStatus?.hardwareBoundOnly, weight: 2, severity: 'medium', desc: t('settings.checkupHardwareBoundDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('hardware-bound') },
+    { key: 'secret-copy', label: t('settings.secretCopyDisabledTitle'), active: secretCopyDisabled, weight: 2, severity: 'medium', desc: t('settings.checkupSecretCopyDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('secret-copy') },
+    { key: 'decoy-vault', label: t('settings.decoyVaultTitle'), active: hasDecoyPin, weight: 1, severity: 'low', desc: t('settings.checkupDecoyVaultDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('decoy-vault') },
+    { key: 'device-integrity', label: t('settings.deviceIntegrityTitle'), active: deviceIntegrityGuard, weight: 2, severity: 'medium', desc: t('settings.checkupDeviceIntegrityDesc'), action: t('settings.goToSetting', { default: 'Đến cài đặt' }), onClick: () => scrollToSecuritySetting('device-integrity') },
+  ];
+
+  const handleExportSecurityConfig = async () => {
+    const score = calculateSecurityScore(scoreItems);
+    const payload = {
+      app: 'xKey',
+      reportType: 'security-report',
+      exportedAt: new Date().toISOString(),
+      score,
+      riskLevel: score.riskLevel,
+      enabled: scoreItems.filter(item => item.active).map(item => ({ key: item.key, label: item.label, weight: item.weight ?? 1 })),
+      missing: scoreItems.filter(item => !item.active).map(item => ({ key: item.key, label: item.label, severity: item.severity ?? 'medium', weight: item.weight ?? 1 })),
+      recommended: scoreItems.filter(item => !item.active).map(item => item.key),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `xkey-security-config-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast(t('settings.securityConfigExported'), 'success');
+  };
+
+  const handleImportSecurityConfig = async () => {
+    hapticTap();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const payload = JSON.parse(await file.text()) as {
+          app?: string;
+          reportType?: string;
+          enabled?: Array<{ key?: string }>;
+        };
+
+        if (payload.app !== 'xKey' || payload.reportType !== 'security-report' || !Array.isArray(payload.enabled)) {
+          showToast(t('settings.securityConfigImportInvalid', { default: 'Tệp cấu hình bảo mật không hợp lệ.' }), 'error');
+          return;
+        }
+
+        const confirmed = await showConfirm(t('settings.securityConfigImportConfirm', { default: 'Nhập cấu hình sẽ chỉ áp dụng các mục có thể bật tự động. Các mục cần xác minh sẽ được điều hướng đến vùng cài đặt tương ứng.' }), {
+          title: t('settings.importSecurityConfig', { default: 'Nhập cấu hình' }),
+          confirmText: t('common.confirm'),
+        });
+        if (!confirmed) return;
+
+        const enabledKeys = new Set(payload.enabled.map(item => item.key).filter(Boolean));
+        const tasks: Promise<unknown>[] = [];
+
+        if (enabledKeys.has('auto-lock')) {
+          tasks.push(
+            Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: 'true' }),
+            Preferences.set({ key: AUTOLOCK_KEY, value: String(DEFAULT_MS) }),
+          );
+          setAutoLockEnabled(true);
+          setCurrentAutoLockMs(DEFAULT_MS);
+        }
+
+        if (enabledKeys.has('secret-copy')) {
+          tasks.push(Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: 'true' }));
+          setSecretCopyDisabled(true);
+        }
+
+        if (enabledKeys.has('device-integrity')) {
+          tasks.push(setDeviceIntegrityGuardEnabled(true));
+          setDeviceIntegrityGuard(true);
+        }
+
+        await Promise.all(tasks);
+        window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
+        showToast(t('settings.securityConfigImported', { default: 'Đã nhập cấu hình bảo mật' }), 'success');
+
+        const needsManualSetup = ['master-password', 'sensitive-pin', 'screen-capture', 'hardware-bound', 'decoy-vault']
+          .find(key => enabledKeys.has(key));
+        if (needsManualSetup) {
+          scrollToSecuritySetting(needsManualSetup);
+        }
+      } catch {
+        showToast(t('settings.securityConfigImportInvalid', { default: 'Tệp cấu hình bảo mật không hợp lệ.' }), 'error');
+      }
+    };
+    input.click();
+  };
+
   return (
-    <>
-      <SettingsGroupLabel>{t('settings.securityOverviewGroup', { default: 'Tổng quan bảo mật' })}</SettingsGroupLabel>
+    <div className="security-tab-theme-scope">
+      <SettingsGroupLabel>{t('settings.securityOverviewGroup')}</SettingsGroupLabel>
 
       <SecurityStatusSection
         t={t}
@@ -841,7 +847,13 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         hardwareSecurityLabel={hardwareSecurityLabel}
       />
 
-      <SettingsGroupLabel>{t('settings.unlockAuthGroup', { default: 'Mở khóa & xác thực' })}</SettingsGroupLabel>
+      <SecurityRecommendationsSection
+        t={t}
+        scoreItems={scoreItems}
+        settingStatus={settingStatus}
+      />
+
+      <SettingsGroupLabel>{t('settings.unlockAuthGroup')}</SettingsGroupLabel>
 
       <PinBiometricSection
         t={t}
@@ -856,6 +868,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         pinConfirmVal={pinConfirmVal}
         setPinConfirmVal={(value) => setPinConfirmVal(sanitizePinInput(value))}
         pinError={pinError}
+        pinBackoffUntil={pinBackoffUntil}
+        onBackPinStep={handleBackPinStep}
         handleChangePin={handleChangePin}
         killSwitchEnabled={killSwitchEnabled}
         handleToggleKillSwitch={handleToggleKillSwitch}
@@ -877,255 +891,85 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         toggleSwitch={toggleSwitch}
       />
 
-      <SettingsGroupLabel>{t('settings.securityControlsGroup', { default: 'Kiểm soát bảo mật' })}</SettingsGroupLabel>
+      <SettingsGroupLabel>{t('settings.securityControlsGroup')}</SettingsGroupLabel>
 
-      <div className="glass-card overflow-hidden">
-        <div className="border-b border-surface-700/50 p-4">
+      <div className="security-settings-tab glass-card overflow-hidden">
+        <div className="border-b border-surface-200 p-4 dark:border-surface-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+            <div className="security-row-icon flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
               <ShieldCheck size={20} className="text-cyan-400" />
             </div>
             <div>
-              <p className="text-white font-medium text-sm">{t('settings.securityControlsTitle', { default: 'Cài đặt bảo vệ nâng cao' })}</p>
-              <p className="text-xs text-surface-400">{t('settings.securityControlsDesc', { default: 'Các lớp khóa, chống lộ dữ liệu và bảo vệ vault được nhóm theo mục đích sử dụng.' })}</p>
+              <p className="text-sm font-medium text-surface-950 dark:text-white">{t('settings.securityControlsTitle')}</p>
+              <p className="text-xs text-surface-700 dark:text-surface-300">{t('settings.securityControlsDesc')}</p>
             </div>
           </div>
         </div>
 
         <div>
-          <SettingsSubGroupLabel>{t('settings.appLockGroup', { default: 'Khóa ứng dụng' })}</SettingsSubGroupLabel>
-
-          <div className="border-b border-surface-700/30">
-            <div className="flex items-start justify-between gap-3 p-4">
-              <button
-                type="button"
-                onClick={() => { hapticTap(); setShowHighSecurityDetails(!showHighSecurityDetails); }}
-                className="flex min-w-0 flex-1 gap-3 text-left"
-              >
-                <ShieldAlert size={16} className={`mt-1 flex-shrink-0 ${contextAutoLockPreset === 'paranoid' ? 'text-amber-400' : 'text-surface-400'}`} />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white">{t('settings.highSecuritySessionTitle')}</p>
-                  <p className="mt-1 text-xs text-surface-500">
-                    {t('settings.highSecuritySessionDesc')}
-                  </p>
-                </div>
-              </button>
-              <div className="flex flex-shrink-0 items-center gap-2">
-                {settingStatus(contextAutoLockPreset === 'paranoid' ? t('settings.enabled') : t('settings.disabled'), contextAutoLockPreset === 'paranoid')}
-                <button type="button" onClick={() => { hapticTap(); setShowHighSecurityDetails(!showHighSecurityDetails); }} className="p-1 text-surface-500" aria-label={t('settings.expandDetails')}>
-                  <ChevronDown size={16} className={`transition-transform ${showHighSecurityDetails ? 'rotate-180' : ''}`} />
-                </button>
-                {toggleSwitch(
-                  contextAutoLockPreset === 'paranoid',
-                  contextAutoLockPreset === 'paranoid' ? disableHighSecuritySession : enableHighSecuritySession,
-                  t('settings.highSecuritySessionTitle'),
-                  'bg-amber-500',
-                )}
-              </div>
-            </div>
-            {showHighSecurityDetails && (
-              <div className="mx-4 mb-4 space-y-3">
-                <div className="rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-500/10 to-surface-900/70 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-amber-100">{t('settings.highSecuritySessionDetailsIntro')}</p>
-                      <p className="mt-1 text-[0.7rem] leading-relaxed text-amber-100/70">{t('settings.highSecurityCustomizeNote')}</p>
-                    </div>
-                    {settingStatus(contextAutoLockPreset === 'paranoid' ? t('settings.enabled') : t('settings.custom'), contextAutoLockPreset === 'paranoid')}
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {[
-                      [t('settings.highSecurityDetailNoCopyTitle'), secretCopyDisabled ? t('settings.enabled') : t('settings.disabled')],
-                      [t('settings.highSecurityDetailIdleTitle'), formatAutoLock(currentAutoLockMs)],
-                      [t('settings.highSecurityDetailBackgroundTitle'), `${contextBackgroundSeconds} s`],
-                      [t('settings.highSecurityDetailBlurTitle'), `${contextSwitchSeconds} s`],
-                      [t('settings.highSecurityDetailRevealTitle'), `${contextRevealSeconds} s`],
-                      [t('settings.highSecurityDetailCopyLockTitle'), contextLockAfterCopy ? t('settings.enabled') : t('settings.disabled')],
-                      [t('settings.highSecurityDetailScreenOffTitle'), contextScreenOffLock ? t('settings.enabled') : t('settings.disabled')],
-                      [t('settings.highSecurityDetailClipboardTitle'), formatClipboardTimeout(currentClipboardMs)],
-                      [t('settings.highSecurityDetailSecureDisplayTitle'), secureDisplay.enabled ? t('settings.enabled') : t('settings.disabled')],
-                      [t('settings.highSecurityDetailScreenCaptureTitle'), screenSecurity.blocked ? t('settings.blocked') : t('settings.allowed')],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-xl border border-surface-700/45 bg-surface-950/45 px-3 py-2">
-                        <p className="truncate text-[0.65rem] text-surface-500">{label}</p>
-                        <p className="mt-0.5 truncate text-xs font-semibold text-surface-100">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-surface-700/60 bg-surface-900/50 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-white">{t('settings.highSecurityCustomizeButton')}</p>
-                      <p className="mt-1 text-[0.65rem] leading-relaxed text-surface-400">{t('settings.highSecurityManualWarning')}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 space-y-3">
-                    <div className="rounded-lg border border-surface-700/60 bg-surface-950/40 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold text-white">{t('settings.highSecurityParamIdleTitle')}</p>
-                        {settingStatus(formatAutoLock(currentAutoLockMs), true)}
-                      </div>
-                      <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-                        <input
-                          type="number"
-                          min="1"
-                          max="1440"
-                          inputMode="numeric"
-                          value={Math.round(currentAutoLockMs / 60000)}
-                          onChange={e => setCurrentAutoLockMs(Math.max(1, Number.parseInt(e.target.value || '1', 10)) * 60000)}
-                          className="min-w-0 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-xs text-white focus:border-brand-500 focus:outline-none"
-                        />
-                        <button type="button" onClick={() => saveHighSecurityIdleParam(String(Math.round(currentAutoLockMs / 60000)))} className="btn-glow rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-surface-950">
-                          {t('common.save')}
-                        </button>
-                      </div>
-                    </div>
-
-                    {[
-                      {
-                        title: t('settings.highSecurityParamBackgroundTitle'),
-                        desc: t('settings.highSecurityParamBackgroundDesc'),
-                        value: contextBackgroundSeconds,
-                        setValue: setContextBackgroundSeconds,
-                        save: () => saveHighSecurityAutoLockParam(AUTOLOCK_BACKGROUND_KEY, contextBackgroundSeconds, setContextBackgroundSeconds),
-                      },
-                      {
-                        title: t('settings.highSecurityParamBlurTitle'),
-                        desc: t('settings.highSecurityParamBlurDesc'),
-                        value: contextSwitchSeconds,
-                        setValue: setContextSwitchSeconds,
-                        save: () => saveHighSecurityAutoLockParam(AUTOLOCK_BLUR_KEY, contextSwitchSeconds, setContextSwitchSeconds),
-                      },
-                      {
-                        title: t('settings.highSecurityParamRevealTitle'),
-                        desc: t('settings.highSecurityParamRevealDesc'),
-                        value: contextRevealSeconds,
-                        setValue: setContextRevealSeconds,
-                        save: () => saveHighSecurityAutoLockParam(AUTOLOCK_AFTER_REVEAL_KEY, contextRevealSeconds, setContextRevealSeconds),
-                      },
-                    ].map(item => (
-                      <div key={item.title} className="rounded-lg border border-surface-700/60 bg-surface-950/40 p-3">
-                        <p className="text-xs font-semibold text-white">{item.title}</p>
-                        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max="86400"
-                            inputMode="numeric"
-                            value={item.value}
-                            onChange={e => item.setValue(e.target.value)}
-                            className="min-w-0 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-xs text-white focus:border-brand-500 focus:outline-none"
-                          />
-                          <button type="button" onClick={item.save} className="btn-glow rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-surface-950">
-                            {t('common.save')}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="rounded-lg border border-surface-700/60 bg-surface-950/40 p-3">
-                      <p className="text-xs font-semibold text-white">{t('settings.highSecurityParamClipboardTitle')}</p>
-                      <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          max="86400"
-                          inputMode="numeric"
-                          value={Math.round(currentClipboardMs / 1000)}
-                          onChange={e => setCurrentClipboardMs(Math.max(0, Number.parseInt(e.target.value || '0', 10)) * 1000)}
-                          className="min-w-0 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-xs text-white focus:border-brand-500 focus:outline-none"
-                        />
-                        <button type="button" onClick={() => saveHighSecurityClipboardParam(String(Math.round(currentClipboardMs / 1000)))} className="btn-glow rounded-lg bg-amber-500 px-3 py-2 text-xs font-semibold text-surface-950">
-                          {t('common.save')}
-                        </button>
-                      </div>
-                    </div>
-
-                    {[
-                      {
-                        title: t('settings.highSecurityParamCopyLockTitle'),
-                        desc: t('settings.highSecurityParamCopyLockDesc'),
-                        active: contextLockAfterCopy,
-                        toggle: () => setHighSecurityBooleanParam(AUTOLOCK_LOCK_AFTER_SECRET_COPY_KEY, !contextLockAfterCopy, setContextLockAfterCopy),
-                      },
-                      {
-                        title: t('settings.highSecurityParamScreenOffTitle'),
-                        desc: t('settings.highSecurityParamScreenOffDesc'),
-                        active: contextScreenOffLock,
-                        toggle: () => setHighSecurityBooleanParam(AUTOLOCK_SCREEN_OFF_LOCK_KEY, !contextScreenOffLock, setContextScreenOffLock),
-                      },
-                      {
-                        title: t('settings.highSecurityParamNoCopyTitle'),
-                        desc: t('settings.highSecurityParamNoCopyDesc'),
-                        active: secretCopyDisabled,
-                        toggle: () => setHighSecurityBooleanParam(SECRET_COPY_DISABLED_KEY, !secretCopyDisabled, setSecretCopyDisabled, false),
-                      },
-                      {
-                        title: t('settings.highSecurityParamSecureDisplayTitle'),
-                        desc: t('settings.highSecurityParamSecureDisplayDesc'),
-                        active: secureDisplay.enabled,
-                        toggle: () => { hapticTap(); secureDisplay.setEnabled(!secureDisplay.enabled); showToast(t('settings.highSecurityParamSaved'), 'success'); },
-                      },
-                    ].map(item => (
-                      <div key={item.title} className="flex items-start justify-between gap-3 rounded-lg border border-surface-700/60 bg-surface-950/40 p-3">
-                        <div>
-                          <p className="text-xs font-semibold text-white">{item.title}</p>
-                        </div>
-                        <div className="flex flex-shrink-0 items-center gap-2">
-                          {settingStatus(item.active ? t('settings.enabled') : t('settings.disabled'), item.active)}
-                          {toggleSwitch(item.active, item.toggle, item.title, 'bg-amber-500')}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <SettingsSubGroupLabel>{t('settings.appLockGroup')}</SettingsSubGroupLabel>
 
           {/* Logo Lock */}
-          <div className="border-b border-surface-700/30">
+          <div className="border-b border-surface-200 dark:border-surface-200 dark:border-surface-700/30">
             <div className="flex items-start justify-between gap-3 p-4">
             <button
               type="button"
               onClick={handleToggleLogoLock}
               className="flex min-w-0 flex-1 gap-3 text-left"
             >
-              <ShieldAlert size={16} className={`mt-1 flex-shrink-0 ${logoLockEnabled ? 'text-rose-400' : 'text-surface-400'}`} />
+              <span className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${logoLockEnabled ? 'bg-rose-500/15 text-rose-600 dark:text-rose-300' : 'bg-rose-500/10 text-rose-500 dark:text-rose-400'}`}>
+                <Fingerprint size={17} />
+              </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">{t('settings.logoLockTitle')}</p>
-                <p className="mt-1 text-xs text-surface-500">
+                <p className="text-sm font-semibold text-surface-950 dark:text-white">{t('settings.logoLockTitle')}</p>
+                <p className="mt-1 text-xs text-surface-700 dark:text-surface-300">
                   {logoLockEnabled ? t('settings.logoLockSummaryOn') : t('settings.logoLockSummaryOff')}
                 </p>
               </div>
             </button>
               <div className="flex flex-shrink-0 items-center gap-2">
                 {settingStatus(logoLockEnabled ? t('settings.enabled') : t('settings.disabled'), logoLockEnabled)}
+                <button
+                  type="button"
+                  onClick={() => { hapticTap(); setShowLogoLockDetails(!showLogoLockDetails); }}
+                  className="p-1 text-surface-700 dark:text-surface-300"
+                  aria-expanded={showLogoLockDetails}
+                  aria-label={t('settings.expandDetails')}
+                >
+                  <ChevronDown size={16} className={`transition-transform ${showLogoLockDetails ? 'rotate-180' : ''}`} />
+                </button>
                 {toggleSwitch(logoLockEnabled, handleToggleLogoLock, t('settings.logoLockTitle'), 'bg-rose-500')}
               </div>
             </div>
+            {showLogoLockDetails && (
+              <div className="mx-4 mt-2 mb-4 rounded-xl border border-rose-500/20 bg-rose-50 p-3 text-xs leading-relaxed text-rose-900 dark:bg-rose-500/10 dark:text-rose-100">
+                <p className="font-semibold">{t('settings.logoLockDetailsTitle', { default: 'Khóa bằng logo hoạt động như thế nào?' })}</p>
+                <p className="mt-1">{t('settings.logoLockDetailsDesc', { default: 'Khi bật, logo xKey trên màn hình chính sẽ phát sáng viền đỏ và trở thành nút khóa nhanh. Chạm vào logo để khóa ứng dụng ngay lập tức mà không cần hiển thị nút khóa riêng, giúp thao tác kín đáo hơn trong môi trường công cộng.' })}</p>
+              </div>
+            )}
           </div>
 
           {/* Root/Data Tamper Guard */}
-          <div className="border-b border-surface-700/30">
+          <div id="security-setting-device-integrity" className="border-b border-surface-200 transition-shadow duration-300 dark:border-surface-200 dark:border-surface-700/30">
             <div className="flex items-start justify-between gap-3 p-4">
             <button
               type="button"
               onClick={() => { hapticTap(); setShowDeviceIntegrityGuard(!showDeviceIntegrityGuard); }}
               className="flex min-w-0 flex-1 gap-3 text-left"
             >
-              <ShieldAlert size={16} className={`mt-1 flex-shrink-0 ${deviceIntegrityGuard ? 'text-red-400' : 'text-surface-400'}`} />
+              <span className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${deviceIntegrityGuard ? 'bg-red-500/15 text-red-600 dark:text-red-300' : 'bg-red-500/10 text-red-500 dark:text-red-400'}`}>
+                <ScanSearch size={17} />
+              </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">{t('settings.deviceIntegrityTitle')}</p>
-                <p className="mt-1 truncate text-xs text-surface-500">
+                <p className="text-sm font-semibold text-surface-950 dark:text-white">{t('settings.deviceIntegrityTitle')}</p>
+                <p className="mt-1 truncate text-xs text-surface-700 dark:text-surface-300">
                   {deviceIntegrityGuard ? t('settings.deviceIntegritySummaryOn') : t('settings.deviceIntegritySummaryOff')}
                 </p>
               </div>
             </button>
             <div className="flex flex-shrink-0 items-center gap-2">
               {settingStatus(deviceIntegrityGuard ? t('settings.enabled') : t('settings.disabled'), deviceIntegrityGuard)}
-              <button type="button" onClick={() => { hapticTap(); setShowDeviceIntegrityGuard(!showDeviceIntegrityGuard); }} className="p-1 text-surface-500" aria-label={t('settings.expandDetails')}>
+              <button type="button" onClick={() => { hapticTap(); setShowDeviceIntegrityGuard(!showDeviceIntegrityGuard); }} className="p-1 text-surface-700 dark:text-surface-300" aria-label={t('settings.expandDetails')}>
                 <ChevronDown size={16} className={`transition-transform ${showDeviceIntegrityGuard ? 'rotate-180' : ''}`} />
               </button>
                 {toggleSwitch(
@@ -1139,11 +983,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           </div>
           {showDeviceIntegrityGuard && (
             <div className="mx-4 mb-4 space-y-3">
-              <p className="text-xs leading-relaxed text-surface-400">{t('settings.deviceIntegrityDesc')}</p>
+              <p className="text-xs leading-relaxed text-surface-600 dark:text-surface-300">{t('settings.deviceIntegrityDesc')}</p>
               <div className={`rounded-xl border p-3 text-xs leading-relaxed ${
                 deviceRiskInfo?.risky
-                  ? 'border-red-500/25 bg-red-500/10 text-red-100'
-                  : 'border-emerald-500/15 bg-emerald-500/5 text-emerald-100/85'
+                  ? 'border-red-500/25 bg-red-50 text-red-900 dark:bg-red-500/10 dark:text-red-100'
+                  : 'border-emerald-500/20 bg-emerald-50 text-emerald-900 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-emerald-100/85'
               }`}>
                 {deviceRiskInfo?.risky
                   ? t('settings.deviceIntegrityRiskDetected', { reasons: formatDeviceRiskReasons() })
@@ -1183,9 +1027,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
             toggleSwitch={toggleSwitch}
           />
 
-          <SettingsSubGroupLabel>{t('settings.sensitiveActionProtectionGroup', { default: 'Xác nhận thao tác nhạy cảm' })}</SettingsSubGroupLabel>
+          <SettingsSubGroupLabel>{t('settings.sensitiveActionProtectionGroup')}</SettingsSubGroupLabel>
 
-          <div className="border-b border-surface-700/30">
+          <div className="border-b border-surface-200 dark:border-surface-700/30">
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <button
@@ -1193,25 +1037,25 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                   onClick={() => { hapticTap(); setShowSensitivePinDetails(!showSensitivePinDetails); }}
                   className="flex min-w-0 flex-1 gap-3 text-left"
                 >
-                  <div className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border ${
+                    <div className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border ${
                     sensitivePinEnabled
-                      ? 'border-brand-400/25 bg-brand-500/15 text-brand-300'
-                      : 'border-surface-700/60 bg-surface-800/70 text-surface-400'
+                      ? 'border-fuchsia-400/30 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-400/25 dark:bg-fuchsia-500/15 dark:text-fuchsia-300'
+                      : 'border-fuchsia-200 bg-fuchsia-50/80 text-fuchsia-600 dark:border-fuchsia-500/20 dark:bg-fuchsia-500/10 dark:text-fuchsia-400'
                   }`}>
-                    <ShieldCheck size={17} />
+                    <Siren size={17} />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-white">{t('settings.sensitivePinTitle')}</p>
+                      <p className="text-sm font-semibold text-surface-950 dark:text-white">{t('settings.sensitivePinTitle')}</p>
                       <span className={`rounded-full px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.12em] ${
                         sensitivePinEnabled
-                          ? 'bg-brand-500/15 text-brand-200'
-                          : 'bg-surface-800 text-surface-400'
+                          ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
+                          : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300'
                       }`}>
                         {sensitivePinEnabled ? t('settings.enabled') : t('settings.disabled')}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs leading-relaxed text-surface-500">
+                    <p className="mt-1 text-xs leading-relaxed text-surface-700 dark:text-surface-300">
                       {sensitivePinEnabled
                         ? t('settings.sensitivePinSummaryOn')
                         : t('settings.sensitivePinSummaryOff')}
@@ -1222,7 +1066,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                   <button
                     type="button"
                     onClick={() => { hapticTap(); setShowSensitivePinDetails(!showSensitivePinDetails); }}
-                    className="rounded-lg p-1.5 text-surface-500 transition-colors hover:bg-surface-800 hover:text-surface-200"
+                    className="p-1.5 text-surface-700 transition-colors hover:text-surface-950 dark:text-surface-300 dark:hover:text-white"
                     aria-label={t('settings.expandDetails')}
                   >
                     <ChevronDown size={16} className={`transition-transform ${showSensitivePinDetails ? 'rotate-180' : ''}`} />
@@ -1232,23 +1076,29 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
               </div>
 
               {showSensitivePinDetails && (
-                <div className="mt-4 space-y-3 rounded-2xl border border-brand-500/15 bg-gradient-to-br from-brand-500/10 via-surface-900/80 to-surface-950/80 p-3 shadow-inner">
+                <div className="mt-4 space-y-3 rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 via-white to-surface-50 p-3 shadow-inner dark:border-brand-500/15 dark:from-brand-500/10 dark:via-surface-900/80 dark:to-surface-950/80">
                   <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/15 text-brand-200">
-                      <ShieldAlert size={16} />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-200">
+                      <Siren size={16} />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-200">{t('settings.sensitivePinDetailsTitle')}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-surface-300">{t('settings.sensitivePinDetailsIntro')}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-200">{t('settings.sensitivePinDetailsTitle')}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-300">{t('settings.sensitivePinDetailsIntro')}</p>
                     </div>
                   </div>
 
-                  {showSensitivePinSetup && !sensitivePinEnabled && (
-                    <div className="space-y-3 rounded-xl border border-brand-500/20 bg-surface-950/55 p-3">
+                  {showSensitivePinSetup && (
+                    <div className="space-y-3 rounded-xl border border-brand-200 bg-white/85 p-3 dark:border-brand-500/20 dark:bg-surface-950/55">
                       <div>
-                        <p className="text-xs font-semibold text-white">{t('settings.sensitivePinCreateTitle', { default: 'Tạo PIN phụ 6 chữ số' })}</p>
-                        <p className="mt-1 text-xs leading-relaxed text-surface-400">
-                          {t('settings.sensitivePinCreateDesc', { default: 'PIN này được yêu cầu trước khi cho phép hiển/xuất/nhập ghi đè hoặc thao tác Shamir.' })}
+                        <p className="text-xs font-semibold text-surface-950 dark:text-white">
+                          {sensitivePinEnabled
+                            ? t('settings.sensitivePinChangeTitle')
+                            : t('settings.sensitivePinCreateTitle')}
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-300">
+                          {sensitivePinEnabled
+                            ? t('settings.sensitivePinChangeDesc')
+                            : t('settings.sensitivePinCreateDesc')}
                         </p>
                       </div>
                       <div className="space-y-2">
@@ -1256,19 +1106,19 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                           value={sensitivePinInput}
                           onChange={e => setSensitivePinInput(sanitizePinInput(e.target.value))}
                           onKeyDown={e => e.key === 'Enter' && handleSaveSensitivePin()}
-                          placeholder={t('settings.sensitivePinCreatePlaceholder', { default: 'Nhập PIN phụ 6 chữ số' })}
+                          placeholder={t('settings.sensitivePinCreatePlaceholder')}
                           maxLength={6}
                           inputMode="numeric"
-                          className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-white placeholder:text-surface-600 focus:border-brand-500 focus:outline-none"
+                          className="w-full rounded-lg border border-surface-300 bg-white px-3 py-2 text-sm text-surface-950 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder:text-surface-600"
                         />
                         <PasswordInput
                           value={sensitivePinConfirm}
                           onChange={e => setSensitivePinConfirm(sanitizePinInput(e.target.value))}
                           onKeyDown={e => e.key === 'Enter' && handleSaveSensitivePin()}
-                          placeholder={t('settings.sensitivePinConfirmPlaceholder', { default: 'Nhập lại PIN phụ' })}
+                          placeholder={t('settings.sensitivePinConfirmPlaceholder')}
                           maxLength={6}
                           inputMode="numeric"
-                          className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-white placeholder:text-surface-600 focus:border-brand-500 focus:outline-none"
+                          className="w-full rounded-lg border border-surface-300 bg-white px-3 py-2 text-sm text-surface-950 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder:text-surface-600"
                         />
                       </div>
                       <div className="flex gap-2">
@@ -1276,7 +1126,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                           type="button"
                           onClick={resetSensitivePinSetup}
                           disabled={sensitivePinBusy}
-                          className="btn-glow flex-1 rounded-lg bg-surface-700 py-2 text-xs text-surface-300 disabled:opacity-50"
+                        className="btn-glow flex-1 rounded-lg bg-surface-200 py-2 text-xs font-semibold text-surface-800 disabled:opacity-50 dark:bg-surface-700 dark:text-surface-300"
                         >
                           {t('common.cancel')}
                         </button>
@@ -1284,7 +1134,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                           type="button"
                           onClick={handleSaveSensitivePin}
                           disabled={sensitivePinBusy}
-                          className="btn-glow flex-1 rounded-lg bg-brand-600 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                          className="btn-glow flex-1 rounded-lg bg-brand-600 py-2 text-xs font-semibold text-surface-950 dark:text-white disabled:opacity-50"
                         >
                           {t('common.save')}
                         </button>
@@ -1293,24 +1143,35 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
                   )}
 
                   <div className="grid gap-2">
-                    <div className="rounded-xl border border-surface-700/50 bg-surface-950/45 p-3">
-                      <p className="text-xs font-semibold text-white">{t('settings.sensitivePinDetailLayerTitle')}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.sensitivePinDetailLayerDesc')}</p>
+                    <div className="rounded-xl border border-surface-200 bg-white/75 p-3 dark:border-surface-700/50 dark:bg-surface-950/45">
+                      <p className="text-xs font-semibold text-surface-950 dark:text-white">{t('settings.sensitivePinDetailLayerTitle')}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-300">{t('settings.sensitivePinDetailLayerDesc')}</p>
                     </div>
-                    <div className="rounded-xl border border-surface-700/50 bg-surface-950/45 p-3">
-                      <p className="text-xs font-semibold text-white">{t('settings.sensitivePinDetailScopeTitle')}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.sensitivePinDetailScopeDesc')}</p>
+                    <div className="rounded-xl border border-surface-200 bg-white/75 p-3 dark:border-surface-700/50 dark:bg-surface-950/45">
+                      <p className="text-xs font-semibold text-surface-950 dark:text-white">{t('settings.sensitivePinDetailScopeTitle')}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-300">{t('settings.sensitivePinDetailScopeDesc')}</p>
                     </div>
-                    <div className="rounded-xl border border-surface-700/50 bg-surface-950/45 p-3">
-                      <p className="text-xs font-semibold text-white">{t('settings.sensitivePinDetailStorageTitle')}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-surface-400">{t('settings.sensitivePinDetailStorageDesc')}</p>
+                    <div className="rounded-xl border border-surface-200 bg-white/75 p-3 dark:border-surface-700/50 dark:bg-surface-950/45">
+                      <p className="text-xs font-semibold text-surface-950 dark:text-white">{t('settings.sensitivePinDetailStorageTitle')}</p>
+                      <p className="mt-1 text-xs leading-relaxed text-surface-600 dark:text-surface-300">{t('settings.sensitivePinDetailStorageDesc')}</p>
                     </div>
                   </div>
 
+                  {sensitivePinEnabled && !showSensitivePinSetup && (
+                    <button
+                      type="button"
+                      onClick={handleChangeSensitivePin}
+                      disabled={sensitivePinBusy}
+                      className="btn-glow w-full rounded-xl border border-brand-500/25 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-800 dark:text-brand-100 disabled:opacity-50"
+                    >
+                      {t('settings.changeSensitivePin')}
+                    </button>
+                  )}
+
                   <div className={`rounded-xl border px-3 py-2 text-xs leading-relaxed ${
                     sensitivePinEnabled
-                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100'
-                      : 'border-amber-500/20 bg-amber-500/10 text-amber-100'
+                      ? 'border-emerald-500/20 bg-emerald-50 text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-100'
+                      : 'border-amber-500/20 bg-amber-50 text-amber-900 dark:bg-amber-500/10 dark:text-amber-100'
                   }`}>
                     {sensitivePinEnabled
                       ? t('settings.sensitivePinStatusEnabled')
@@ -1321,7 +1182,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
             </div>
           </div>
 
-          <SettingsSubGroupLabel>{t('settings.contentDeviceProtectionGroup', { default: 'Bảo vệ nội dung, thiết bị & vault' })}</SettingsSubGroupLabel>
+          <SettingsSubGroupLabel>{t('settings.contentDeviceProtectionGroup')}</SettingsSubGroupLabel>
 
           <AdvancedSecuritySection
           t={t}
@@ -1370,7 +1231,26 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         </div>
       </div>
 
-    </>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={handleImportSecurityConfig}
+          className="btn-glow inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-brand-300 bg-brand-50 px-3 py-2 text-center text-[0.7rem] font-bold leading-tight text-brand-800 shadow-sm transition hover:border-brand-500 hover:bg-brand-100 dark:border-brand-500/35 dark:bg-brand-500/10 dark:text-brand-100 dark:hover:border-brand-400/70 dark:hover:bg-brand-500/20"
+        >
+          <Import size={14} className="flex-shrink-0" />
+          <span className="min-w-0 truncate">{t('settings.importSecurityConfig', { default: 'Nhập cấu hình bảo mật' })}</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleExportSecurityConfig}
+          className="btn-glow inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-brand-300 bg-brand-50 px-3 py-2 text-center text-[0.7rem] font-bold leading-tight text-brand-800 shadow-sm transition hover:border-brand-500 hover:bg-brand-100 dark:border-brand-500/35 dark:bg-brand-500/10 dark:text-brand-100 dark:hover:border-brand-400/70 dark:hover:bg-brand-500/20"
+        >
+          <Download size={14} className="flex-shrink-0" />
+          <span className="min-w-0 truncate">{t('settings.exportSecurityConfig', { default: 'Xuất cấu hình bảo mật' })}</span>
+        </button>
+      </div>
+
+    </div>
   );
 }
 

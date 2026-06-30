@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ethers } from 'ethers';
 import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import { normalizeAmountInput } from '../utils/amountFormat';
+import { secureCopy } from '../utils/clipboard';
 import type { BulkResult, CreateWalletModalProps, FloatingEffect, GeneratedWallet } from '../components/create-wallet/types';
 
 type ToastPayload = {
@@ -199,8 +200,20 @@ export function useWalletGeneration({
     }
   };
 
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = async (text: string, field: string) => {
+    const copied = await secureCopy(text, {
+      kind: field === 'privateKey' || field === 'pk'
+        ? 'privateKey'
+        : field === 'mnemonic' || field === 'seedPhrase' || field === 'seed'
+          ? 'mnemonic'
+          : field === 'address'
+            ? 'address'
+            : 'generic',
+    });
+    if (!copied) {
+      showToast({ key: 'settings.secretCopyBlocked', category: 'security' }, 'warning');
+      return;
+    }
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };
