@@ -1,8 +1,9 @@
-🔐 Security settings hardened.
+📦 CSV Import/Export upgraded.
 
-• Added confirmations before disabling key protections.
-• Improved 6-digit PIN validation for main, decoy, and sensitive-action PINs.
-• Fixed custom auto-lock timing behavior.
-• Added utility tests.
+🛡️ Safer CSV export with standard quoting and formula-injection protection.
 
-✅ Type-check, lint, tests, and production build passed.
+🔍 Added CSV import preview with column mapping, duplicate checks, invalid/missing address detection, and sensitive-data warnings.
+
+🎨 Improved CSV preview UI readability, light-theme colors, and button tap feedback.
+
+✅ Added CSV tests and type-check validation.

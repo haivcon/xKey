@@ -1,8 +1,28 @@
 # Local instruction / scratch folders
-1/
 /1/
-1/**
 
+# Private AI governance / local standards files
+.clinerules
+AGENTS.md
+AI_CONTEXT.md
+SOURCE_OF_TRUTH.md
+FEATURE_SPEC_TEMPLATE.md
+DESIGN_SYSTEM.md
+IMPLEMENTATION_CHECKLIST.md
+ARCHITECTURE_DECISIONS.md
+scripts/app-standards-audit.mjs
+
+# Local AI/tooling state and generated review artifacts
+.cline/
+.roo/
+.aider*
+.cursor/
+*.ai-review.md
+*.ai-review.json
+*.standards-audit.log
+*.standards-audit.json
+scripts/*-audit-report.json
+scripts/*-audit-report.md
 
 # Dependencies
 node_modules/
@@ -90,6 +110,3 @@ android/**/*.iml
 
 # Extra guard: never publish the local numbered scratch directory.
 /1/**
-
-# Custom ignores
-1/

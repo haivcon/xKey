@@ -121,12 +121,12 @@ The vanity generator runs as an offline CPU-bound workflow. Generated secrets mu
 
 ## 8. Android Build Metadata
 
-For v6.0.14:
+For v6.0.15:
 
-- `package.json` version: `6.0.14`
-- `package-lock.json` version: `6.0.14`
-- Android `versionName`: `6.0.14`
-- Android `versionCode`: `112`
+- `package.json` version: `6.0.15`
+- `package-lock.json` version: `6.0.15`
+- Android `versionName`: `6.0.15`
+- Android `versionCode`: `113`
 - Android application ID/package: `com.haivcon.xkey`
 
 `android/app/build.gradle` owns application version metadata and release build settings.
@@ -150,7 +150,7 @@ Release flow:
 2. Run verification commands.
 3. Commit only intended source and documentation files.
 4. Ensure local-only folders such as `1/` and build artifacts are ignored.
-5. Create an annotated tag such as `v6.0.14`.
+5. Create an annotated tag such as `v6.0.15`.
 6. Push `main` and the tag to GitHub.
 7. Let GitHub Actions build Android artifacts from the clean tag.
 

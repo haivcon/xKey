@@ -23,7 +23,6 @@ export function SecurityRecommendationsSection({
   settingStatus,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [scoreExpanded, setScoreExpanded] = useState(false);
   const [checkupExpanded, setCheckupExpanded] = useState(true);
   const score = calculateSecurityScore(scoreItems);
   const checkupItems = buildSecurityCheckup(scoreItems);
@@ -108,36 +107,6 @@ export function SecurityRecommendationsSection({
                     : t('settings.securityRiskHighDesc', { default: 'Vault đang thiếu nhiều lớp bảo vệ quan trọng.' })}
               </p>
             </div>
-
-            <div className="mt-4">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-surface-700 dark:text-surface-300">
-                  {t('settings.securityScoreBreakdownTitle', { default: 'Chi tiết điểm từng mục' })}
-                </p>
-                <button type="button" onClick={() => setScoreExpanded(value => !value)} className={groupToggleClass} aria-expanded={scoreExpanded} aria-label={t('settings.expandDetails')}>
-                  <ChevronDown size={16} className={`transition-transform ${scoreExpanded ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-              {scoreExpanded && (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {scoreItems.map(item => {
-                    const itemWeight = item.weight ?? 1;
-                    return (
-                      <div key={item.key} className={`rounded-xl border px-3 py-2 text-xs ${
-                        item.active
-                          ? 'border-emerald-500/25 bg-emerald-50 text-emerald-950 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-100'
-                          : 'border-surface-300 bg-white text-surface-800 dark:border-surface-700/60 dark:bg-surface-950/40 dark:text-surface-200'
-                      }`}>
-                        <span className="block truncate font-semibold">{item.label}</span>
-                        <span className="mt-0.5 block text-[0.625rem] font-medium opacity-95">
-                          {item.active ? t('settings.enabled') : t('settings.disabled')} · {item.active ? `+${itemWeight}` : '+0'}/{itemWeight}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>
@@ -185,9 +154,6 @@ export function SecurityRecommendationsSection({
                             </span>
                           </div>
                           <p className="mt-1 text-[0.7rem] leading-relaxed text-surface-600 dark:text-surface-300">{item.desc}</p>
-                          <p className="mt-1 text-[0.65rem] leading-relaxed text-surface-700 dark:text-surface-300">
-                            {t('settings.securityScoreItemFormula', { default: 'Điểm mục này: bật thì cộng toàn bộ trọng số, tắt thì cộng 0 điểm.' })}
-                          </p>
                         </div>
                         <span className={actionButtonClass}>
                           <ArrowDown size={13} />

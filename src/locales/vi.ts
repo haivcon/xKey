@@ -1528,6 +1528,28 @@ export default {
     "colNetwork": "Mạng lưới",
     "authPrompt": "Xác thực để xuất dữ liệu"
   },
+  "csvImportPreview": {
+    "title": "Kiểm tra nhập CSV",
+    "rows": "Dòng",
+    "validWallets": "Có thể nhập",
+    "duplicates": "Trùng lặp",
+    "missingAddress": "Thiếu địa chỉ",
+    "invalidAddress": "Địa chỉ không hợp lệ",
+    "sensitiveRows": "Dòng nhạy cảm",
+    "sensitiveWarning": "CSV này chứa khóa riêng tư hoặc cụm từ gợi nhớ. Hãy kiểm tra ở nơi riêng tư và chỉ nhập nếu bạn tin nguồn file.",
+    "mappingTitle": "Ánh xạ cột",
+    "columnsDetected": "Phát hiện {count} cột CSV",
+    "ignoreColumn": "Bỏ qua trường này",
+    "issueTitle": "{count} cảnh báo",
+    "rowIssue": "Dòng {row}: {message}",
+    "saveReport": "Lưu báo cáo",
+    "import": "Nhập CSV",
+    "sensitiveAuthPrompt": "Xác thực để nhập dữ liệu CSV có khóa riêng tư hoặc cụm từ gợi nhớ",
+    "issueMissingAddress": "Thiếu địa chỉ",
+    "issueDuplicateAddress": "Địa chỉ bị trùng",
+    "issueEvmAddress": "Địa chỉ không đúng định dạng EVM",
+    "issueSolanaAddress": "Địa chỉ không đúng định dạng Solana"
+  },
   "authError": {
     "vaultLocked": "Kho bị khóa",
     "retry": "Thử xác thực lại",

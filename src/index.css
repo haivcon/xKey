@@ -993,6 +993,117 @@ body.keyboard-open .keyboard-scroll-target {
   background-color: rgba(239, 68, 68, 0.12);
 }
 
+/* CSV import preview must follow the selected theme.
+   Some platforms can keep the `dark` class on <html> while `theme-light` is active,
+   so these scoped rules make light theme win over Tailwind `dark:*` utilities. */
+.theme-light .csv-import-preview-modal-panel {
+  background-color: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+.theme-light .csv-import-preview-modal-panel > div {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-950"],
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-900"],
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-800"],
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-700"] {
+  background-color: rgba(248, 250, 252, 0.92) !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="border-surface-800"],
+.theme-light .csv-import-preview-modal-panel [class*="border-surface-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="text-white"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-100"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-200"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-300"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-400"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-500"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-600"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-700"],
+.theme-light .csv-import-preview-modal-panel [class*="text-surface-800"],
+.theme-light .csv-import-preview-modal-panel button[class*="text-surface-"],
+.theme-light .csv-import-preview-modal-panel svg[class*="text-surface-"] {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-50"],
+.theme-light .csv-import-preview-modal-panel [class*="bg-surface-100"] {
+  background-color: #f8fafc !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="bg-brand-50"] {
+  background-color: #eff6ff !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="text-brand-700"] {
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+.theme-light .csv-import-preview-modal-panel [class*="bg-brand-600"],
+.theme-light .csv-import-preview-modal-panel [class*="bg-brand-500"] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.csv-import-preview-modal-panel .csv-mapping-chip {
+  min-height: 2rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.csv-import-preview-modal-panel .csv-mapping-chip:active {
+  transform: translateY(1px) scale(0.96);
+  filter: saturate(1.08);
+}
+
+.theme-light .csv-import-preview-modal-panel .csv-mapping-chip {
+  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.theme-light .csv-import-preview-modal-panel .csv-mapping-chip:hover {
+  border-color: #38bdf8 !important;
+  background-color: #e0f2fe !important;
+  color: #075985 !important;
+  -webkit-text-fill-color: #075985 !important;
+}
+
+.theme-light .csv-import-preview-modal-panel .csv-mapping-chip[class*="bg-brand-600"] {
+  border-color: #0369a1 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(2, 132, 199, 0.24);
+}
+
+.theme-light .csv-import-preview-modal-panel button {
+  font-weight: 800;
+}
+
+.theme-light .csv-import-preview-modal-panel button:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.theme-light .csv-import-preview-modal-panel button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.22), 0 0 0 1px rgba(2, 132, 199, 0.54);
+}
+
 /* Create wallet / vanity must follow the selected theme.
    Some platforms can keep the `dark` class on <html> while `theme-light` is active,
    so these scoped rules make light theme win over Tailwind `dark:*` utilities. */

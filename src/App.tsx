@@ -26,6 +26,7 @@ const SettingsScreen = lazy(() => import('./components/SettingsScreen'));
 const QRCodeModal = lazy(() => import('./components/qr/QRCodeModal'));
 const DashboardView = lazy(() => import('./components/DashboardView'));
 const ExportCSVModal = lazy(() => import('./components/ExportCSVModal'));
+const CsvImportPreviewModal = lazy(() => import('./components/CsvImportPreviewModal'));
 const CreateWalletModal = lazy(() => import('./components/CreateWalletModal'));
 const MoveToFolderModal = lazy(() => import('./components/MoveToFolderModal'));
 const DonateModal = lazy(() => import('./components/DonateModal'));
@@ -256,8 +257,8 @@ export default function App() {
 
   const {
     loading, fileOperationKey,
-    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
-    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, saveRestoreReport, dismissPasswordPrompt,
+    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, csvImportPreview, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
+    handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, updateCsvImportMapping, confirmCsvImport, saveCsvImportReport, dismissCsvImportPreview, saveRestoreReport, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
 
   const {
@@ -841,6 +842,19 @@ export default function App() {
             onConfirmUpdateMissingSensitive={() => showConfirm(t('restore.updateMissingSensitiveConfirm'))}
             onHapticTap={hapticTap}
             onHapticSuccess={hapticSuccess}
+          />
+        )}
+
+        {csvImportPreview && (
+          <CsvImportPreviewModal
+            preview={csvImportPreview}
+            loading={loading}
+            brandReminders={brandReminders}
+            t={t}
+            onMappingChange={updateCsvImportMapping}
+            onCancel={dismissCsvImportPreview}
+            onImport={confirmCsvImport}
+            onSaveReport={saveCsvImportReport}
           />
         )}
 

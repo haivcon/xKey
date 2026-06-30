@@ -5,6 +5,7 @@ export type SensitiveAction =
   | 'backup.export'
   | 'backup.import_replace'
   | 'backup.import_override_sandbox'
+  | 'csv.import_sensitive'
   | 'secret.reveal'
   | 'vault.delete'
   | 'shamir.create_shares'

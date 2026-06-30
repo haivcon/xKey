@@ -2,6 +2,23 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.15] - 2026-06-30
+
+### Release Notes
+
+- 📦 CSV Import/Export upgraded.
+- 🛡️ Safer CSV export with standard quoting and formula-injection protection.
+- 🔍 Added CSV import preview with column mapping, duplicate checks, invalid/missing address detection, and sensitive-data warnings.
+- 🎨 Improved CSV preview UI readability, light-theme colors, and button tap feedback.
+- ✅ Added CSV tests and type-check validation.
+
+### Release Metadata
+
+- `package.json`: `6.0.15`
+- `package-lock.json`: `6.0.15`
+- Android `versionName`: `6.0.15`
+- Android `versionCode`: `113`
+
 ## [6.0.14] - 2026-06-30
 
 ### Release Notes

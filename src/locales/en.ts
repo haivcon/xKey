@@ -1537,6 +1537,28 @@ export default {
     "colNetwork": "Network",
     "authPrompt": "Authenticate to export data"
   },
+  "csvImportPreview": {
+    "title": "Review CSV import",
+    "rows": "Rows",
+    "validWallets": "Importable",
+    "duplicates": "Duplicates",
+    "missingAddress": "Missing address",
+    "invalidAddress": "Invalid address",
+    "sensitiveRows": "Sensitive rows",
+    "sensitiveWarning": "This CSV contains private keys or seed phrases. Review the file in a private place and import only if you trust the source.",
+    "mappingTitle": "Column mapping",
+    "columnsDetected": "{count} CSV columns detected",
+    "ignoreColumn": "Ignore this field",
+    "issueTitle": "{count} warning(s)",
+    "rowIssue": "Row {row}: {message}",
+    "saveReport": "Save report",
+    "import": "Import CSV",
+    "sensitiveAuthPrompt": "Authenticate to import CSV data containing private keys or seed phrases",
+    "issueMissingAddress": "Missing address",
+    "issueDuplicateAddress": "Duplicate address",
+    "issueEvmAddress": "Address does not match EVM format",
+    "issueSolanaAddress": "Address does not match Solana format"
+  },
   "authError": {
     "vaultLocked": "Vault Locked",
     "retry": "Retry Authentication",

@@ -14,7 +14,18 @@ import type { Wallet } from '../types';
 import { analyzeBackupImport, type BackupImportAnalysis } from '../features/import/backupImportAnalysis';
 import { runRestoreSandbox, type RestoreSandboxResult } from '../features/backup/restoreSandbox';
 import { buildBackupRestoreReport } from '../features/backup/backupRestoreReport';
-import { decodeBase64Text, dedupeWallets, detectImportFormat, getImportFolderName, parseCsvWallets, parseJsonWallets, parseTextWallets } from '../features/import/fileImportParsers';
+import {
+  buildCsvImportPreview,
+  buildCsvImportReport,
+  decodeBase64Text,
+  dedupeWallets,
+  detectImportFormat,
+  getImportFolderName,
+  parseJsonWallets,
+  parseTextWallets,
+  type CsvImportMapping,
+  type CsvImportPreview,
+} from '../features/import/fileImportParsers';
 
 export type BackupPreview = {
   fileName?: string;
@@ -47,6 +58,7 @@ type UseFileImportResult = {
   importPassword: string;
   backupAnalysis: BackupImportAnalysis | null;
   restoreSandbox: RestoreSandboxResult | null;
+  csvImportPreview: CsvImportPreview | null;
   backupImportMode: BackupImportMode;
   setBackupImportMode: Dispatch<SetStateAction<BackupImportMode>>;
   updateMissingSensitive: boolean;
@@ -56,6 +68,10 @@ type UseFileImportResult = {
   handleExternalBackupFile: (file: ExternalBackupFile) => Promise<boolean>;
   handleImportWithPassword: () => Promise<void>;
   previewBackupWithPassword: () => Promise<void>;
+  updateCsvImportMapping: (mapping: CsvImportMapping) => Promise<void>;
+  confirmCsvImport: () => Promise<void>;
+  saveCsvImportReport: () => Promise<void>;
+  dismissCsvImportPreview: () => void;
   saveRestoreReport: () => Promise<void>;
   dismissPasswordPrompt: () => void;
 };
@@ -77,6 +93,8 @@ export default function useFileImport(
   const [importPassword, setImportPassword] = useState('');
   const [backupAnalysis, setBackupAnalysis] = useState<BackupImportAnalysis | null>(null);
   const [restoreSandbox, setRestoreSandbox] = useState<RestoreSandboxResult | null>(null);
+  const [csvImportPreview, setCsvImportPreview] = useState<CsvImportPreview | null>(null);
+  const [pendingCsvRaw, setPendingCsvRaw] = useState<string | null>(null);
   const [backupImportMode, setBackupImportMode] = useState<BackupImportMode>('merge');
   const [updateMissingSensitive, setUpdateMissingSensitive] = useState(false);
   const lastExternalFileRef = useRef<{ fingerprint: string; ts: number } | null>(null);
@@ -97,6 +115,11 @@ export default function useFileImport(
     if (storedRef) await deleteInternalText(storedRef);
     showToast(t('common.undoRestored'), 'success');
   }, [aesKey, isDecoyMode, setWallets, showToast, t]);
+
+  const clearCsvImportPreview = useCallback(() => {
+    setCsvImportPreview(null);
+    setPendingCsvRaw(null);
+  }, []);
 
   // Shared import helper: dedup + persist + toast
   const importWallets = useCallback(async (newData: Wallet[], folderName: string) => {
@@ -162,11 +185,24 @@ export default function useFileImport(
         const format = detectImportFormat(fileName, rawString);
 
         try {
+          if (format === 'csv') {
+            const preview = await buildCsvImportPreview(rawString, fileName, folderName, wallets);
+            setPendingCsvRaw(rawString);
+            setCsvImportPreview(preview);
+            await appendAuditLog('csv.previewed', {
+              fileName,
+              folderName,
+              rows: preview.rowCount,
+              importableWallets: preview.uniqueWallets.length,
+              skippedDuplicates: preview.skippedDuplicates,
+              includesSensitive: preview.includesSensitive,
+            });
+            return;
+          }
+
           const normalizedData = format === 'json'
             ? parseJsonWallets(rawString, folderName)
-            : format === 'text'
-              ? parseTextWallets(rawString, folderName)
-              : await parseCsvWallets(rawString, folderName);
+            : parseTextWallets(rawString, folderName);
 
           await importWallets(normalizedData, folderName);
         } catch (err: unknown) {
@@ -187,7 +223,72 @@ export default function useFileImport(
       setLoading(false);
       setFileOperationKey('');
     }
-  }, [importWallets, showToast, t]);
+  }, [importWallets, showToast, t, wallets]);
+
+  const updateCsvImportMapping = useCallback(async (mapping: CsvImportMapping) => {
+    if (!pendingCsvRaw || !csvImportPreview) return;
+    const preview = await buildCsvImportPreview(
+      pendingCsvRaw,
+      csvImportPreview.fileName,
+      csvImportPreview.folderName,
+      wallets,
+      mapping,
+    );
+    setCsvImportPreview(preview);
+  }, [csvImportPreview, pendingCsvRaw, wallets]);
+
+  const saveCsvImportReport = useCallback(async () => {
+    if (!csvImportPreview) return;
+    await saveTextFile(`xkey_csv_import_report_${Date.now()}.txt`, 'text/plain', buildCsvImportReport(csvImportPreview, 0));
+  }, [csvImportPreview]);
+
+  const confirmCsvImport = useCallback(async () => {
+    if (!csvImportPreview) return;
+    try {
+      setLoading(true);
+      setFileOperationKey('fileStatus.importing');
+
+      if (csvImportPreview.includesSensitive) {
+        const verified = await requireSensitiveAction({
+          action: 'csv.import_sensitive',
+          reason: t('csvImportPreview.sensitiveAuthPrompt'),
+          metadata: {
+            fileName: csvImportPreview.fileName,
+            sensitiveRows: csvImportPreview.sensitiveCount,
+            walletCount: csvImportPreview.uniqueWallets.length,
+          },
+        });
+        if (!verified) {
+          showToast({ key: 'authError.vaultLocked', category: 'warning' }, 'warning');
+          return;
+        }
+      }
+
+      const updated = [...wallets, ...csvImportPreview.uniqueWallets];
+      setWallets(updated);
+      await saveWallets(updated, aesKey, isDecoyMode);
+      let msg = t('home.importSuccess', { count: csvImportPreview.uniqueWallets.length, folder: csvImportPreview.folderName });
+      if (csvImportPreview.skippedDuplicates > 0) msg += t('home.duplicatesSkipped', { count: csvImportPreview.skippedDuplicates });
+      const report = buildCsvImportReport(csvImportPreview, csvImportPreview.uniqueWallets.length);
+      showToast(msg, 'success', 8000, {
+        label: t('common.save'),
+        onClick: async () => {
+          await saveTextFile(`xkey_csv_import_report_${Date.now()}.txt`, 'text/plain', report);
+        },
+      });
+      await appendAuditLog('csv.imported', {
+        fileName: csvImportPreview.fileName,
+        folderName: csvImportPreview.folderName,
+        walletCount: csvImportPreview.uniqueWallets.length,
+        skippedDuplicates: csvImportPreview.skippedDuplicates,
+        includesSensitive: csvImportPreview.includesSensitive,
+      });
+      clearCsvImportPreview();
+    } finally {
+      setLoading(false);
+      setFileOperationKey('');
+    }
+  }, [aesKey, clearCsvImportPreview, csvImportPreview, isDecoyMode, setWallets, showToast, t, wallets]);
 
   const handleExternalBackupFile = useCallback(async (file: ExternalBackupFile) => {
     const fileData = file?.data || file?.base64 || '';
@@ -446,14 +547,24 @@ export default function useFileImport(
     setFileOperationKey('');
   }, []);
 
+  const dismissCsvImportPreview = useCallback(() => {
+    clearCsvImportPreview();
+    setLoading(false);
+    setFileOperationKey('');
+  }, [clearCsvImportPreview]);
+
   return {
     loading, fileOperationKey,
-    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive,
+    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, csvImportPreview, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive,
     importPassword, setImportPassword,
     handleFileUpload,
     handleExternalBackupFile,
     handleImportWithPassword,
     previewBackupWithPassword,
+    updateCsvImportMapping,
+    confirmCsvImport,
+    saveCsvImportReport,
+    dismissCsvImportPreview,
     saveRestoreReport,
     dismissPasswordPrompt,
   };

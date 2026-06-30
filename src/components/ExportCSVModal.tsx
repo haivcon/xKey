@@ -7,11 +7,12 @@ import type { Wallet } from '../types';
 import { saveTextFile } from '../utils/fileSaver';
 import { XKEY_SLOGAN } from '../utils/branding';
 import { useTheme } from '../contexts/ThemeContext';
+import { appendAuditLog } from '../utils/auditLog';
+import { buildWalletCsv, type CsvWalletColumnKey } from '../features/import/fileImportParsers';
 import BrandSlogan from './shared/BrandSlogan';
 
-type CsvColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 type CsvColumn = {
-  key: CsvColumnKey;
+  key: CsvWalletColumnKey;
   label: string;
   default: boolean;
   sensitive?: boolean;
@@ -37,12 +38,12 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     { key: 'seedPhrase', label: t('exportCSV.colSeedPhrase'), default: false, sensitive: true },
   ];
 
-  const [selected, setSelected] = useState<Set<CsvColumnKey>>(new Set(COLUMNS.filter(c => c.default).map(c => c.key)));
+  const [selected, setSelected] = useState<Set<CsvWalletColumnKey>>(new Set(COLUMNS.filter(c => c.default).map(c => c.key)));
   const [copied, setCopied] = useState(false);
   const [fileName, setFileName] = useState('');
   const { showToast } = useToast();
 
-  const toggle = async (key: CsvColumnKey) => {
+  const toggle = async (key: CsvWalletColumnKey) => {
     const col = COLUMNS.find(c => c.key === key);
     if (!col) return;
     if (col.sensitive && !selected.has(key)) {
@@ -54,12 +55,7 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     setSelected(next);
   };
 
-  const buildCSV = () => {
-    const cols = COLUMNS.filter(c => selected.has(c.key));
-    const header = cols.map(c => c.label).join(',');
-    const rows = wallets.map(w => cols.map(c => { const val = String(w[c.key] || '').replace(/\r?\n/g, ' ').replace(/"/g, '""'); return `"${val}"`; }).join(','));
-    return [header, ...rows].join('\n');
-  };
+  const buildCSV = () => buildWalletCsv(wallets, COLUMNS.filter(c => selected.has(c.key)));
 
   const requireExportPinIfNeeded = async (action: 'copy' | 'download') => {
     if (!hasSensitive) return true;
@@ -78,6 +74,11 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
     }
 
     await navigator.clipboard.writeText(buildCSV());
+    await appendAuditLog('csv.copied', {
+      walletCount: wallets.length,
+      columns: [...selected],
+      includesSensitive: hasSensitive,
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     showToast({ key: 'exportCSV.copySuccess', vars: { count: wallets.length }, category: 'copy' }, 'success');
@@ -100,6 +101,12 @@ export default function ExportCSVModal({ wallets, onClose }: ExportCSVModalProps
       const exportFileName = `${safeBaseName || `xkey_export_${Date.now()}`}.csv`;
       
       await saveTextFile(exportFileName, 'text/csv', csv);
+      await appendAuditLog('csv.exported', {
+        fileName: exportFileName,
+        walletCount: wallets.length,
+        columns: [...selected],
+        includesSensitive: hasSensitive,
+      });
       showToast({ key: 'exportCSV.exportSuccess', category: 'data' }, 'success');
     } catch (error: unknown) {
       if (!(error instanceof Error && error.message.includes('SAVE_CANCELLED'))) showToast({ key: 'common.error', category: 'warning' }, 'error');
