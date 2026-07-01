@@ -134,6 +134,7 @@ export default {
     "warning": "Avertissement",
     "undo": "Défaire",
     "copy": "Copie",
+    "paste": "Paste",
     "copied": "Copié !",
     "copyData": "Copier les données",
     "copiedClipboard": "Copié dans le presse-papiers",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Fragments récupérés",
     "recoveredBytes": "L’auto-réparation a récupéré {count} octets avant l’import.",
     "modifiedWarning": "Cette sauvegarde semble modifiée ou corrompue. Import bloqué."
+  },
+  "backupExportChallenge": {
+    "title": "Confirmer le mot de passe de sauvegarde",
+    "description": "Sélectionnez les caractères de votre mot de passe de sauvegarde dans l’ordre exact. Des caractères leurres supplémentaires sont mélangés afin que le mot de passe soit vérifié consciemment avant l’export.",
+    "selected": "Caractères sélectionnés",
+    "pickCharacter": "Choisir le caractère {char}",
+    "invalid": "La séquence sélectionnée ne correspond pas au mot de passe de sauvegarde."
+  },
+  "backupImportSelection": {
+    "title": "Importation sélective",
+    "summary": "{selected}/{total} portefeuilles sélectionnés pour l’importation",
+    "folders": "Dossiers",
+    "tags": "Tags",
+    "selectAll": "Tout sélectionner",
+    "clearAll": "Tout effacer",
+    "searchLabel": "Rechercher des portefeuilles",
+    "searchPlaceholder": "Rechercher par nom, adresse, dossier, tag ou réseau",
+    "selectVisible": "Sélectionner les visibles",
+    "clearVisible": "Effacer les visibles",
+    "selectWallet": "Sélectionner le portefeuille",
+    "unselectWallet": "Désélectionner le portefeuille",
+    "walletAddress": "adresse du portefeuille",
+    "noAddress": "Aucune adresse",
+    "noSearchResults": "Aucun portefeuille ne correspond à cette recherche.",
+    "noneSelected": "Sélectionnez au moins un portefeuille à importer."
   },
   "audit": {
     "title": "Journal d'audit de sécurité",

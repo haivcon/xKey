@@ -20,18 +20,18 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.15
+## Current Release Security Notes: v6.0.16
 
-v6.0.15 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.16 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- 📦 CSV Import/Export upgraded.
-- 🛡️ Safer CSV export with standard quoting and formula-injection protection.
-- 🔍 Added CSV import preview with column mapping, duplicate checks, invalid/missing address detection, and sensitive-data warnings.
-- 🎨 Improved CSV preview UI readability, light-theme colors, and button tap feedback.
-- ✅ Added CSV tests and type-check validation.
-- Android metadata is updated to `versionCode 113` and `versionName 6.0.15`.
+- 🔒 Added password challenge before .xkey backup export.
+- 🎯 Import only selected wallets, folders, or tags from backups.
+- 🧩 Improved backup preview, selection summary, and restore flow.
+- 📱 Fixed mobile keyboard handling to keep inputs visible without blank space.
+- ✅ Build verified for a stable release.
+- Android metadata is updated to `versionCode 114` and `versionName 6.0.16`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

@@ -136,6 +136,7 @@ export default {
     "warning": "Warning",
     "undo": "Undo",
     "copy": "Copy",
+    "paste": "Paste",
     "copied": "Copied!",
     "copyData": "Copy Data",
     "copiedClipboard": "Copied to Clipboard",
@@ -359,6 +360,31 @@ export default {
     "critical_conflicts": "{count} critical wallet/secret conflict(s) were detected.",
     "duplicate_secrets": "{count} duplicate or reused secret fingerprint(s) were detected.",
     "missing_sensitive": "{count} backup wallet(s) do not include private key or seed phrase."
+  },
+  "backupExportChallenge": {
+    "title": "Confirm backup password",
+    "description": "Select the characters of your backup password in the exact order. Extra decoy characters are mixed in so the password must be consciously verified before export.",
+    "selected": "Selected characters",
+    "pickCharacter": "Pick character {char}",
+    "invalid": "The selected sequence does not match the backup password."
+  },
+  "backupImportSelection": {
+    "title": "Selective import",
+    "summary": "{selected}/{total} wallets selected for import",
+    "folders": "Folders",
+    "tags": "Tags",
+    "selectAll": "Select all",
+    "clearAll": "Clear all",
+    "searchLabel": "Search wallets",
+    "searchPlaceholder": "Search by name, address, folder, tag, or network",
+    "selectVisible": "Select visible",
+    "clearVisible": "Clear visible",
+    "selectWallet": "Select wallet",
+    "unselectWallet": "Unselect wallet",
+    "walletAddress": "wallet address",
+    "noAddress": "No address",
+    "noSearchResults": "No wallets match this search.",
+    "noneSelected": "Select at least one wallet to import."
   },
   "audit": {
     "title": "Security Audit Log",

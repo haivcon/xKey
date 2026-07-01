@@ -134,6 +134,7 @@ export default {
     "warning": "Advertencia",
     "undo": "Deshacer",
     "copy": "Copiar",
+    "paste": "Paste",
     "copied": "¡Copiado!",
     "copyData": "Copiar datos",
     "copiedClipboard": "Copiado al portapapeles",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Fragmentos recuperados",
     "recoveredBytes": "La autorreparación recuperó {count} bytes antes de importar.",
     "modifiedWarning": "Este backup parece modificado o dañado. Importación bloqueada."
+  },
+  "backupExportChallenge": {
+    "title": "Confirmar contraseña de respaldo",
+    "description": "Seleccione los caracteres de la contraseña de respaldo en el orden exacto. Se mezclan caracteres señuelo adicionales para que la contraseña se verifique conscientemente antes de exportar.",
+    "selected": "Caracteres seleccionados",
+    "pickCharacter": "Elegir carácter {char}",
+    "invalid": "La secuencia seleccionada no coincide con la contraseña de respaldo."
+  },
+  "backupImportSelection": {
+    "title": "Importación selectiva",
+    "summary": "{selected}/{total} carteras seleccionadas para importar",
+    "folders": "Carpetas",
+    "tags": "Etiquetas",
+    "selectAll": "Seleccionar todo",
+    "clearAll": "Borrar todo",
+    "searchLabel": "Buscar carteras",
+    "searchPlaceholder": "Buscar por nombre, dirección, carpeta, etiqueta o red",
+    "selectVisible": "Seleccionar visibles",
+    "clearVisible": "Borrar visibles",
+    "selectWallet": "Seleccionar cartera",
+    "unselectWallet": "Deseleccionar cartera",
+    "walletAddress": "dirección de cartera",
+    "noAddress": "Sin dirección",
+    "noSearchResults": "Ninguna cartera coincide con esta búsqueda.",
+    "noneSelected": "Seleccione al menos una cartera para importar."
   },
   "audit": {
     "title": "Registro de auditoría de seguridad",

@@ -134,6 +134,7 @@ export default {
     "warning": "警告",
     "undo": "元に戻す",
     "copy": "コピー",
+    "paste": "Paste",
     "copied": "コピーしました！",
     "copyData": "データをコピー",
     "copiedClipboard": "クリップボードにコピーしました",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "復旧済みシャード",
     "recoveredBytes": "インポート前に自己修復で {count} バイトを復旧しました。",
     "modifiedWarning": "このバックアップは変更または破損している可能性があります。インポートをブロックしました。"
+  },
+  "backupExportChallenge": {
+    "title": "バックアップパスワードを確認",
+    "description": "バックアップパスワードの文字を正確な順序で選択してください。エクスポート前に意識して確認できるよう、追加のおとり文字が混在しています。",
+    "selected": "選択した文字",
+    "pickCharacter": "文字 {char} を選択",
+    "invalid": "選択した順序がバックアップパスワードと一致しません。"
+  },
+  "backupImportSelection": {
+    "title": "選択インポート",
+    "summary": "インポート対象として {selected}/{total} 個のウォレットを選択済み",
+    "folders": "フォルダー",
+    "tags": "タグ",
+    "selectAll": "すべて選択",
+    "clearAll": "すべて解除",
+    "searchLabel": "ウォレットを検索",
+    "searchPlaceholder": "名前、アドレス、フォルダー、タグ、ネットワークで検索",
+    "selectVisible": "表示中を選択",
+    "clearVisible": "表示中を解除",
+    "selectWallet": "ウォレットを選択",
+    "unselectWallet": "ウォレットの選択を解除",
+    "walletAddress": "ウォレットアドレス",
+    "noAddress": "アドレスなし",
+    "noSearchResults": "この検索に一致するウォレットはありません。",
+    "noneSelected": "インポートするウォレットを少なくとも1つ選択してください。"
   },
   "audit": {
     "title": "セキュリティ監査ログ",

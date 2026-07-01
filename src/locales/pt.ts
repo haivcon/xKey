@@ -134,6 +134,7 @@ export default {
     "warning": "Aviso",
     "undo": "Desfazer",
     "copy": "Cópia",
+    "paste": "Paste",
     "copied": "Copiado!",
     "copyData": "Copiar dados",
     "copiedClipboard": "Copiado para a área de transferência",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Shards recuperados",
     "recoveredBytes": "A autocorreção recuperou {count} bytes antes da importação.",
     "modifiedWarning": "Este backup parece modificado ou corrompido. Importação bloqueada."
+  },
+  "backupExportChallenge": {
+    "title": "Confirmar senha do backup",
+    "description": "Selecione os caracteres da senha do backup na ordem exata. Caracteres isca extras são misturados para que a senha seja verificada conscientemente antes da exportação.",
+    "selected": "Caracteres selecionados",
+    "pickCharacter": "Escolher caractere {char}",
+    "invalid": "A sequência selecionada não corresponde à senha do backup."
+  },
+  "backupImportSelection": {
+    "title": "Importação seletiva",
+    "summary": "{selected}/{total} carteiras selecionadas para importação",
+    "folders": "Pastas",
+    "tags": "Tags",
+    "selectAll": "Selecionar tudo",
+    "clearAll": "Limpar tudo",
+    "searchLabel": "Pesquisar carteiras",
+    "searchPlaceholder": "Pesquise por nome, endereço, pasta, tag ou rede",
+    "selectVisible": "Selecionar visíveis",
+    "clearVisible": "Limpar visíveis",
+    "selectWallet": "Selecionar carteira",
+    "unselectWallet": "Desmarcar carteira",
+    "walletAddress": "endereço da carteira",
+    "noAddress": "Sem endereço",
+    "noSearchResults": "Nenhuma carteira corresponde a esta pesquisa.",
+    "noneSelected": "Selecione pelo menos uma carteira para importar."
   },
   "audit": {
     "title": "Registro de auditoria de segurança",

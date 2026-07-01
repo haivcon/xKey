@@ -134,6 +134,7 @@ export default {
     "warning": "경고",
     "undo": "끄르다",
     "copy": "복사",
+    "paste": "Paste",
     "copied": "복사됨!",
     "copyData": "데이터 복사",
     "copiedClipboard": "클립보드에 복사됨",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "복구된 샤드",
     "recoveredBytes": "가져오기 전에 자가 복구로 {count}바이트를 복구했습니다.",
     "modifiedWarning": "이 백업은 수정되었거나 손상된 것으로 보입니다. 가져오기가 차단되었습니다."
+  },
+  "backupExportChallenge": {
+    "title": "백업 비밀번호 확인",
+    "description": "백업 비밀번호의 문자를 정확한 순서대로 선택하세요. 내보내기 전에 비밀번호를 의식적으로 확인할 수 있도록 추가 미끼 문자가 섞여 있습니다.",
+    "selected": "선택한 문자",
+    "pickCharacter": "문자 {char} 선택",
+    "invalid": "선택한 순서가 백업 비밀번호와 일치하지 않습니다."
+  },
+  "backupImportSelection": {
+    "title": "선택 가져오기",
+    "summary": "가져올 지갑 {selected}/{total}개 선택됨",
+    "folders": "폴더",
+    "tags": "태그",
+    "selectAll": "모두 선택",
+    "clearAll": "모두 해제",
+    "searchLabel": "지갑 검색",
+    "searchPlaceholder": "이름, 주소, 폴더, 태그 또는 네트워크로 검색",
+    "selectVisible": "보이는 항목 선택",
+    "clearVisible": "보이는 항목 해제",
+    "selectWallet": "지갑 선택",
+    "unselectWallet": "지갑 선택 해제",
+    "walletAddress": "지갑 주소",
+    "noAddress": "주소 없음",
+    "noSearchResults": "이 검색과 일치하는 지갑이 없습니다.",
+    "noneSelected": "가져올 지갑을 하나 이상 선택하세요."
   },
   "audit": {
     "title": "보안 감사 로그",

@@ -136,6 +136,7 @@ export default {
     "warning": "Cảnh báo",
     "undo": "Hoàn tác",
     "copy": "Sao chép",
+    "paste": "Paste",
     "copied": "Đã sao chép!",
     "copyData": "Sao chép dữ liệu",
     "copiedClipboard": "Đã sao chép vào clipboard",
@@ -359,6 +360,31 @@ export default {
     "critical_conflicts": "Phát hiện {count} xung đột ví/secret nghiêm trọng.",
     "duplicate_secrets": "Phát hiện {count} fingerprint secret trùng hoặc được dùng lại.",
     "missing_sensitive": "{count} ví trong backup không có private key hoặc seed phrase."
+  },
+  "backupExportChallenge": {
+    "title": "Xác nhận mật khẩu sao lưu",
+    "description": "Chọn các ký tự của mật khẩu sao lưu theo đúng thứ tự. Các ký tự gây nhiễu được trộn thêm để bạn phải xác minh mật khẩu một cách chủ động trước khi xuất.",
+    "selected": "Ký tự đã chọn",
+    "pickCharacter": "Chọn ký tự {char}",
+    "invalid": "Chuỗi đã chọn không khớp với mật khẩu sao lưu."
+  },
+  "backupImportSelection": {
+    "title": "Nhập có chọn lọc",
+    "summary": "Đã chọn {selected}/{total} ví để nhập",
+    "folders": "Thư mục",
+    "tags": "Thẻ",
+    "selectAll": "Chọn tất cả",
+    "clearAll": "Bỏ chọn tất cả",
+    "searchLabel": "Tìm kiếm ví",
+    "searchPlaceholder": "Tìm theo tên, địa chỉ, thư mục, thẻ hoặc mạng",
+    "selectVisible": "Chọn mục đang hiện",
+    "clearVisible": "Bỏ chọn mục đang hiện",
+    "selectWallet": "Chọn ví",
+    "unselectWallet": "Bỏ chọn ví",
+    "walletAddress": "địa chỉ ví",
+    "noAddress": "Không có địa chỉ",
+    "noSearchResults": "Không có ví nào khớp với tìm kiếm này.",
+    "noneSelected": "Chọn ít nhất một ví để nhập."
   },
   "audit": {
     "title": "Nhật ký bảo mật",

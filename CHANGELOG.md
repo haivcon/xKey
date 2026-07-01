@@ -2,6 +2,23 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.16] - 2026-07-01
+
+### Release Notes
+
+- 🔒 Added password challenge before .xkey backup export.
+- 🎯 Import only selected wallets, folders, or tags from backups.
+- 🧩 Improved backup preview, selection summary, and restore flow.
+- 📱 Fixed mobile keyboard handling to keep inputs visible without blank space.
+- ✅ Build verified for a stable release.
+
+### Release Metadata
+
+- `package.json`: `6.0.16`
+- `package-lock.json`: `6.0.16`
+- Android `versionName`: `6.0.16`
+- Android `versionCode`: `114`
+
 ## [6.0.15] - 2026-06-30
 
 ### Release Notes

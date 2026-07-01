@@ -197,8 +197,15 @@ export default function App() {
     backupFileName,
     setBackupFileName,
     backupExporting,
+    showPasswordChallenge,
+    passwordChallengeChoices,
+    passwordChallengeSelected,
+    passwordChallengeProgress,
     closeBackupExport,
     handleExportBackup,
+    cancelPasswordChallenge,
+    selectPasswordChallengeCharacter,
+    clearPasswordChallengeSelection,
   } = useBackupExport({ aesKey, isDecoyMode, showToast, t });
 
   const {
@@ -257,7 +264,7 @@ export default function App() {
 
   const {
     loading, fileOperationKey,
-    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, csvImportPreview, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, importPassword, setImportPassword,
+    showPasswordPrompt, backupPreview, backupAnalysis, restoreSandbox, csvImportPreview, backupImportMode, setBackupImportMode, updateMissingSensitive, setUpdateMissingSensitive, backupWalletsForSelection, selectedBackupWalletIds, setSelectedBackupWalletIds, importPassword, setImportPassword,
     handleFileUpload, handleExternalBackupFile, handleImportWithPassword, previewBackupWithPassword, updateCsvImportMapping, confirmCsvImport, saveCsvImportReport, dismissCsvImportPreview, saveRestoreReport, dismissPasswordPrompt,
   } = useFileImport(wallets, setWallets, aesKey, isDecoyMode);
 
@@ -826,9 +833,12 @@ export default function App() {
             backupImportMode={backupImportMode}
             updateMissingSensitive={updateMissingSensitive}
             importPassword={importPassword}
+            backupWalletsForSelection={backupWalletsForSelection}
+            selectedBackupWalletIds={selectedBackupWalletIds}
             brandReminders={brandReminders}
             t={t}
             onPasswordChange={setImportPassword}
+            onSelectedBackupWalletIdsChange={setSelectedBackupWalletIds}
             onCancel={dismissPasswordPrompt}
             onPreview={previewBackupWithPassword}
             onImport={handleImportWithPassword}
@@ -865,12 +875,19 @@ export default function App() {
             passwordConfirm={backupPasswordConfirm}
             exporting={backupExporting}
             brandReminders={brandReminders}
+            showPasswordChallenge={showPasswordChallenge}
+            passwordChallengeChoices={passwordChallengeChoices}
+            passwordChallengeSelected={passwordChallengeSelected}
+            passwordChallengeComplete={passwordChallengeProgress.isComplete}
             t={t}
             onFileNameChange={setBackupFileName}
             onPasswordChange={setBackupPassword}
             onPasswordConfirmChange={setBackupPasswordConfirm}
             onClose={closeBackupExport}
             onExport={handleExportBackup}
+            onCancelPasswordChallenge={cancelPasswordChallenge}
+            onSelectPasswordChallengeCharacter={selectPasswordChallengeCharacter}
+            onClearPasswordChallengeSelection={clearPasswordChallengeSelection}
           />
         )}
 

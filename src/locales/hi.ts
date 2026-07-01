@@ -134,6 +134,7 @@ export default {
     "warning": "चेतावनी",
     "undo": "पूर्ववत",
     "copy": "प्रतिलिपि",
+    "paste": "Paste",
     "copied": "कॉपी किया!",
     "copyData": "डेटा कॉपी करें",
     "copiedClipboard": "क्लिपबोर्ड पर कॉपी किया",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "पुनर्प्राप्त शार्ड",
     "recoveredBytes": "आयात से पहले self-healing ने {count} बाइट ठीक किए।",
     "modifiedWarning": "यह बैकअप बदला हुआ या खराब लगता है। आयात रोका गया।"
+  },
+  "backupExportChallenge": {
+    "title": "बैकअप पासवर्ड की पुष्टि करें",
+    "description": "अपने बैकअप पासवर्ड के अक्षरों को बिल्कुल सही क्रम में चुनें। अतिरिक्त भ्रामक अक्षर मिलाए गए हैं ताकि निर्यात से पहले पासवर्ड को सचेत रूप से सत्यापित किया जा सके।",
+    "selected": "चयनित अक्षर",
+    "pickCharacter": "अक्षर {char} चुनें",
+    "invalid": "चयनित क्रम बैकअप पासवर्ड से मेल नहीं खाता।"
+  },
+  "backupImportSelection": {
+    "title": "चयनात्मक आयात",
+    "summary": "आयात के लिए {selected}/{total} वॉलेट चुने गए",
+    "folders": "फ़ोल्डर",
+    "tags": "टैग",
+    "selectAll": "सभी चुनें",
+    "clearAll": "सभी हटाएँ",
+    "searchLabel": "वॉलेट खोजें",
+    "searchPlaceholder": "नाम, पता, फ़ोल्डर, टैग या नेटवर्क से खोजें",
+    "selectVisible": "दिख रहे चुनें",
+    "clearVisible": "दिख रहे हटाएँ",
+    "selectWallet": "वॉलेट चुनें",
+    "unselectWallet": "वॉलेट अचयनित करें",
+    "walletAddress": "वॉलेट पता",
+    "noAddress": "कोई पता नहीं",
+    "noSearchResults": "इस खोज से कोई वॉलेट मेल नहीं खाता।",
+    "noneSelected": "आयात करने के लिए कम से कम एक वॉलेट चुनें।"
   },
   "audit": {
     "title": "सुरक्षा ऑडिट लॉग",

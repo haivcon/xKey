@@ -134,6 +134,7 @@ export default {
     "warning": "Uyarı",
     "undo": "Geri al",
     "copy": "Kopyala",
+    "paste": "Paste",
     "copied": "Kopyalandı!",
     "copyData": "Veriyi Kopyala",
     "copiedClipboard": "Panoya kopyalandı",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Kurtarılan shardlar",
     "recoveredBytes": "Self-healing içe aktarmadan önce {count} bayt kurtardı.",
     "modifiedWarning": "Bu yedek değiştirilmiş veya bozuk görünüyor. İçe aktarma engellendi."
+  },
+  "backupExportChallenge": {
+    "title": "Yedekleme parolasını onayla",
+    "description": "Yedekleme parolanızın karakterlerini tam sırayla seçin. Dışa aktarmadan önce parolanın bilinçli olarak doğrulanması için ek yanıltıcı karakterler karıştırılır.",
+    "selected": "Seçilen karakterler",
+    "pickCharacter": "{char} karakterini seç",
+    "invalid": "Seçilen sıra yedekleme parolasıyla eşleşmiyor."
+  },
+  "backupImportSelection": {
+    "title": "Seçmeli içe aktarma",
+    "summary": "İçe aktarma için {selected}/{total} cüzdan seçildi",
+    "folders": "Klasörler",
+    "tags": "Etiketler",
+    "selectAll": "Tümünü seç",
+    "clearAll": "Tümünü temizle",
+    "searchLabel": "Cüzdanlarda ara",
+    "searchPlaceholder": "Ad, adres, klasör, etiket veya ağa göre ara",
+    "selectVisible": "Görünenleri seç",
+    "clearVisible": "Görünenleri temizle",
+    "selectWallet": "Cüzdan seç",
+    "unselectWallet": "Cüzdan seçimini kaldır",
+    "walletAddress": "cüzdan adresi",
+    "noAddress": "Adres yok",
+    "noSearchResults": "Bu aramayla eşleşen cüzdan yok.",
+    "noneSelected": "İçe aktarmak için en az bir cüzdan seçin."
   },
   "audit": {
     "title": "Güvenlik Denetim Günlüğü",

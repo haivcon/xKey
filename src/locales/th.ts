@@ -134,6 +134,7 @@ export default {
     "warning": "คำเตือน",
     "undo": "เลิกทำ",
     "copy": "สำเนา",
+    "paste": "Paste",
     "copied": "คัดลอกแล้ว!",
     "copyData": "คัดลอกข้อมูล",
     "copiedClipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "ชาร์ดที่กู้คืน",
     "recoveredBytes": "Self-healing กู้คืน {count} ไบต์ก่อนนำเข้า",
     "modifiedWarning": "backup นี้ดูเหมือนถูกแก้ไขหรือเสียหาย จึงบล็อกการนำเข้า"
+  },
+  "backupExportChallenge": {
+    "title": "ยืนยันรหัสผ่านข้อมูลสำรอง",
+    "description": "เลือกอักขระของรหัสผ่านข้อมูลสำรองตามลำดับที่ถูกต้อง อักขระล่อเพิ่มเติมถูกผสมไว้เพื่อให้ต้องตรวจสอบรหัสผ่านอย่างตั้งใจก่อนส่งออก",
+    "selected": "อักขระที่เลือก",
+    "pickCharacter": "เลือกอักขระ {char}",
+    "invalid": "ลำดับที่เลือกไม่ตรงกับรหัสผ่านข้อมูลสำรอง"
+  },
+  "backupImportSelection": {
+    "title": "นำเข้าแบบเลือกบางส่วน",
+    "summary": "เลือกกระเป๋า {selected}/{total} รายการเพื่อนำเข้า",
+    "folders": "โฟลเดอร์",
+    "tags": "แท็ก",
+    "selectAll": "เลือกทั้งหมด",
+    "clearAll": "ล้างทั้งหมด",
+    "searchLabel": "ค้นหากระเป๋า",
+    "searchPlaceholder": "ค้นหาตามชื่อ ที่อยู่ โฟลเดอร์ แท็ก หรือเครือข่าย",
+    "selectVisible": "เลือกที่มองเห็น",
+    "clearVisible": "ล้างที่มองเห็น",
+    "selectWallet": "เลือกกระเป๋า",
+    "unselectWallet": "ยกเลิกเลือกกระเป๋า",
+    "walletAddress": "ที่อยู่กระเป๋า",
+    "noAddress": "ไม่มีที่อยู่",
+    "noSearchResults": "ไม่มีกระเป๋าที่ตรงกับการค้นหานี้",
+    "noneSelected": "เลือกกระเป๋าอย่างน้อยหนึ่งรายการเพื่อนำเข้า"
   },
   "audit": {
     "title": "บันทึกการตรวจสอบความปลอดภัย",

@@ -134,6 +134,7 @@ export default {
     "warning": "Warnung",
     "undo": "Rückgängig machen",
     "copy": "Kopie",
+    "paste": "Paste",
     "copied": "Kopiert!",
     "copyData": "Daten kopieren",
     "copiedClipboard": "In Zwischenablage kopiert",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Wiederhergestellte Shards",
     "recoveredBytes": "Selbstheilung hat vor dem Import {count} Byte wiederhergestellt.",
     "modifiedWarning": "Dieses Backup scheint verändert oder beschädigt zu sein. Import blockiert."
+  },
+  "backupExportChallenge": {
+    "title": "Backup-Passwort bestätigen",
+    "description": "Wählen Sie die Zeichen Ihres Backup-Passworts in der exakten Reihenfolge aus. Zusätzliche Täuschzeichen werden gemischt, damit das Passwort vor dem Export bewusst bestätigt wird.",
+    "selected": "Ausgewählte Zeichen",
+    "pickCharacter": "Zeichen {char} auswählen",
+    "invalid": "Die ausgewählte Zeichenfolge stimmt nicht mit dem Backup-Passwort überein."
+  },
+  "backupImportSelection": {
+    "title": "Selektiver Import",
+    "summary": "{selected}/{total} Wallets für den Import ausgewählt",
+    "folders": "Ordner",
+    "tags": "Tags",
+    "selectAll": "Alle auswählen",
+    "clearAll": "Alle abwählen",
+    "searchLabel": "Wallets suchen",
+    "searchPlaceholder": "Nach Name, Adresse, Ordner, Tag oder Netzwerk suchen",
+    "selectVisible": "Sichtbare auswählen",
+    "clearVisible": "Sichtbare abwählen",
+    "selectWallet": "Wallet auswählen",
+    "unselectWallet": "Wallet abwählen",
+    "walletAddress": "Wallet-Adresse",
+    "noAddress": "Keine Adresse",
+    "noSearchResults": "Keine Wallets entsprechen dieser Suche.",
+    "noneSelected": "Wählen Sie mindestens eine Wallet zum Importieren aus."
   },
   "audit": {
     "title": "Sicherheits-Auditprotokoll",

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronUp, Copy, Fingerprint, FolderOpen, Globe2, Hash, KeyRound, MonitorSmartphone, Package, PlusCircle, RefreshCw, Settings, ShieldAlert, ShieldCheck, ShieldX, Wallet, Wrench } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckSquare, ChevronDown, ChevronUp, ClipboardPaste, Copy, Fingerprint, FolderOpen, Globe2, Hash, KeyRound, MonitorSmartphone, Package, PlusCircle, RefreshCw, Search, Settings, ShieldAlert, ShieldCheck, ShieldX, Square, Tags, Wallet, Wrench } from 'lucide-react';
 import BrandSlogan from '../shared/BrandSlogan';
 import PasswordInput from '../shared/PasswordInput';
 import { asNumber, asText } from '../../app/valueFormatters';
@@ -7,6 +7,14 @@ import type { BackupImportAnalysis } from '../../features/import/backupImportAna
 import type { RestoreSandboxResult } from '../../features/backup/restoreSandbox';
 import type { BackupPreview } from '../../hooks/useFileImport';
 import type { TranslationFn } from '../../contexts/LanguageContext';
+import type { Wallet as WalletModel } from '../../types';
+import {
+  buildBackupImportSelectionSummary,
+  createAllBackupWalletSelection,
+  getBackupSelectionIdsByFolder,
+  getBackupSelectionIdsByTag,
+  getBackupWalletSelectionId,
+} from '../../features/backup/backupImportSelection';
 
 type BackupImportMode = 'merge' | 'replace';
 
@@ -121,9 +129,12 @@ type BackupImportPasswordModalProps = {
   backupImportMode: BackupImportMode;
   updateMissingSensitive: boolean;
   importPassword: string;
+  backupWalletsForSelection: WalletModel[];
+  selectedBackupWalletIds: string[];
   brandReminders: boolean;
   t: TranslationFn;
   onPasswordChange: (value: string) => void;
+  onSelectedBackupWalletIdsChange: (ids: string[]) => void;
   onCancel: () => void;
   onPreview: () => Promise<void>;
   onImport: () => void;
@@ -148,9 +159,12 @@ export default function BackupImportPasswordModal({
   backupImportMode,
   updateMissingSensitive,
   importPassword,
+  backupWalletsForSelection,
+  selectedBackupWalletIds,
   brandReminders,
   t,
   onPasswordChange,
+  onSelectedBackupWalletIdsChange,
   onCancel,
   onPreview,
   onImport,
@@ -169,6 +183,7 @@ export default function BackupImportPasswordModal({
   const [backupIdExpanded, setBackupIdExpanded] = useState(false);
   const [fileHashExpanded, setFileHashExpanded] = useState(false);
   const [showAllOfflineDiff, setShowAllOfflineDiff] = useState(false);
+  const [walletSearch, setWalletSearch] = useState('');
   const backupId = asText(backupPreview?.backupId) || asText(backupPreview?.metadata?.backupId);
   const fileHash = asText(backupPreview?.containerHash) || asText(backupPreview?.metadata?.containerHash);
   const metadata = backupPreview?.metadata;
@@ -178,6 +193,51 @@ export default function BackupImportPasswordModal({
   const offlineDiffItems = restoreSandbox?.diff.items.filter(item => item.status !== 'unchanged') || [];
   const visibleOfflineDiffItems = showAllOfflineDiff ? offlineDiffItems : offlineDiffItems.slice(0, 6);
   const createdAtText = asText(metadata?.createdAt) ? new Date(asText(metadata?.createdAt)).toLocaleString() : '';
+  const selectionSummary = buildBackupImportSelectionSummary(backupWalletsForSelection, selectedBackupWalletIds);
+  const selectedBackupWalletSet = new Set(selectedBackupWalletIds);
+  const normalizedWalletSearch = walletSearch.trim().toLowerCase();
+  const filteredBackupWalletsForSelection = normalizedWalletSearch
+    ? backupWalletsForSelection.filter((wallet) => {
+      const searchableText = [
+        wallet.name,
+        wallet.address,
+        wallet.groupId,
+        wallet.network,
+        ...(wallet.tags || []),
+      ].filter(Boolean).join(' ').toLowerCase();
+      return searchableText.includes(normalizedWalletSearch);
+    })
+    : backupWalletsForSelection;
+  const toggleSelectedIds = (ids: string[], forceSelected?: boolean) => {
+    const next = new Set(selectedBackupWalletIds);
+    const shouldSelect = forceSelected ?? ids.some(id => !next.has(id));
+    ids.forEach((id) => {
+      if (shouldSelect) next.add(id);
+      else next.delete(id);
+    });
+    onSelectedBackupWalletIdsChange(Array.from(next));
+  };
+  const selectAllBackupWallets = () => {
+    onSelectedBackupWalletIdsChange(createAllBackupWalletSelection(backupWalletsForSelection));
+  };
+  const clearAllBackupWallets = () => {
+    onSelectedBackupWalletIdsChange([]);
+  };
+  const selectVisibleBackupWallets = () => {
+    toggleSelectedIds(filteredBackupWalletsForSelection.map((wallet, index) => getBackupWalletSelectionId(wallet, backupWalletsForSelection.indexOf(wallet) >= 0 ? backupWalletsForSelection.indexOf(wallet) : index)), true);
+  };
+  const clearVisibleBackupWallets = () => {
+    toggleSelectedIds(filteredBackupWalletsForSelection.map((wallet, index) => getBackupWalletSelectionId(wallet, backupWalletsForSelection.indexOf(wallet) >= 0 ? backupWalletsForSelection.indexOf(wallet) : index)), false);
+  };
+  const pasteWalletSearch = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setWalletSearch(text);
+      onHapticSuccess();
+    } catch {
+      onHapticTap();
+    }
+  };
   const metadataItems = metadata
     ? [
       { label: t('restore.createdAt'), value: createdAtText, icon: CalendarDays },
@@ -253,7 +313,7 @@ export default function BackupImportPasswordModal({
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[110] flex items-start justify-center overflow-y-auto bg-black/60 p-2 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={() => { onHapticTap(); onCancel(); }}
     >
       <div
@@ -263,7 +323,7 @@ export default function BackupImportPasswordModal({
         aria-labelledby="restore-backup-title"
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
-        className="restore-backup-modal max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-full sm:p-6"
+        className="restore-backup-modal my-auto h-auto max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:w-full sm:p-6"
       >
         <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${integrityPresentation.haloClass}`}>
           <IntegrityIcon size={22} className={integrityPresentation.iconClass} />
@@ -489,6 +549,157 @@ export default function BackupImportPasswordModal({
             <button type="button" onClick={() => { onHapticTap(); onSaveRestoreReport(); }} className="mt-3 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 font-semibold text-surface-100 transition-colors hover:bg-surface-700">
               {t('restoreSandbox.saveReport')}
             </button>
+          </div>
+        )}
+
+        {backupWalletsForSelection.length > 0 && (
+          <div className="mb-4 rounded-xl border border-surface-700 bg-surface-950/40 p-3 text-xs text-surface-200">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="text-scale-xs font-bold uppercase tracking-wide text-brand-200">{t('backupImportSelection.title')}</div>
+                <div className="mt-1 text-surface-400">
+                  {t('backupImportSelection.summary', {
+                    selected: selectionSummary.selectedWallets,
+                    total: selectionSummary.totalWallets,
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={selectAllBackupWallets}
+                  className="btn-glow rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-2 font-semibold text-brand-100 hover:bg-brand-500/15"
+                >
+                  {t('backupImportSelection.selectAll')}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAllBackupWallets}
+                  className="btn-glow rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 font-semibold text-surface-100 hover:bg-surface-700"
+                >
+                  {t('backupImportSelection.clearAll')}
+                </button>
+              </div>
+            </div>
+            <div className="mb-3 rounded-xl border border-surface-700 bg-surface-900/60 p-2">
+              <label className="mb-1.5 flex items-center gap-1.5 text-scale-2xs font-bold uppercase tracking-wide text-surface-400" htmlFor="backup-wallet-search">
+                <Search size={12} aria-hidden="true" />
+                {t('backupImportSelection.searchLabel')}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="backup-wallet-search"
+                  value={walletSearch}
+                  onChange={(event) => setWalletSearch(event.target.value)}
+                  placeholder={t('backupImportSelection.searchPlaceholder')}
+                  className="min-w-0 flex-1 rounded-lg border border-surface-700 bg-surface-950 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-600 focus:outline-none focus:border-brand-500"
+                />
+                <button
+                  type="button"
+                  onClick={pasteWalletSearch}
+                  className="btn-glow inline-flex items-center gap-1.5 rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 font-semibold text-surface-100 hover:bg-surface-700"
+                >
+                  <ClipboardPaste size={14} aria-hidden="true" />
+                  {t('common.paste')}
+                </button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={selectVisibleBackupWallets}
+                  className="rounded-lg border border-brand-500/30 bg-brand-500/10 px-2.5 py-1.5 font-semibold text-brand-100"
+                >
+                  {t('backupImportSelection.selectVisible')}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearVisibleBackupWallets}
+                  className="rounded-lg border border-surface-700 bg-surface-800 px-2.5 py-1.5 font-semibold text-surface-200"
+                >
+                  {t('backupImportSelection.clearVisible')}
+                </button>
+              </div>
+            </div>
+            {selectionSummary.folders.length > 0 && (
+              <div className="mb-3">
+                <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-surface-100"><FolderOpen size={13} />{t('backupImportSelection.folders')}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectionSummary.folders.map(folder => (
+                    <button
+                      key={folder.name}
+                      type="button"
+                      onClick={() => toggleSelectedIds(getBackupSelectionIdsByFolder(backupWalletsForSelection, folder.name))}
+                      className={`rounded-full border px-2.5 py-1 font-semibold ${folder.selectedCount > 0 ? 'border-brand-400/40 bg-brand-500/15 text-brand-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
+                    >
+                      {folder.name} · {folder.selectedCount}/{folder.count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectionSummary.tags.length > 0 && (
+              <div className="mb-3">
+                <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-surface-100"><Tags size={13} />{t('backupImportSelection.tags')}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectionSummary.tags.map(tag => (
+                    <button
+                      key={tag.name}
+                      type="button"
+                      onClick={() => toggleSelectedIds(getBackupSelectionIdsByTag(backupWalletsForSelection, tag.name))}
+                      className={`rounded-full border px-2.5 py-1 font-semibold ${tag.selectedCount > 0 ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100' : 'border-surface-700 bg-surface-800 text-surface-300'}`}
+                    >
+                      #{tag.name} · {tag.selectedCount}/{tag.count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+              {filteredBackupWalletsForSelection.map((wallet) => {
+                const walletIndex = backupWalletsForSelection.indexOf(wallet);
+                const walletId = getBackupWalletSelectionId(wallet, walletIndex);
+                const checked = selectedBackupWalletSet.has(walletId);
+                return (
+                  <div
+                    key={walletId}
+                    className={`flex w-full items-start gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors ${checked ? 'border-brand-400/40 bg-brand-500/10 text-brand-50' : 'border-surface-700 bg-surface-900/70 text-surface-300 hover:bg-surface-800'}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectedIds([walletId])}
+                      className="mt-0.5 shrink-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                      aria-label={checked ? t('backupImportSelection.unselectWallet') : t('backupImportSelection.selectWallet')}
+                    >
+                      {checked ? <CheckSquare size={16} className="text-brand-300" /> : <Square size={16} className="text-surface-500" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectedIds([walletId])}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <span className="block truncate font-semibold">{wallet.name || wallet.address || t('wallet.unnamed')}</span>
+                      <span className="mt-0.5 block truncate font-mono text-scale-2xs text-surface-400">{wallet.address || t('backupImportSelection.noAddress')}</span>
+                      <span className="mt-0.5 block truncate text-scale-2xs text-surface-500">{wallet.groupId || t('folder.imported')} · {(wallet.tags || []).map(tag => `#${tag}`).join(' ')}</span>
+                    </button>
+                    {wallet.address && (
+                      <button
+                        type="button"
+                        onClick={() => onCopyPreviewValue('walletAddress', wallet.address || '')}
+                        className="btn-glow shrink-0 rounded-lg border border-surface-700 bg-surface-800 px-2 py-1.5 text-scale-2xs font-semibold text-surface-100 hover:bg-surface-700"
+                        aria-label={`${t('common.copy')} ${t('backupImportSelection.walletAddress')}`}
+                      >
+                        <Copy size={13} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {filteredBackupWalletsForSelection.length === 0 && (
+                <div className="rounded-lg border border-surface-700 bg-surface-900 px-3 py-4 text-center text-surface-400">
+                  {t('backupImportSelection.noSearchResults')}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

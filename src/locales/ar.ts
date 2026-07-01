@@ -134,6 +134,7 @@ export default {
     "warning": "تحذير",
     "undo": "تراجع",
     "copy": "ينسخ",
+    "paste": "Paste",
     "copied": "تم النسخ!",
     "copyData": "نسخ البيانات",
     "copiedClipboard": "تم النسخ إلى الحافظة",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "الأجزاء المستردة",
     "recoveredBytes": "استعاد الإصلاح الذاتي {count} بايت قبل الاستيراد.",
     "modifiedWarning": "يبدو أن هذه النسخة معدلة أو تالفة. تم حظر الاستيراد."
+  },
+  "backupExportChallenge": {
+    "title": "تأكيد كلمة مرور النسخة الاحتياطية",
+    "description": "حدد أحرف كلمة مرور النسخة الاحتياطية بالترتيب الصحيح. يتم خلط أحرف تمويه إضافية حتى يتم التحقق من كلمة المرور بوعي قبل التصدير.",
+    "selected": "الأحرف المحددة",
+    "pickCharacter": "اختر الحرف {char}",
+    "invalid": "التسلسل المحدد لا يطابق كلمة مرور النسخة الاحتياطية."
+  },
+  "backupImportSelection": {
+    "title": "استيراد انتقائي",
+    "summary": "تم تحديد {selected}/{total} محفظة للاستيراد",
+    "folders": "المجلدات",
+    "tags": "الوسوم",
+    "selectAll": "تحديد الكل",
+    "clearAll": "مسح الكل",
+    "searchLabel": "البحث في المحافظ",
+    "searchPlaceholder": "ابحث بالاسم أو العنوان أو المجلد أو الوسم أو الشبكة",
+    "selectVisible": "تحديد الظاهر",
+    "clearVisible": "مسح الظاهر",
+    "selectWallet": "تحديد المحفظة",
+    "unselectWallet": "إلغاء تحديد المحفظة",
+    "walletAddress": "عنوان المحفظة",
+    "noAddress": "لا يوجد عنوان",
+    "noSearchResults": "لا توجد محافظ تطابق هذا البحث.",
+    "noneSelected": "حدد محفظة واحدة على الأقل للاستيراد."
   },
   "audit": {
     "title": "سجل تدقيق الأمان",

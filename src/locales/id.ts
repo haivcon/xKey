@@ -134,6 +134,7 @@ export default {
     "warning": "Peringatan",
     "undo": "Membuka",
     "copy": "Menyalin",
+    "paste": "Paste",
     "copied": "Disalin!",
     "copyData": "Salin Data",
     "copiedClipboard": "Disalin ke clipboard",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "Shard dipulihkan",
     "recoveredBytes": "Self-healing memulihkan {count} byte sebelum impor.",
     "modifiedWarning": "Backup ini tampak diubah atau rusak. Impor diblokir."
+  },
+  "backupExportChallenge": {
+    "title": "Konfirmasi kata sandi cadangan",
+    "description": "Pilih karakter kata sandi cadangan Anda dalam urutan yang tepat. Karakter umpan tambahan dicampur agar kata sandi diverifikasi secara sadar sebelum ekspor.",
+    "selected": "Karakter yang dipilih",
+    "pickCharacter": "Pilih karakter {char}",
+    "invalid": "Urutan yang dipilih tidak cocok dengan kata sandi cadangan."
+  },
+  "backupImportSelection": {
+    "title": "Impor selektif",
+    "summary": "{selected}/{total} dompet dipilih untuk diimpor",
+    "folders": "Folder",
+    "tags": "Tag",
+    "selectAll": "Pilih semua",
+    "clearAll": "Hapus semua",
+    "searchLabel": "Cari dompet",
+    "searchPlaceholder": "Cari berdasarkan nama, alamat, folder, tag, atau jaringan",
+    "selectVisible": "Pilih yang terlihat",
+    "clearVisible": "Hapus yang terlihat",
+    "selectWallet": "Pilih dompet",
+    "unselectWallet": "Batal pilih dompet",
+    "walletAddress": "alamat dompet",
+    "noAddress": "Tidak ada alamat",
+    "noSearchResults": "Tidak ada dompet yang cocok dengan pencarian ini.",
+    "noneSelected": "Pilih setidaknya satu dompet untuk diimpor."
   },
   "audit": {
     "title": "Log Audit Keamanan",

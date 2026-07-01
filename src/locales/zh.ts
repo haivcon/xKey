@@ -135,6 +135,7 @@ export default {
     "warning": "警告",
     "undo": "撤消",
     "copy": "复制",
+    "paste": "Paste",
     "copied": "已复制！",
     "copyData": "复制数据",
     "copiedClipboard": "已复制到剪贴板",
@@ -313,6 +314,31 @@ export default {
     "reportRecoveredShards": "已恢复分片",
     "recoveredBytes": "自修复在导入前恢复了 {count} 字节。",
     "modifiedWarning": "此备份似乎被修改或损坏，已阻止导入。"
+  },
+  "backupExportChallenge": {
+    "title": "确认备份密码",
+    "description": "请按正确顺序选择备份密码中的字符。系统会混入额外干扰字符，以确保导出前必须主动核对密码。",
+    "selected": "已选择字符",
+    "pickCharacter": "选择字符 {char}",
+    "invalid": "所选序列与备份密码不匹配。"
+  },
+  "backupImportSelection": {
+    "title": "选择性导入",
+    "summary": "已选择 {selected}/{total} 个钱包用于导入",
+    "folders": "文件夹",
+    "tags": "标签",
+    "selectAll": "全选",
+    "clearAll": "清空选择",
+    "searchLabel": "搜索钱包",
+    "searchPlaceholder": "按名称、地址、文件夹、标签或网络搜索",
+    "selectVisible": "选择可见项",
+    "clearVisible": "清除可见项",
+    "selectWallet": "选择钱包",
+    "unselectWallet": "取消选择钱包",
+    "walletAddress": "钱包地址",
+    "noAddress": "无地址",
+    "noSearchResults": "没有钱包匹配此搜索。",
+    "noneSelected": "请至少选择一个钱包进行导入。"
   },
   "audit": {
     "title": "安全审计日志",

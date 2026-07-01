@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
+import { createPasswordChallengeChoices, getPasswordChallengeProgress, type PasswordChallengeChoice } from '../../features/backup/passwordChallenge';
 import { loadWallets } from '../../utils/storage';
 import { exportPortableBackup } from '../../utils/backup/backupUtils';
 import { hapticSuccess } from '../../utils/haptics';
@@ -19,24 +20,30 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
   const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
   const [backupFileName, setBackupFileName] = useState('');
   const [backupExporting, setBackupExporting] = useState(false);
+  const [showPasswordChallenge, setShowPasswordChallenge] = useState(false);
+  const [passwordChallengeChoices, setPasswordChallengeChoices] = useState<PasswordChallengeChoice[]>([]);
+  const [passwordChallengeSelected, setPasswordChallengeSelected] = useState<string[]>([]);
+
+  const passwordChallengeProgress = useMemo(
+    () => getPasswordChallengeProgress(backupPassword, passwordChallengeSelected),
+    [backupPassword, passwordChallengeSelected],
+  );
+
+  const resetPasswordChallenge = useCallback(() => {
+    setShowPasswordChallenge(false);
+    setPasswordChallengeChoices([]);
+    setPasswordChallengeSelected([]);
+  }, []);
 
   const closeBackupExport = useCallback(() => {
     setShowBackupExport(false);
     setBackupPassword('');
     setBackupPasswordConfirm('');
     setBackupFileName('');
-  }, []);
+    resetPasswordChallenge();
+  }, [resetPasswordChallenge]);
 
-  const handleExportBackup = useCallback(async () => {
-    if (!backupPassword || backupPassword.length < 6) {
-      showToast?.(t('settings.passwordMinError'), 'warning');
-      return;
-    }
-    if (backupPassword !== backupPasswordConfirm) {
-      showToast?.(t('settings.passwordMismatch'), 'error');
-      return;
-    }
-
+  const performExportBackup = useCallback(async () => {
     setBackupExporting(true);
     try {
       const verified = await requireSensitiveAction({
@@ -63,7 +70,48 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
     } finally {
       setBackupExporting(false);
     }
-  }, [aesKey, backupFileName, backupPassword, backupPasswordConfirm, closeBackupExport, isDecoyMode, showToast, t]);
+  }, [aesKey, backupFileName, backupPassword, closeBackupExport, isDecoyMode, showToast, t]);
+
+  const handleExportBackup = useCallback(async () => {
+    if (!backupPassword || backupPassword.length < 6) {
+      showToast?.(t('settings.passwordMinError'), 'warning');
+      return;
+    }
+    if (backupPassword !== backupPasswordConfirm) {
+      showToast?.(t('settings.passwordMismatch'), 'error');
+      return;
+    }
+
+    setPasswordChallengeChoices(createPasswordChallengeChoices(backupPassword));
+    setPasswordChallengeSelected([]);
+    setShowPasswordChallenge(true);
+  }, [backupPassword, backupPasswordConfirm, showToast, t]);
+
+  const cancelPasswordChallenge = useCallback(() => {
+    resetPasswordChallenge();
+  }, [resetPasswordChallenge]);
+
+  const selectPasswordChallengeCharacter = useCallback((character: string) => {
+    setPasswordChallengeSelected((current) => {
+      const next = [...current, character];
+      const progress = getPasswordChallengeProgress(backupPassword, next);
+      if (!progress.isPrefixValid) {
+        showToast?.(t('backupExportChallenge.invalid'), 'error');
+        return [];
+      }
+      if (progress.isValid) {
+        setTimeout(() => {
+          resetPasswordChallenge();
+          void performExportBackup();
+        }, 0);
+      }
+      return next;
+    });
+  }, [backupPassword, performExportBackup, resetPasswordChallenge, showToast, t]);
+
+  const clearPasswordChallengeSelection = useCallback(() => {
+    setPasswordChallengeSelected([]);
+  }, []);
 
   return {
     showBackupExport,
@@ -75,7 +123,14 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
     backupFileName,
     setBackupFileName,
     backupExporting,
+    showPasswordChallenge,
+    passwordChallengeChoices,
+    passwordChallengeSelected,
+    passwordChallengeProgress,
     closeBackupExport,
     handleExportBackup,
+    cancelPasswordChallenge,
+    selectPasswordChallengeCharacter,
+    clearPasswordChallengeSelection,
   };
 }
