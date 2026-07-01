@@ -20,18 +20,21 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.16
+## Current Release Security Notes: v6.0.17
 
-v6.0.16 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.17 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- 🔒 Added password challenge before .xkey backup export.
-- 🎯 Import only selected wallets, folders, or tags from backups.
-- 🧩 Improved backup preview, selection summary, and restore flow.
-- 📱 Fixed mobile keyboard handling to keep inputs visible without blank space.
-- ✅ Build verified for a stable release.
-- Android metadata is updated to `versionCode 114` and `versionName 6.0.16`.
+- ✨ Improved vanity wallet highlighting for primary and extra matches.
+- 🏠 Saved vanity wallets now keep highlight metadata for accurate home screen display.
+- 🧩 Reused one highlight-length helper to prevent head/tail overlap in compact addresses.
+- ✅ Added regression coverage for main, extra, head, tail, and both-side vanity patterns.
+- 🛠 Verified with vanity tests, type-check, and lint.
+- 🔎 Added extra vanity filters for numeric tails and low-diversity edge patterns, updated localized labels, fixed duplicated/escaped locale entries, and verified with build plus vanity-related tests.
+- 🔐 Added encrypted vault snapshots before import, merge, batch delete, and schema migration. Local rollback can restore the latest snapshot after risky changes, and migrations now support dry-run reporting before apply.
+- 🔔 Standardized top toast notifications with shared design tokens, severity variants, responsive typography, and i18n-safe helpers. Added HODL text for the reveal hint across all locales and verified the production build.
+- Android metadata is updated to `versionCode 115` and `versionName 6.0.17`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

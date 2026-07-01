@@ -21,7 +21,7 @@ export type CsvImportPreview = {
   mapping: CsvImportMapping;
 };
 
-const CSV_FORMULA_PREFIX = /^[=+\-@\t\r]/;
+const CSV_FORMULA_PREFIX = /^\s*[=+\-@]/;
 const EVM_ADDRESS = /^0x[a-fA-F0-9]{40}$/;
 const SOL_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 

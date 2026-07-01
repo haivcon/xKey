@@ -391,16 +391,25 @@ export const loadWallets = async (key: string | null, isDecoy = false): Promise<
     if (!value) return [];
     
     let wallets = await runCryptoWorker<Wallet[]>('DECRYPT_WALLETS', { cipherText: value, key });
+    const preMigrationWallets = wallets;
     
     // Run schema migrations
-    const { wallets: migrated, migrated: didMigrate } = await runMigrations(wallets);
+    const { wallets: migrated, migrated: didMigrate, dryRun } = await runMigrations(wallets);
     wallets = migrated;
     
     const { wallets: vanityBackfilled, migrated: didBackfillVanity } = backfillVanityScoreMetadata(wallets);
     wallets = vanityBackfilled;
     
-    // If migration happened, re-save with new schema + field encryption
+    // If migration happened, create an encrypted rollback snapshot before re-saving.
     if (didMigrate || didBackfillVanity) {
+        if (didMigrate) {
+            const { createEncryptedVaultSnapshot } = await import('./vaultSnapshot');
+            await createEncryptedVaultSnapshot(preMigrationWallets, key, {
+                operation: 'migration',
+                schemaVersion: dryRun.targetSchema,
+                reason: `dry_run:${dryRun.changes.map(change => change.code).join(',')}`,
+            });
+        }
         await saveWallets(wallets, key, isDecoy);
     } else if (source === 'legacy' && Capacitor.isNativePlatform()) {
         await saveVaultCipher(storageKey, value);

@@ -1135,6 +1135,10 @@ export default {
     "vanityExtraFilterHint_alternating": "Keeps alternating pairs such as ababab or 121212.",
     "vanityExtraFilter_lucky": "Lucky/custom patterns",
     "vanityExtraFilterHint_lucky": "Keeps common lucky strings or your comma-separated custom hex patterns.",
+    "vanityExtraFilter_numericTail": "Numeric tail",
+    "vanityExtraFilterHint_numericTail": "Keeps addresses with memorable numeric endings such as 8888, 6868, or 2024.",
+    "vanityExtraFilter_lowDiversity": "Low character diversity",
+    "vanityExtraFilterHint_lowDiversity": "Keeps edges made from only one or two different hex characters, such as aaaa11 or 7777bb.",
     "vanityExtraMinRun": "최소 반복 문자 수",
     "vanityExtraMinRun_3": "최소 3개 반복 문자",
     "vanityExtraMinRun_4": "최소 4개 반복 문자",
@@ -1300,6 +1304,7 @@ export default {
   },
   "walletCard": {
     "unnamed": "이름 없는 지갑",
+    "holdToReveal": "HODL",
     "noAddress": "주소 없음",
     "balanceLabel": "잔액",
     "rename": "이름 변경",

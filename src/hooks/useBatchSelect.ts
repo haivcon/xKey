@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Wallet } from '../types';
 import { hapticTap, hapticSuccess, hapticWarning } from '../utils/haptics';
 import { saveWallets } from '../utils/storage';
+import { createEncryptedVaultSnapshot } from '../utils/vaultSnapshot';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useT } from '../contexts/LanguageContext';
@@ -102,11 +103,15 @@ export default function useBatchSelect(
     if (!ok) return;
     hapticWarning();
     const updated = wallets.filter(w => !isSelected(w));
+    await createEncryptedVaultSnapshot(wallets, aesKey, {
+      operation: 'batch-delete',
+      reason: `batch_delete:${selectedCount}`,
+    });
     await persist(updated);
     showToast({ key: 'batch.deleted', vars: { count: selectedCount }, category: 'data' }, 'info');
     setSelectedIds(new Set());
     setSelectionMode(false);
-  }, [wallets, selectedCount, isSelected, persist, showConfirm, showToast, t]);
+  }, [wallets, selectedCount, isSelected, persist, showConfirm, showToast, t, aesKey]);
 
   const bulkMove = useCallback(async (targetFolder: string) => {
     const updated = wallets.map(w => isSelected(w) ? { ...w, groupId: targetFolder } : w);

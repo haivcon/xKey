@@ -275,7 +275,7 @@ export default function App() {
   } = useBackupVerificationReport({ backupPreview, t, showToast });
 
   const externalBackupWaiting = useExternalBackupOpen(aesKey, handleExternalBackupFile);
-  const healthMessages = useAppHealthMessages({ aesKey, externalBackupWaiting, tRef });
+  useAppHealthMessages({ aesKey, externalBackupWaiting, tRef });
 
   const {
     selectionMode, toggleSelectionMode,
@@ -464,19 +464,6 @@ export default function App() {
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
-          {externalBackupWaiting && (
-            <div className="mb-3 rounded-lg border border-sky-400/25 bg-sky-400/10 px-3 py-2 text-xs font-semibold text-sky-100">
-              {t('restore.externalWaiting')}
-            </div>
-          )}
-          {healthMessages.length > 0 && (
-            <div className="mb-3 rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-100">
-              <div className="font-semibold">{t('health.title')}</div>
-              <div className="mt-1 space-y-0.5">
-                {healthMessages.map(message => <p key={message}>{message}</p>)}
-              </div>
-            </div>
-          )}
           {wallets.length > 0 && keyHealthAttentionCount > 0 && (
             <button
               type="button"

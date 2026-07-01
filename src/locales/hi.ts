@@ -1135,6 +1135,10 @@ export default {
     "vanityExtraFilterHint_alternating": "Keeps alternating pairs such as ababab or 121212.",
     "vanityExtraFilter_lucky": "Lucky/custom patterns",
     "vanityExtraFilterHint_lucky": "Keeps common lucky strings or your comma-separated custom hex patterns.",
+    "vanityExtraFilter_numericTail": "Numeric tail",
+    "vanityExtraFilterHint_numericTail": "Keeps addresses with memorable numeric endings such as 8888, 6868, or 2024.",
+    "vanityExtraFilter_lowDiversity": "Low character diversity",
+    "vanityExtraFilterHint_lowDiversity": "Keeps edges made from only one or two different hex characters, such as aaaa11 or 7777bb.",
     "vanityExtraMinRun": "न्यूनतम दोहराए गए अक्षर",
     "vanityExtraMinRun_3": "कम से कम 3 दोहराए गए अक्षर",
     "vanityExtraMinRun_4": "कम से कम 4 दोहराए गए अक्षर",
@@ -1300,6 +1304,7 @@ export default {
   },
   "walletCard": {
     "unnamed": "बिना नाम वॉलेट",
+    "holdToReveal": "HODL",
     "noAddress": "कोई पता नहीं",
     "balanceLabel": "शेष राशि",
     "rename": "नाम बदलें",

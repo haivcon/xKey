@@ -1,19 +1,23 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X, type LucideIcon } from 'lucide-react';
-import { logActionHistory } from '../utils/actionHistory';
+import { logActionHistory, type ActionHistoryCategory } from '../utils/actionHistory';
 import { useT, type TranslationVars } from './LanguageContext';
 import { XKEY_SLOGAN } from '../utils/branding';
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-type ToastAction = {
-  label: string;
-  onClick?: () => void | Promise<void>;
-};
-type ToastMessage = unknown | {
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+type ToastCategory = ActionHistoryCategory;
+type KeyedText = {
   key: string;
   vars?: TranslationVars;
   fallback?: string;
-  category?: 'all' | 'unlock' | 'backup' | 'copy' | 'warning' | 'data' | 'other';
+};
+type ToastCategoryInput = ToastCategory | string;
+type ToastAction = {
+  label: string | KeyedText;
+  onClick?: () => void | Promise<void>;
+};
+export type ToastMessage = unknown | KeyedText & {
+  category?: ToastCategoryInput;
 };
 type Toast = {
   id: number;
@@ -21,7 +25,10 @@ type Toast = {
   resolvedMessage: string;
   type: ToastType;
   duration: number;
-  action?: ToastAction;
+  action?: {
+    label: string;
+    onClick?: () => void | Promise<void>;
+  };
 };
 type ToastContextValue = {
   showToast: (message: ToastMessage, type?: ToastType | string, duration?: number, action?: ToastAction) => void;
@@ -45,39 +52,24 @@ const TOAST_ICONS: Record<ToastType, LucideIcon> = {
 };
 
 const TOAST_STYLES: Record<ToastType, {
-  bg: string;
-  border: string;
-  icon: string;
-  text: string;
-  bar: string;
+  toneClass: string;
+  iconClass: string;
 }> = {
   success: {
-    bg: 'bg-emerald-950/90',
-    border: 'border-emerald-500/30',
-    icon: 'text-emerald-400',
-    text: 'text-emerald-100',
-    bar: 'bg-emerald-400',
+    toneClass: 'toast-surface-success',
+    iconClass: 'text-[var(--toast-success-icon)]',
   },
   error: {
-    bg: 'bg-red-950/90',
-    border: 'border-red-500/30',
-    icon: 'text-red-400',
-    text: 'text-red-100',
-    bar: 'bg-red-400',
+    toneClass: 'toast-surface-error',
+    iconClass: 'text-[var(--toast-error-icon)]',
   },
   warning: {
-    bg: 'bg-amber-950/90',
-    border: 'border-amber-500/30',
-    icon: 'text-amber-400',
-    text: 'text-amber-100',
-    bar: 'bg-amber-400',
+    toneClass: 'toast-surface-warning',
+    iconClass: 'text-[var(--toast-warning-icon)]',
   },
   info: {
-    bg: 'bg-sky-950/90',
-    border: 'border-sky-500/30',
-    icon: 'text-sky-400',
-    text: 'text-sky-100',
-    bar: 'bg-sky-400',
+    toneClass: 'toast-surface-info',
+    iconClass: 'text-[var(--toast-info-icon)]',
   },
 };
 
@@ -125,11 +117,25 @@ const getToastDuration = (type: ToastType, duration: number | undefined, message
   return 3200;
 };
 
-const isKeyedToast = (message: ToastMessage): message is { key: string; vars?: TranslationVars; fallback?: string; category?: 'all' | 'unlock' | 'backup' | 'copy' | 'warning' | 'data' | 'other' } => (
-  !!message && typeof message === 'object' && !Array.isArray(message) && typeof (message as { key?: unknown }).key === 'string'
+const isKeyedText = (value: unknown): value is KeyedText => (
+  !!value && typeof value === 'object' && !Array.isArray(value) && typeof (value as { key?: unknown }).key === 'string'
 );
 
-function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
+const isKeyedToast = (message: ToastMessage): message is KeyedText & { category?: ToastCategoryInput } => isKeyedText(message);
+
+const normalizeToastCategory = (category: ToastCategoryInput | undefined): ActionHistoryCategory | undefined => (
+  category === 'all'
+  || category === 'unlock'
+  || category === 'backup'
+  || category === 'copy'
+  || category === 'warning'
+  || category === 'data'
+  || category === 'other'
+    ? category
+    : undefined
+);
+
+function ToastItem({ toast, onDismiss, closeLabel }: { toast: Toast; onDismiss: (id: number) => void; closeLabel: string }) {
   const [progress, setProgress] = useState(100);
   const [exiting, setExiting] = useState(false);
   const startTime = useRef(Date.now());
@@ -170,35 +176,37 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
   return (
     <div
-      className={`relative max-h-[28dvh] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-xl transition-all duration-250
-        ${style.bg} ${style.border}
+      role="status"
+      aria-live={toast.type === 'error' || toast.type === 'warning' ? 'assertive' : 'polite'}
+      className={`toast-surface relative max-h-[28dvh] overflow-hidden rounded-[var(--toast-radius)] border shadow-[var(--toast-shadow)] backdrop-blur-xl transition-all duration-250
+        ${style.toneClass}
         ${exiting ? 'animate-toast-exit' : 'animate-toast-enter'}`}
-      style={{ width: 'min(420px, calc(100vw - 28px))', fontSize: 'calc(1rem * var(--app-display-scale, 1))' }}
     >
-      <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2.5 px-3 py-2.5 text-center sm:gap-3 sm:px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-          <Icon size={17} className={style.icon} />
+      <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_1.5rem] items-center gap-1.5 px-2 py-2.5 text-center sm:grid-cols-[1.75rem_minmax(0,1fr)_1.75rem] sm:gap-2 sm:px-3">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--toast-icon-bg)] sm:h-7 sm:w-7">
+          <Icon size={15} className={style.iconClass} />
         </div>
         {formatted.address ? (
-          <div className={`min-w-0 overflow-hidden text-center ${style.text}`}>
+          <div className="min-w-0 overflow-hidden text-center text-[var(--toast-text)]">
             {formatted.slogan && (
-              <p className="mb-1 truncate text-[0.66em] font-black uppercase tracking-[0.14em] leading-tight text-white/90">
+              <p className="mb-1 truncate whitespace-nowrap text-[var(--toast-font-overline)] font-black uppercase tracking-[0.14em] leading-tight text-[var(--toast-slogan)]">
                 {formatted.slogan}
               </p>
             )}
-            <p className="truncate text-[0.82em] font-semibold leading-tight">{formatted.title}</p>
-            <p className="mt-0.5 whitespace-nowrap font-mono font-bold leading-tight text-[clamp(0.56rem,2.55vw,0.78rem)]">
+            <p className="truncate text-[var(--toast-font-title)] font-semibold leading-tight">{formatted.title}</p>
+            <p className="mx-auto mt-0.5 max-w-full whitespace-nowrap text-center font-mono text-[var(--toast-font-address)] font-bold leading-tight tracking-[-0.08em] text-[var(--toast-address)]">
               {formatted.address}
             </p>
           </div>
         ) : (
-          <div className={`min-w-0 overflow-hidden text-center ${style.text}`}>
+          <div className="min-w-0 overflow-hidden text-center text-[var(--toast-text)]">
             {formatted.slogan && (
-              <p className="mb-1 text-[0.66em] font-black uppercase tracking-[0.14em] leading-tight text-white/90">
+              <p className="mb-1 truncate whitespace-nowrap text-[var(--toast-font-overline)] font-black uppercase tracking-[0.14em] leading-tight text-[var(--toast-slogan)]">
                 {formatted.slogan}
               </p>
             )}
-            <p className="mx-auto overflow-hidden break-words text-center text-[0.82em] font-semibold leading-snug"
+            <p
+              className="mx-auto overflow-hidden break-words text-center text-[var(--toast-font-title)] font-semibold leading-snug"
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: formatted.slogan ? 2 : 3,
@@ -212,24 +220,24 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
         {toast.action ? (
           <button
             onClick={handleAction}
-            className="justify-self-end rounded-lg border border-white/15 bg-white/10 px-2.5 py-1.5 text-[0.72em] font-bold text-white transition-colors hover:bg-white/15"
+            className="justify-self-end rounded-lg border border-[var(--toast-action-border)] bg-[var(--toast-action-bg)] px-1.5 py-1.5 text-[var(--toast-font-action)] font-bold text-[var(--toast-action-text)] transition-colors hover:bg-[var(--toast-action-bg-hover)] sm:px-2"
           >
             {toast.action.label}
           </button>
         ) : (
           <button
             onClick={handleDismiss}
-            className="flex h-8 w-8 items-center justify-center justify-self-end rounded-full transition-colors hover:bg-white/10"
+            aria-label={closeLabel}
+            className="flex h-6 w-6 items-center justify-center justify-self-end rounded-full transition-colors hover:bg-[var(--toast-action-bg-hover)] sm:h-7 sm:w-7"
           >
-            <X size={14} className="text-white/40" />
+            <X size={13} className="text-[var(--toast-close)]" />
           </button>
         )}
       </div>
-      {/* Progress bar */}
-      <div className="h-[2px] w-full bg-white/5">
+      <div className="h-[2px] w-full bg-[var(--toast-track)]">
         <div
-          className={`h-full ${style.bar} transition-none`}
-          style={{ width: `${progress}%`, opacity: 0.6 }}
+          className="h-full bg-[var(--toast-bar)] transition-none"
+          style={{ width: `${progress}%`, opacity: 0.72 }}
         />
       </div>
     </div>
@@ -240,36 +248,43 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const t = useT();
 
+  const resolveText = useCallback((value: unknown): string => {
+    if (!isKeyedText(value)) return String(value ?? '');
+    return t(value.key, value.vars) || value.fallback || value.key;
+  }, [t]);
+
   const showToast = useCallback<ToastContextValue['showToast']>((message, type = 'info', duration, action) => {
     const id = ++toastId;
     const normalizedType = normalizeToastType(type);
-    const resolvedMessage = isKeyedToast(message) ? t(message.key, message.vars) || message.fallback || message.key : String(message ?? '');
+    const resolvedMessage = resolveText(message);
     const resolvedDuration = getToastDuration(normalizedType, duration, resolvedMessage);
+    const resolvedAction = action ? { ...action, label: resolveText(action.label) } : undefined;
+
     logActionHistory(resolvedMessage, isKeyedToast(message)
-      ? { type: normalizedType, messageKey: message.key, vars: message.vars, category: message.category }
+      ? { type: normalizedType, messageKey: message.key, vars: message.vars, category: normalizeToastCategory(message.category) }
       : normalizedType).catch(() => {});
+
     setToasts(prev => {
-      // Keep max 3 toasts visible
       const limited = prev.length >= 3 ? prev.slice(1) : prev;
-      return [...limited, { id, message, resolvedMessage, type: normalizedType, duration: resolvedDuration, action }];
+      return [...limited, { id, message, resolvedMessage, type: normalizedType, duration: resolvedDuration, action: resolvedAction }];
     });
-  }, [t]);
+  }, [resolveText]);
 
   const dismiss = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+  const closeLabel = t('common.close');
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {/* Toast Container — top-center, safe area aware */}
       <div
-        className="fixed left-0 right-0 z-[200] flex flex-col items-center gap-2 px-3 pointer-events-none"
+        className="pointer-events-none fixed left-0 right-0 z-[200] flex flex-col items-center gap-2 px-3"
         style={{ top: 'max(env(safe-area-inset-top, 0px), 0px)', paddingTop: 12 }}
       >
         {toasts.map(t => (
           <div key={t.id} className="pointer-events-auto flex w-full justify-center">
-            <ToastItem toast={t} onDismiss={dismiss} />
+            <ToastItem toast={t} onDismiss={dismiss} closeLabel={closeLabel} />
           </div>
         ))}
       </div>

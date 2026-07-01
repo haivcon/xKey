@@ -1136,6 +1136,10 @@ export default {
     "vanityExtraFilterHint_alternating": "保留 ababab 或 121212 这样的交替对。",
     "vanityExtraFilter_lucky": "幸运/自定义模式",
     "vanityExtraFilterHint_lucky": "保留常见幸运字符串或你用逗号分隔的自定义十六进制模式。",
+    "vanityExtraFilter_numericTail": "Numeric tail",
+    "vanityExtraFilterHint_numericTail": "Keeps addresses with memorable numeric endings such as 8888, 6868, or 2024.",
+    "vanityExtraFilter_lowDiversity": "Low character diversity",
+    "vanityExtraFilterHint_lowDiversity": "Keeps edges made from only one or two different hex characters, such as aaaa11 or 7777bb.",
     "vanityExtraMinRun": "最少连续重复字符",
     "vanityExtraMinRun_3": "至少 3 个重复字符",
     "vanityExtraMinRun_4": "至少 4 个重复字符",
@@ -1300,6 +1304,7 @@ export default {
   },
   "walletCard": {
     "unnamed": "未命名钱包",
+    "holdToReveal": "HODL",
     "noAddress": "无地址",
     "balanceLabel": "余额",
     "rename": "重命名",

@@ -28,6 +28,40 @@ html {
   --app-display-scale: 1;
   --home-header-height: 4.5rem;
   --theme-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Global top toast design tokens.
+     Keep toast color, typography and radius centralized so future notification
+     variants can be adjusted without touching ToastContext markup. */
+  --toast-radius: 1rem;
+  --toast-shadow: 0 18px 44px rgba(2, 6, 23, 0.34), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  --toast-font-overline: clamp(0.5rem, 1.45vw, 0.625rem);
+  --toast-font-title: clamp(0.75rem, 2.15vw, 0.8125rem);
+  --toast-font-address: clamp(0.4375rem, 1.55vw, 0.5625rem);
+  --toast-font-action: clamp(0.625rem, 1.85vw, 0.6875rem);
+  --toast-text: var(--color-surface-50);
+  --toast-slogan: var(--color-brand-300);
+  --toast-address: var(--color-surface-200);
+  --toast-close: var(--color-surface-300);
+  --toast-icon-bg: rgba(255, 255, 255, 0.08);
+  --toast-action-border: rgba(255, 255, 255, 0.12);
+  --toast-action-bg: rgba(255, 255, 255, 0.08);
+  --toast-action-bg-hover: rgba(255, 255, 255, 0.14);
+  --toast-action-text: var(--color-surface-50);
+  --toast-track: rgba(255, 255, 255, 0.1);
+  --toast-bar: rgba(255, 255, 255, 0.68);
+  --toast-success-bg: color-mix(in srgb, var(--color-emerald-500) 20%, rgba(15, 17, 21, 0.92));
+  --toast-success-border: color-mix(in srgb, var(--color-emerald-400) 42%, transparent);
+  --toast-success-icon: var(--color-emerald-400);
+  --toast-error-bg: color-mix(in srgb, #ef4444 18%, rgba(15, 17, 21, 0.94));
+  --toast-error-border: color-mix(in srgb, #f87171 42%, transparent);
+  --toast-error-icon: #f87171;
+  --toast-warning-bg: color-mix(in srgb, var(--color-amber-500) 18%, rgba(15, 17, 21, 0.94));
+  --toast-warning-border: color-mix(in srgb, var(--color-amber-400) 46%, transparent);
+  --toast-warning-icon: var(--color-amber-400);
+  --toast-info-bg: color-mix(in srgb, var(--color-brand-500) 18%, rgba(15, 17, 21, 0.94));
+  --toast-info-border: color-mix(in srgb, var(--color-brand-400) 42%, transparent);
+  --toast-info-icon: var(--color-brand-400);
+
   font-size: calc(16px * var(--app-display-scale));
 }
 
@@ -53,10 +87,39 @@ html {
 
 :where(.theme-light, .theme-light body) {
   --theme-font: "Aptos", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+  --toast-shadow: 0 18px 44px rgba(15, 23, 42, 0.16), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  --toast-text: #0f172a;
+  --toast-slogan: #0369a1;
+  --toast-address: #334155;
+  --toast-close: #475569;
+  --toast-icon-bg: rgba(255, 255, 255, 0.72);
+  --toast-action-border: rgba(15, 23, 42, 0.1);
+  --toast-action-bg: rgba(255, 255, 255, 0.56);
+  --toast-action-bg-hover: rgba(255, 255, 255, 0.86);
+  --toast-action-text: #0f172a;
+  --toast-track: rgba(15, 23, 42, 0.08);
+  --toast-bar: rgba(15, 23, 42, 0.38);
+  --toast-success-bg: color-mix(in srgb, #dcfce7 82%, white);
+  --toast-success-border: rgba(5, 150, 105, 0.32);
+  --toast-success-icon: #047857;
+  --toast-error-bg: color-mix(in srgb, #fee2e2 84%, white);
+  --toast-error-border: rgba(220, 38, 38, 0.32);
+  --toast-error-icon: #b91c1c;
+  --toast-warning-bg: color-mix(in srgb, #fef3c7 84%, white);
+  --toast-warning-border: rgba(217, 119, 6, 0.34);
+  --toast-warning-icon: #92400e;
+  --toast-info-bg: color-mix(in srgb, #e0f2fe 84%, white);
+  --toast-info-border: rgba(2, 132, 199, 0.34);
+  --toast-info-icon: #0369a1;
 }
 
 :where(.theme-amoled, .theme-amoled body) {
   --theme-font: "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, Arial, sans-serif;
+  --toast-shadow: 0 18px 44px rgba(0, 0, 0, 0.72), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  --toast-success-bg: color-mix(in srgb, var(--color-emerald-500) 18%, rgba(0, 0, 0, 0.94));
+  --toast-error-bg: color-mix(in srgb, #ef4444 16%, rgba(0, 0, 0, 0.96));
+  --toast-warning-bg: color-mix(in srgb, var(--color-amber-500) 16%, rgba(0, 0, 0, 0.96));
+  --toast-info-bg: color-mix(in srgb, var(--color-brand-500) 16%, rgba(0, 0, 0, 0.96));
 }
 
 body {
@@ -1285,7 +1348,35 @@ body.keyboard-open .keyboard-scroll-target {
   box-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
 }
 
-/* ── Toast Animations ── */
+/* ── Toast System ── */
+.toast-surface {
+  width: min(96vw, 30rem);
+  min-height: 3.25rem;
+  background: var(--toast-info-bg);
+  border-color: var(--toast-info-border);
+  font-family: var(--theme-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+}
+
+.toast-surface-success {
+  background: var(--toast-success-bg);
+  border-color: var(--toast-success-border);
+}
+
+.toast-surface-error {
+  background: var(--toast-error-bg);
+  border-color: var(--toast-error-border);
+}
+
+.toast-surface-warning {
+  background: var(--toast-warning-bg);
+  border-color: var(--toast-warning-border);
+}
+
+.toast-surface-info {
+  background: var(--toast-info-bg);
+  border-color: var(--toast-info-border);
+}
+
 @keyframes toast-enter {
   0% { opacity: 0; transform: translateY(-16px) scale(0.95); }
   100% { opacity: 1; transform: translateY(0) scale(1); }

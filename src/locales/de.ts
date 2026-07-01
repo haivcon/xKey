@@ -1135,6 +1135,10 @@ export default {
     "vanityExtraFilterHint_alternating": "Behält alternierende Paare wie Ababab oder 121212 bei.",
     "vanityExtraFilter_lucky": "Glückliche/individuelle Muster",
     "vanityExtraFilterHint_lucky": "Behält gängige Glücksstränge oder Ihre durch Kommas getrennten benutzerdefinierten Hexadezimalmuster bei.",
+    "vanityExtraFilter_numericTail": "Numeric tail",
+    "vanityExtraFilterHint_numericTail": "Keeps addresses with memorable numeric endings such as 8888, 6868, or 2024.",
+    "vanityExtraFilter_lowDiversity": "Low character diversity",
+    "vanityExtraFilterHint_lowDiversity": "Keeps edges made from only one or two different hex characters, such as aaaa11 or 7777bb.",
     "vanityExtraMinRun": "Mindestens wiederholte Zeichen",
     "vanityExtraMinRun_3": "Mindestens 3 wiederholte Zeichen",
     "vanityExtraMinRun_4": "Mindestens 4 wiederholte Zeichen",
@@ -1300,6 +1304,7 @@ export default {
   },
   "walletCard": {
     "unnamed": "Unbenanntes Wallet",
+    "holdToReveal": "HODL",
     "noAddress": "Keine Adresse",
     "balanceLabel": "Guthaben",
     "rename": "Umbenennen",

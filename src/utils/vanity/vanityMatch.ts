@@ -8,7 +8,9 @@ export type VanityExtraPatternType =
   | 'palindrome'
   | 'bracket'
   | 'lucky'
-  | 'alternating';
+  | 'alternating'
+  | 'numeric-tail'
+  | 'low-diversity';
 
 export type VanityExtraPatternKey =
   | 'repeat'
@@ -19,7 +21,9 @@ export type VanityExtraPatternKey =
   | 'palindrome'
   | 'bracket'
   | 'lucky'
-  | 'alternating';
+  | 'alternating'
+  | 'numericTail'
+  | 'lowDiversity';
 
 export type VanityExtraFilterRule = {
   enabled: boolean;
@@ -58,6 +62,8 @@ export const DEFAULT_VANITY_EXTRA_FILTERS: VanityExtraFilterConfig = {
   bracket: { enabled: true, minRun: 3 },
   lucky: { enabled: false, patterns: DEFAULT_LUCKY_PATTERNS },
   alternating: { enabled: false, minRun: 6 },
+  numericTail: { enabled: false, minRun: 4 },
+  lowDiversity: { enabled: false, minRun: 6 },
 };
 
 const clampMinRun = (value: unknown, fallback = 4): number => Math.max(3, Math.min(12, Number(value) || fallback));
@@ -223,6 +229,51 @@ const detectAlternating = (body: string, minRun: number): VanityExtraMatch | nul
   return best;
 };
 
+const detectNumericTail = (body: string, minRun: number): VanityExtraMatch | null => {
+  let length = 0;
+  for (let index = body.length - 1; index >= 0; index -= 1) {
+    if (!/[0-9]/.test(body[index])) break;
+    length += 1;
+  }
+  if (length < minRun) return null;
+  const value = body.slice(body.length - length);
+  return {
+    side: 'tail',
+    char: value[0] || '',
+    length,
+    patternType: 'numeric-tail',
+    tailRun: value,
+    score: length * 12 + 12,
+  };
+};
+
+const detectLowDiversity = (body: string, minRun: number): VanityExtraMatch | null => {
+  let best: VanityExtraMatch | null = null;
+  for (const side of ['head', 'tail'] as const) {
+    const target = side === 'head' ? body : [...body].reverse().join('');
+    const seen = new Set<string>();
+    let length = 0;
+    while (length < target.length) {
+      seen.add(target[length]);
+      if (seen.size > 2) break;
+      length += 1;
+    }
+    if (length >= minRun) {
+      const value = side === 'head' ? body.slice(0, length) : body.slice(body.length - length);
+      const match: VanityExtraMatch = {
+        side,
+        char: value[0] || '',
+        length,
+        patternType: 'low-diversity',
+        [side === 'head' ? 'headRun' : 'tailRun']: value,
+        score: length * 11 + (side === 'head' ? 7 : 6),
+      };
+      if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
+    }
+  }
+  return best;
+};
+
 export const compareVanityExtraMatches = (left: VanityExtraMatch, right: VanityExtraMatch): number => (
   right.score - left.score
   || right.length - left.length
@@ -325,6 +376,12 @@ export const detectExtraVanityMatch = (
 
   const alternating = filters.alternating.enabled ? detectAlternating(body, clampMinRun(filters.alternating.minRun, 6)) : null;
   if (alternating) matches.push(alternating);
+
+  const numericTail = filters.numericTail.enabled ? detectNumericTail(body, clampMinRun(filters.numericTail.minRun, 4)) : null;
+  if (numericTail) matches.push(numericTail);
+
+  const lowDiversity = filters.lowDiversity.enabled ? detectLowDiversity(body, clampMinRun(filters.lowDiversity.minRun, 6)) : null;
+  if (lowDiversity) matches.push(lowDiversity);
 
   return matches.sort(compareVanityExtraMatches)[0] || null;
 };

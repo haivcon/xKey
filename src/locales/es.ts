@@ -1135,6 +1135,10 @@ export default {
     "vanityExtraFilterHint_alternating": "Keeps alternating pairs such as ababab or 121212.",
     "vanityExtraFilter_lucky": "Lucky/custom patterns",
     "vanityExtraFilterHint_lucky": "Keeps common lucky strings or your comma-separated custom hex patterns.",
+    "vanityExtraFilter_numericTail": "Numeric tail",
+    "vanityExtraFilterHint_numericTail": "Keeps addresses with memorable numeric endings such as 8888, 6868, or 2024.",
+    "vanityExtraFilter_lowDiversity": "Low character diversity",
+    "vanityExtraFilterHint_lowDiversity": "Keeps edges made from only one or two different hex characters, such as aaaa11 or 7777bb.",
     "vanityExtraMinRun": "Caracteres mínimos repetidos",
     "vanityExtraMinRun_3": "Mínimo 3 caracteres repetidos",
     "vanityExtraMinRun_4": "Mínimo 4 caracteres repetidos",
@@ -1300,6 +1304,7 @@ export default {
   },
   "walletCard": {
     "unnamed": "Billetera sin nombre",
+    "holdToReveal": "HODL",
     "noAddress": "Sin dirección",
     "balanceLabel": "Saldo",
     "rename": "Renombrar",

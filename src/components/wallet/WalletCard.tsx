@@ -214,7 +214,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     }
     else if (actionType === 'qr_pk') {
       appendAuditLog('wallet.secret_qr_opened', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
-      onShowQR(wallet.privateKey || '', t('walletCard.privateKey'), 'WARNING');
+      onShowQR(wallet.privateKey || '', t('walletCard.privateKey'), t('common.warning'));
     }
     else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk', t('walletCard.privateKey'));
     else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
@@ -258,7 +258,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
       setShowMPPrompt(null);
       setMpInput('');
     } else {
-      showToast(t('walletCard.masterPasswordWrong') || 'Wrong master password', 'error');
+      showToast({ key: 'walletCard.masterPasswordWrong', category: 'warning' }, 'error');
     }
   };
 
@@ -310,7 +310,11 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     const notesWarning = getSecretPlacementWarning(editFields.notes || '', 'notes');
     if (nameWarning || notesWarning) {
       hapticWarning();
-      showToast(`${nameWarning || notesWarning} ${t('walletCard.moveItBeforeSaving')}`, 'warning');
+      showToast({
+        key: 'walletCard.secretPlacementWarningToast',
+        vars: { warning: nameWarning || notesWarning, action: t('walletCard.moveItBeforeSaving') },
+        category: 'warning',
+      }, 'warning');
       return;
     }
     hapticSuccess();
@@ -677,7 +681,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Coins size={12} /> {t('walletCard.editBalance')}</button>
                 <div className="relative">
-                  <button type="button" onClick={() => { hapticTap(); setMoreMenuOpen(v => !v); }} className="btn-icon-glow flex items-center justify-center text-surface-300 hover:text-white bg-surface-800 px-2.5 py-1.5 rounded-lg transition-colors" aria-label="More wallet actions" title="More wallet actions"><MoreHorizontal size={16} /></button>
+                  <button type="button" onClick={() => { hapticTap(); setMoreMenuOpen(v => !v); }} className="btn-icon-glow flex items-center justify-center text-surface-300 hover:text-white bg-surface-800 px-2.5 py-1.5 rounded-lg transition-colors" aria-label={t('walletCard.moreActions')} title={t('walletCard.moreActions')}><MoreHorizontal size={16} /></button>
                   {moreMenuOpen && (
                     <div className="wallet-more-menu absolute left-0 top-full z-20 mt-2 min-w-48 overflow-hidden rounded-xl border border-surface-700 bg-surface-900 p-1.5 shadow-2xl shadow-black/40">
                       <button type="button" onClick={() => runMoreAction(enterEditMode)} className="wallet-more-item text-surface-200 hover:bg-surface-800"><Settings2 size={14} /> {t('walletCard.edit')}</button>
@@ -734,7 +738,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                         onPointerCancel={handleHoldRevealEnd}
                         className="hold-reveal-btn px-2.5 py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 rounded text-scale-2xs font-bold uppercase tracking-wide transition-colors"
                       >
-                        Hold
+                        {t('walletCard.holdToReveal')}
                       </button>
                     )}
                     <button onClick={() => handleShowSensitive('qr_pk')} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded transition-colors"><QrCode size={18} /></button>
@@ -770,7 +774,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                         onPointerCancel={handleHoldRevealEnd}
                         className="hold-reveal-btn h-fit self-start px-2.5 py-2 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 rounded text-scale-2xs font-bold uppercase tracking-wide transition-colors"
                       >
-                        Hold
+                        {t('walletCard.holdToReveal')}
                       </button>
                     )}
                     <button onClick={() => handleShowSensitive('copy_seed')} className="p-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded transition-colors h-fit self-start">

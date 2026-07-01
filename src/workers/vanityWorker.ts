@@ -83,6 +83,8 @@ const createVanityWallet = (
   matchType: 'main' | 'extra',
   extra?: VanityExtraMatch | null,
   mnemonic?: string,
+  primaryPrefix = '',
+  primarySuffix = '',
 ): VanityWallet => ({
   name: 'Vanity Wallet',
   address: ethers.getAddress(address),
@@ -96,8 +98,8 @@ const createVanityWallet = (
   vanityRepeatChar: extra?.char,
   vanityRepeatLength: extra?.length,
   vanityScore: extra?.score,
-  vanityHeadRun: extra?.headRun,
-  vanityTailRun: extra?.tailRun,
+  vanityHeadRun: extra?.headRun || (matchType === 'main' && primaryPrefix ? address.slice(2, 2 + primaryPrefix.length) : undefined),
+  vanityTailRun: extra?.tailRun || (matchType === 'main' && primarySuffix ? address.slice(-primarySuffix.length) : undefined),
   vanityPatternType: extra?.patternType,
 });
 
@@ -215,7 +217,7 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           scanned,
           found,
           elapsed: (Date.now() - startTime) / 1000,
-          wallet: createVanityWallet(privateKey, address, 'main', extraMatch, mnemonic),
+          wallet: createVanityWallet(privateKey, address, 'main', extraMatch, mnemonic, prefix, suffix),
           matchType: 'main',
         });
 

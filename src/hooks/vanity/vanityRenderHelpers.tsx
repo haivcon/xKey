@@ -2,6 +2,26 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MiddleEllipsisAddress } from '../../components/create-wallet/components';
 import type { GeneratedWallet } from '../../components/create-wallet/types';
 
+type VanityHighlightWallet = Pick<GeneratedWallet, 'vanityRepeatSide' | 'vanityRepeatLength' | 'vanityHeadRun' | 'vanityTailRun'>;
+
+export const getVanityHighlightLengths = (wallet: VanityHighlightWallet, bodyLength = Number.POSITIVE_INFINITY) => {
+  const repeatFallbackLength = Math.max(0, wallet.vanityRepeatLength || 0);
+  const rawHeadLength = Math.max(
+    0,
+    wallet.vanityHeadRun?.length ||
+      (wallet.vanityRepeatSide === 'head' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
+  );
+  const headLength = Math.min(rawHeadLength, Math.max(0, bodyLength));
+  const rawTailLength = Math.max(
+    0,
+    wallet.vanityTailRun?.length ||
+      (wallet.vanityRepeatSide === 'tail' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
+  );
+  const tailLength = Math.min(rawTailLength, Math.max(0, bodyLength - headLength));
+
+  return { headLength, tailLength };
+};
+
 export const compactVanityAddress = (address: string, head = 12, tail = 8): ReactNode => {
   if (!address) return '';
   const clean = address.startsWith('0x') || address.startsWith('0X') ? address : `0x${address}`;
@@ -229,17 +249,7 @@ export const createVanityAddressRenderer = (
     const hasHexPrefix = address.startsWith('0x') || address.startsWith('0X');
     const prefix = hasHexPrefix ? address.slice(0, 2) : '';
     const body = hasHexPrefix ? address.slice(2) : address;
-    const repeatFallbackLength = Math.max(0, wallet.vanityRepeatLength || 0);
-    const headLength = Math.max(
-      0,
-      wallet.vanityHeadRun?.length ||
-        (wallet.vanityRepeatSide === 'head' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
-    );
-    const tailLength = Math.max(
-      0,
-      wallet.vanityTailRun?.length ||
-        (wallet.vanityRepeatSide === 'tail' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
-    );
+    const { headLength, tailLength } = getVanityHighlightLengths(wallet, body.length);
     const highlightClassName = 'rounded-[0.18em] bg-cyan-500/20 text-cyan-700 box-decoration-clone dark:text-cyan-200';
 
     if (!headLength && !tailLength) return renderVanityAddress(address, compact, compactOptions);
