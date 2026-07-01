@@ -28,6 +28,10 @@ export interface Wallet {
   pinned?: boolean;
   tags?: string[];
   createdAt?: number;
+  updatedAt?: number;
+  lastBackupAt?: number;
+  lastBackupHash?: string;
+  backupStatus?: 'current' | 'missing' | 'outdated';
   hdRootId?: string;
   derivationPath?: string;
   hdAccount?: number;

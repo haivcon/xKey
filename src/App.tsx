@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Preferences } from '@capacitor/preferences';
 import {
-  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Bell, Eye, EyeOff, ShieldCheck, ServerOff, FileKey2
+  UploadCloud, BarChart3, Settings, Plus, FolderPlus, Eye, EyeOff, ShieldCheck, ServerOff, FileKey2
 } from 'lucide-react';
 
 // Components (Eager loaded)
@@ -85,6 +85,7 @@ export default function App() {
   const [showDonate, setShowDonate] = useState(false);
   const [showAssetBalance, setShowAssetBalance] = useState(false);
   const [showKeyHealth, setShowKeyHealth] = useState(false);
+  const [modalChunksPreloaded, setModalChunksPreloaded] = useState(false);
   const [logoLockEnabled, setLogoLockEnabled] = useState(false);
   const homeHeaderRef = useRef<HTMLElement | null>(null);
   const createWalletCloseHandlerRef = useRef<(() => void | Promise<void>) | null>(null);
@@ -95,6 +96,22 @@ export default function App() {
   useEffect(() => {
     initFeedbackSettings();
   }, []);
+
+  const preloadToolModalChunks = useCallback(() => {
+    if (modalChunksPreloaded) return;
+    setModalChunksPreloaded(true);
+    void Promise.all([
+      import('./components/ExportCSVModal'),
+      import('./components/CreateWalletModal'),
+      import('./components/MoveToFolderModal'),
+      import('./components/BulkNetworkModal'),
+      import('./components/AssetBalanceModal'),
+      import('./components/KeyHealthModal'),
+      import('./components/DashboardView'),
+    ]).catch(() => {
+      setModalChunksPreloaded(false);
+    });
+  }, [modalChunksPreloaded]);
 
   const t = useT();
   const tRef = useRef(t);
@@ -173,7 +190,6 @@ export default function App() {
     setVaultLoadingRef.current = setVaultLoading;
   }, [setWallets, setVaultLoading]);
   const {
-    showProofOfKeysReminder,
     keyHealthAttentionCount,
     runProofOfKeysCheck: handleRunProofOfKeysCheck,
     patchKeyHealthWallets,
@@ -464,19 +480,6 @@ export default function App() {
         />
 
         <main className="p-4 max-w-[140rem] mx-auto w-full pb-20">
-          {wallets.length > 0 && keyHealthAttentionCount > 0 && (
-            <button
-              type="button"
-              onClick={() => { hapticTap(); setShowKeyHealth(true); }}
-              className="mb-3 flex w-full items-center justify-between gap-3 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-left text-xs text-amber-100 transition-colors hover:bg-amber-400/15"
-            >
-              <span className="min-w-0">
-                <span className="block font-semibold">{showProofOfKeysReminder ? t('keyHealth.proofDayTitle') : t('keyHealth.attentionTitle')}</span>
-                <span className="mt-0.5 block truncate text-amber-100/80">{t('keyHealth.attentionDesc', { count: keyHealthAttentionCount })}</span>
-              </span>
-              <Bell size={16} className="shrink-0" />
-            </button>
-          )}
           {wallets.length === 0 ? (
             <div className="space-y-4 mt-10 max-w-2xl mx-auto">
               {(folders.length > 1 || creatingFolder) && (
@@ -684,6 +687,7 @@ export default function App() {
                     onAdvancedTools={() => { hapticTap(); setShowAdvancedTools(true); }}
                     keyHealthAttentionCount={keyHealthAttentionCount}
                     onOpenKeyHealth={() => { hapticTap(); setShowKeyHealth(true); }}
+                    onPreloadTools={preloadToolModalChunks}
                   />
                 </div>
 

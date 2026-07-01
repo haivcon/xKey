@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmContext';
 import { useT } from '../contexts/LanguageContext';
 import { parseAmount } from '../utils/amountFormat';
+import { getDuplicateGroups } from '../utils/keyHealth';
 import type { Wallet } from '../types';
 
 const CUSTOM_FOLDERS_KEY = 'xkey_custom_folders';
@@ -208,20 +209,8 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
     return [...tagSet].sort();
   }, [wallets]);
 
-  // Derived: duplicate address count
-  const duplicateCount = useMemo(() => {
-    const map = new Map();
-    wallets.forEach(w => {
-      if (!w.address) return;
-      const key = w.address.toLowerCase();
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    let groups = 0;
-    for (const count of map.values()) {
-      if (count > 1) groups++;
-    }
-    return groups;
-  }, [wallets]);
+  // Derived: duplicate key material count
+  const duplicateCount = useMemo(() => getDuplicateGroups(wallets).length, [wallets]);
 
   // --- Mutations ---
 
@@ -361,9 +350,10 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
 
   const handleRenameWallet = useCallback(async (wallet: XKeyWallet, newName: string) => {
     const previousWallets = wallets;
+    const now = Date.now();
     const updated = wallets.map(w => {
-      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, name: newName } : w;
-      return (w.address === wallet.address && w.groupId === wallet.groupId) ? { ...w, name: newName } : w;
+      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, name: newName, updatedAt: now, backupStatus: w.lastBackupAt ? 'outdated' as const : 'missing' as const } : w;
+      return (w.address === wallet.address && w.groupId === wallet.groupId) ? { ...w, name: newName, updatedAt: now, backupStatus: w.lastBackupAt ? 'outdated' as const : 'missing' as const } : w;
     });
     await persist(updated);
     showUndoToast(t('walletCard.saved'), previousWallets, 'success');
@@ -371,9 +361,16 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
 
   const handleEditWallet = useCallback(async (wallet: XKeyWallet, updatedFields: Partial<XKeyWallet>) => {
     const previousWallets = wallets;
+    const now = Date.now();
     const updated = wallets.map(w => {
-      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, ...updatedFields } : w;
-      return (w === wallet) ? { ...w, ...updatedFields } : w;
+      const next = {
+        ...w,
+        ...updatedFields,
+        updatedAt: now,
+        backupStatus: w.lastBackupAt ? 'outdated' as const : 'missing' as const,
+      };
+      if (wallet._id && w._id) return w._id === wallet._id ? next : w;
+      return (w === wallet) ? next : w;
     });
     await persist(updated);
     showUndoToast(t('walletCard.saved'), previousWallets, 'success');
@@ -397,6 +394,8 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
       network: w.network || 'ETH',
       pinned: false,
       createdAt: w.createdAt || now,
+      updatedAt: now,
+      backupStatus: 'missing',
       isNew: true,
       newUntil: now + NEW_WALLET_BADGE_MS
     }));
@@ -420,9 +419,10 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
     const targetFolder = String(newFolder || '').trim();
     if (!targetFolder) return;
     const previousWallets = wallets;
+    const now = Date.now();
     const updated = wallets.map(w => {
-      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: targetFolder } : w;
-      return (w === wallet) ? { ...w, groupId: targetFolder } : w;
+      if (wallet._id && w._id) return w._id === wallet._id ? { ...w, groupId: targetFolder, updatedAt: now, backupStatus: w.lastBackupAt ? 'outdated' as const : 'missing' as const } : w;
+      return (w === wallet) ? { ...w, groupId: targetFolder, updatedAt: now, backupStatus: w.lastBackupAt ? 'outdated' as const : 'missing' as const } : w;
     });
     const shouldRememberFolder = !folders.some(f => f.toLowerCase() === targetFolder.toLowerCase());
     await Promise.all([

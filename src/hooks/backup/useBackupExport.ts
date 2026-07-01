@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { createPasswordChallengeChoices, getPasswordChallengeProgress, type PasswordChallengeChoice } from '../../features/backup/passwordChallenge';
-import { loadWallets } from '../../utils/storage';
+import { loadWallets, saveWallets } from '../../utils/storage';
 import { exportPortableBackup } from '../../utils/backup/backupUtils';
+import { markWalletsBackedUp } from '../../utils/keyHealth';
 import { hapticSuccess } from '../../utils/haptics';
 import { requireSensitiveAction } from '../../features/security/sensitiveActions';
 import type { TranslationFn } from '../../contexts/LanguageContext';
@@ -57,8 +58,11 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
       }
 
       const currentWallets = await loadWallets(aesKey, isDecoyMode);
+      const backupCreatedAt = Date.now();
       const success = await exportPortableBackup(currentWallets || [], null, backupPassword, backupFileName);
       if (success) {
+        const backedUpWallets = await markWalletsBackedUp(currentWallets || [], backupCreatedAt);
+        await saveWallets(backedUpWallets, aesKey, isDecoyMode);
         hapticSuccess();
         showToast?.(t('settings.exportSuccess'), 'success');
         closeBackupExport();

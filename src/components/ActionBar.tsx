@@ -59,6 +59,7 @@ type ActionBarProps = {
   onAdvancedTools: () => void;
   keyHealthAttentionCount?: number;
   onOpenKeyHealth: () => void;
+  onPreloadTools?: () => void;
 };
 
 export default function ActionBar({
@@ -66,7 +67,7 @@ export default function ActionBar({
   onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
   allTags = [], selectionMode, onToggleSelectionMode,
   onExportCSV, onExportBackup, onShowDuplicates, duplicateCount = 0, onAnalytics, onAdvancedTools,
-  keyHealthAttentionCount = 0, onOpenKeyHealth
+  keyHealthAttentionCount = 0, onOpenKeyHealth, onPreloadTools
 }: ActionBarProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [showTools, setShowTools] = useState(false);
@@ -297,11 +298,16 @@ export default function ActionBar({
             <Plus size={18} />
             <span>{t('home.addWallet')}</span>
           </button>
-          <button
-            onClick={() => setShowTools(!showTools)}
-            className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-3 text-sm font-semibold transition-colors ${showTools ? 'bg-surface-700 border-surface-600 text-white' : 'bg-surface-800 border-surface-700 text-surface-200 hover:bg-surface-700'}`}
-            title={t('actionBar.moreTools')}
-          >
+            <button
+              onClick={() => {
+                onPreloadTools?.();
+                setShowTools(!showTools);
+              }}
+              onPointerEnter={onPreloadTools}
+              onFocus={onPreloadTools}
+              className={`flex min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-3 text-sm font-semibold transition-colors ${showTools ? 'bg-surface-700 border-surface-600 text-white' : 'bg-surface-800 border-surface-700 text-surface-200 hover:bg-surface-700'}`}
+              title={t('actionBar.moreTools')}
+            >
             <MoreHorizontal size={18} />
             <span className="truncate">{t('actionBar.tools')}</span>
           </button>

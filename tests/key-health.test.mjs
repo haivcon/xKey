@@ -18,7 +18,11 @@ globalThis.window = {
 const {
   DEFAULT_ROTATION_MONTHS,
   createPostQuantumEnvelope,
+  getDuplicateGroups,
   getWalletHealth,
+  getWalletHealthDetails,
+  markWalletsBackupOutdated,
+  markWalletsBackedUp,
   runWalletProofCheck,
   selectProofWallets,
 } = await import('../src/utils/keyHealth.ts');
@@ -53,11 +57,40 @@ const skipped = await runWalletProofCheck({ name: 'Address only', address: signe
 assert.equal(skipped.lastProofOfKeysStatus, 'skipped');
 
 const wallets = [
-  { name: 'due', createdAt: now - (DEFAULT_ROTATION_MONTHS * month + day), privateKey: signer.privateKey },
-  { name: 'ok', createdAt: now - month },
-  { name: 'failed', createdAt: now - month, lastProofOfKeysStatus: 'failed' },
+  { name: 'due', createdAt: now - (DEFAULT_ROTATION_MONTHS * month + day), privateKey: signer.privateKey, lastBackupAt: now, lastModifiedAt: now - day },
+  { name: 'ok', createdAt: now - month, lastBackupAt: now, lastModifiedAt: now - day },
+  { name: 'failed', createdAt: now - month, lastProofOfKeysStatus: 'failed', lastBackupAt: now, lastModifiedAt: now - day },
 ];
 assert.deepEqual(selectProofWallets(wallets, 'attention', wallets, now).map(wallet => wallet.name), ['due', 'failed']);
 assert.deepEqual(selectProofWallets(wallets, 'signable', wallets, now).map(wallet => wallet.name), ['due']);
+
+const mnemonic = ethers.Wallet.createRandom().mnemonic.phrase;
+const duplicatePrivateKey = ethers.Wallet.createRandom();
+const duplicateWallets = [
+  { _id: 'a', name: 'addr-a', address: duplicatePrivateKey.address, privateKey: duplicatePrivateKey.privateKey, seedPhrase: mnemonic, derivationPath: "m/44'/60'/0'/0/0", lastBackupAt: now, lastModifiedAt: now - day },
+  { _id: 'b', name: 'addr-b', address: duplicatePrivateKey.address.toLowerCase(), privateKey: duplicatePrivateKey.privateKey.toUpperCase(), seedPhrase: mnemonic.toUpperCase(), derivationPath: "m/44'/60'/0'/0/0", lastBackupAt: now, lastModifiedAt: now - day },
+];
+assert.deepEqual(getDuplicateGroups(duplicateWallets).map(group => group.kind).sort(), ['address', 'derivationPath', 'mnemonic', 'privateKey']);
+
+const duplicateHealth = getWalletHealthDetails(duplicateWallets[0], duplicateWallets, now);
+assert.equal(duplicateHealth.risk, 'danger');
+assert.ok(duplicateHealth.score < 100);
+assert.ok(duplicateHealth.issues.some(issue => issue.code === 'duplicatePrivateKey'));
+assert.ok(duplicateHealth.issues.some(issue => issue.code === 'duplicateMnemonic'));
+assert.ok(duplicateHealth.issues.some(issue => issue.code === 'duplicateDerivationPath'));
+
+const missingBackupHealth = getWalletHealthDetails({ name: 'new', createdAt: now, privateKey: signer.privateKey }, [], now);
+assert.equal(missingBackupHealth.backupFresh, false);
+assert.ok(missingBackupHealth.issues.some(issue => issue.code === 'missingBackup'));
+
+const backedUp = await markWalletsBackedUp([{ name: 'fresh', updatedAt: now - day }], now);
+assert.equal(backedUp[0].lastBackupAt, now);
+assert.equal(backedUp[0].backupStatus, 'current');
+assert.equal(getWalletHealthDetails(backedUp[0], backedUp, now).backupFresh, true);
+
+const dirty = markWalletsBackupOutdated(backedUp, wallet => wallet.name === 'fresh', now + day);
+assert.equal(dirty[0].backupStatus, 'outdated');
+assert.equal(dirty[0].updatedAt, now + day);
+assert.equal(getWalletHealthDetails(dirty[0], dirty, now + day).backupFresh, false);
 
 console.log('Key health tests passed');
