@@ -107,17 +107,63 @@ assert.equal(preview.uniqueWallets.length, 3);
 assert.equal(preview.skippedDuplicates, 1);
 assert.equal(preview.missingAddress, 1);
 assert.equal(preview.invalidAddress, 1);
+assert.equal(preview.encodingIssues, 0);
+assert.equal(preview.duplicateSecrets, 0);
 assert.equal(preview.sensitiveCount, 1);
 assert.equal(preview.includesSensitive, true);
-assert.ok(preview.issues.some(issue => issue.row === 2 && issue.field === 'duplicate'));
-assert.ok(preview.issues.some(issue => issue.row === 3 && issue.message === 'Address does not match EVM format'));
-assert.ok(preview.issues.some(issue => issue.row === 5 && issue.message === 'Missing address'));
+assert.ok(preview.issues.some(issue => issue.row === 2 && issue.field === 'duplicate' && issue.messageKey === 'csvImportPreview.issueDuplicateAddress'));
+assert.ok(preview.issues.some(issue => issue.row === 3 && issue.messageKey === 'csvImportPreview.issueEvmAddress'));
+assert.ok(preview.issues.some(issue => issue.row === 5 && issue.messageKey === 'csvImportPreview.issueMissingAddress'));
 
 const report = buildCsvImportReport(preview, preview.uniqueWallets.length);
 assert.match(report, /xKey CSV Import Report/);
 assert.match(report, /File: wallets\.csv/);
 assert.match(report, /Imported wallets: 3/);
+assert.match(report, /Encoding issues: 0/);
+assert.match(report, /Duplicate secrets: 0/);
 assert.match(report, /Sensitive rows: 1/);
 assert.match(report, /- address: Address/);
+
+const validationCsv = [
+  'Name,Address,Network,Private Key,Seed Phrase',
+  'Valid,0x0000000000000000000000000000000000000010,ETH,duplicate-private,duplicate seed words',
+  ',0x0000000000000000000000000000000000000011,ETH,duplicate-private,unique seed words',
+  'Broken\uFFFDName,0x0000000000000000000000000000000000000012,ETH,unique-private,duplicate seed words',
+  'Bad Address,0xNOTVALID,ETH,,',
+].join('\n');
+
+const validationPreview = await buildCsvImportPreview(validationCsv, 'validation.csv', 'Validation Folder');
+
+assert.equal(validationPreview.rowCount, 4);
+assert.equal(validationPreview.encodingIssues, 1);
+assert.equal(validationPreview.duplicateSecrets, 2);
+assert.equal(validationPreview.invalidAddress, 1);
+assert.ok(validationPreview.issues.some(issue => issue.row === 3 && issue.field === 'name' && issue.messageKey === 'csvImportPreview.issueMissingName'));
+assert.ok(
+  validationPreview.issues.some(
+    issue =>
+      issue.row === 3 &&
+      issue.field === 'privateKey' &&
+      issue.messageKey === 'csvImportPreview.issueDuplicatePrivateKey' &&
+      issue.messageVars?.row === 2,
+  ),
+);
+assert.ok(validationPreview.issues.some(issue => issue.row === 4 && issue.field === 'encoding' && issue.messageKey === 'csvImportPreview.issueEncoding'));
+assert.ok(
+  validationPreview.issues.some(
+    issue =>
+      issue.row === 4 &&
+      issue.field === 'seedPhrase' &&
+      issue.messageKey === 'csvImportPreview.issueDuplicateSeedPhrase' &&
+      issue.messageVars?.row === 2,
+  ),
+);
+assert.ok(validationPreview.issues.some(issue => issue.row === 5 && issue.field === 'address' && issue.messageKey === 'csvImportPreview.issueEvmAddress'));
+
+const validationReport = buildCsvImportReport(validationPreview, validationPreview.uniqueWallets.length);
+assert.match(validationReport, /Encoding issues: 1/);
+assert.match(validationReport, /Duplicate secrets: 2/);
+assert.match(validationReport, /Row 3: Missing wallet name/);
+assert.match(validationReport, /Row 4: Row contains invalid encoding characters/);
 
 console.log('CSV import/export tests passed');

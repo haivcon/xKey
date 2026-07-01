@@ -20,23 +20,25 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.18
+## Current Release Security Notes: v6.0.19
 
-v6.0.18 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.19 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- ## Release Notes
-- This update enhances Key Health with a more professional, compact review experience and stronger wallet safety checks.
-- ### Key Highlights
-- - Improved duplicate detection across wallet address, private key, mnemonic, and derivation path.
-- - Expanded Key Health scoring with checks for key format, entropy, reuse, missing metadata, and backup freshness.
-- - Added backup warnings for new or recently edited wallets that still require a fresh backup.
-- - Moved Key Health into the Tools area with attention badges for cleaner access and better visibility.
-- - Refined the Key Health modal with clearer status cards, grouped risk/action sections, i18n-ready copy, and light/dark-safe styling.
-- - Preloaded tool-related modal chunks from the Tools button to reduce perceived lag when opening health and tools screens.
-- - Added tests and validation coverage to support safer releases.
-- Android metadata is updated to `versionCode 116` and `versionName 6.0.18`.
+- - 🚀 Improved app startup stability by fixing hydration mismatch and deferring rendering until client mount.
+- - 📱 Added Android app-only display scaling with native WebView support, safe clamping, and localized controls.
+- - 🛡️ Strengthened device integrity, secondary PIN protection, brute-force backoff, and sensitive-action verification.
+- - 🔐 Added a high-security session preset with clearer grouped security settings and safer verification UX.
+- - 🧠 Added 2D HD Wallet Explorer for 24-word BIP-39 seeds with branch visualization and duplicate protection.
+- - 🔎 Enhanced Vanity tools with pattern analysis, ETA, live progress, worker tuning, time limits, and quantity mode.
+- - 📦 Added extra vanity wallet auto-keep with scoring, filters, previews, save-all controls, and backup confirmation.
+- - 🌡️ Added CPU thermal monitoring with warning, pause, critical thresholds, and heat-safety guidance.
+- - 💾 Added encrypted vanity session restore after app restart with pending-session alerts and safe cleanup.
+- - 📊 Added local vanity session reports after each run, including time, speed, pattern, candidates, and result.
+- - 🧹 Added clear-history support for saved vanity reports.
+- - 🌐 Synchronized translations and locale keys across all supported languages.
+- Android metadata is updated to `versionCode 117` and `versionName 6.0.19`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

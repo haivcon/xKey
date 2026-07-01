@@ -8,6 +8,7 @@ import { VanityPerformanceSection } from './VanityPerformanceSection';
 import { VanityPrimaryWalletCard } from './VanityPrimaryWalletCard';
 import { VanityResultsSection } from './VanityResultsSection';
 import { VanityRunningPanel } from './VanityRunningPanel';
+import { VanitySessionReportsPanel } from './VanitySessionReportsPanel';
 import { VanitySetupProgress } from './VanitySetupProgress';
 import { VanityStorageSection } from './VanityStorageSection';
 import { VanityTargetSection } from './VanityTargetSection';
@@ -87,6 +88,7 @@ export function VanityTabContent(props: VanityTabProps) {
     setVanityThermalCriticalC,
 
     hasRecoverableVanitySession,
+    vanitySessionReports,
     vanityPrefixClean,
     vanitySuffixClean,
     vanityPrefixInvalid,
@@ -133,6 +135,7 @@ export function VanityTabContent(props: VanityTabProps) {
     saveVanityWallets,
     restoreVanitySession,
     startVanity,
+    clearVanitySessionReportHistory,
     toggleVanitySelection,
     resetVanityResults,
   } = props;
@@ -281,6 +284,7 @@ export function VanityTabContent(props: VanityTabProps) {
                     {vanityHasPattern ? t('createWallet.startVanity') : t('createWallet.vanityNeedPattern')}
                   </span>
                 </button>
+                <VanitySessionReportsPanel t={t} reports={vanitySessionReports} onClearReports={clearVanitySessionReportHistory} />
                 </>
               ) : vanityGenerating || vanityPaused ? (
                 <VanityRunningPanel {...props} />
@@ -311,6 +315,9 @@ export function VanityTabContent(props: VanityTabProps) {
                   renderVanityExtraAddress={renderVanityExtraAddress}
                   getVanityExtraLabel={getVanityExtraLabel}
                 />
+              )}
+              {!vanityGenerating && !vanityPaused && allVanityWallets.length > 0 && (
+                <VanitySessionReportsPanel t={t} reports={vanitySessionReports} onClearReports={clearVanitySessionReportHistory} />
               )}
             </div>
   );

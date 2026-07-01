@@ -21,6 +21,7 @@ export const VANITY_EXTRA_LIMITS = [10, 25, 50, 100];
 export const VANITY_EXTRA_MIN_RUNS = [3, 4, 5, 6];
 export const VANITY_SETTINGS_KEY = 'xkey_vanity_settings_v1';
 export const VANITY_SESSION_KEY = 'xkey_vanity_session_v1';
+export const VANITY_REPORTS_KEY = 'xkey_vanity_reports_v1';
 export const VANITY_EXTRA_FILTER_KEYS: VanityExtraPatternKey[] = ['repeat', 'sequenceUp', 'sequenceDown', 'numericTail', 'bothEnds', 'mirror', 'bracket', 'palindrome', 'alternating', 'lowDiversity', 'lucky'];
 
 export const MATH_THEMES = [

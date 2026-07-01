@@ -114,7 +114,10 @@ export default function CsvImportPreviewModal({
               <div className="max-h-32 space-y-1 overflow-y-auto text-xs text-amber-800/80 dark:text-amber-100/80">
                 {preview.issues.slice(0, 20).map((issue, index) => (
                   <div key={`${issue.row}-${issue.field}-${index}`}>
-                    {t('csvImportPreview.rowIssue', { row: issue.row, message: issue.message })}
+                    {t('csvImportPreview.rowIssue', {
+                      row: issue.row,
+                      message: t(issue.messageKey, issue.messageVars) || issue.message,
+                    })}
                   </div>
                 ))}
               </div>

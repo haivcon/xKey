@@ -2,6 +2,30 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.19] - 2026-07-01
+
+### Release Notes
+
+- - 🚀 Improved app startup stability by fixing hydration mismatch and deferring rendering until client mount.
+- - 📱 Added Android app-only display scaling with native WebView support, safe clamping, and localized controls.
+- - 🛡️ Strengthened device integrity, secondary PIN protection, brute-force backoff, and sensitive-action verification.
+- - 🔐 Added a high-security session preset with clearer grouped security settings and safer verification UX.
+- - 🧠 Added 2D HD Wallet Explorer for 24-word BIP-39 seeds with branch visualization and duplicate protection.
+- - 🔎 Enhanced Vanity tools with pattern analysis, ETA, live progress, worker tuning, time limits, and quantity mode.
+- - 📦 Added extra vanity wallet auto-keep with scoring, filters, previews, save-all controls, and backup confirmation.
+- - 🌡️ Added CPU thermal monitoring with warning, pause, critical thresholds, and heat-safety guidance.
+- - 💾 Added encrypted vanity session restore after app restart with pending-session alerts and safe cleanup.
+- - 📊 Added local vanity session reports after each run, including time, speed, pattern, candidates, and result.
+- - 🧹 Added clear-history support for saved vanity reports.
+- - 🌐 Synchronized translations and locale keys across all supported languages.
+
+### Release Metadata
+
+- `package.json`: `6.0.19`
+- `package-lock.json`: `6.0.19`
+- Android `versionName`: `6.0.19`
+- Android `versionCode`: `117`
+
 ## [6.0.18] - 2026-07-01
 
 ### Release Notes

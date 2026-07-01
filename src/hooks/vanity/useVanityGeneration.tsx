@@ -36,6 +36,13 @@ import {
   writeVanitySessionBackup,
 } from './vanitySessionStorage';
 import {
+  appendVanitySessionReport,
+  clearVanitySessionReports,
+  readVanitySessionReports,
+  type VanitySessionReport,
+  type VanitySessionReportResult,
+} from './vanitySessionReport';
+import {
   buildVanitySelectedWallets,
   createVanityExtraWallet,
   createVanityWallet,
@@ -144,6 +151,7 @@ export function useVanityGeneration({
   const [vanityThermalCriticalC, setVanityThermalCriticalC] = useState(90);
 
   const [hasRecoverableVanitySession, setHasRecoverableVanitySession] = useState(false);
+  const [vanitySessionReports, setVanitySessionReports] = useState<VanitySessionReport[]>([]);
 
   // ── Refs ───────────────────────────────────────────────────────────────
   const isVanityRunningRef = useRef(false);
@@ -353,6 +361,30 @@ export function useVanityGeneration({
   });
 
   // ── Session persistence helpers ────────────────────────────────────────
+  const refreshVanitySessionReports = useCallback(async () => {
+    const reports = await readVanitySessionReports();
+    setVanitySessionReports(reports);
+  }, []);
+
+  useEffect(() => {
+    void refreshVanitySessionReports().catch(() => {});
+  }, [refreshVanitySessionReports]);
+
+  const clearVanitySessionReportHistory = useCallback(async () => {
+    if (vanitySessionReports.length === 0) return;
+    const ok = await showConfirm(t('createWallet.vanitySessionReportsClearConfirm'), {
+      danger: true,
+      title: t('createWallet.vanitySessionReportsClear'),
+      confirmText: t('createWallet.vanitySessionReportsClear'),
+      cancelText: t('common.cancel'),
+    });
+    if (!ok) return;
+
+    await clearVanitySessionReports();
+    setVanitySessionReports([]);
+    showToast({ key: 'createWallet.vanitySessionReportsCleared', category: 'success' }, 'success');
+  }, [showConfirm, showToast, t, vanitySessionReports.length]);
+
   const scheduleVanitySessionPersist = useCallback(() => {
     if (vanitySessionPersistTimerRef.current) return;
     vanitySessionPersistTimerRef.current = setTimeout(() => {
@@ -796,6 +828,12 @@ export function useVanityGeneration({
     reason = '',
     closeAfterSave = false,
     saveFound = true,
+    reportStatus,
+  }: {
+    reason?: string;
+    closeAfterSave?: boolean;
+    saveFound?: boolean;
+    reportStatus?: VanitySessionReportResult;
   } = {}): Promise<boolean> => {
     isVanityRunningRef.current = false;
     setVanityGenerating(false);
@@ -809,6 +847,17 @@ export function useVanityGeneration({
     vanityWorkerRef.current = [];
     if (reason) setVanityStopReason(reason);
     const foundWallets = [...vanityFoundRef.current, ...vanityExtraRef.current];
+    const durationSeconds = Math.max(0, Number(vanityTime) || 0);
+    const candidateCount = Math.max(0, Number(vanityScanned) || 0);
+    const endedAtMs = Date.now();
+    const safeReportStatus: VanitySessionReportResult =
+      reportStatus ||
+      (foundWallets.length >= vanitySafeTargetCount
+        ? 'completed'
+        : foundWallets.length > 0
+          ? 'saved'
+          : 'noMatch');
+
     if (foundWallets.length > 0 && saveFound) {
       const saved = await saveVanityWallets(foundWallets, closeAfterSave);
       if (!saved) return false;
@@ -818,6 +867,32 @@ export function useVanityGeneration({
     } else if (foundWallets.length > 0) {
       await enqueueVanitySessionPersist().catch(() => {});
     }
+
+    const report = await appendVanitySessionReport({
+      startedAt: new Date(endedAtMs - durationSeconds * 1000).toISOString(),
+      durationSeconds,
+      speedPerSecond:
+        durationSeconds > 0
+          ? Math.max(0, Math.floor(candidateCount / durationSeconds))
+          : Math.max(0, Math.floor(Number(vanitySpeed) || 0)),
+      pattern: {
+        prefix: vanityPrefixClean,
+        suffix: vanitySuffixClean,
+        customPatterns: [...vanityCustomPatterns],
+        network: vanityNetwork,
+        generationMode: vanityGenerationMode,
+      },
+      candidateCount,
+      result: {
+        status: safeReportStatus,
+        reason,
+        foundCount: foundWallets.length,
+        savedCount: vanitySavedRef.current.size,
+        primaryCount: vanityFoundRef.current.length,
+        extraCount: vanityExtraRef.current.length,
+      },
+    }).catch(() => null);
+    if (report) setVanitySessionReports(current => [report, ...current].slice(0, 50));
     return true;
   };
 
@@ -956,7 +1031,11 @@ export function useVanityGeneration({
       }
 
       if (vanityTimeLimit > 0 && safeElapsed >= vanityTimeLimit) {
-        void finishVanityRun({ reason: t('createWallet.vanityTimeLimitReached'), saveFound: false });
+        void finishVanityRun({
+          reason: t('createWallet.vanityTimeLimitReached'),
+          saveFound: false,
+          reportStatus: 'timeLimit',
+        });
         return;
       }
 
@@ -1012,6 +1091,7 @@ export function useVanityGeneration({
           void finishVanityRun({
             reason: t('createWallet.vanityComplete', { count: vanityFoundRef.current.length }),
             saveFound: false,
+            reportStatus: 'completed',
           });
         }
       }
@@ -1020,7 +1100,11 @@ export function useVanityGeneration({
     workers.forEach((worker, workerIndex) => {
       worker.onmessage = handleWorkerMessage(workerIndex);
       worker.onerror = () => {
-        void finishVanityRun({ reason: t('createWallet.vanityWorkerError'), saveFound: false });
+        void finishVanityRun({
+          reason: t('createWallet.vanityWorkerError'),
+          saveFound: false,
+          reportStatus: 'workerError',
+        });
         showToast({ key: 'createWallet.vanityWorkerError', category: 'warning' }, 'error');
       };
       worker.postMessage({
@@ -1072,7 +1156,11 @@ export function useVanityGeneration({
   }, [enqueueVanitySessionPersist, t]);
 
   const stopVanity = async () => {
-    await finishVanityRun({ reason: t('createWallet.vanityStopped'), saveFound: false });
+    await finishVanityRun({
+      reason: t('createWallet.vanityStopped'),
+      saveFound: false,
+      reportStatus: 'stopped',
+    });
   };
 
   // Thermal guard → pause before the device overheats
@@ -1168,6 +1256,8 @@ export function useVanityGeneration({
     vanityThermalPauseC, setVanityThermalPauseC,
     vanityThermalCriticalC, setVanityThermalCriticalC,
     hasRecoverableVanitySession,
+    vanitySessionReports,
+    clearVanitySessionReportHistory,
     // Derived
     vanityPrefixClean,
     vanitySuffixClean,

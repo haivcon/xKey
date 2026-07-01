@@ -4,7 +4,13 @@ import type { Wallet } from '../../types';
 export type CsvWalletColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 export type CsvImportColumnKey = CsvWalletColumnKey | 'ignore';
 export type CsvImportMapping = Partial<Record<CsvWalletColumnKey, string>>;
-export type CsvImportIssue = { row: number; field: 'address' | 'network' | 'privateKey' | 'seedPhrase' | 'duplicate'; message: string };
+export type CsvImportIssue = {
+  row: number;
+  field: 'address' | 'name' | 'network' | 'privateKey' | 'seedPhrase' | 'duplicate' | 'encoding';
+  message: string;
+  messageKey: string;
+  messageVars?: Record<string, string | number>;
+};
 export type CsvImportPreview = {
   fileName: string;
   folderName: string;
@@ -15,6 +21,8 @@ export type CsvImportPreview = {
   skippedDuplicates: number;
   missingAddress: number;
   invalidAddress: number;
+  encodingIssues: number;
+  duplicateSecrets: number;
   sensitiveCount: number;
   includesSensitive: boolean;
   issues: CsvImportIssue[];
@@ -179,26 +187,75 @@ export function mapCsvRowsToWallets(
 export function validateCsvWallets(wallets: Wallet[], existingWallets: Wallet[] = []): CsvImportIssue[] {
   const issues: CsvImportIssue[] = [];
   const seen = new Set(existingWallets.map(wallet => wallet.address?.toLowerCase()).filter(Boolean));
+  const seenPrivateKeys = new Map<string, number>();
+  const seenSeedPhrases = new Map<string, number>();
 
   wallets.forEach((wallet, index) => {
     const row = index + 2;
+    const name = String(wallet.name || '').trim();
     const address = String(wallet.address || '').trim();
     const network = String(wallet.network || 'ETH').trim().toUpperCase();
+    const privateKey = String(wallet.privateKey || '').trim();
+    const seedPhrase = String(wallet.seedPhrase || '').trim();
+    const rawValues = wallet._raw ? Object.values(wallet._raw) : Object.values(wallet);
+
+    if (rawValues.some(value => String(value ?? '').includes('\uFFFD'))) {
+      issues.push({
+        row,
+        field: 'encoding',
+        message: 'Row contains invalid encoding characters (possible non-UTF-8 source)',
+        messageKey: 'csvImportPreview.issueEncoding',
+      });
+    }
+
+    if (!name) {
+      issues.push({ row, field: 'name', message: 'Missing wallet name', messageKey: 'csvImportPreview.issueMissingName' });
+    }
+
+    if (privateKey) {
+      const duplicateRow = seenPrivateKeys.get(privateKey);
+      if (duplicateRow) {
+        issues.push({
+          row,
+          field: 'privateKey',
+          message: `Duplicate private key (same as row ${duplicateRow})`,
+          messageKey: 'csvImportPreview.issueDuplicatePrivateKey',
+          messageVars: { row: duplicateRow },
+        });
+      } else {
+        seenPrivateKeys.set(privateKey, row);
+      }
+    }
+
+    if (seedPhrase) {
+      const duplicateRow = seenSeedPhrases.get(seedPhrase);
+      if (duplicateRow) {
+        issues.push({
+          row,
+          field: 'seedPhrase',
+          message: `Duplicate seed phrase (same as row ${duplicateRow})`,
+          messageKey: 'csvImportPreview.issueDuplicateSeedPhrase',
+          messageVars: { row: duplicateRow },
+        });
+      } else {
+        seenSeedPhrases.set(seedPhrase, row);
+      }
+    }
 
     if (!address) {
-      issues.push({ row, field: 'address', message: 'Missing address' });
+      issues.push({ row, field: 'address', message: 'Missing address', messageKey: 'csvImportPreview.issueMissingAddress' });
       return;
     }
 
     if (seen.has(address.toLowerCase())) {
-      issues.push({ row, field: 'duplicate', message: 'Duplicate address' });
+      issues.push({ row, field: 'duplicate', message: 'Duplicate address', messageKey: 'csvImportPreview.issueDuplicateAddress' });
     }
     seen.add(address.toLowerCase());
 
     if (['ETH', 'EVM', 'BSC', 'BNB', 'POLYGON', 'MATIC', 'BASE', 'ARBITRUM', 'OPTIMISM', 'AVAX', 'XDC'].includes(network) && !EVM_ADDRESS.test(address)) {
-      issues.push({ row, field: 'address', message: 'Address does not match EVM format' });
+      issues.push({ row, field: 'address', message: 'Address does not match EVM format', messageKey: 'csvImportPreview.issueEvmAddress' });
     } else if (['SOL', 'SOLANA'].includes(network) && !SOL_ADDRESS.test(address)) {
-      issues.push({ row, field: 'address', message: 'Address does not match Solana format' });
+      issues.push({ row, field: 'address', message: 'Address does not match Solana format', messageKey: 'csvImportPreview.issueSolanaAddress' });
     }
   });
 
@@ -229,6 +286,8 @@ export async function buildCsvImportPreview(
     skippedDuplicates: skippedCount,
     missingAddress: parsedWallets.filter(wallet => !wallet.address).length,
     invalidAddress: issues.filter(issue => issue.field === 'address' && issue.message !== 'Missing address').length,
+    encodingIssues: issues.filter(issue => issue.field === 'encoding').length,
+    duplicateSecrets: issues.filter(issue => issue.field === 'privateKey' || issue.field === 'seedPhrase').length,
     sensitiveCount,
     includesSensitive: sensitiveCount > 0,
     issues,
@@ -247,6 +306,8 @@ export function buildCsvImportReport(preview: CsvImportPreview, importedCount: n
     `Skipped duplicates: ${preview.skippedDuplicates}`,
     `Missing address: ${preview.missingAddress}`,
     `Invalid address warnings: ${preview.invalidAddress}`,
+    `Encoding issues: ${preview.encodingIssues}`,
+    `Duplicate secrets: ${preview.duplicateSecrets}`,
     `Sensitive rows: ${preview.sensitiveCount}`,
     '',
     'Column mapping:',
