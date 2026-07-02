@@ -25,7 +25,9 @@ for (const pair of [[0, 1], [0, 2], [1, 2]]) {
 assert.throws(() => combineShamirShares([shares[0]]), /At least 2 shares/);
 assert.throws(() => combineShamirShares([shares[0], shares[0]]), /Duplicate/);
 
-const corruptedPage = { ...pagesByPart[0][0], data: `${pagesByPart[0][0].data.slice(0, -1)}A` };
+const originalPageData = pagesByPart[0][0].data;
+const corruptChar = originalPageData.endsWith('A') ? 'B' : 'A';
+const corruptedPage = { ...pagesByPart[0][0], data: `${originalPageData.slice(0, -1)}${corruptChar}` };
 await assert.rejects(() => assembleShamirShareFromPages([corruptedPage, ...pagesByPart[0].slice(1)]), /checksum/i);
 
 const largeSecret = `xkey-large-backup:${'abcdef0123456789'.repeat(7000)}`;

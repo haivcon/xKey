@@ -44,7 +44,9 @@ export function useWalletGeneration({
   const [postQuantumMode, setPostQuantumMode] = useState(false);
   const [showPostQuantumOptions, setShowPostQuantumOptions] = useState(false);
   const [rotationReminderMonths, setRotationReminderMonths] = useState(DEFAULT_ROTATION_MONTHS);
-  const [entropyVerification, setEntropyVerification] = useState<EntropyVerification | null>(null);
+  const [entropyVerification, setEntropyVerification] = useState<EntropyVerification | null>(
+    () => assertEntropyQuality()
+  );
 
   const [manualAddress, setManualAddress] = useState('');
   const [manualPK, setManualPK] = useState('');
@@ -105,6 +107,21 @@ export function useWalletGeneration({
     if (!verification.ok) {
       showToast({ key: 'createWallet.entropyVerificationFailed', category: 'security' }, 'error');
     }
+
+    return verification;
+  };
+
+  const retryEntropyVerification = (): EntropyVerification => {
+    const verification = assertEntropyQuality();
+    setEntropyVerification(verification);
+
+    showToast(
+      {
+        key: verification.ok ? 'createWallet.entropyVerificationPassed' : 'createWallet.entropyVerificationFailed',
+        category: 'security',
+      },
+      verification.ok ? 'success' : 'error'
+    );
 
     return verification;
   };
@@ -349,6 +366,7 @@ export function useWalletGeneration({
     setRotationReminderMonths,
     entropyVerification,
     setEntropyVerification,
+    retryEntropyVerification,
     manualAddress,
     setManualAddress,
     manualPK,

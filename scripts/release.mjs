@@ -67,6 +67,13 @@ const ensureTagIsFree = (tag) => {
   if (out('git', ['ls-remote', '--tags', 'origin', tag])) throw new Error(`Remote tag exists: ${tag}`);
 };
 
+const runChecks = () => {
+  run(npmCmd, ['run', 'type-check']);
+  run(npmCmd, ['run', 'lint']);
+  run(npmCmd, ['run', 'test']);
+  run(npmCmd, ['audit', '--omit=dev', '--audit-level=high']);
+};
+
 const commitToReleaseNote = (message) => message
   .replace(/^(feat|fix|perf|refactor|style|docs|test|build|ci|chore)(\([^)]+\))?!?:\s*/i, '')
   .replace(/^release\s+v?\d+\.\d+\.\d+$/i, '')
@@ -273,10 +280,15 @@ const generateReleaseNote = () => {
 try {
   out('git', ['rev-parse', '--is-inside-work-tree']);
   const branch = out('git', ['branch', '--show-current']) || 'main';
+
   const pkg = json('package.json');
   const nextVersion = bump(pkg.version, options.bump);
   const tag = `v${nextVersion}`;
   ensureTagIsFree(tag);
+
+  if (options.checks) {
+    runChecks();
+  }
 
   const lock = json('package-lock.json');
   pkg.version = nextVersion;
@@ -307,12 +319,6 @@ try {
   writeFileSync(changelogPath, changelog.replace(introPattern, `$1${entry}`));
 
   console.log(`Prepared ${tag}: package ${nextVersion}, Android versionCode ${nextCode}.`);
-  if (options.checks) {
-    run(npmCmd, ['run', 'type-check']);
-    run(npmCmd, ['run', 'lint']);
-    run(npmCmd, ['run', 'test']);
-    run(npmCmd, ['audit', '--omit=dev', '--audit-level=high']);
-  }
 
   run('git', ['add', '-A']);
   run('git', ['commit', '-m', `chore: release ${tag}`, '-m', releaseNoteText]);

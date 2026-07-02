@@ -20,21 +20,17 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.21
+## Current Release Security Notes: v6.0.23
 
-v6.0.21 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.23 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- - 🔐 Fixed fresh-install fingerprint unlock asking twice before opening the app.
-- - 🛡️ Skipped legacy biometric migration when no existing vault data is present.
-- - ⚡ Streamlined first unlock flow while keeping secure device-protected key storage.
-- - ✅ Verified the security storage change with a successful TypeScript type-check.
-- - ✨ Upgraded vanity sub-filters with letter/number mode choices.
-- - 🧩 Fixed preview updates for lucky suffix and unique-character filters.
-- - 🔆 Added optional keep-screen-awake during vanity generation.
-- - 🌐 Added localized hints and labels for new vanity controls.
-- Android metadata is updated to `versionCode 119` and `versionName 6.0.21`.
+- - 🔧 Fixed white gaps above the header and below navigation on Android.
+- - 🎨 Unified native window, status bar, and navigation bar colors with the app theme.
+- - 📱 Improved full-screen WebView background coverage for safer viewport rendering.
+- - 🌗 Kept dark and light themes consistent across safe-area and root surfaces.
+- Android metadata is updated to `versionCode 121` and `versionName 6.0.23`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

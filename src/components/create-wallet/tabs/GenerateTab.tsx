@@ -16,6 +16,7 @@ export type GenerateTabProps = {
   generateProgress: number;
   bulkResult: BulkResult;
   entropyVerification: EntropyVerification | null;
+  onRetryEntropy: () => void;
   onClose: () => void;
   randomGeneratedWallets: GeneratedWallet[];
   setGenerateCount: Dispatch<SetStateAction<number | string>>;
@@ -49,6 +50,7 @@ export function GenerateTab(props: GenerateTabProps) {
     generateProgress,
     bulkResult,
     entropyVerification,
+    onRetryEntropy,
     onClose,
     randomGeneratedWallets,
     setGenerateCount,
@@ -187,7 +189,7 @@ export function GenerateTab(props: GenerateTabProps) {
                   </div>
 
                   <div className="mb-4">
-                    <EntropyBadge t={t} verification={entropyVerification} />
+                    <EntropyBadge t={t} verification={entropyVerification} onRetry={onRetryEntropy} />
                   </div>
 
                   <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-4 text-left space-y-3">
@@ -247,7 +249,11 @@ export function GenerateTab(props: GenerateTabProps) {
                       </div>
                     )}
                   </div>
-                  <button onClick={generateWallet} className="bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-8 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 w-full">
+                  <button
+                    onClick={generateWallet}
+                    disabled={entropyVerification?.ok !== true}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-8 py-3 font-semibold text-white transition-all active:scale-[0.98] hover:bg-brand-500 disabled:cursor-not-allowed disabled:bg-surface-700 disabled:text-surface-400 disabled:hover:bg-surface-700"
+                  >
                     <Plus size={18} /> {t('createWallet.bulkGenerateBtn') || 'Generate & Save'}
                   </button>
                 </div>
