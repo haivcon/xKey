@@ -2,6 +2,26 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.20] - 2026-07-02
+
+### Release Notes
+
+- - 🔐 Fixed fresh-install fingerprint unlock asking twice before opening the app.
+- - 🛡️ Skipped legacy biometric migration when no existing vault data is present.
+- - ⚡ Streamlined first unlock flow while keeping secure device-protected key storage.
+- - ✅ Verified the security storage change with a successful TypeScript type-check.
+- - ✨ Upgraded vanity sub-filters with letter/number mode choices.
+- - 🧩 Fixed preview updates for lucky suffix and unique-character filters.
+- - 🔆 Added optional keep-screen-awake during vanity generation.
+- - 🌐 Added localized hints and labels for new vanity controls.
+
+### Release Metadata
+
+- `package.json`: `6.0.20`
+- `package-lock.json`: `6.0.20`
+- Android `versionName`: `6.0.20`
+- Android `versionCode`: `118`
+
 ## [6.0.19] - 2026-07-01
 
 ### Release Notes

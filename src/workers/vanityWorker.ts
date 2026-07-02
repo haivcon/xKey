@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { assertEntropyQuality } from '../utils/crypto/entropyUtils';
 import type { Wallet } from '../types';
 import { compareVanityExtraMatches, detectExtraVanityMatch, normalizeVanityExtraFilters, type VanityExtraFilterConfig, type VanityExtraFilterRule, type VanityExtraMatch, type VanityExtraPatternKey, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanity/vanityMatch';
 
@@ -62,6 +63,11 @@ type VanityWorkerResponse =
       found: number;
       elapsed: number;
       candidate?: string;
+    }
+  | {
+      type: 'error';
+      code: 'entropy-verification-failed';
+      details: string[];
     };
 
 const postVanityMessage = (message: VanityWorkerResponse): void => {
@@ -145,6 +151,17 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   }
 
   if (type !== 'start') return;
+
+  const entropyVerification = assertEntropyQuality();
+  if (!entropyVerification.ok) {
+    running = false;
+    postVanityMessage({
+      type: 'error',
+      code: 'entropy-verification-failed',
+      details: entropyVerification.details,
+    });
+    return;
+  }
 
   running = true;
   const startTime = Date.now() - Math.max(0, Number(elapsedOffset) || 0) * 1000;

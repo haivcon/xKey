@@ -149,6 +149,7 @@ export function useVanityGeneration({
   const [vanityThermalWarningC, setVanityThermalWarningC] = useState(70);
   const [vanityThermalPauseC, setVanityThermalPauseC] = useState(82);
   const [vanityThermalCriticalC, setVanityThermalCriticalC] = useState(90);
+  const [vanityKeepAwake, setVanityKeepAwake] = useState(false);
 
   const [hasRecoverableVanitySession, setHasRecoverableVanitySession] = useState(false);
   const [vanitySessionReports, setVanitySessionReports] = useState<VanitySessionReport[]>([]);
@@ -167,6 +168,7 @@ export function useVanityGeneration({
   const vanitySessionPersistQueueRef = useRef<Promise<void>>(Promise.resolve());
   const vanitySessionGenerationRef = useRef(0);
   const vanitySessionPersistNowRef = useRef<() => Promise<void>>(async () => {});
+  const vanityWakeLockRef = useRef<{ release: () => Promise<void>; released?: boolean } | null>(null);
   const closingRef = useRef(false);
   const vanityThermalPauseTriggeredRef = useRef(false);
 
@@ -426,6 +428,7 @@ export function useVanityGeneration({
       thermalWarningC: vanityThermalWarningC,
       thermalPauseC: vanityThermalPauseC,
       thermalCriticalC: vanityThermalCriticalC,
+      keepAwake: vanityKeepAwake,
 
       performanceMode: vanityPerformanceMode,
       generationMode: vanityGenerationMode,
@@ -463,6 +466,7 @@ export function useVanityGeneration({
     vanityThermalPauseC,
     vanityThermalPauseEnabled,
     vanityThermalWarningC,
+    vanityKeepAwake,
     vanityTime,
     vanityTimeLimit,
     vanityScanned,
@@ -530,6 +534,7 @@ export function useVanityGeneration({
         setVanityThermalWarningC,
         setVanityThermalPauseC,
         setVanityThermalCriticalC,
+        setVanityKeepAwake,
 
         setVanityExtraFilters,
         setVanityExtraFolder,
@@ -586,7 +591,7 @@ export function useVanityGeneration({
       thermalWarningC: vanityThermalWarningC,
       thermalPauseC: vanityThermalPauseC,
       thermalCriticalC: vanityThermalCriticalC,
-
+      keepAwake: vanityKeepAwake,
     }).catch(() => {});
   }, [
     vanitySafeTargetCount,
@@ -601,6 +606,7 @@ export function useVanityGeneration({
     vanityThermalWarningC,
     vanityThermalPauseC,
     vanityThermalCriticalC,
+    vanityKeepAwake,
 
     vanitySafeExtraFilters,
     vanityExtraFolder,
@@ -619,6 +625,50 @@ export function useVanityGeneration({
       void appStateListener.then(l => l.remove());
     };
   }, []);
+
+  // Optional wake lock while vanity generation is active.
+  useEffect(() => {
+    if (!vanityKeepAwake || !vanityGenerating || typeof navigator === 'undefined') return;
+
+    const wakeLock = (
+      navigator as Navigator & {
+        wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void>; released?: boolean }> };
+      }
+    ).wakeLock;
+
+    if (!wakeLock?.request) return;
+
+    let cancelled = false;
+
+    const requestWakeLock = async () => {
+      try {
+        if (vanityWakeLockRef.current && !vanityWakeLockRef.current.released) return;
+        const sentinel = await wakeLock.request('screen');
+        if (cancelled) {
+          await sentinel.release().catch(() => {});
+          return;
+        }
+        vanityWakeLockRef.current = sentinel;
+      } catch {
+        vanityWakeLockRef.current = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void requestWakeLock();
+    };
+
+    void requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      const sentinel = vanityWakeLockRef.current;
+      vanityWakeLockRef.current = null;
+      if (sentinel && !sentinel.released) void sentinel.release().catch(() => {});
+    };
+  }, [vanityGenerating, vanityKeepAwake]);
 
   // Detect recoverable session on mount
   useEffect(() => {
@@ -935,6 +985,7 @@ export function useVanityGeneration({
       if (typeof state.thermalWarningC === 'number') setVanityThermalWarningC(Math.max(30, Math.min(120, Math.floor(state.thermalWarningC))));
       if (typeof state.thermalPauseC === 'number') setVanityThermalPauseC(Math.max(35, Math.min(125, Math.floor(state.thermalPauseC))));
       if (typeof state.thermalCriticalC === 'number') setVanityThermalCriticalC(Math.max(40, Math.min(130, Math.floor(state.thermalCriticalC))));
+      if (typeof state.keepAwake === 'boolean') setVanityKeepAwake(state.keepAwake);
       setVanityCandidates(Array.isArray(state.candidates) ? state.candidates.slice(-12) : []);
       vanityFoundRef.current = restored.wallets;
       vanityExtraRef.current = Array.isArray(state.extraWallets) ? state.extraWallets : [];
@@ -1012,6 +1063,16 @@ export function useVanityGeneration({
     const handleWorkerMessage = (workerIndex: number) => (event: MessageEvent) => {
       const { type, scanned, elapsed, wallet, candidate, matchType } = event.data || {};
       if (!isVanityRunningRef.current) return;
+
+      if (type === 'error' && event.data?.code === 'entropy-verification-failed') {
+        void finishVanityRun({
+          reason: t('createWallet.entropyVerificationFailed'),
+          saveFound: false,
+          reportStatus: 'workerError',
+        });
+        showToast({ key: 'createWallet.entropyVerificationFailed', category: 'security' }, 'error');
+        return;
+      }
 
       window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
       workerScanned[workerIndex] = Math.max(0, Number(scanned) || 0);
@@ -1255,6 +1316,7 @@ export function useVanityGeneration({
     vanityThermalWarningC, setVanityThermalWarningC,
     vanityThermalPauseC, setVanityThermalPauseC,
     vanityThermalCriticalC, setVanityThermalCriticalC,
+    vanityKeepAwake, setVanityKeepAwake,
     hasRecoverableVanitySession,
     vanitySessionReports,
     clearVanitySessionReportHistory,

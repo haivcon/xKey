@@ -1,10 +1,10 @@
 ﻿import type { Dispatch, SetStateAction } from 'react';
-import { ChevronDown, Folder, Info, Star } from 'lucide-react';
+import { ChevronDown, Folder, Info, Moon, Plus, Star, X } from 'lucide-react';
 import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { InlineSelect } from '../../components';
 import { VANITY_EXTRA_FILTER_KEYS, VANITY_EXTRA_LIMITS } from '../../constants';
 import { buildVanityExtraFilterPreview } from '../../vanityPreview';
-import type { VanityExtraFilterConfig, VanityExtraFilterRule, VanityExtraPatternKey } from '../../../../utils/vanity/vanityMatch';
+import type { VanityExtraCharType, VanityExtraFilterConfig, VanityExtraFilterRule, VanityExtraPatternKey } from '../../../../utils/vanity/vanityMatch';
 
 type VanityExtraFiltersSectionProps = {
   t: TranslationFn;
@@ -12,6 +12,8 @@ type VanityExtraFiltersSectionProps = {
   vanityCaptureExtras: boolean;
   setVanityCaptureExtras: (enabled: boolean) => void;
   vanityGenerating: boolean;
+  vanityKeepAwake: boolean;
+  setVanityKeepAwake: (enabled: boolean) => void;
   vanityExtraSummary: string;
   vanitySafeExtraLimit: number;
   vanityExtraLimit: string | number;
@@ -38,6 +40,8 @@ export function VanityExtraFiltersSection({
   vanityCaptureExtras,
   setVanityCaptureExtras,
   vanityGenerating,
+  vanityKeepAwake,
+  setVanityKeepAwake,
   vanityExtraSummary,
   vanitySafeExtraLimit,
   vanityExtraLimit,
@@ -57,6 +61,22 @@ export function VanityExtraFiltersSection({
   stepVanityExtraMinRun,
   onToggle,
 }: VanityExtraFiltersSectionProps) {
+  const charTypeFilterOptions: Array<{ value: VanityExtraCharType; label: string }> = [
+    { value: 'any', label: t('createWallet.vanityExtraCharTypeAny') },
+    { value: 'letters', label: t('createWallet.vanityExtraCharTypeLetters') },
+    { value: 'numbers', label: t('createWallet.vanityExtraCharTypeNumbers') },
+  ];
+  const charTypeFilterKeys = new Set<VanityExtraPatternKey>([
+    'repeat',
+    'sequenceUp',
+    'sequenceDown',
+    'mirror',
+    'bothEnds',
+    'palindrome',
+    'bracket',
+    'alternating',
+  ]);
+
   return (
     <section className={`vanity-step-card ${expanded ? 'is-open' : ''} ${
       vanityCaptureExtras
@@ -199,6 +219,38 @@ export function VanityExtraFiltersSection({
                 {vanityExtraFolderLabel}
               </div>
             </div>
+
+            <div className="rounded-xl border border-surface-200 bg-white/80 p-3 shadow-sm shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-900/75 dark:shadow-black/10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-2">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-cyan-400/20 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300">
+                    <Moon size={14} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-surface-900 dark:text-white">{t('createWallet.vanityKeepAwake')}</p>
+                    <p className="mt-0.5 text-scale-xs leading-relaxed text-surface-600 dark:text-surface-400">{t('createWallet.vanityKeepAwakeHint')}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={vanityKeepAwake}
+                  disabled={!vanityCaptureExtras}
+                  onClick={() => setVanityKeepAwake(!vanityKeepAwake)}
+                  className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50 ${
+                    vanityKeepAwake ? 'bg-cyan-500' : 'bg-surface-300 dark:bg-surface-700'
+                  }`}
+                >
+                  <span className="sr-only">{vanityKeepAwake ? t('common.enabled') : t('common.disabled')}</span>
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                      vanityKeepAwake ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="rounded-xl border border-surface-200 bg-white/80 p-3 shadow-sm shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-900/75 dark:shadow-black/10">
@@ -262,6 +314,18 @@ export function VanityExtraFiltersSection({
                       </span>
                     </div>
 
+                    {charTypeFilterKeys.has(key) && (
+                      <div className="mt-2 space-y-1.5 rounded-lg border border-surface-200 bg-white/70 px-2 py-1.5 dark:border-surface-700 dark:bg-surface-900/70">
+                        <span className="text-scale-2xs font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityExtraCharType')}</span>
+                        <InlineSelect
+                          value={rule.charType || 'any'}
+                          disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
+                          onChange={(value) => updateVanityExtraFilter(key, { charType: value as VanityExtraCharType })}
+                          options={charTypeFilterOptions}
+                        />
+                      </div>
+                    )}
+
                     {key !== 'lucky' ? (
                       <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-surface-200 bg-white/70 px-2 py-1.5 dark:border-surface-700 dark:bg-surface-900/70">
                         <span className="text-scale-2xs font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityExtraFilterMin')}</span>
@@ -303,14 +367,51 @@ export function VanityExtraFiltersSection({
                         </div>
                       </div>
                     ) : (
-                      <input
-                        type="text"
-                        value={(rule.patterns || []).join(', ')}
-                        disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
-                        onChange={(event) => updateVanityExtraFilter(key, { patterns: event.target.value.split(',') })}
-                        placeholder="888, 666, 168"
-                        className="mt-2 w-full rounded-lg border border-surface-200 bg-white/70 px-2 py-1.5 text-xs font-semibold text-surface-950 placeholder:text-surface-400 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-900/70 dark:text-white dark:placeholder:text-surface-500"
-                      />
+                      <div className="mt-2 space-y-2 rounded-lg border border-surface-200 bg-white/70 px-2 py-1.5 dark:border-surface-700 dark:bg-surface-900/70">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-scale-2xs font-bold uppercase tracking-wide text-surface-500">{t('createWallet.vanityLuckyPatterns')}</span>
+                          <span className="text-scale-3xs font-semibold text-surface-400">{t('createWallet.vanityLuckyPatternsHint')}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(rule.patterns || []).map((pattern, patternIndex) => (
+                            <span
+                              key={`${key}-pattern-${patternIndex}-${pattern}`}
+                              className="inline-flex max-w-full items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 font-mono text-scale-2xs font-bold text-cyan-800 dark:text-cyan-100"
+                            >
+                              <span className="max-w-[7rem] truncate">{pattern}</span>
+                              <button
+                                type="button"
+                                disabled={vanityGenerating || !vanityCaptureExtras || !enabled || (rule.patterns || []).length <= 1}
+                                onClick={() => updateVanityExtraFilter(key, { patterns: (rule.patterns || []).filter((_, currentIndex) => currentIndex !== patternIndex) })}
+                                className="rounded-full p-0.5 text-cyan-700 transition-colors hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-35 dark:text-cyan-200"
+                                aria-label={t('common.remove')}
+                              >
+                                <X size={10} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            value={(rule.patterns || []).join(', ')}
+                            disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
+                            onChange={(event) => updateVanityExtraFilter(key, { patterns: event.target.value.split(',') })}
+                            placeholder="888, 666, 168"
+                            className="min-w-0 flex-1 rounded-lg border border-surface-200 bg-surface-50 px-2 py-1.5 text-xs font-semibold text-surface-950 placeholder:text-surface-400 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-950 dark:text-white dark:placeholder:text-surface-500"
+                            aria-label={t('createWallet.vanityLuckyPatterns')}
+                          />
+                          <button
+                            type="button"
+                            disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
+                            onClick={() => updateVanityExtraFilter(key, { patterns: [...(rule.patterns || []), '888'] })}
+                            className="inline-flex items-center gap-1 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-2 py-1.5 text-scale-2xs font-bold text-cyan-700 transition-colors hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-45 dark:text-cyan-200"
+                          >
+                            <Plus size={12} />
+                            {t('common.add')}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 );

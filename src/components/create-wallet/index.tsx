@@ -43,6 +43,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
     setShowPostQuantumOptions,
     rotationReminderMonths,
     setRotationReminderMonths,
+    entropyVerification,
     manualAddress,
     setManualAddress,
     manualPK,
@@ -155,6 +156,7 @@ export default function CreateWalletModal({ onClose, onSave, existingWallets = [
               generateCount={generateCount}
               generateProgress={generateProgress}
               bulkResult={bulkResult}
+              entropyVerification={entropyVerification}
               onClose={onClose}
               randomGeneratedWallets={randomGeneratedWallets}
               setGenerateCount={setGenerateCount}

@@ -60,29 +60,40 @@ export const buildVanityExtraFilterPreview = (key: VanityExtraPatternKey, rule: 
       )
       .find(pattern => pattern.length >= 2) || '888';
 
+  const charType = rule.charType === 'letters' || rule.charType === 'numbers' ? rule.charType : 'any';
+  const repeatedHeadChar = charType === 'letters' ? 'a' : '8';
+  const repeatedTailChar = charType === 'letters' ? 'f' : '1';
+  const sequenceUpSeed = charType === 'letters' ? 'abcdefabcdef' : charType === 'numbers' ? '123456789012' : '123456789abcdef0';
+  const sequenceDownSeed = charType === 'letters' ? 'fedcbafedcba' : charType === 'numbers' ? '987654321098' : 'fedcba9876543210';
+  const mirrorSeed = charType === 'letters' ? 'abcdefabcdef' : charType === 'numbers' ? '123456789012' : 'abcde0123456';
+  const palindromeSeed = charType === 'letters' ? 'abcdef' : charType === 'numbers' ? '123456' : 'ab8c9d';
+  const alternatingA = charType === 'numbers' ? '1' : 'a';
+  const alternatingB = charType === 'numbers' ? '2' : 'b';
+  const bracketSeed = charType === 'letters' ? 'abcdefabcdef' : charType === 'numbers' ? '123456789012' : '123abc456def';
+
   switch (key) {
     case 'repeat': {
-      const pattern = 'f'.repeat(minRun);
+      const pattern = repeatedTailChar.repeat(minRun);
       return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
     }
     case 'sequenceUp': {
-      const pattern = '123456789abcdef0'.slice(0, minRun);
+      const pattern = sequenceUpSeed.slice(0, minRun);
       return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
     }
     case 'sequenceDown': {
-      const pattern = 'fedcba9876543210'.slice(0, minRun);
+      const pattern = sequenceDownSeed.slice(0, minRun);
       return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
     }
     case 'bothEnds': {
-      const head = '8'.repeat(minRun);
-      const tail = '1'.repeat(minRun);
+      const head = repeatedHeadChar.repeat(minRun);
+      const tail = repeatedTailChar.repeat(minRun);
       return makeVanityPreview(`${head}${filler.slice(0, 40 - head.length - tail.length)}${tail}`, [
         { start: 0, length: head.length },
         { start: 40 - tail.length, length: tail.length },
       ]);
     }
     case 'mirror': {
-      const head = 'abcde0123456'.slice(0, minRun);
+      const head = mirrorSeed.slice(0, minRun);
       const tail = [...head].reverse().join('');
       return makeVanityPreview(`${head}${filler.slice(0, 40 - head.length - tail.length)}${tail}`, [
         { start: 0, length: head.length },
@@ -90,19 +101,30 @@ export const buildVanityExtraFilterPreview = (key: VanityExtraPatternKey, rule: 
       ]);
     }
     case 'bracket': {
-      const pattern = '123abc456def'.slice(0, minRun);
+      const pattern = bracketSeed.slice(0, minRun);
       return makeVanityPreview(`${pattern}${filler.slice(0, 40 - pattern.length * 2)}${pattern}`, [
         { start: 0, length: pattern.length },
         { start: 40 - pattern.length, length: pattern.length },
       ]);
     }
     case 'palindrome': {
-      const half = 'ab8c9d'.slice(0, Math.ceil(minRun / 2));
+      const half = palindromeSeed.slice(0, Math.ceil(minRun / 2));
       const pattern = (half + [...half].reverse().join('')).slice(0, minRun);
       return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
     }
     case 'alternating': {
-      const pattern = Array.from({ length: minRun }, (_, index) => (index % 2 === 0 ? 'a' : 'b')).join('');
+      const pattern = Array.from({ length: minRun }, (_, index) => (index % 2 === 0 ? alternatingA : alternatingB)).join('');
+      return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
+    }
+    case 'numericTail': {
+      const pattern = '123456789012'.slice(0, minRun);
+      return makeVanityPreview(`${filler.slice(0, 40 - pattern.length)}${pattern}`, {
+        start: 40 - pattern.length,
+        length: pattern.length,
+      });
+    }
+    case 'lowDiversity': {
+      const pattern = Array.from({ length: minRun }, (_, index) => (index < Math.ceil(minRun / 2) ? 'a' : '1')).join('');
       return makeVanityPreview(`${pattern}${filler}`, { start: 0, length: pattern.length });
     }
     case 'lucky':

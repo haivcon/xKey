@@ -1,9 +1,10 @@
 ﻿import { useState, type Dispatch, type SetStateAction } from 'react';
 import type { TranslationFn } from '../../../contexts/LanguageContext';
-import type { Wallet as WalletModel } from '../../../types';
+import type { EntropyVerification, Wallet as WalletModel } from '../../../types';
 import { Check, ChevronDown, Copy, Info, Plus, RefreshCw, Sparkles, Wallet } from 'lucide-react';
 import HDWalletTreeVisualizer from '../../HDWalletTreeVisualizer';
 import AdvancedEntropyPanel from '../../entropy/AdvancedEntropyPanel';
+import { EntropyBadge } from '../EntropyBadge';
 import { MATH_THEMES } from '../constants';
 import type { BulkResult, FloatingEffect, GeneratedWallet, MathStep } from '../types';
 
@@ -14,6 +15,7 @@ export type GenerateTabProps = {
   generateCount: number | string;
   generateProgress: number;
   bulkResult: BulkResult;
+  entropyVerification: EntropyVerification | null;
   onClose: () => void;
   randomGeneratedWallets: GeneratedWallet[];
   setGenerateCount: Dispatch<SetStateAction<number | string>>;
@@ -46,6 +48,7 @@ export function GenerateTab(props: GenerateTabProps) {
     generateCount,
     generateProgress,
     bulkResult,
+    entropyVerification,
     onClose,
     randomGeneratedWallets,
     setGenerateCount,
@@ -181,6 +184,10 @@ export function GenerateTab(props: GenerateTabProps) {
                       {t(seedWordCount === 24 ? 'createWallet.seedLengthHint24' : 'createWallet.seedLengthHint12')}
                     </p>
                     <p className="mt-1 text-scale-2xs leading-relaxed text-surface-500">{t('createWallet.seedChoiceSummary')}</p>
+                  </div>
+
+                  <div className="mb-4">
+                    <EntropyBadge t={t} verification={entropyVerification} />
                   </div>
 
                   <div className="bg-surface-800/30 border border-surface-700/50 rounded-lg p-3 mb-4 text-left space-y-3">

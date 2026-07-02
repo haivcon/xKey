@@ -10,6 +10,15 @@ export interface HDRoot {
 }
 
 /** Core wallet data model used throughout the app. */
+export interface EntropyVerification {
+  ok: boolean;
+  checkedAt: number;
+  source: 'crypto.getRandomValues' | 'unavailable';
+  sampleBytes: number;
+  uniqueBytes: number;
+  details: string[];
+}
+
 export interface Wallet {
   _id?: string;
   name?: string;

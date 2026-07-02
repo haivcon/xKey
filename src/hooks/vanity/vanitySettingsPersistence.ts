@@ -34,7 +34,7 @@ export type VanitySettingsSnapshot = {
   thermalWarningC: number;
   thermalPauseC: number;
   thermalCriticalC: number;
-
+  keepAwake: boolean;
 };
 
 export type VanitySettingsSetters = {
@@ -50,6 +50,7 @@ export type VanitySettingsSetters = {
   setVanityThermalWarningC: (value: number) => void;
   setVanityThermalPauseC: (value: number) => void;
   setVanityThermalCriticalC: (value: number) => void;
+  setVanityKeepAwake: (value: boolean) => void;
 
   setVanityExtraFilters: (value: VanityExtraFilterConfig) => void;
   setVanityExtraFolder: (value: string) => void;
@@ -118,7 +119,7 @@ export const loadVanitySettings = async (
     setters.setVanityThermalPauseC(Math.max(35, Math.min(125, Math.floor(settings.thermalPauseC))));
   if (typeof settings.thermalCriticalC === 'number')
     setters.setVanityThermalCriticalC(Math.max(40, Math.min(130, Math.floor(settings.thermalCriticalC))));
-
+  if (typeof settings.keepAwake === 'boolean') setters.setVanityKeepAwake(settings.keepAwake);
 };
 
 export const persistVanitySettings = async (
@@ -145,7 +146,7 @@ export const persistVanitySettings = async (
       thermalWarningC: snapshot.thermalWarningC,
       thermalPauseC: snapshot.thermalPauseC,
       thermalCriticalC: snapshot.thermalCriticalC,
-
+      keepAwake: snapshot.keepAwake,
     } satisfies VanitySettings),
   });
 };

@@ -86,6 +86,8 @@ export function VanityTabContent(props: VanityTabProps) {
     setVanityThermalPauseC,
     vanityThermalCriticalC,
     setVanityThermalCriticalC,
+    vanityKeepAwake,
+    setVanityKeepAwake,
 
     hasRecoverableVanitySession,
     vanitySessionReports,
@@ -239,6 +241,8 @@ export function VanityTabContent(props: VanityTabProps) {
                   vanityCaptureExtras={vanityCaptureExtras}
                   setVanityCaptureExtras={setVanityCaptureExtras}
                   vanityGenerating={vanityGenerating}
+                  vanityKeepAwake={vanityKeepAwake}
+                  setVanityKeepAwake={setVanityKeepAwake}
                   vanityExtraSummary={vanityExtraSummary}
                   vanitySafeExtraLimit={vanitySafeExtraLimit}
                   vanityExtraLimit={vanityExtraLimit}

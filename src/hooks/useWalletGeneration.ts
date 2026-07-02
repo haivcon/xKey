@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import { normalizeAmountInput } from '../utils/amountFormat';
 import { secureCopy } from '../utils/clipboard';
+import { assertEntropyQuality } from '../utils/crypto/entropyUtils';
+import type { EntropyVerification } from '../types';
 import type { BulkResult, CreateWalletModalProps, FloatingEffect, GeneratedWallet } from '../components/create-wallet/types';
 
 type ToastPayload = {
@@ -42,6 +44,7 @@ export function useWalletGeneration({
   const [postQuantumMode, setPostQuantumMode] = useState(false);
   const [showPostQuantumOptions, setShowPostQuantumOptions] = useState(false);
   const [rotationReminderMonths, setRotationReminderMonths] = useState(DEFAULT_ROTATION_MONTHS);
+  const [entropyVerification, setEntropyVerification] = useState<EntropyVerification | null>(null);
 
   const [manualAddress, setManualAddress] = useState('');
   const [manualPK, setManualPK] = useState('');
@@ -95,6 +98,17 @@ export function useWalletGeneration({
     }
   }, [manualSeed, manualDerivationPath, manualAddress]);
 
+  const verifyEntropyOrWarn = (): EntropyVerification => {
+    const verification = assertEntropyQuality();
+    setEntropyVerification(verification);
+
+    if (!verification.ok) {
+      showToast({ key: 'createWallet.entropyVerificationFailed', category: 'security' }, 'error');
+    }
+
+    return verification;
+  };
+
   const createRandomWalletRecord = async (name: string): Promise<GeneratedWallet> => {
     let w;
     if (Number(seedWordCount) === 24) {
@@ -136,6 +150,10 @@ export function useWalletGeneration({
   const generateWallet = async () => {
     const count = Number.parseInt(String(generateCount), 10) || 1;
     if (count < 1) return;
+
+    const verification = verifyEntropyOrWarn();
+    if (!verification.ok) return;
+
     if (!await ensureStorageCapacity(count)) return;
 
     if (count < 10) {
@@ -329,6 +347,8 @@ export function useWalletGeneration({
     setShowPostQuantumOptions,
     rotationReminderMonths,
     setRotationReminderMonths,
+    entropyVerification,
+    setEntropyVerification,
     manualAddress,
     setManualAddress,
     manualPK,

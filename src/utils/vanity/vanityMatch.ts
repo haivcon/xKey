@@ -1,4 +1,5 @@
 export type VanityRepeatSide = 'head' | 'tail' | 'both';
+export type VanityExtraCharType = 'any' | 'letters' | 'numbers';
 
 export type VanityExtraPatternType =
   | 'repeat'
@@ -29,6 +30,7 @@ export type VanityExtraFilterRule = {
   enabled: boolean;
   minRun?: number;
   patterns?: string[];
+  charType?: VanityExtraCharType;
 };
 
 export type VanityExtraFilterConfig = Record<VanityExtraPatternKey, VanityExtraFilterRule>;
@@ -53,20 +55,31 @@ const HEX_SEQUENCE = '0123456789abcdef';
 const DEFAULT_LUCKY_PATTERNS = ['888', '666', '999', '000', '168', '520', '1314'];
 
 export const DEFAULT_VANITY_EXTRA_FILTERS: VanityExtraFilterConfig = {
-  repeat: { enabled: true, minRun: 4 },
-  sequenceUp: { enabled: true, minRun: 4 },
-  sequenceDown: { enabled: true, minRun: 4 },
-  mirror: { enabled: true, minRun: 3 },
-  bothEnds: { enabled: true, minRun: 3 },
-  palindrome: { enabled: false, minRun: 5 },
-  bracket: { enabled: true, minRun: 3 },
+  repeat: { enabled: true, minRun: 4, charType: 'any' },
+  sequenceUp: { enabled: true, minRun: 4, charType: 'any' },
+  sequenceDown: { enabled: true, minRun: 4, charType: 'any' },
+  mirror: { enabled: true, minRun: 3, charType: 'any' },
+  bothEnds: { enabled: true, minRun: 3, charType: 'any' },
+  palindrome: { enabled: false, minRun: 5, charType: 'any' },
+  bracket: { enabled: true, minRun: 3, charType: 'any' },
   lucky: { enabled: false, patterns: DEFAULT_LUCKY_PATTERNS },
-  alternating: { enabled: false, minRun: 6 },
+  alternating: { enabled: false, minRun: 6, charType: 'any' },
   numericTail: { enabled: false, minRun: 4 },
   lowDiversity: { enabled: false, minRun: 6 },
 };
 
 const clampMinRun = (value: unknown, fallback = 4): number => Math.max(3, Math.min(12, Number(value) || fallback));
+
+const normalizeCharType = (value: unknown): VanityExtraCharType => (
+  value === 'letters' || value === 'numbers' ? value : 'any'
+);
+
+const isCharTypeMatch = (value: string, charType: VanityExtraCharType = 'any'): boolean => {
+  if (!value) return false;
+  if (charType === 'letters') return /^[a-f]+$/.test(value);
+  if (charType === 'numbers') return /^[0-9]+$/.test(value);
+  return /^[0-9a-f]+$/.test(value);
+};
 
 export const normalizeVanityExtraFilters = (
   config?: Partial<Record<VanityExtraPatternKey, Partial<VanityExtraFilterRule>>> | null,
@@ -83,6 +96,9 @@ export const normalizeVanityExtraFilters = (
         ? (Array.isArray(incoming?.patterns) && incoming.patterns.length ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
           .map(pattern => String(pattern).replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
           .filter(pattern => pattern.length >= 2)
+        : undefined,
+      charType: key !== 'lucky' && key !== 'numericTail' && key !== 'lowDiversity'
+        ? normalizeCharType(incoming?.charType ?? base.charType)
         : undefined,
     };
   });
@@ -102,7 +118,11 @@ const getRun = (value: string, fromEnd = false): CharacterRun => {
 
 const scoreRun = (length: number, side: 'head' | 'tail'): number => length * 10 + (side === 'head' ? 4 : 3);
 
-const longestEdgeSequence = (body: string, direction: 'up' | 'down'): { length: number; value: string; side: 'head' | 'tail' } | null => {
+const longestEdgeSequence = (
+  body: string,
+  direction: 'up' | 'down',
+  charType: VanityExtraCharType = 'any',
+): { length: number; value: string; side: 'head' | 'tail' } | null => {
   const source = direction === 'up' ? HEX_SEQUENCE : [...HEX_SEQUENCE].reverse().join('');
   const variants = Array.from({ length: source.length }, (_, index) => source.slice(index) + source.slice(0, index));
   let best: { length: number; value: string; side: 'head' | 'tail' } | null = null;
@@ -111,16 +131,18 @@ const longestEdgeSequence = (body: string, direction: 'up' | 'down'): { length: 
       const target = side === 'head' ? body : [...body].reverse().join('');
       let length = 0;
       while (length < target.length && target[length] === variant[length % variant.length]) length += 1;
-      if (length >= 3 && (!best || length > best.length)) {
+      if (length >= 3) {
         const value = side === 'head' ? body.slice(0, length) : body.slice(body.length - length);
-        best = { length, value, side };
+        if (isCharTypeMatch(value, charType) && (!best || length > best.length)) {
+          best = { length, value, side };
+        }
       }
     }
   }
   return best;
 };
 
-const detectMirror = (body: string): VanityExtraMatch | null => {
+const detectMirror = (body: string, charType: VanityExtraCharType = 'any'): VanityExtraMatch | null => {
   const edge = Math.min(8, Math.floor(body.length / 2));
   let length = 0;
   for (let i = 0; i < edge; i += 1) {
@@ -128,24 +150,31 @@ const detectMirror = (body: string): VanityExtraMatch | null => {
     length += 1;
   }
   if (length < 3) return null;
+  const headRun = body.slice(0, length);
+  const tailRun = body.slice(body.length - length);
+  if (!isCharTypeMatch(headRun, charType) || !isCharTypeMatch(tailRun, charType)) return null;
   return {
     side: 'both',
     char: body[0] || '',
     length,
     patternType: 'mirror',
-    headRun: body.slice(0, length),
-    tailRun: body.slice(body.length - length),
+    headRun,
+    tailRun,
     score: length * 18 + 24,
   };
 };
 
-const detectPalindrome = (body: string, minRun: number): VanityExtraMatch | null => {
+const detectPalindrome = (
+  body: string,
+  minRun: number,
+  charType: VanityExtraCharType = 'any',
+): VanityExtraMatch | null => {
   const max = Math.min(10, body.length);
   for (const side of ['head', 'tail'] as const) {
     const source = side === 'head' ? body.slice(0, max) : body.slice(-max);
     for (let length = max; length >= minRun; length -= 1) {
       const value = side === 'head' ? source.slice(0, length) : source.slice(source.length - length);
-      if (value === [...value].reverse().join('')) {
+      if (value === [...value].reverse().join('') && isCharTypeMatch(value, charType)) {
         return {
           side,
           char: value[0] || '',
@@ -160,12 +189,12 @@ const detectPalindrome = (body: string, minRun: number): VanityExtraMatch | null
   return null;
 };
 
-const detectBracket = (body: string, minRun: number): VanityExtraMatch | null => {
+const detectBracket = (body: string, minRun: number, charType: VanityExtraCharType = 'any'): VanityExtraMatch | null => {
   const max = Math.min(8, Math.floor(body.length / 2));
   for (let length = max; length >= minRun; length -= 1) {
     const head = body.slice(0, length);
     const tail = body.slice(body.length - length);
-    if (head && head === tail) {
+    if (head && head === tail && isCharTypeMatch(head, charType)) {
       return {
         side: 'both',
         char: head[0] || '',
@@ -203,7 +232,11 @@ const detectLucky = (body: string, patterns: string[]): VanityExtraMatch | null 
   return best;
 };
 
-const detectAlternating = (body: string, minRun: number): VanityExtraMatch | null => {
+const detectAlternating = (
+  body: string,
+  minRun: number,
+  charType: VanityExtraCharType = 'any',
+): VanityExtraMatch | null => {
   let best: VanityExtraMatch | null = null;
   for (const side of ['head', 'tail'] as const) {
     const target = side === 'head' ? body : [...body].reverse().join('');
@@ -215,6 +248,7 @@ const detectAlternating = (body: string, minRun: number): VanityExtraMatch | nul
     while (length < target.length && target[length] === (length % 2 === 0 ? a : b)) length += 1;
     if (length >= minRun) {
       const value = side === 'head' ? body.slice(0, length) : body.slice(body.length - length);
+      if (!isCharTypeMatch(value, charType)) continue;
       const match: VanityExtraMatch = {
         side,
         char: a,
@@ -302,7 +336,14 @@ export const detectExtraVanityMatch = (
   const hasBothTail = !!tail.char && tail.length >= bothMinRun;
   const overlappingRuns = hasBothHead && hasBothTail && head.length + tail.length > body.length;
 
-  if (filters.bothEnds.enabled && hasBothHead && hasBothTail && !overlappingRuns) {
+  if (
+    filters.bothEnds.enabled
+    && hasBothHead
+    && hasBothTail
+    && isCharTypeMatch(head.value, filters.bothEnds.charType)
+    && isCharTypeMatch(tail.value, filters.bothEnds.charType)
+    && !overlappingRuns
+  ) {
     const preferred = head.length >= tail.length ? head : tail;
     matches.push({
       side: 'both',
@@ -316,7 +357,7 @@ export const detectExtraVanityMatch = (
   }
 
   if (filters.repeat.enabled) {
-    if (hasHead) {
+    if (hasHead && isCharTypeMatch(head.value, filters.repeat.charType)) {
       matches.push({
         side: 'head',
         char: head.char,
@@ -326,7 +367,7 @@ export const detectExtraVanityMatch = (
         score: scoreRun(head.length, 'head'),
       });
     }
-    if (hasTail) {
+    if (hasTail && isCharTypeMatch(tail.value, filters.repeat.charType)) {
       matches.push({
         side: 'tail',
         char: tail.char,
@@ -338,7 +379,7 @@ export const detectExtraVanityMatch = (
     }
   }
 
-  const up = filters.sequenceUp.enabled ? longestEdgeSequence(body, 'up') : null;
+  const up = filters.sequenceUp.enabled ? longestEdgeSequence(body, 'up', filters.sequenceUp.charType) : null;
   if (up && up.length >= clampMinRun(filters.sequenceUp.minRun, legacyMinRun)) {
     matches.push({
       side: up.side,
@@ -350,7 +391,7 @@ export const detectExtraVanityMatch = (
     });
   }
 
-  const down = filters.sequenceDown.enabled ? longestEdgeSequence(body, 'down') : null;
+  const down = filters.sequenceDown.enabled ? longestEdgeSequence(body, 'down', filters.sequenceDown.charType) : null;
   if (down && down.length >= clampMinRun(filters.sequenceDown.minRun, legacyMinRun)) {
     matches.push({
       side: down.side,
@@ -362,19 +403,19 @@ export const detectExtraVanityMatch = (
     });
   }
 
-  const mirror = filters.mirror.enabled ? detectMirror(body) : null;
+  const mirror = filters.mirror.enabled ? detectMirror(body, filters.mirror.charType) : null;
   if (mirror && mirror.length >= clampMinRun(filters.mirror.minRun, 3)) matches.push(mirror);
 
-  const palindrome = filters.palindrome.enabled ? detectPalindrome(body, clampMinRun(filters.palindrome.minRun, 5)) : null;
+  const palindrome = filters.palindrome.enabled ? detectPalindrome(body, clampMinRun(filters.palindrome.minRun, 5), filters.palindrome.charType) : null;
   if (palindrome) matches.push(palindrome);
 
-  const bracket = filters.bracket.enabled ? detectBracket(body, clampMinRun(filters.bracket.minRun, 3)) : null;
+  const bracket = filters.bracket.enabled ? detectBracket(body, clampMinRun(filters.bracket.minRun, 3), filters.bracket.charType) : null;
   if (bracket) matches.push(bracket);
 
   const lucky = filters.lucky.enabled ? detectLucky(body, filters.lucky.patterns || DEFAULT_LUCKY_PATTERNS) : null;
   if (lucky) matches.push(lucky);
 
-  const alternating = filters.alternating.enabled ? detectAlternating(body, clampMinRun(filters.alternating.minRun, 6)) : null;
+  const alternating = filters.alternating.enabled ? detectAlternating(body, clampMinRun(filters.alternating.minRun, 6), filters.alternating.charType) : null;
   if (alternating) matches.push(alternating);
 
   const numericTail = filters.numericTail.enabled ? detectNumericTail(body, clampMinRun(filters.numericTail.minRun, 4)) : null;

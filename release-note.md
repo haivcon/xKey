@@ -2,3 +2,7 @@
 - 🛡️ Skipped legacy biometric migration when no existing vault data is present.
 - ⚡ Streamlined first unlock flow while keeping secure device-protected key storage.
 - ✅ Verified the security storage change with a successful TypeScript type-check.
+- ✨ Upgraded vanity sub-filters with letter/number mode choices.
+- 🧩 Fixed preview updates for lucky suffix and unique-character filters.
+- 🔆 Added optional keep-screen-awake during vanity generation.
+- 🌐 Added localized hints and labels for new vanity controls.

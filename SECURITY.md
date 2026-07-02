@@ -20,25 +20,21 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.19
+## Current Release Security Notes: v6.0.20
 
-v6.0.19 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.20 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- - 🚀 Improved app startup stability by fixing hydration mismatch and deferring rendering until client mount.
-- - 📱 Added Android app-only display scaling with native WebView support, safe clamping, and localized controls.
-- - 🛡️ Strengthened device integrity, secondary PIN protection, brute-force backoff, and sensitive-action verification.
-- - 🔐 Added a high-security session preset with clearer grouped security settings and safer verification UX.
-- - 🧠 Added 2D HD Wallet Explorer for 24-word BIP-39 seeds with branch visualization and duplicate protection.
-- - 🔎 Enhanced Vanity tools with pattern analysis, ETA, live progress, worker tuning, time limits, and quantity mode.
-- - 📦 Added extra vanity wallet auto-keep with scoring, filters, previews, save-all controls, and backup confirmation.
-- - 🌡️ Added CPU thermal monitoring with warning, pause, critical thresholds, and heat-safety guidance.
-- - 💾 Added encrypted vanity session restore after app restart with pending-session alerts and safe cleanup.
-- - 📊 Added local vanity session reports after each run, including time, speed, pattern, candidates, and result.
-- - 🧹 Added clear-history support for saved vanity reports.
-- - 🌐 Synchronized translations and locale keys across all supported languages.
-- Android metadata is updated to `versionCode 117` and `versionName 6.0.19`.
+- - 🔐 Fixed fresh-install fingerprint unlock asking twice before opening the app.
+- - 🛡️ Skipped legacy biometric migration when no existing vault data is present.
+- - ⚡ Streamlined first unlock flow while keeping secure device-protected key storage.
+- - ✅ Verified the security storage change with a successful TypeScript type-check.
+- - ✨ Upgraded vanity sub-filters with letter/number mode choices.
+- - 🧩 Fixed preview updates for lucky suffix and unique-character filters.
+- - 🔆 Added optional keep-screen-awake during vanity generation.
+- - 🌐 Added localized hints and labels for new vanity controls.
+- Android metadata is updated to `versionCode 118` and `versionName 6.0.20`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 

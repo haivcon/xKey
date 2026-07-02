@@ -1185,6 +1185,11 @@ export default {
     "vanityFound": "Matching wallet found. Review it before saving.",
     "vanityLongConfirm": "This pattern is long and may take a very long time. Continue?",
     "vanityLongTitle": "Long vanity pattern",
+    "entropyVerified": "Entropy source verified",
+    "entropyVerifiedDetail": "Local CSPRNG check passed using {source} ({bytes} bytes).",
+    "entropyNotVerified": "Entropy source not verified",
+    "entropyNotVerifiedDetail": "Wallet generation is blocked until a secure local random source is available.",
+    "entropyVerificationFailed": "Entropy verification failed. Secure random generation is unavailable.",
     "vanityWorkerError": "Could not start the vanity generator.",
     "vanityTimeLimitReached": "Time limit reached. No matching address was found.",
     "noFolder": "No folder",
@@ -1209,6 +1214,12 @@ export default {
     "vanityExtraFilterHint_sequenceDown": "Keeps reverse hex sequences such as 9876, dcba, 3210.",
     "vanityExtraFilter_bothEnds": "Repeats on both ends",
     "vanityExtraFilterHint_bothEnds": "Keeps addresses where both the start and end contain attractive repeated runs.",
+    "vanityExtraCharType": "Character type",
+    "vanityExtraCharTypeAny": "Letters or numbers",
+    "vanityExtraCharTypeLetters": "Letters only",
+    "vanityExtraCharTypeNumbers": "Numbers only",
+    "vanityKeepAwake": "Keep screen awake while generating",
+    "vanityKeepAwakeHint": "When enabled, xKey asks the device to keep the screen on only during vanity-wallet generation, so long searches are not interrupted.",
     "vanityExtraFilter_mirror": "Mirrored edges",
     "vanityExtraFilterHint_mirror": "Keeps addresses where the ending mirrors the beginning, such as abc...cba.",
     "vanityExtraFilter_bracket": "Bracketed ends",
@@ -1800,4 +1811,4 @@ export default {
   "privacyShield": {
     "subtitle": "Protected while inactive"
   }
-};
+}

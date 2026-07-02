@@ -50,7 +50,7 @@ export type VanitySettings = {
   thermalWarningC?: number;
   thermalPauseC?: number;
   thermalCriticalC?: number;
-
+  keepAwake?: boolean;
 };
 
 export type VanitySessionState = {
@@ -74,6 +74,7 @@ export type VanitySessionState = {
   thermalWarningC?: number;
   thermalPauseC?: number;
   thermalCriticalC?: number;
+  keepAwake?: boolean;
 
   generationMode?: 'privateKey' | 'mnemonic';
   mnemonicWords?: 12 | 24;
