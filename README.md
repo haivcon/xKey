@@ -12,9 +12,9 @@
 
 ---
 
-## Current Release: v6.0.20
+## Current Release: v6.0.21
 
-xKey v6.0.20 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.21 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
@@ -26,7 +26,7 @@ xKey v6.0.20 is the current synchronized web and Android release. This release u
 - - 🧩 Fixed preview updates for lucky suffix and unique-character filters.
 - - 🔆 Added optional keep-screen-awake during vanity generation.
 - - 🌐 Added localized hints and labels for new vanity controls.
-- **Android release metadata:** `versionName 6.0.20`, `versionCode 118`.
+- **Android release metadata:** `versionName 6.0.21`, `versionCode 119`.
 ---
 
 ## Core Features

@@ -373,7 +373,7 @@ body {
 }
 
 .vanity-step-card {
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid rgba(203, 213, 225, 0.92);
   border-radius: 1rem;
   background: rgba(248, 250, 252, 0.72);
@@ -471,6 +471,14 @@ body {
   container-type: inline-size;
 }
 
+.vanity-extra-filter-grid {
+  grid-template-columns: 1fr;
+}
+
+.vanity-extra-filter-grid > * {
+  min-width: 0;
+}
+
 .vanity-step-card > button:first-child {
   gap: 0.75rem;
   min-height: 3rem;
@@ -519,9 +527,15 @@ body {
   }
 }
 
-@container (max-width: 360px) {
-  .vanity-step-card .grid.sm\:grid-cols-2 {
-    grid-template-columns: 1fr;
+@container (min-width: 720px) {
+  .vanity-extra-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 1040px) {
+  .vanity-extra-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

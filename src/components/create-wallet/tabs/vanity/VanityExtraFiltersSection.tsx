@@ -264,7 +264,7 @@ export function VanityExtraFiltersSection({
               </span>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="vanity-extra-filter-grid grid gap-2">
               {VANITY_EXTRA_FILTER_KEYS.map((key) => {
                 const rule = vanitySafeExtraFilters[key];
                 const enabled = !!rule.enabled;

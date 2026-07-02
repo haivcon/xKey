@@ -3,6 +3,7 @@ package com.haivcon.xkey;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import androidx.activity.EdgeToEdge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -14,6 +15,8 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
+
         registerPlugin(DeviceCredentialPlugin.class);
         registerPlugin(ScreenSecurityPlugin.class);
         registerPlugin(XKeyFileOpenPlugin.class);
