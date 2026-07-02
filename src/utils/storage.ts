@@ -272,17 +272,18 @@ export const getEncryptionKeyBiometric = async (): Promise<string> => {
             return fallbackKey;
         }
 
-        try {
-            const legacyKey = await getLegacyBiometricKey();
-            if (legacyKey) {
-                await setDeviceProtectedVaultKey(legacyKey);
-                return legacyKey;
+        const storedVaultCipher = await getStoredVaultCipher();
+        if (storedVaultCipher) {
+            try {
+                const legacyKey = await getLegacyBiometricKey();
+                if (legacyKey) {
+                    await setDeviceProtectedVaultKey(legacyKey);
+                    return legacyKey;
+                }
+            } catch {
+                // Existing vault data without a recoverable key cannot be safely opened.
             }
-        } catch {
-            // Continue to new-key creation for a fresh vault.
-        }
 
-        if (await getStoredVaultCipher()) {
             throw vaultKeyError(
                 'VAULT_KEY_UNRECOVERABLE',
                 'Unable to unlock the existing vault with the current device credential.'
