@@ -2,6 +2,22 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.27] - 2026-07-02
+
+### Release Notes
+
+- - 🔧 Fixed white gaps above the header and below navigation on Android.
+- - 🎨 Unified native window, status bar, and navigation bar colors with the app theme.
+- - 📱 Improved full-screen WebView background coverage for safer viewport rendering.
+- - 🌗 Kept dark and light themes consistent across safe-area and root surfaces.
+
+### Release Metadata
+
+- `package.json`: `6.0.27`
+- `package-lock.json`: `6.0.27`
+- Android `versionName`: `6.0.27`
+- Android `versionCode`: `125`
+
 ## [6.0.26] - 2026-07-02
 
 ### Release Notes

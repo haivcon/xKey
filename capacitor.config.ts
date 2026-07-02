@@ -16,8 +16,8 @@ const config: CapacitorConfig = {
       androidSplashResourceName: "splash",
       androidScaleType: "FIT_CENTER",
       showSpinner: false,
-      splashFullScreen: true,
-      splashImmersive: true,
+      splashFullScreen: false,
+      splashImmersive: false,
     },
   },
 };
