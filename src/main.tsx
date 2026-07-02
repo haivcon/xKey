@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar } from '@capacitor/status-bar';
 import './index.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -18,7 +19,13 @@ const hideNativeSplash = () => {
   SplashScreen.hide().catch(() => {});
 };
 
+const hideNativeStatusBar = () => {
+  StatusBar.hide().catch(() => {});
+};
+
+hideNativeStatusBar();
 hideNativeSplash();
+setTimeout(hideNativeStatusBar, 300);
 setTimeout(hideNativeSplash, 1200);
 
 function Boot() {
@@ -46,6 +53,7 @@ function Boot() {
       })
       .finally(() => {
         window.clearTimeout(slowTimer);
+        hideNativeStatusBar();
         hideNativeSplash();
       });
 
