@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
 import com.getcapacitor.BridgeActivity;
 
@@ -20,7 +19,6 @@ public class MainActivity extends BridgeActivity {
         Window window = getWindow();
         window.setStatusBarColor(Color.BLACK);
         window.setNavigationBarColor(Color.BLACK);
-        window.getDecorView().setSystemUiVisibility(0);
 
         registerPlugin(DeviceCredentialPlugin.class);
         registerPlugin(ScreenSecurityPlugin.class);

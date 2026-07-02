@@ -35,7 +35,7 @@ Do not post real secrets, production wallet data, backup files, screenshots with
 
 ## Release and Repository Hygiene
 
-Community release work should respect the current repository structure, keep older release notes compact, and never include local-only folders such as `1/`, generated APK/AAB files, or secret environment files. The current release documentation target is `v6.0.25`.
+Community release work should respect the current repository structure, keep older release notes compact, and never include local-only folders such as `1/`, generated APK/AAB files, or secret environment files. The current release documentation target is `v6.0.26`.
 
 ---
 
