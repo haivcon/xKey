@@ -12,9 +12,9 @@
 
 ---
 
-## Current Release: v6.0.24
+## Current Release: v6.0.25
 
-xKey v6.0.24 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.25 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
@@ -22,7 +22,7 @@ xKey v6.0.24 is the current synchronized web and Android release. This release u
 - - 🎨 Unified native window, status bar, and navigation bar colors with the app theme.
 - - 📱 Improved full-screen WebView background coverage for safer viewport rendering.
 - - 🌗 Kept dark and light themes consistent across safe-area and root surfaces.
-- **Android release metadata:** `versionName 6.0.24`, `versionCode 122`.
+- **Android release metadata:** `versionName 6.0.25`, `versionCode 123`.
 ---
 
 ## Core Features
