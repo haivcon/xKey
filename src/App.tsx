@@ -24,6 +24,7 @@ import BackupImportPasswordModal from './components/backup/BackupImportPasswordM
 // Components (Lazy loaded)
 const SettingsScreen = lazy(() => import('./components/SettingsScreen'));
 const QRCodeModal = lazy(() => import('./components/qr/QRCodeModal'));
+const QRReceiveModal = lazy(() => import('./components/qr/QRReceiveModal'));
 const DashboardView = lazy(() => import('./components/DashboardView'));
 const ExportCSVModal = lazy(() => import('./components/ExportCSVModal'));
 const CsvImportPreviewModal = lazy(() => import('./components/CsvImportPreviewModal'));
@@ -85,6 +86,7 @@ export default function App() {
   const [showDonate, setShowDonate] = useState(false);
   const [showAssetBalance, setShowAssetBalance] = useState(false);
   const [showKeyHealth, setShowKeyHealth] = useState(false);
+  const [showQRReceive, setShowQRReceive] = useState(false);
   const [modalChunksPreloaded, setModalChunksPreloaded] = useState(false);
   const [logoLockEnabled, setLogoLockEnabled] = useState(false);
   const homeHeaderRef = useRef<HTMLElement | null>(null);
@@ -675,6 +677,7 @@ export default function App() {
                     onAddWallet={() => { hapticTap(); setShowCreateWallet(true); }}
                     onBulkNetwork={() => { hapticTap(); setShowBulkNetworkModal(true); }}
                     onUpload={() => { hapticTap(); handleFileUpload(activeFolder !== 'All' ? activeFolder : undefined); }}
+                    onOpenQRReceive={() => { hapticTap(); setShowQRReceive(true); }}
                     loading={loading}
                     allTags={allTags}
                     selectionMode={selectionMode}
@@ -797,6 +800,18 @@ export default function App() {
             onRemindLater={(targetWallets) => patchKeyHealthWallets(targetWallets, { rotationSnoozedUntil: Date.now() + 30 * 24 * 60 * 60 * 1000 })}
             onCreateReplacement={() => { setShowKeyHealth(false); setShowCreateWallet(true); }}
             t={t}
+          />
+        )}
+        {showQRReceive && (
+          <QRReceiveModal
+            onClose={() => setShowQRReceive(false)}
+            targetFolder={activeFolder}
+            onImport={async (importedWallets) => {
+              const savedWallets = await handleCreateWalletSave(importedWallets);
+              const count = Array.isArray(savedWallets) ? savedWallets.length : 1;
+              setShowQRReceive(false);
+              showToast(t('qrReceive.importSuccess', { count }), 'success');
+            }}
           />
         )}
         </Suspense>

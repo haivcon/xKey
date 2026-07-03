@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "動く",
     "standardBadge": "標準",
-    "new": "新規"
+    "new": "新規",
+    "qrTransferWallet": "QRで転送",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "バニティスコア",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "QRでデータを転送",
     "desc": "すべてのデータを暗号化してQRコードで共有する",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "新しい暗号化パスワードを入力してください",
     "generateBtn": "QRコードを生成する",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "前",
     "nextBtn": "次",
     "doneBtn": "完了",
-    "hint": "別のデバイスを使用し、『QRでデータを受信』を選択してスキャンしてください"
+    "hint": "別のデバイスを使用し、『QRでデータを受信』を選択してスキャンしてください",
+    "scanGuideTitle": "受信側のデバイスで",
+    "scanStep1": "ホーム画面で検索欄の近くにあるカメラボタンをタップします。",
+    "scanStep2": "進捗が100%になるまで、各QRパートをスキャンします。",
+    "scanStep3": "選択したフォルダー、またはxKeyが作成したQRフォルダーに保存します。"
   },
   "shamir": {
     "sectionTitle": "Shamir をオフラインでバックアップする",

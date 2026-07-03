@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "Mover",
     "standardBadge": "Estándar",
-    "new": "NUEVO"
+    "new": "NUEVO",
+    "qrTransferWallet": "Transferir por QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Puntuación vanity",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "Transferir datos mediante QR",
     "desc": "Cifra y comparte todos los datos mediante códigos QR",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "Introducir nueva contraseña de cifrado",
     "generateBtn": "Generar códigos QR",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "Anterior",
     "nextBtn": "Siguiente",
     "doneBtn": "hecho",
-    "hint": "Usa otro dispositivo y selecciona 'Recibir datos vía QR' para escanear"
+    "hint": "Usa otro dispositivo y selecciona 'Recibir datos vía QR' para escanear",
+    "scanGuideTitle": "En el dispositivo receptor",
+    "scanStep1": "Toca el botón de cámara junto a la búsqueda en la pantalla principal.",
+    "scanStep2": "Escanea cada parte del QR hasta que el progreso llegue al 100%.",
+    "scanStep3": "Guarda en la carpeta seleccionada o en la carpeta QR creada por xKey."
   },
   "shamir": {
     "sectionTitle": "Copia de seguridad de Shamir sin conexión",

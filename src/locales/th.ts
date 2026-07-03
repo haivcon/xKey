@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "ย้าย",
     "standardBadge": "มาตรฐาน",
-    "new": "ใหม่"
+    "new": "ใหม่",
+    "qrTransferWallet": "โอนผ่าน QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "คะแนน Vanity",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "โอนข้อมูลผ่าน QR",
     "desc": "เข้ารหัสและแชร์ข้อมูลทั้งหมดผ่านรหัส QR",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "กรอกพาสเวิร์ดเข้ารหัสใหม่",
     "generateBtn": "สร้างรหัส QR",
     "progress": "คิวอาร์ {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "ก่อนหน้า",
     "nextBtn": "ถัดไป",
     "doneBtn": "เสร็จแล้ว",
-    "hint": "ใช้เครื่องมืออื่นแล้วเลือก 'รับข้อมูลผ่าน QR' เพื่อสแกน"
+    "hint": "ใช้เครื่องมืออื่นแล้วเลือก 'รับข้อมูลผ่าน QR' เพื่อสแกน",
+    "scanGuideTitle": "บนอุปกรณ์รับ",
+    "scanStep1": "แตะปุ่มกล้องใกล้ช่องค้นหาบนหน้าหลัก",
+    "scanStep2": "สแกน QR แต่ละส่วนจนกว่าความคืบหน้าจะถึง 100%",
+    "scanStep3": "บันทึกลงในโฟลเดอร์ที่เลือกหรือโฟลเดอร์ QR ที่ xKey สร้าง"
   },
   "shamir": {
     "sectionTitle": "สำรอง Shamir ออฟไลน์",

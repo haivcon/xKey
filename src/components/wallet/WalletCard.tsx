@@ -8,6 +8,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMasterPassword } from '../../contexts/MasterPasswordContext';
 import PasswordInput from '../shared/PasswordInput';
+import QRTransferModal from '../qr/QRTransferModal';
 import SecureTextarea from '../shared/SecureTextarea';
 import SecureGlyphText from '../shared/SecureGlyphText';
 import { TagBadge, TagEditor } from '../TagSystem';
@@ -54,7 +55,7 @@ export { NETWORK_COLORS, NETWORK_KEYS };
 
 type WalletCardModel = Wallet & { newUntil?: number };
 type WalletDensity = 'comfortable' | 'compact' | 'ultra';
-type SensitiveAction = 'pk' | 'seed' | 'qr_pk' | 'copy_pk' | 'copy_seed' | 'sensitive_note' | 'copy_sensitive_note';
+type SensitiveAction = 'pk' | 'seed' | 'qr_pk' | 'qr_transfer' | 'copy_pk' | 'copy_seed' | 'sensitive_note' | 'copy_sensitive_note';
 type CopyOptions = { revealAddress?: boolean; kind?: SecretKind };
 type EditFields = Partial<Wallet> & { tags?: string[] };
 
@@ -85,6 +86,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
   const [editFields, setEditFields] = useState<EditFields>({});
   const [showFullAddress, setShowFullAddress] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [showQRTransfer, setShowQRTransfer] = useState(false);
   const [holdReveal, setHoldReveal] = useState<'pk' | 'seed' | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -189,6 +191,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     actionType === 'pk'
     || actionType === 'seed'
     || actionType === 'qr_pk'
+    || actionType === 'qr_transfer'
     || actionType === 'copy_pk'
     || actionType === 'copy_seed'
     || actionType === 'sensitive_note'
@@ -197,6 +200,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
 
   const sensitiveActionReason = (actionType: SensitiveAction) => {
     if (actionType === 'seed' || actionType === 'copy_seed') return t('walletCard.seedPhrase');
+    if (actionType === 'qr_transfer') return t('walletCard.qrTransferWallet');
     if (actionType === 'sensitive_note' || actionType === 'copy_sensitive_note') return t('walletCard.sensitiveNote');
     return t('walletCard.privateKey');
   };
@@ -215,6 +219,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
     else if (actionType === 'qr_pk') {
       appendAuditLog('wallet.secret_qr_opened', { wallet: wallet.name || t('walletCard.unnamed'), field: 'privateKey' }).catch(() => {});
       onShowQR(wallet.privateKey || '', t('walletCard.privateKey'), t('common.warning'));
+    }
+    else if (actionType === 'qr_transfer') {
+      appendAuditLog('wallet.qr_transfer_opened', { wallet: wallet.name || t('walletCard.unnamed') }).catch(() => {});
+      setShowQRTransfer(true);
     }
     else if (actionType === 'copy_pk') handleCopy(wallet.privateKey, 'pk', t('walletCard.privateKey'));
     else if (actionType === 'copy_seed') handleCopy(wallet.seedPhrase, 'seed', t('walletCard.seedPhrase'));
@@ -676,7 +684,20 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
           ) : (
             <>
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                {(wallet.privateKey || wallet.seedPhrase) && (
+                  <button
+                    type="button"
+                    onClick={() => { hapticTap(); handleShowSensitive('qr_transfer'); }}
+                    className="btn-glow inline-flex min-h-[2rem] w-fit items-center justify-center gap-1.5 rounded-lg bg-surface-800 px-3 py-1.5 text-xs font-medium text-brand-300 transition-colors hover:bg-brand-500/20 hover:text-brand-100"
+                    aria-label={t('walletCard.qrTransferWallet')}
+                    title={t('walletCard.qrTransferWallet')}
+                  >
+                    <QrCode size={12} strokeWidth={2.4} className="shrink-0" />
+                    <span>{t('walletCard.qrShort')}</span>
+                  </button>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
                 <button onClick={() => { hapticTap(); onPin && onPin(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-amber-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors">{wallet.pinned ? <PinOff size={12} /> : <Pin size={12} />} {wallet.pinned ? t('walletCard.unpin') : t('walletCard.pin')}</button>
                 <button onClick={() => { hapticTap(); setRenaming(true); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-brand-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Pencil size={12} /> {t('walletCard.rename')}</button>
                 <button onClick={() => { hapticTap(); enterEditMode(); }} className="btn-glow flex items-center gap-1 text-xs text-surface-400 hover:text-emerald-400 bg-surface-800 px-3 py-1.5 rounded-lg transition-colors"><Coins size={12} /> {t('walletCard.editBalance')}</button>
@@ -690,6 +711,7 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
                     </div>
                   )}
                 </div>
+              </div>
               </div>
 
               {wallet.createdAt && <div className="text-xs text-surface-500">{t('walletCard.added')}: {formatDate(wallet.createdAt)}</div>}
@@ -813,6 +835,10 @@ export default function WalletCard({ wallet, onShowQR, onDelete, onRename, onEdi
             </>
           )}
         </div>
+      )}
+
+      {showQRTransfer && (
+        <QRTransferModal wallets={[wallet]} onClose={() => setShowQRTransfer(false)} />
       )}
 
       {showMPPrompt && (

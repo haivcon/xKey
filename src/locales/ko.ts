@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "움직이다",
     "standardBadge": "표준",
-    "new": "NEW"
+    "new": "NEW",
+    "qrTransferWallet": "QR로 전송",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "배니티 점수",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "QR을 통해 데이터 전송",
     "desc": "모든 데이터를 QR 코드를 통해 암호화하고 공유하세요",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "새 암호 입력",
     "generateBtn": "QR 코드 생성",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "이전",
     "nextBtn": "다음",
     "doneBtn": "완료",
-    "hint": "다른 기기를 사용하고 'QR로 데이터 받기'를 선택하여 스캔하세요"
+    "hint": "다른 기기를 사용하고 'QR로 데이터 받기'를 선택하여 스캔하세요",
+    "scanGuideTitle": "받는 기기에서",
+    "scanStep1": "홈 화면의 검색창 근처에 있는 카메라 버튼을 누르세요.",
+    "scanStep2": "진행률이 100%가 될 때까지 각 QR 조각을 스캔하세요.",
+    "scanStep3": "선택한 폴더 또는 xKey가 만든 QR 폴더에 저장하세요."
   },
   "shamir": {
     "sectionTitle": "샤미르 오프라인 백업",

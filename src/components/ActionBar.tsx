@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, X, Wrench, Bell } from 'lucide-react';
+import { Search, ArrowDownUp, UploadCloud, Filter, Plus, Network, CheckSquare, FileDown, AlertTriangle, BarChart3, MoreHorizontal, ClipboardPaste, Camera, QrCode, X, Wrench, Bell } from 'lucide-react';
 import { useT } from '../contexts/LanguageContext';
 import { readClipboard } from '../utils/clipboard';
 import type { FilterKey, SortOrder } from '../types';
@@ -43,6 +43,7 @@ type ActionBarProps = {
   sortOrder: SortOrder | string;
   onSortChange: (value: SortOrder) => void;
   onUpload: () => void;
+  onOpenQRReceive: () => void;
   loading?: boolean;
   activeFilter: FilterKey | string;
   onFilterChange: (value: FilterKey | string) => void;
@@ -64,7 +65,7 @@ type ActionBarProps = {
 
 export default function ActionBar({
   searchQuery, onSearchChange, sortOrder, onSortChange,
-  onUpload, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
+  onUpload, onOpenQRReceive, loading, activeFilter, onFilterChange, onAddWallet, onBulkNetwork,
   allTags = [], selectionMode, onToggleSelectionMode,
   onExportCSV, onExportBackup, onShowDuplicates, duplicateCount = 0, onAnalytics, onAdvancedTools,
   keyHealthAttentionCount = 0, onOpenKeyHealth, onPreloadTools
@@ -134,6 +135,14 @@ export default function ActionBar({
       key: 'data',
       title: t('actionBar.toolData'),
       items: [
+        {
+          key: 'qrReceive',
+          label: t('actionBar.qrReceive'),
+          desc: t('actionBar.qrReceiveDesc'),
+          icon: QrCode,
+          tone: 'success',
+          onClick: () => { onOpenQRReceive(); closeTools(); },
+        },
         {
           key: 'import',
           label: t('actionBar.importFiles'),

@@ -1449,7 +1449,9 @@ export default {
     "notesMovedToSensitiveNote": "Đã chuyển ghi chú sang ghi chú nhạy cảm.",
     "moveBtn": "Di chuyển",
     "standardBadge": "Cơ bản",
-    "new": "MỚI"
+    "new": "MỚI",
+    "qrTransferWallet": "Chuyển qua QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Điểm ví đẹp",
@@ -1747,6 +1749,11 @@ export default {
   "qrTransfer": {
     "title": "Chuyển dữ liệu qua QR",
     "desc": "Mã hóa và chia sẻ toàn bộ dữ liệu qua mã QR",
+    "stepsTitle": "Cách gửi",
+    "step1": "Giữ cả hai thiết bị ngoại tuyến và mở camera nhận trên thiết bị còn lại.",
+    "step2": "Nhập mật khẩu mã hóa tại đây, tạo chuỗi QR, rồi quét lần lượt từng phần.",
+    "step3": "Chia sẻ mật khẩu riêng để thiết bị nhận giải mã và lưu ví.",
+    "securityNote": "QR chứa bí mật ví đã mã hóa. Chỉ quét trên thiết bị tin cậy và đóng màn hình này khi xong.",
     "passwordPlaceholder": "Nhập mật khẩu mã hóa mới",
     "generateBtn": "Tạo mã QR",
     "progress": "QR {current} / {total}",
@@ -1754,7 +1761,11 @@ export default {
     "prevBtn": "Trước",
     "nextBtn": "Tiếp",
     "doneBtn": "Hoàn tất",
-    "hint": "Dùng thiết bị khác chọn 'Nhận dữ liệu qua QR' để quét"
+    "hint": "Dùng thiết bị khác chọn 'Nhận dữ liệu qua QR' để quét",
+    "scanGuideTitle": "Trên thiết bị nhận",
+    "scanStep1": "Nhấn nút camera gần ô tìm kiếm ở trang chủ.",
+    "scanStep2": "Quét từng phần QR cho đến khi tiến trình đạt 100%.",
+    "scanStep3": "Lưu vào thư mục đã chọn hoặc thư mục QR do xKey tạo."
   },
   "shamir": {
     "sectionTitle": "Sao lưu Shamir ngoại tuyến",

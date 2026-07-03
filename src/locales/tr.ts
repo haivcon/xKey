@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "Hareket et",
     "standardBadge": "Standart",
-    "new": "YENİ"
+    "new": "YENİ",
+    "qrTransferWallet": "QR ile aktar",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Vanity puanı",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "Verileri QR ile aktar",
     "desc": "Tüm verileri QR kodları aracılığıyla şifreleyin ve paylaşın",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "Yeni şifreleme parolasını girin",
     "generateBtn": "QR Kodları Üret",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "Önceki",
     "nextBtn": "Sonraki",
     "doneBtn": "Tamamlandı",
-    "hint": "Başka bir cihaz kullanın ve taramak için 'Veriyi QR ile al'ı seçin"
+    "hint": "Başka bir cihaz kullanın ve taramak için 'Veriyi QR ile al'ı seçin",
+    "scanGuideTitle": "Alıcı cihazda",
+    "scanStep1": "Ana ekranda aramanın yanındaki kamera düğmesine dokunun.",
+    "scanStep2": "İlerleme %100 olana kadar her QR parçasını tarayın.",
+    "scanStep3": "Seçilen klasöre veya xKey tarafından oluşturulan QR klasörüne kaydedin."
   },
   "shamir": {
     "sectionTitle": "Shamir'i çevrimdışı olarak yedekle",

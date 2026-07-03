@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "Двигаться",
     "standardBadge": "Стандарт",
-    "new": "НОВОЕ"
+    "new": "НОВОЕ",
+    "qrTransferWallet": "Передать через QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Оценка vanity",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "Передавать данные через QR",
     "desc": "Шифруйте и делитесь всеми данными через QR-коды",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "Введите новый пароль шифрования",
     "generateBtn": "Создать QR-коды",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "Пред",
     "nextBtn": "Далее",
     "doneBtn": "Готово",
-    "hint": "Используйте другое устройство и выберите «Получить данные через QR», чтобы отсканировать"
+    "hint": "Используйте другое устройство и выберите «Получить данные через QR», чтобы отсканировать",
+    "scanGuideTitle": "На принимающем устройстве",
+    "scanStep1": "Нажмите кнопку камеры рядом с поиском на главном экране.",
+    "scanStep2": "Сканируйте каждую часть QR, пока прогресс не достигнет 100%.",
+    "scanStep3": "Сохраните в выбранную папку или в папку QR, созданную xKey."
   },
   "shamir": {
     "sectionTitle": "Резервное копирование Шамира оффлайн",

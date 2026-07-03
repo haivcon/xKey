@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "移动",
     "standardBadge": "标准",
-    "new": "新"
+    "new": "新",
+    "qrTransferWallet": "通过 QR 传输",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "靓号评分",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "通过QR传输数据",
     "desc": "通过二维码加密并共享所有数据",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "输入新的加密密码",
     "generateBtn": "生成二维码",
     "progress": "二维码 {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "上一步",
     "nextBtn": "下一步",
     "doneBtn": "完成",
-    "hint": "使用另一台设备并选择“通过QR接收数据”进行扫描"
+    "hint": "使用另一台设备并选择“通过QR接收数据”进行扫描",
+    "scanGuideTitle": "在接收设备上",
+    "scanStep1": "在主页点击搜索框旁边的相机按钮。",
+    "scanStep2": "按顺序扫描每个 QR 分片，直到进度达到 100%。",
+    "scanStep3": "保存到所选文件夹，或保存到 xKey 创建的 QR 文件夹。"
   },
   "shamir": {
     "sectionTitle": "离线备份 Shamir",

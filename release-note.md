@@ -1,4 +1,4 @@
-- 🔧 Fixed white gaps above the header and below navigation on Android.
-- 🎨 Unified native window, status bar, and navigation bar colors with the app theme.
-- 📱 Improved full-screen WebView background coverage for safer viewport rendering.
-- 🌗 Kept dark and light themes consistent across safe-area and root surfaces.
+- 📲 Added offline wallet transfer via QR — no Bluetooth, Wi-Fi, or internet required.
+- 🔐 Export QR now carries full wallet data: address, private key, seed phrase, network, notes, tags, and HD details.
+- 📷 Added QR receive flow from the home tools area to scan and import wallets quickly.
+- 📁 Imported QR wallets go to the selected folder, or a new default "QR" folder when needed.

@@ -1,4 +1,5 @@
 ﻿import { useState, type MouseEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { QrCode, ArrowRight, X, Copy, Check, Lock } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
@@ -36,9 +37,22 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
 
     // Encrypt vault data
     const payload = JSON.stringify(wallets.map(w => ({
-      name: w.name, address: w.address, privateKey: w.privateKey,
-      seedPhrase: w.seedPhrase, balance: w.balance, notes: w.notes,
-      network: w.network, groupId: w.groupId,
+      name: w.name,
+      address: w.address,
+      privateKey: w.privateKey,
+      seedPhrase: w.seedPhrase,
+      network: w.network,
+      notes: w.notes,
+      sensitiveNotes: w.sensitiveNotes,
+      tags: w.tags,
+      hdRootId: w.hdRootId,
+      derivationPath: w.derivationPath,
+      hdAccount: w.hdAccount,
+      hdIndex: w.hdIndex,
+      hdNetwork: w.hdNetwork,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt,
+      balance: w.balance,
     })));
 
     const encrypted = CryptoJS.AES.encrypt(payload, password).toString();
@@ -53,7 +67,8 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
     const images: string[] = [];
     for (let i = 0; i < chunks.length; i++) {
       const data = JSON.stringify({
-        _xkey: 'transfer',
+        _xkey: 'wallet-transfer',
+        version: 2,
         part: i + 1,
         total: chunks.length,
         data: chunks[i],
@@ -86,10 +101,10 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-3 sm:p-4" onClick={onClose}>
+  const modal = (
+    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/70 p-3 pt-5 backdrop-blur-sm sm:p-4 sm:pt-8" onClick={onClose}>
       <div
-        className="qr-modal-panel rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:p-6"
+        className="qr-modal-panel max-h-[calc(100dvh-2.5rem)] overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:max-h-[calc(100dvh-4rem)] sm:p-6"
         onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
@@ -108,6 +123,17 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
             <p className="text-surface-400 text-sm">
               {t('qrTransfer.desc', { count: wallets.length })}
             </p>
+            <div className="rounded-xl border border-brand-400/20 bg-brand-500/10 p-3 text-xs text-surface-300">
+              <p className="font-semibold text-brand-100">{t('qrTransfer.stepsTitle')}</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>{t('qrTransfer.step1')}</li>
+                <li>{t('qrTransfer.step2')}</li>
+                <li>{t('qrTransfer.step3')}</li>
+              </ol>
+            </div>
+            <div className="rounded-lg border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-100">
+              {t('qrTransfer.securityNote')}
+            </div>
             <div className="flex items-center gap-2">
               <Lock size={14} className="text-surface-500" />
               <PasswordInput
@@ -171,9 +197,17 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
               )}
             </div>
 
-            <p className="text-scale-xs text-surface-500 text-center">
-              {t('qrTransfer.hint')}
-            </p>
+             <div className="rounded-xl border border-surface-700 bg-surface-800/60 p-3 text-scale-xs text-surface-300">
+               <p className="font-semibold text-surface-100">{t('qrTransfer.scanGuideTitle')}</p>
+               <ol className="mt-2 list-decimal space-y-1 pl-4">
+                 <li>{t('qrTransfer.scanStep1')}</li>
+                 <li>{t('qrTransfer.scanStep2')}</li>
+                 <li>{t('qrTransfer.scanStep3')}</li>
+               </ol>
+             </div>
+             <p className="text-scale-xs text-surface-500 text-center">
+               {t('qrTransfer.hint')}
+             </p>
           </div>
         )}
       </div>
@@ -189,4 +223,6 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
       )}
     </div>
   );
+
+  return createPortal(modal, document.body);
 }

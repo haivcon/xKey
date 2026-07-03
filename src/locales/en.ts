@@ -1450,7 +1450,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "Move",
     "standardBadge": "Standard",
-    "new": "NEW"
+    "new": "NEW",
+    "qrTransferWallet": "Transfer via QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Vanity score",
@@ -1486,6 +1488,8 @@ export default {
     "clearSearch": "Clear search",
     "pasteSearch": "Paste into search",
     "scanSearch": "Scan address QR",
+    "qrReceive": "Receive wallet QR",
+    "qrReceiveDesc": "Scan an offline QR transfer into the selected folder",
     "toolData": "Data",
     "toolReview": "Review",
     "toolBulk": "Bulk actions",
@@ -1743,11 +1747,17 @@ export default {
     "hint": "Point camera at the QR code displayed on the other device",
     "cameraError": "Camera access was denied or no camera was found. Check app permissions.",
     "decryptFailed": "Unable to decrypt or read this QR transfer.",
-    "defaultFolder": "Imported QR"
+    "defaultFolder": "QR",
+    "importSuccess": "Imported {count} wallet(s) from QR"
   },
   "qrTransfer": {
     "title": "Transfer data via QR",
-    "desc": "Encrypt and share all data via QR codes",
+    "desc": "Encrypt and share {count} wallet(s) with QR codes. No Bluetooth, Wi-Fi, or Internet is required.",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "Enter new encryption password",
     "generateBtn": "Generate QR Codes",
     "progress": "QR {current} / {total}",
@@ -1755,7 +1765,11 @@ export default {
     "prevBtn": "Prev",
     "nextBtn": "Next",
     "doneBtn": "Done",
-    "hint": "Use another device and select 'Receive data via QR' to scan"
+    "hint": "Use another device and select 'Receive data via QR' to scan",
+    "scanGuideTitle": "On the receiving device",
+    "scanStep1": "Tap the camera button near search on the home screen.",
+    "scanStep2": "Scan each QR part until the progress reaches 100%.",
+    "scanStep3": "Save into the selected folder or the QR folder created by xKey."
   },
   "shamir": {
     "sectionTitle": "Offline Shamir Backup",

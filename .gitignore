@@ -23,6 +23,7 @@ scripts/app-standards-audit.mjs
 *.standards-audit.json
 scripts/*-audit-report.json
 scripts/*-audit-report.md
+xKey-skill/
 
 # Dependencies
 node_modules/

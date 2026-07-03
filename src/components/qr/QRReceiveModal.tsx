@@ -7,7 +7,8 @@ import PasswordInput from '../shared/PasswordInput';
 import type { Wallet } from '../../types';
 
 type TransferQrChunk = {
-  _xkey: 'transfer';
+  _xkey: 'transfer' | 'wallet-transfer';
+  version?: number;
   part: number;
   total: number;
   data: string;
@@ -16,12 +17,13 @@ type TransferQrChunk = {
 type QRReceiveModalProps = {
   onClose: () => void;
   onImport: (wallets: Wallet[]) => void;
+  targetFolder?: string;
 };
 
 const isTransferQrChunk = (value: unknown): value is TransferQrChunk => {
   if (!value || typeof value !== 'object') return false;
   const chunk = value as Partial<TransferQrChunk>;
-  return chunk._xkey === 'transfer'
+  return (chunk._xkey === 'transfer' || chunk._xkey === 'wallet-transfer')
     && Number.isInteger(chunk.part)
     && Number.isInteger(chunk.total)
     && typeof chunk.data === 'string';
@@ -40,13 +42,21 @@ const toImportedWallet = (value: unknown): Wallet => {
     seedPhrase: typeof wallet.seedPhrase === 'string' ? wallet.seedPhrase : undefined,
     balance: typeof wallet.balance === 'string' ? wallet.balance : '0.00',
     notes: typeof wallet.notes === 'string' ? wallet.notes : '',
+    sensitiveNotes: typeof wallet.sensitiveNotes === 'string' ? wallet.sensitiveNotes : undefined,
     network: typeof wallet.network === 'string' ? wallet.network : 'ETH',
     groupId: typeof wallet.groupId === 'string' ? wallet.groupId : undefined,
-    createdAt: Date.now(),
+    tags: Array.isArray(wallet.tags) ? wallet.tags.filter((tag): tag is string => typeof tag === 'string') : undefined,
+    hdRootId: typeof wallet.hdRootId === 'string' ? wallet.hdRootId : undefined,
+    derivationPath: typeof wallet.derivationPath === 'string' ? wallet.derivationPath : undefined,
+    hdAccount: typeof wallet.hdAccount === 'number' ? wallet.hdAccount : undefined,
+    hdIndex: typeof wallet.hdIndex === 'number' ? wallet.hdIndex : undefined,
+    hdNetwork: typeof wallet.hdNetwork === 'string' ? wallet.hdNetwork : undefined,
+    createdAt: typeof wallet.createdAt === 'number' ? wallet.createdAt : Date.now(),
+    updatedAt: typeof wallet.updatedAt === 'number' ? wallet.updatedAt : undefined,
   };
 };
 
-export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProps) {
+export default function QRReceiveModal({ onClose, onImport, targetFolder }: QRReceiveModalProps) {
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(true);
   const [chunks, setChunks] = useState<Record<number, string>>({});
@@ -173,9 +183,11 @@ export default function QRReceiveModal({ onClose, onImport }: QRReceiveModalProp
       if (!Array.isArray(payload)) throw new Error('Invalid payload format');
 
       // Map to proper wallet format
+      const importFolder = targetFolder && targetFolder !== 'All' ? targetFolder : t('qrReceive.defaultFolder');
       const importedWallets = payload.map(toImportedWallet).map(wallet => ({
         ...wallet,
-        groupId: wallet.groupId || t('qrReceive.defaultFolder'),
+        groupId: importFolder,
+        updatedAt: Date.now(),
       }));
 
       onImport(importedWallets);

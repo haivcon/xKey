@@ -12,17 +12,17 @@
 
 ---
 
-## Current Release: v6.0.27
+## Current Release: v6.0.28
 
-xKey v6.0.27 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.28 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- - 🔧 Fixed white gaps above the header and below navigation on Android.
-- - 🎨 Unified native window, status bar, and navigation bar colors with the app theme.
-- - 📱 Improved full-screen WebView background coverage for safer viewport rendering.
-- - 🌗 Kept dark and light themes consistent across safe-area and root surfaces.
-- **Android release metadata:** `versionName 6.0.27`, `versionCode 125`.
+- - 📲 Added offline wallet transfer via QR — no Bluetooth, Wi-Fi, or internet required.
+- - 🔐 Export QR now carries full wallet data: address, private key, seed phrase, network, notes, tags, and HD details.
+- - 📷 Added QR receive flow from the home tools area to scan and import wallets quickly.
+- - 📁 Imported QR wallets go to the selected folder, or a new default "QR" folder when needed.
+- **Android release metadata:** `versionName 6.0.28`, `versionCode 126`.
 ---
 
 ## Core Features

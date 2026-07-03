@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "Gerak",
     "standardBadge": "Standar",
-    "new": "BARU"
+    "new": "BARU",
+    "qrTransferWallet": "Transfer via QR",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "Skor vanity",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "Transfer data melalui QR",
     "desc": "Enkripsi dan bagikan semua data melalui kode QR",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "Masukkan kata sandi enkripsi baru",
     "generateBtn": "Buat Kode QR",
     "progress": "QR {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "Sebelumnya",
     "nextBtn": "Berikutnya",
     "doneBtn": "Selesai",
-    "hint": "Gunakan perangkat lain dan pilih 'Terima data melalui QR' untuk memindai"
+    "hint": "Gunakan perangkat lain dan pilih 'Terima data melalui QR' untuk memindai",
+    "scanGuideTitle": "Di perangkat penerima",
+    "scanStep1": "Ketuk tombol kamera di dekat kolom pencarian pada layar utama.",
+    "scanStep2": "Pindai setiap bagian QR hingga progres mencapai 100%.",
+    "scanStep3": "Simpan ke folder yang dipilih atau folder QR yang dibuat oleh xKey."
   },
   "shamir": {
     "sectionTitle": "Cadangkan Shamir offline",

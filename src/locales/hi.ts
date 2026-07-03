@@ -1443,7 +1443,9 @@ export default {
     "notesMovedToSensitiveNote": "Moved notes to sensitive note.",
     "moveBtn": "चलें",
     "standardBadge": "मानक",
-    "new": "नया"
+    "new": "नया",
+    "qrTransferWallet": "QR से ट्रांसफ़र करें",
+    "qrShort": "QR"
   },
   "actionBar": {
     "vanityScore": "वैनिटी स्कोर",
@@ -1741,6 +1743,11 @@ export default {
   "qrTransfer": {
     "title": "क्यूआर के माध्यम से डेटा स्थानांतरण करें",
     "desc": "सभी डेटा को क्यूआर कोड के माध्यम से एन्क्रिप्ट और साझा करें",
+    "stepsTitle": "How to send",
+    "step1": "Keep both devices offline and open the receiving camera on the other device.",
+    "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
+    "step3": "Share the password separately so the receiving device can decrypt and save the wallet.",
+    "securityNote": "The QR contains encrypted wallet secrets. Scan only on a trusted device and close this screen when finished.",
     "passwordPlaceholder": "नई एन्क्रिप्शन पासवर्ड दर्ज करें",
     "generateBtn": "क्यूआर कोड जनरेट करें",
     "progress": "क्यूआर {current} / {total}",
@@ -1748,7 +1755,11 @@ export default {
     "prevBtn": "पिछला",
     "nextBtn": "अगला",
     "doneBtn": "समाप्त",
-    "hint": "किसी अन्य डिवाइस का उपयोग करें और स्कैन करने के लिए 'QR के माध्यम से डेटा प्राप्त करें' चुनें"
+    "hint": "किसी अन्य डिवाइस का उपयोग करें और स्कैन करने के लिए 'QR के माध्यम से डेटा प्राप्त करें' चुनें",
+    "scanGuideTitle": "प्राप्त करने वाले डिवाइस पर",
+    "scanStep1": "होम स्क्रीन पर खोज के पास कैमरा बटन टैप करें।",
+    "scanStep2": "प्रगति 100% होने तक प्रत्येक QR भाग स्कैन करें।",
+    "scanStep3": "चुने गए फ़ोल्डर या xKey द्वारा बनाए गए QR फ़ोल्डर में सहेजें।"
   },
   "shamir": {
     "sectionTitle": "बैकअप शमीर ऑफ़लाइन",
