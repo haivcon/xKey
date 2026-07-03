@@ -1753,6 +1753,7 @@ export default {
   "qrTransfer": {
     "title": "Transfer data via QR",
     "desc": "Encrypt and share {count} wallet(s) with QR codes. No Bluetooth, Wi-Fi, or Internet is required.",
+    "openNote": "Keep this modal open until the receiving device finishes scanning all QR parts.",
     "stepsTitle": "How to send",
     "step1": "Keep both devices offline and open the receiving camera on the other device.",
     "step2": "Enter an encryption password here, generate the QR sequence, then scan every part in order.",
@@ -1765,7 +1766,7 @@ export default {
     "prevBtn": "Prev",
     "nextBtn": "Next",
     "doneBtn": "Done",
-    "hint": "Use another device and select 'Receive data via QR' to scan",
+    "hint": "Use another device and select 'Receive data via QR' to scan.",
     "scanGuideTitle": "On the receiving device",
     "scanStep1": "Tap the camera button near search on the home screen.",
     "scanStep2": "Scan each QR part until the progress reaches 100%.",

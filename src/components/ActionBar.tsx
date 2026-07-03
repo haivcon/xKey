@@ -110,6 +110,30 @@ export default function ActionBar({
 
   const closeTools = () => setShowTools(false);
 
+  const isTransferQrPayload = (value: string) => {
+    try {
+      const data = JSON.parse(value) as unknown;
+      if (!data || typeof data !== 'object') return false;
+      const payload = data as { _xkey?: unknown; part?: unknown; total?: unknown; data?: unknown };
+      return (payload._xkey === 'transfer' || payload._xkey === 'wallet-transfer')
+        && Number.isInteger(payload.part)
+        && Number.isInteger(payload.total)
+        && typeof payload.data === 'string';
+    } catch {
+      return false;
+    }
+  };
+
+  const handleSearchQrResult = (value: string) => {
+    if (isTransferQrPayload(value)) {
+      setShowSearchScanner(false);
+      onOpenQRReceive();
+      return;
+    }
+
+    onSearchChange(extractSearchTarget(value));
+  };
+
   const extractSearchTarget = (value: string) => {
     const text = (value || '').trim();
     const evmAddress = text.match(/0x[a-fA-F0-9]{40}/);
@@ -462,7 +486,7 @@ export default function ActionBar({
       {showSearchScanner && (
         <Suspense fallback={null}>
           <QRScannerModal
-            onResult={({ text }) => onSearchChange(extractSearchTarget(text))}
+            onResult={({ text }) => handleSearchQrResult(text)}
             onClose={() => setShowSearchScanner(false)}
           />
         </Suspense>

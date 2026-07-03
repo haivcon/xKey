@@ -1,6 +1,6 @@
 ﻿import { useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { QrCode, ArrowRight, X, Copy, Check, Lock } from 'lucide-react';
+import { QrCode, ArrowRight, X, Copy, Check, Lock, ShieldCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import CryptoJS from 'crypto-js';
 import { hapticTap } from '../../utils/haptics';
@@ -102,13 +102,13 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
   };
 
   const modal = (
-    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/70 p-3 pt-5 backdrop-blur-sm sm:p-4 sm:pt-8" onClick={onClose}>
+    <div className="app-scaled-icons fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-black/70 p-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-4 sm:items-center" onClick={onClose}>
       <div
-        className="qr-modal-panel max-h-[calc(100dvh-2.5rem)] overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-4 shadow-2xl sm:max-h-[calc(100dvh-4rem)] sm:p-6"
+        className="qr-modal-panel max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl border border-surface-700 bg-surface-900 p-3 shadow-2xl sm:max-h-[calc(100dvh-2rem)] sm:p-4"
         onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <QrCode size={20} className="text-brand-400" />
             <h3 className="text-white font-bold">{t('qrTransfer.title')}</h3>
@@ -119,10 +119,14 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
         </div>
 
         {!started ? (
-          <div className="space-y-4">
-            <p className="text-surface-400 text-sm">
-              {t('qrTransfer.desc', { count: wallets.length })}
-            </p>
+          <div className="space-y-3">
+             <p className="text-surface-400 text-sm">
+               {t('qrTransfer.desc', { count: wallets.length })}
+             </p>
+             <div className="flex gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-xs text-emerald-100">
+               <ShieldCheck size={16} className="mt-0.5 shrink-0 text-emerald-300" />
+               <p>{t('qrTransfer.openNote')}</p>
+             </div>
             <div className="rounded-xl border border-brand-400/20 bg-brand-500/10 p-3 text-xs text-surface-300">
               <p className="font-semibold text-brand-100">{t('qrTransfer.stepsTitle')}</p>
               <ol className="mt-2 list-decimal space-y-1 pl-4">
@@ -150,7 +154,7 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Progress */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-surface-400">{t('qrTransfer.progress', { current: currentChunk + 1, total: totalChunks })}</span>
@@ -167,7 +171,7 @@ export default function QRTransferModal({ wallets, onClose }: QRTransferModalPro
             </div>
 
             {/* QR Code */}
-            <div className="flex justify-center py-1">
+             <div className="flex justify-center">
               <button
                 type="button"
                 onClick={() => setZoomed(true)}

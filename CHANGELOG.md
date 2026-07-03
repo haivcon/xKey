@@ -2,6 +2,22 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.29] - 2026-07-03
+
+### Release Notes
+
+- - 📲 Added offline wallet transfer via QR — no Bluetooth, Wi-Fi, or internet required.
+- - 🔐 Export QR now carries full wallet data: address, private key, seed phrase, network, notes, tags, and HD details.
+- - 📷 Added QR receive flow from the home tools area to scan and import wallets quickly.
+- - 📁 Imported QR wallets go to the selected folder, or a new default "QR" folder when needed.
+
+### Release Metadata
+
+- `package.json`: `6.0.29`
+- `package-lock.json`: `6.0.29`
+- Android `versionName`: `6.0.29`
+- Android `versionCode`: `127`
+
 ## [6.0.28] - 2026-07-03
 
 ### Release Notes
