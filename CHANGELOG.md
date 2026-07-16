@@ -2,6 +2,19 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.31] - 2026-07-16
+
+### Release Notes
+
+- 🔐 Fixed backup export validation so matching 6-character passwords accepted by the UI can create encrypted backups reliably.\n✅ Added focused regression coverage and wired it into the automated test suite.
+
+### Release Metadata
+
+- `package.json`: `6.0.31`
+- `package-lock.json`: `6.0.31`
+- Android `versionName`: `6.0.31`
+- Android `versionCode`: `129`
+
 ## [6.0.30] - 2026-07-16
 
 ### Release Notes

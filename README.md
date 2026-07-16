@@ -12,21 +12,14 @@
 
 ---
 
-## Current Release: v6.0.30
+## Current Release: v6.0.31
 
-xKey v6.0.30 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.31 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- - 🔐 Removed the fast backup password oracle while keeping legacy restores compatible.
-- - 🛡️ Upgraded main, decoy, and sensitive PINs to salted PBKDF2 with safe migration.
-- - 🔒 Moved vaults and encrypted settings to authenticated AES-256-GCM.
-- - 💾 Added verified writes to prevent false success messages and silent data loss.
-- - ⏱️ Made auto-lock and secret clipboard policies fail closed without resetting preferences.
-- - 📥 Added strict size, row, schema, and depth limits for web and Android imports.
-- - ⚙️ Made security settings imports transactional with automatic rollback.
-- - ✅ Expanded security, fault-injection, Android, locale, smoke, and visual tests.
-- **Android release metadata:** `versionName 6.0.30`, `versionCode 128`.
+- 🔐 Fixed backup export validation so matching 6-character passwords accepted by the UI can create encrypted backups reliably.\n✅ Added focused regression coverage and wired it into the automated test suite.
+- **Android release metadata:** `versionName 6.0.31`, `versionCode 129`.
 ---
 
 ## Core Features

@@ -20,21 +20,14 @@ xKey is a local cold-vault style manager. It is not a network-connected trading 
 
 ---
 
-## Current Release Security Notes: v6.0.30
+## Current Release Security Notes: v6.0.31
 
-v6.0.30 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
+v6.0.31 is a synchronized web and Android release. It updates release documentation, package metadata, and Android build metadata without changing the local-only custody model by default.
 
 Security-relevant notes:
 
-- - 🔐 Removed the fast backup password oracle while keeping legacy restores compatible.
-- - 🛡️ Upgraded main, decoy, and sensitive PINs to salted PBKDF2 with safe migration.
-- - 🔒 Moved vaults and encrypted settings to authenticated AES-256-GCM.
-- - 💾 Added verified writes to prevent false success messages and silent data loss.
-- - ⏱️ Made auto-lock and secret clipboard policies fail closed without resetting preferences.
-- - 📥 Added strict size, row, schema, and depth limits for web and Android imports.
-- - ⚙️ Made security settings imports transactional with automatic rollback.
-- - ✅ Expanded security, fault-injection, Android, locale, smoke, and visual tests.
-- Android metadata is updated to `versionCode 128` and `versionName 6.0.30`.
+- 🔐 Fixed backup export validation so matching 6-character passwords accepted by the UI can create encrypted backups reliably.\n✅ Added focused regression coverage and wired it into the automated test suite.
+- Android metadata is updated to `versionCode 129` and `versionName 6.0.31`.
 - The offline-first vault model, encryption boundaries, backup ownership, and secret-handling requirements remain unchanged unless explicitly stated above.
 ---
 
