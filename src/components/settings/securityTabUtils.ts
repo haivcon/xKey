@@ -1,5 +1,3 @@
-import CryptoJS from 'crypto-js';
-
 export const AUTOLOCK_OPTIONS = [
   { label: '1 min', value: 60000 },
   { label: '5 min', value: 300000 },
@@ -23,5 +21,3 @@ export const sanitizePinInput = (value: string, maxLength = 6): string => (
 );
 
 export const isSixDigitPin = (value: string): boolean => /^\d{6}$/.test(value);
-
-export const hashPin = (p: string) => CryptoJS.SHA256(p + 'xkey_pin_salt_v1').toString();

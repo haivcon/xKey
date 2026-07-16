@@ -1973,7 +1973,7 @@ html {
 .home-header-slogan-letter,
 .home-header-slogan-space {
   display: inline-block;
-  font-size: clamp(3.2px, 0.72vw, 4.2px);
+  font-size: 5.4px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.018em;
@@ -1989,8 +1989,8 @@ html {
 @media (max-width: 360px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(3px, 0.68vw, 3.6px);
-    letter-spacing: 0.014em;
+    font-size: 4.7px;
+    letter-spacing: 0.02em;
   }
 
   .home-header-slogan-space {
@@ -2001,7 +2001,7 @@ html {
 @media (min-width: 481px) and (max-width: 767px) {
   .home-header-slogan-letter,
   .home-header-slogan-space {
-    font-size: clamp(4px, 0.82vw, 5.2px);
+    font-size: 5.4px;
     letter-spacing: 0.02em;
   }
 

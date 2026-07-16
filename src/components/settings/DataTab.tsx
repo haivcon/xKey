@@ -90,7 +90,11 @@ export default function DataTab({ aesKey, onImport, onWipe }: DataTabProps) {
       showToast({ key: 'settings.passwordMinError', category: 'warning' }, 'warning');
       return;
     }
-    await Preferences.set({ key: 'xkey_autobackup_password', value: encryptSetting(autoBackupPassword, aesKey) });
+    const passwordStorageKey = 'xkey_autobackup_password';
+    await Preferences.set({
+      key: passwordStorageKey,
+      value: await encryptSetting(autoBackupPassword, aesKey, passwordStorageKey),
+    });
     hapticSuccess();
     showToast(t('settings.autoBackupPasswordSaved'), 'success');
   };

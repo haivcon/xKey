@@ -1,18 +1,21 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { Preferences } from '@capacitor/preferences';
-import CryptoJS from 'crypto-js';
 import { Delete, Lock, ShieldCheck, TimerReset } from 'lucide-react';
 import { hapticTap } from '../../utils/haptics';
 import { useT } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { appendAuditLog } from '../../utils/auditLog';
 import { XKEY_SLOGAN } from '../../utils/branding';
+import {
+  createPinCredential,
+  DECOY_PIN_HASH_KEY,
+  PIN_HASH_KEY,
+  verifyPinCredential,
+} from '../../features/security/pinCredential';
 
-const PIN_HASH_KEY = 'xkey_pin_hash';
 const PIN_ATTEMPTS_KEY = 'xkey_pin_attempts';
 const PIN_LOCKOUT_KEY = 'xkey_pin_lockout_until';
 const KILL_SWITCH_KEY = 'xkey_kill_switch';
-const DECOY_PIN_HASH_KEY = 'xkey_decoy_pin_hash';
 const PIN_LENGTH = 6;
 
 // Lockout tiers: [maxAttempts, lockoutSeconds]
@@ -83,8 +86,6 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
     }, 1000);
   };
 
-  const hashPin = (p: string) => CryptoJS.SHA256(p + 'xkey_pin_salt_v1').toString();
-
   const triggerShake = () => {
     setShake(true);
     setTimeout(() => setShake(false), 500);
@@ -118,7 +119,7 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
           setMode('confirm');
         } else if (mode === 'confirm') {
           if (newPin === confirmPin) {
-            await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(newPin) });
+            await Preferences.set({ key: PIN_HASH_KEY, value: await createPinCredential(newPin, 'main') });
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await appendAuditLog('pin.created');
             onSuccess(false, { createdPin: true });
@@ -133,14 +134,24 @@ export default function PinLockScreen({ onSuccess, onSelfDestruct }: PinLockScre
         } else if (mode === 'verify') {
           const { value: stored } = await Preferences.get({ key: PIN_HASH_KEY });
           const { value: decoyStored } = await Preferences.get({ key: DECOY_PIN_HASH_KEY });
-          if (hashPin(newPin) === stored) {
+          const mainVerification = await verifyPinCredential(newPin, stored, 'main');
+          const decoyVerification = mainVerification.valid
+            ? { valid: false }
+            : await verifyPinCredential(newPin, decoyStored, 'decoy');
+          if (mainVerification.valid) {
+            if (mainVerification.upgradedRecord) {
+              await Preferences.set({ key: PIN_HASH_KEY, value: mainVerification.upgradedRecord }).catch(() => {});
+            }
             // Reset attempts on success
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
             await appendAuditLog('pin.unlock_success', { decoy: false });
             onSuccess(false);
             setPin('');
-          } else if (decoyStored && hashPin(newPin) === decoyStored) {
+          } else if (decoyVerification.valid) {
+            if ('upgradedRecord' in decoyVerification && decoyVerification.upgradedRecord) {
+              await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: decoyVerification.upgradedRecord }).catch(() => {});
+            }
             await Preferences.set({ key: PIN_ATTEMPTS_KEY, value: '0' });
             await Preferences.remove({ key: PIN_LOCKOUT_KEY });
             await appendAuditLog('pin.unlock_success', { decoy: true });

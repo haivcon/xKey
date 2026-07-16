@@ -7,6 +7,7 @@ import { useT } from '../contexts/LanguageContext';
 import { appendAuditLog } from '../utils/auditLog';
 import { saveTextFile } from '../utils/fileSaver';
 import { withTimeout } from '../utils/asyncTimeout';
+import { isImportFileWithinLimit } from '../utils/importFileLimits';
 import { createEncryptedVaultSnapshot, restoreLatestVaultSnapshot } from '../utils/vaultSnapshot';
 import { requireSensitiveAction } from '../features/security/sensitiveActions';
 import type { Wallet } from '../types';
@@ -105,6 +106,21 @@ export default function useFileImport(
   const [backupWalletsForSelection, setBackupWalletsForSelection] = useState<Wallet[]>([]);
   const [selectedBackupWalletIds, setSelectedBackupWalletIds] = useState<string[]>([]);
   const lastExternalFileRef = useRef<{ fingerprint: string; ts: number } | null>(null);
+  const operationGenerationRef = useRef(0);
+
+  const beginOperation = useCallback(() => {
+    operationGenerationRef.current += 1;
+    return operationGenerationRef.current;
+  }, []);
+
+  const cancelOperations = useCallback(() => {
+    operationGenerationRef.current += 1;
+  }, []);
+
+  const isCurrentOperation = useCallback(
+    (generation: number) => operationGenerationRef.current === generation,
+    [],
+  );
 
   const { showToast } = useToast();
   const t = useT();
@@ -129,8 +145,8 @@ export default function useFileImport(
       operation: 'import',
       reason: `file_import:${folderName}`,
     });
-    setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
+    setWallets(updated);
     let msg = t('home.importSuccess', { count: uniqueNew.length, folder: folderName });
     if (skippedCount > 0) msg += t('home.duplicatesSkipped', { count: skippedCount });
     showToast(msg, 'success', 8000, {
@@ -140,6 +156,7 @@ export default function useFileImport(
   }, [wallets, setWallets, aesKey, isDecoyMode, showToast, t, restoreReplaceSnapshot]);
 
   const handleFileUpload = useCallback(async (targetFolderName = '') => {
+    const generation = beginOperation();
     try {
       const result = await FilePicker.pickFiles({
         types: ['text/csv', 'text/comma-separated-values', 'application/csv', '.csv', 'application/octet-stream', '.xkey', '*/*'],
@@ -147,9 +164,18 @@ export default function useFileImport(
         readData: true
       } as Parameters<typeof FilePicker.pickFiles>[0] & { multiple: boolean });
 
+      if (!isCurrentOperation(generation)) return;
       if (result.files && result.files.length > 0) {
         const file = result.files[0];
         const fileData = String(file.data || '');
+        if (!isImportFileWithinLimit(file.size, fileData)) {
+          showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
+          await appendAuditLog('file.import_rejected', {
+            fileName: file.name || '',
+            reason: 'size_limit',
+          });
+          return;
+        }
         setLoading(true);
         setFileOperationKey('fileStatus.reading');
 
@@ -162,6 +188,7 @@ export default function useFileImport(
             FILE_IMPORT_TIMEOUT_MS,
             () => new Error(t('common.errorReadingFile')),
           );
+          if (!isCurrentOperation(generation)) return;
           setPendingBackupData(fileData);
           setBackupPreview({ ...preview, fileName: file.name });
           setBackupAnalysis(null);
@@ -194,6 +221,7 @@ export default function useFileImport(
         try {
           if (format === 'csv') {
             const preview = await buildCsvImportPreview(rawString, fileName, folderName, wallets);
+            if (!isCurrentOperation(generation)) return;
             setPendingCsvRaw(rawString);
             setCsvImportPreview(preview);
             await appendAuditLog('csv.previewed', {
@@ -211,8 +239,10 @@ export default function useFileImport(
             ? parseJsonWallets(rawString, folderName)
             : parseTextWallets(rawString, folderName);
 
+          if (!isCurrentOperation(generation)) return;
           await importWallets(normalizedData, folderName);
         } catch (err: unknown) {
+          if (!isCurrentOperation(generation)) return;
           if (format === 'json') {
             showToast(`${t('common.jsonParseError')}: ${err instanceof Error ? err.message : String(err)}`, 'error');
           } else if (format === 'csv') {
@@ -221,19 +251,23 @@ export default function useFileImport(
             showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
           }
         } finally {
-          setLoading(false);
-          setFileOperationKey('');
+          if (isCurrentOperation(generation)) {
+            setLoading(false);
+            setFileOperationKey('');
+          }
         }
       }
     } catch (error: unknown) {
+      if (!isCurrentOperation(generation)) return;
       console.error('FilePicker Error:', error);
       setLoading(false);
       setFileOperationKey('');
     }
-  }, [importWallets, showToast, t, wallets]);
+  }, [beginOperation, importWallets, isCurrentOperation, showToast, t, wallets]);
 
   const updateCsvImportMapping = useCallback(async (mapping: CsvImportMapping) => {
     if (!pendingCsvRaw || !csvImportPreview) return;
+    const generation = beginOperation();
     const preview = await buildCsvImportPreview(
       pendingCsvRaw,
       csvImportPreview.fileName,
@@ -241,8 +275,8 @@ export default function useFileImport(
       wallets,
       mapping,
     );
-    setCsvImportPreview(preview);
-  }, [csvImportPreview, pendingCsvRaw, wallets]);
+    if (isCurrentOperation(generation)) setCsvImportPreview(preview);
+  }, [beginOperation, csvImportPreview, isCurrentOperation, pendingCsvRaw, wallets]);
 
   const saveCsvImportReport = useCallback(async () => {
     if (!csvImportPreview) return;
@@ -276,8 +310,8 @@ export default function useFileImport(
         operation: 'import',
         reason: `csv_import:${csvImportPreview.fileName}`,
       });
-      setWallets(updated);
       await saveWallets(updated, aesKey, isDecoyMode);
+      setWallets(updated);
       let msg = t('home.importSuccess', { count: csvImportPreview.uniqueWallets.length, folder: csvImportPreview.folderName });
       if (csvImportPreview.skippedDuplicates > 0) msg += t('home.duplicatesSkipped', { count: csvImportPreview.skippedDuplicates });
       showToast(msg, 'success', 8000, {
@@ -299,9 +333,19 @@ export default function useFileImport(
   }, [aesKey, clearCsvImportPreview, csvImportPreview, isDecoyMode, restoreReplaceSnapshot, setWallets, showToast, t, wallets]);
 
   const handleExternalBackupFile = useCallback(async (file: ExternalBackupFile) => {
+    const generation = beginOperation();
     const fileData = file?.data || file?.base64 || '';
     if (!fileData) return false;
     const fileName = file.name || 'opened.xkey';
+    if (!isImportFileWithinLimit(file.size, fileData)) {
+      showToast({ key: 'common.errorReadingFile', category: 'warning' }, 'error');
+      await appendAuditLog('backup.external_file_ignored', {
+        fileName,
+        mimeType: file.mimeType || '',
+        reason: 'size_limit',
+      });
+      return false;
+    }
     const fingerprint = `${fileName}|${file.size || 0}|${fileData.slice(0, 64)}`;
     const latest = lastExternalFileRef.current;
     if (latest?.fingerprint === fingerprint && Date.now() - latest.ts < EXTERNAL_FILE_DEDUPE_MS) return true;
@@ -325,6 +369,7 @@ export default function useFileImport(
         FILE_IMPORT_TIMEOUT_MS,
         () => new Error(t('common.errorReadingFile')),
       );
+      if (!isCurrentOperation(generation)) return false;
       setPendingBackupData(fileData);
       setBackupPreview({ ...preview, fileName, openedFromExternal: true });
       setBackupAnalysis(null);
@@ -339,6 +384,7 @@ export default function useFileImport(
       });
       return true;
     } catch (err: unknown) {
+      if (!isCurrentOperation(generation)) return false;
       const message = err instanceof Error ? err.message : 'unknown';
       showToast(message || { key: 'common.errorReadingFile', category: 'warning' }, 'error');
       await appendAuditLog('backup.external_open_failed', {
@@ -347,10 +393,12 @@ export default function useFileImport(
       });
       return false;
     } finally {
-      setLoading(false);
-      setFileOperationKey('');
+      if (isCurrentOperation(generation)) {
+        setLoading(false);
+        setFileOperationKey('');
+      }
     }
-  }, [showToast, t]);
+  }, [beginOperation, isCurrentOperation, showToast, t]);
 
   const saveRestoreReport = useCallback(async () => {
     if (!restoreSandbox) return;
@@ -366,6 +414,8 @@ export default function useFileImport(
 
   const handleImportWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
+    const generation = beginOperation();
+    let commitStarted = false;
     try {
       setLoading(true);
       setFileOperationKey('fileStatus.decrypting');
@@ -375,6 +425,7 @@ export default function useFileImport(
         FILE_IMPORT_TIMEOUT_MS,
         () => new Error(t('restore.wrongPassword')),
       );
+      if (!isCurrentOperation(generation)) return;
       const selectedBackupWallets = selectedBackupWalletIds.length > 0
         ? filterBackupWalletsBySelection(backup.wallets, selectedBackupWalletIds)
         : backup.wallets;
@@ -413,7 +464,7 @@ export default function useFileImport(
             healthGrade: sandbox.health.grade,
           },
         });
-        if (!overrideAllowed) return;
+        if (!isCurrentOperation(generation) || !overrideAllowed) return;
       }
 
       if (backupImportMode === 'replace') {
@@ -426,12 +477,15 @@ export default function useFileImport(
             integrity: backupPreview?.integrity || 'unknown',
           },
         });
+        if (!isCurrentOperation(generation)) return;
         if (!verified) {
           showToast(t('common.cancel'), 'warning');
           return;
         }
       }
 
+      if (!isCurrentOperation(generation)) return;
+      commitStarted = true;
       let sensitiveUpdated = 0;
       await createEncryptedVaultSnapshot(wallets, aesKey, {
         operation: backupImportMode === 'replace' ? 'replace' : 'merge',
@@ -457,9 +511,9 @@ export default function useFileImport(
             });
             return [...mergedExisting, ...uniqueBackup];
           })();
-      setWallets(newWallets);
       setFileOperationKey('fileStatus.importing');
       await saveWallets(newWallets, aesKey, isDecoyMode);
+      setWallets(newWallets);
       let msg = t('home.backupImported', { count: backupImportMode === 'replace' ? selectedBackupWallets.length : uniqueBackup.length });
       if (backupImportMode === 'merge' && skipped > 0) msg += t('home.duplicatesSkipped', { count: skipped });
       showToast(msg, 'success', 8000, {
@@ -474,6 +528,7 @@ export default function useFileImport(
         integrity: backupPreview?.integrity || 'unknown',
       });
     } catch (err: unknown) {
+      if (!commitStarted && !isCurrentOperation(generation)) return;
       const message = err instanceof Error ? err.message : '';
       showToast(message || { key: 'restore.wrongPassword', category: 'backup' }, 'error');
       await appendAuditLog('backup.import_failed', {
@@ -481,20 +536,23 @@ export default function useFileImport(
         integrity: backupPreview?.integrity || 'unknown',
       });
     } finally {
-      setLoading(false);
-      setFileOperationKey('');
-      setShowPasswordPrompt(false);
-      setPendingBackupData(null);
-      setBackupPreview(null);
-      setImportPassword('');
-      setUpdateMissingSensitive(false);
-      setBackupWalletsForSelection([]);
-      setSelectedBackupWalletIds([]);
+      if (commitStarted || isCurrentOperation(generation)) {
+        setLoading(false);
+        setFileOperationKey('');
+        setShowPasswordPrompt(false);
+        setPendingBackupData(null);
+        setBackupPreview(null);
+        setImportPassword('');
+        setUpdateMissingSensitive(false);
+        setBackupWalletsForSelection([]);
+        setSelectedBackupWalletIds([]);
+      }
     }
-  }, [pendingBackupData, wallets, setWallets, aesKey, isDecoyMode, importPassword, showToast, t, backupPreview, backupImportMode, updateMissingSensitive, selectedBackupWalletIds, restoreReplaceSnapshot]);
+  }, [aesKey, backupImportMode, backupPreview, beginOperation, importPassword, isCurrentOperation, isDecoyMode, pendingBackupData, restoreReplaceSnapshot, selectedBackupWalletIds, setWallets, showToast, t, updateMissingSensitive, wallets]);
 
   const previewBackupWithPassword = useCallback(async () => {
     if (!pendingBackupData) return;
+    const generation = beginOperation();
     try {
       setLoading(true);
       setFileOperationKey('fileStatus.previewing');
@@ -504,6 +562,7 @@ export default function useFileImport(
         FILE_IMPORT_TIMEOUT_MS,
         () => new Error(t('restore.wrongPassword')),
       );
+      if (!isCurrentOperation(generation)) return;
       setBackupWalletsForSelection(backup.wallets);
       setSelectedBackupWalletIds(createAllBackupWalletSelection(backup.wallets));
       const analysis = analyzeBackupImport(wallets, backup.wallets);
@@ -530,14 +589,19 @@ export default function useFileImport(
           recommendedMode: sandbox.recommendedMode,
       });
     } catch {
-      showToast({ key: 'restore.wrongPassword', category: 'backup' }, 'error');
+      if (isCurrentOperation(generation)) {
+        showToast({ key: 'restore.wrongPassword', category: 'backup' }, 'error');
+      }
     } finally {
-      setLoading(false);
-      setFileOperationKey('');
+      if (isCurrentOperation(generation)) {
+        setLoading(false);
+        setFileOperationKey('');
+      }
     }
-  }, [pendingBackupData, aesKey, importPassword, wallets, showToast, t, backupPreview]);
+  }, [aesKey, backupPreview, beginOperation, importPassword, isCurrentOperation, pendingBackupData, showToast, t, wallets]);
 
   const dismissPasswordPrompt = useCallback(() => {
+    cancelOperations();
     setShowPasswordPrompt(false);
     setPendingBackupData(null);
     setBackupPreview(null);
@@ -550,13 +614,14 @@ export default function useFileImport(
     setSelectedBackupWalletIds([]);
     setLoading(false);
     setFileOperationKey('');
-  }, []);
+  }, [cancelOperations]);
 
   const dismissCsvImportPreview = useCallback(() => {
+    cancelOperations();
     clearCsvImportPreview();
     setLoading(false);
     setFileOperationKey('');
-  }, [clearCsvImportPreview]);
+  }, [cancelOperations, clearCsvImportPreview]);
 
   return {
     loading, fileOperationKey,

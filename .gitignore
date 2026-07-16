@@ -11,7 +11,7 @@ DESIGN_SYSTEM.md
 IMPLEMENTATION_CHECKLIST.md
 ARCHITECTURE_DECISIONS.md
 scripts/app-standards-audit.mjs
-
+video-intro
 # Local AI/tooling state and generated review artifacts
 .cline/
 .roo/

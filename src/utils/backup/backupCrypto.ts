@@ -11,7 +11,6 @@ import {
   V4_PAYLOAD_END,
   createBackupId,
   createBackupRecovery,
-  createPasswordSeal,
   encodeJsonBlock,
   sha256,
   summarizeWallets,
@@ -86,7 +85,6 @@ export const createPortableBackupText = async (
       payloadHash,
       backupId,
       descriptorHash,
-      passwordSeal: createPasswordSeal(userPassword, payloadHash),
     },
     recovery,
   };

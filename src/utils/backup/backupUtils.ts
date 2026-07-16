@@ -11,6 +11,7 @@ import {
 } from './backupFormat';
 import { decryptBackup } from './backupCrypto';
 import { inspectBackupFile } from './backupInspection';
+import { assertImportWalletsWithinLimits } from '../importFileLimits';
 
 const getErrorMessage = (error: unknown): string => error instanceof Error ? error.message : String(error || '');
 
@@ -71,6 +72,7 @@ export const parseEncryptedBackupText = async (
   if (!decrypted.wallets || !Array.isArray(decrypted.wallets)) {
     throw new Error('Invalid backup format');
   }
+  assertImportWalletsWithinLimits(decrypted.wallets);
 
   if (inspection?.recovered) {
     await appendAuditLog('backup.self_healed', {

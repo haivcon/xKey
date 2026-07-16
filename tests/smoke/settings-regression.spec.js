@@ -132,15 +132,17 @@ test('audit log tab and tamper-evident backup preview are wired into settings an
 
 test('backup replacement, import reports, and vanity recovery retain encrypted recovery paths', async () => {
   const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const vaultSnapshot = await readSource('src/utils/vaultSnapshot.ts');
   const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
   const vanitySessionStorage = await readSource('src/hooks/vanity/vanitySessionStorage.ts');
   const vanityConstants = await readSource('src/components/create-wallet/constants.ts');
   const app = await readSource('src/App.tsx');
 
-  expect(fileImport).toContain('xkey_replace_snapshot_v1');
-  expect(fileImport).toContain('createPortableBackupText(wallets');
-  expect(fileImport).toContain('restoreReplaceSnapshot');
-  expect(fileImport).toContain('xkey_import_report_');
+  expect(vaultSnapshot).toContain('REPLACE_SNAPSHOT_KEY');
+  expect(vaultSnapshot).toContain('createPortableBackupText(wallets');
+  expect(vaultSnapshot).toContain('writeInternalText(SNAPSHOT_TEXT_PREFIX');
+  expect(fileImport).toContain('restoreLatestVaultSnapshot');
+  expect(fileImport).toContain('xkey_restore_report_');
   expect(fileImport).toContain('saveTextFile');
   expect(vanityConstants).toContain('xkey_vanity_session_v1');
   expect(vanitySessionStorage).toContain('writeInternalText(\'xkey-vanity-session\'');
@@ -156,6 +158,7 @@ test('vanity wallet generator can auto-keep extra repeated-character matches', a
   const vanityHook = await readSource('src/hooks/vanity/useVanityGeneration.tsx');
   const vanityConstants = await readSource('src/components/create-wallet/constants.ts');
   const vanityWorker = await readSource('src/workers/vanityWorker.ts');
+  const vanityWalletHelpers = await readSource('src/hooks/vanity/vanityWalletHelpers.ts');
 
   expect(vanityHook).toContain('vanityCaptureExtras');
   expect(vanityConstants).toContain('VANITY_EXTRA_MIN_RUNS');
@@ -167,7 +170,7 @@ test('vanity wallet generator can auto-keep extra repeated-character matches', a
   expect(vanityExtraWalletCard).toContain('vanityExtraScore');
   expect(vanityHook).toContain("saveFound: false");
   expect(vanityHook).toContain("CapacitorApp.addListener('appStateChange'");
-  expect(vanityHook).toContain('extraRanks');
+  expect(vanityWalletHelpers).toContain('extraRanks');
   expect(vanityWorker).toContain('detectExtraVanityMatch');
   expect(vanityWorker).toContain("type: 'extras'");
   expect(vanityWorker).not.toContain('seenExtraAddresses');
@@ -214,7 +217,9 @@ test('vault and backup self-healing Reed-Solomon checks are present', async () =
   expect(backupFormat).toContain('recoverBackupPayload');
   expect(backupFormat).toContain('dataHashes');
   expect(backupUtils).toContain("appendAuditLog('backup.self_healed'");
-  expect(backupCrypto).toContain('passwordSeal');
+  expect(backupCrypto).not.toContain('createPasswordSeal');
+  expect(backupUtils).toContain('container.integrity?.passwordSeal');
+  expect(backupUtils).toContain('createPasswordSeal(userPassword, payloadHash)');
   expect(backupInspection).toContain("appendAuditLog('backup.tamper_detected'");
 });
 
@@ -222,6 +227,7 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   const manifest = await readSource('android/app/src/main/AndroidManifest.xml');
   const mainActivity = await readSource('android/app/src/main/java/com/haivcon/xkey/MainActivity.java');
   const fileOpenPlugin = await readSource('android/app/src/main/java/com/haivcon/xkey/XKeyFileOpenPlugin.java');
+  const fileValidation = await readSource('android/app/src/main/java/com/haivcon/xkey/XKeyFileValidation.java');
   const nativeFileOpen = await readSource('src/utils/nativeFileOpen.ts');
   const app = await readSource('src/App.tsx');
   const fileImport = await readSource('src/hooks/useFileImport.ts');
@@ -234,7 +240,9 @@ test('android xkey file open intent is wired to backup preview flow', async () =
   expect(fileOpenPlugin).toContain('@CapacitorPlugin(name = "XKeyFileOpen")');
   expect(fileOpenPlugin).toContain('getPendingFile');
   expect(fileOpenPlugin).toContain('ContentResolver');
-  expect(fileOpenPlugin).toContain('MAX_IMPORT_BYTES');
+  expect(fileOpenPlugin).toContain('XKeyFileValidation.readLimited(input)');
+  expect(fileValidation).toContain('MAX_IMPORT_BYTES = 50 * 1024 * 1024');
+  expect(fileValidation).toContain('total > MAX_IMPORT_BYTES');
   expect(nativeFileOpen).toContain("registerPlugin<XKeyFileOpenPlugin>('XKeyFileOpen')");
   const externalBackupOpen = await readSource('src/hooks/backup/useExternalBackupOpen.ts');
   expect(externalBackupOpen).toContain('getPendingXKeyFile');
@@ -340,7 +348,7 @@ test('locale loading is lazy and does not require repeated initialization effect
 
 test('backup import and vanity recovery keep large temporary payloads out of Preferences', async () => {
   const internalTextStore = await readSource('src/utils/internalTextStore.ts');
-  const fileImport = await readSource('src/hooks/useFileImport.ts');
+  const vaultSnapshot = await readSource('src/utils/vaultSnapshot.ts');
   const vanitySessionStorage = await readSource('src/hooks/vanity/vanitySessionStorage.ts');
   const appHealthMessages = await readSource('src/hooks/useAppHealthMessages.ts');
 
@@ -350,9 +358,9 @@ test('backup import and vanity recovery keep large temporary payloads out of Pre
   expect(internalTextStore).toContain('deleteInternalText');
   expect(internalTextStore).toContain('cleanupInternalTextFiles');
   expect(internalTextStore).toContain('internal-text-ref');
-  expect(fileImport).toContain("writeInternalText('xkey-replace-snapshot'");
-  expect(fileImport).toContain('serializeInternalTextRef(snapshotRef)');
-  expect(fileImport).toContain('readInternalText(storedRef)');
+  expect(vaultSnapshot).toContain("SNAPSHOT_TEXT_PREFIX = 'xkey-vault-snapshot'");
+  expect(vaultSnapshot).toContain('serializeInternalTextRef(snapshotRef)');
+  expect(vaultSnapshot).toContain('readInternalText(storedRef)');
   expect(vanitySessionStorage).toContain("writeInternalText('xkey-vanity-session'");
   expect(vanitySessionStorage).toContain('parseInternalTextRef');
   expect(vanitySessionStorage).toContain('readInternalText(');

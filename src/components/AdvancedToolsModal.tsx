@@ -6,6 +6,7 @@ import { X, Wrench, ShieldCheck, Tags, Download, GitCompare, Search, Network, Hi
 import { Preferences } from '@capacitor/preferences';
 import { saveWallets } from '../utils/storage';
 import { exportPortableBackup, parseVaultBackupFile } from '../utils/backup/backupUtils';
+import { isImportFileWithinLimit } from '../utils/importFileLimits';
 import { useToast } from '../contexts/ToastContext';
 import { useT } from '../contexts/LanguageContext';
 import PasswordInput from './shared/PasswordInput';
@@ -178,14 +179,14 @@ export default function AdvancedToolsModal({
   };
 
   const persist = async (nextWallets: Wallet[], message: string) => {
-    setWallets(nextWallets);
-    const saved = await saveWallets(nextWallets, aesKey, isDecoyMode);
-    if (!saved) {
+    try {
+      await saveWallets(nextWallets, aesKey, isDecoyMode);
+      setWallets(nextWallets);
+      addHistory(message);
+      showToast(message, 'success');
+    } catch {
       showToast(t('advancedTools.saveFailed'), 'error');
-      return;
     }
-    addHistory(message);
-    showToast(message, 'success');
   };
 
   const audit = useMemo(() => {
@@ -277,6 +278,10 @@ export default function AdvancedToolsModal({
       const result = await pickFilesCompat({ multiple: true, readData: true, types: ['.csv', '.json', '.xkey', 'text/csv', 'application/json', 'application/octet-stream', '*/*'] });
       const files = result.files || [];
       if (files.length < 2) return;
+      if (files.slice(0, 2).some(file => !isImportFileWithinLimit(file.size, file.data))) {
+        setCompareResult(t('advancedTools.compareFailed'));
+        return;
+      }
       const first = await parseWalletFile(files[0], aesKey, comparePassword);
       const second = await parseWalletFile(files[1], aesKey, comparePassword);
       const a = new Set(first.map(w => w.address?.toLowerCase()).filter(Boolean));
@@ -346,6 +351,10 @@ export default function AdvancedToolsModal({
       const result = await pickFilesCompat({ multiple: false, readData: true, types: ['.xkey', 'application/octet-stream', '*/*'] });
       const file = result.files?.[0];
       if (!file) return;
+      if (!isImportFileWithinLimit(file.size, file.data)) {
+        setVerifyResult(t('advancedTools.verifyFail'));
+        return;
+      }
       const backup = await parseVaultBackupFile(file.data || '', aesKey, verifyPassword || null);
       const walletCount = Array.isArray(backup.wallets) ? backup.wallets.length : 0;
       setVerifyResult(t('advancedTools.verifyOk', { count: walletCount }));

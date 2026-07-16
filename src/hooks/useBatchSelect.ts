@@ -91,8 +91,8 @@ export default function useBatchSelect(
   // --- Bulk Actions ---
 
   const persist = useCallback(async (updated: Wallet[]) => {
-    setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
+    setWallets(updated);
   }, [setWallets, aesKey, isDecoyMode]);
 
   const bulkDelete = useCallback(async () => {

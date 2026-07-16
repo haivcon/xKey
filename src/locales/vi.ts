@@ -727,6 +727,8 @@ export default {
     "customMinutes": "Tự nhập thời gian (phút)",
     "autoLockRangeError": "Nhập thời gian từ 1 phút đến 24 giờ.",
     "autoLockMinutes": "phút",
+    "autoLockSeconds": "giây",
+    "autoLockHours": "giờ",
     "autoLockCurrent": "Hiện tại",
     "autoLockDesc": "Tự động khóa kho sau khi xKey không có thao tác trong thời gian đã chọn. Lớp này bảo vệ kho nếu bạn để app mở, chuyển sang app khác hoặc quên khóa thủ công sau khi khởi động/mở khóa.",
     "immediately": "Ngay lập tức",
@@ -1487,6 +1489,8 @@ export default {
     "clearSearch": "Xóa tìm kiếm",
     "pasteSearch": "Dán vào tìm kiếm",
     "scanSearch": "Quét QR địa chỉ",
+    "qrReceive": "Nhận QR ví",
+    "qrReceiveDesc": "Quét bản chuyển QR ngoại tuyến vào thư mục đã chọn",
     "toolData": "Dữ liệu",
     "toolReview": "Kiểm tra",
     "toolBulk": "Thao tác hàng loạt",
@@ -1744,7 +1748,8 @@ export default {
     "hint": "Hướng camera vào mã QR hiển thị trên thiết bị khác",
     "cameraError": "Không có quyền camera hoặc không tìm thấy camera. Hãy kiểm tra quyền của ứng dụng.",
     "decryptFailed": "Không thể giải mã hoặc đọc dữ liệu chuyển qua QR này.",
-    "defaultFolder": "Nhập từ QR"
+    "defaultFolder": "Nhập từ QR",
+    "importSuccess": "Đã nhập {count} ví từ QR"
   },
   "qrTransfer": {
     "title": "Chuyển dữ liệu qua QR",

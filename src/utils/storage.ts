@@ -13,37 +13,93 @@ import {
 } from './deviceCredential';
 import CryptoWorker from '../workers/crypto.worker.js?worker';
 import { getVaultStorageStatusForKeys, loadVaultCipher, removeVaultFragmentDirectory, saveVaultCipher } from './storage/fragmentedVault';
+import { persistAndVerify } from './storage/verifiedPersistence';
 import type { Wallet } from '../types';
 import { inferVanityScoreMetadata } from './vanity/vanityScoreGrade';
+import {
+    decryptVaultEnvelope,
+    encryptVaultEnvelope,
+    isVaultEnvelope,
+} from './crypto/vaultEnvelope';
 
 export { loadVaultCipher, saveVaultCipher };
 
-const cryptoWorker = new CryptoWorker();
-
-type CryptoWorkerResponse<T> = {
+type CryptoWorkerResponse = {
     id: string;
     success: boolean;
-    result: T;
+    result?: unknown;
     error?: string;
 };
 
+type PendingCryptoRequest = {
+    resolve: (value: unknown) => void;
+    reject: (reason: Error) => void;
+    timeout: ReturnType<typeof setTimeout>;
+};
+
+const CRYPTO_WORKER_TIMEOUT_MS = 30_000;
+const pendingCryptoRequests = new Map<string, PendingCryptoRequest>();
+let cryptoWorker: Worker;
+
+const rejectPendingCryptoRequests = (error: Error) => {
+    for (const pending of pendingCryptoRequests.values()) {
+        clearTimeout(pending.timeout);
+        pending.reject(error);
+    }
+    pendingCryptoRequests.clear();
+};
+
+const attachCryptoWorker = () => {
+    const worker = new CryptoWorker();
+    worker.addEventListener('message', (event: MessageEvent<CryptoWorkerResponse>) => {
+        const pending = pendingCryptoRequests.get(event.data.id);
+        if (!pending) return;
+        clearTimeout(pending.timeout);
+        pendingCryptoRequests.delete(event.data.id);
+        if (event.data.success) {
+            pending.resolve(event.data.result);
+        } else {
+            pending.reject(new Error(event.data.error || 'Crypto worker request failed.'));
+        }
+    });
+    worker.addEventListener('error', () => {
+        rejectPendingCryptoRequests(new Error('Crypto worker failed.'));
+        worker.terminate();
+        if (cryptoWorker === worker) cryptoWorker = attachCryptoWorker();
+    });
+    worker.addEventListener('messageerror', () => {
+        rejectPendingCryptoRequests(new Error('Crypto worker returned an invalid response.'));
+        worker.terminate();
+        if (cryptoWorker === worker) cryptoWorker = attachCryptoWorker();
+    });
+    return worker;
+};
+
+cryptoWorker = attachCryptoWorker();
+
 const runCryptoWorker = <T = unknown>(type: string, payload: unknown): Promise<T> => {
     return new Promise((resolve, reject) => {
-        const id = Date.now().toString() + Math.random().toString();
-        
-        const handler = (e: MessageEvent<CryptoWorkerResponse<T>>) => {
-            if (e.data.id === id) {
-                cryptoWorker.removeEventListener('message', handler);
-                if (e.data.success) {
-                    resolve(e.data.result);
-                } else {
-                    reject(new Error(e.data.error));
-                }
-            }
-        };
-        
-        cryptoWorker.addEventListener('message', handler);
-        cryptoWorker.postMessage({ type, payload, id });
+        const id = globalThis.crypto.randomUUID();
+        const timeout = setTimeout(() => {
+            const pending = pendingCryptoRequests.get(id);
+            if (!pending) return;
+            pendingCryptoRequests.delete(id);
+            pending.reject(new Error('Crypto worker request timed out.'));
+        }, CRYPTO_WORKER_TIMEOUT_MS);
+
+        pendingCryptoRequests.set(id, {
+            resolve: value => resolve(value as T),
+            reject,
+            timeout,
+        });
+
+        try {
+            cryptoWorker.postMessage({ type, payload, id });
+        } catch {
+            clearTimeout(timeout);
+            pendingCryptoRequests.delete(id);
+            reject(new Error('Unable to start crypto worker request.'));
+        }
     });
 };
 
@@ -62,7 +118,7 @@ type VaultKeyError = Error & {
     code: string;
 };
 
-const walletSaveQueues = new Map<string, Promise<boolean>>();
+const walletSaveQueues = new Map<string, Promise<void>>();
 
 const backfillVanityScoreMetadata = (wallets: Wallet[]): { wallets: Wallet[]; migrated: boolean } => {
     let migrated = false;
@@ -241,7 +297,15 @@ export const persistBiometricEncryptionKey = async (key: string): Promise<boolea
  * Retrieve the AES Encryption Key using biometric authentication.
  * Only call this when isBiometricAvailable() returns true.
  */
-export const getEncryptionKeyBiometric = async (): Promise<string> => {
+export type BiometricPromptText = {
+    reason: string;
+    title: string;
+    subtitle: string;
+};
+
+export const getEncryptionKeyBiometric = async (
+    prompt?: BiometricPromptText,
+): Promise<string> => {
     if (!Capacitor.isNativePlatform()) {
         return getEncryptionKeyFallback();
     }
@@ -275,7 +339,7 @@ export const getEncryptionKeyBiometric = async (): Promise<string> => {
         const storedVaultCipher = await getStoredVaultCipher();
         if (storedVaultCipher) {
             try {
-                const legacyKey = await getLegacyBiometricKey();
+                const legacyKey = await getLegacyBiometricKey(prompt);
                 if (legacyKey) {
                     await setDeviceProtectedVaultKey(legacyKey);
                     return legacyKey;
@@ -298,14 +362,14 @@ export const getEncryptionKeyBiometric = async (): Promise<string> => {
         return newKey;
     }
 
-    return getLegacyBiometricKey();
+    return getLegacyBiometricKey(prompt);
 };
 
-const getLegacyBiometricKey = async (): Promise<string> => {
+const getLegacyBiometricKey = async (prompt?: BiometricPromptText): Promise<string> => {
     await NativeBiometric.verifyIdentity({
-        reason: "Unlock xKey",
-        title: "xKey Authentication",
-        subtitle: "Verify your identity to access the vault",
+        reason: prompt?.reason || 'Unlock xKey',
+        title: prompt?.title || 'xKey Authentication',
+        subtitle: prompt?.subtitle || 'Verify your identity to access the vault',
         useFallback: true
     });
 
@@ -353,18 +417,19 @@ export const getEncryptionKeyFallback = async ({ createIfMissing = true }: { cre
  * Sensitive fields (privateKey, seedPhrase) are encrypted individually
  * before the entire array is encrypted.
  */
-export const saveWallets = async (wallets: Wallet[], key: string | null, isDecoy = false): Promise<boolean> => {
+export const saveWallets = async (wallets: Wallet[], key: string | null, isDecoy = false): Promise<void> => {
     const storageKey = isDecoy ? STORAGE_KEYS.DECOY_WALLETS : STORAGE_KEYS.WALLETS;
     const previous = walletSaveQueues.get(storageKey) || Promise.resolve();
 
     const saveTask = previous.catch(() => {}).then(async () => {
-        const encrypted = await runCryptoWorker<string>('ENCRYPT_WALLETS', { wallets, key });
-        await saveVaultCipher(storageKey, encrypted);
-        if (!isDecoy) await Preferences.set({ key: 'xkey_vault_last_changed_at', value: new Date().toISOString() });
-        return true;
-    }).catch((e) => {
-        console.error('Failed to save wallets', e);
-        return false;
+        const encrypted = await runCryptoWorker<string>('ENCRYPT_WALLETS', { wallets, key, isDecoy });
+        await persistAndVerify(encrypted, {
+            write: value => saveVaultCipher(storageKey, value),
+            read: async () => (await loadVaultCipher(storageKey)).value,
+        });
+        if (!isDecoy) {
+            await Preferences.set({ key: 'xkey_vault_last_changed_at', value: new Date().toISOString() });
+        }
     });
 
     const queuedTask = saveTask.finally(() => {
@@ -374,12 +439,7 @@ export const saveWallets = async (wallets: Wallet[], key: string | null, isDecoy
     });
     walletSaveQueues.set(storageKey, queuedTask);
 
-    try {
-        return await saveTask;
-    } catch (e) {
-        console.error('Failed to save wallets', e);
-        return false;
-    }
+    await saveTask;
 };
 
 /**
@@ -391,7 +451,8 @@ export const loadWallets = async (key: string | null, isDecoy = false): Promise<
     const { value, source } = await loadVaultCipher(storageKey);
     if (!value) return [];
     
-    let wallets = await runCryptoWorker<Wallet[]>('DECRYPT_WALLETS', { cipherText: value, key });
+    const needsCryptoMigration = !isVaultEnvelope(value);
+    let wallets = await runCryptoWorker<Wallet[]>('DECRYPT_WALLETS', { cipherText: value, key, isDecoy });
     const preMigrationWallets = wallets;
     
     // Run schema migrations
@@ -401,14 +462,16 @@ export const loadWallets = async (key: string | null, isDecoy = false): Promise<
     const { wallets: vanityBackfilled, migrated: didBackfillVanity } = backfillVanityScoreMetadata(wallets);
     wallets = vanityBackfilled;
     
-    // If migration happened, create an encrypted rollback snapshot before re-saving.
-    if (didMigrate || didBackfillVanity) {
-        if (didMigrate) {
+    // Create a rollback point before rewriting main-vault legacy crypto or schema.
+    if (didMigrate || didBackfillVanity || needsCryptoMigration) {
+        if (!isDecoy && (didMigrate || needsCryptoMigration)) {
             const { createEncryptedVaultSnapshot } = await import('./vaultSnapshot');
             await createEncryptedVaultSnapshot(preMigrationWallets, key, {
                 operation: 'migration',
                 schemaVersion: dryRun.targetSchema,
-                reason: `dry_run:${dryRun.changes.map(change => change.code).join(',')}`,
+                reason: needsCryptoMigration
+                    ? 'crypto_format:aes-gcm-v2'
+                    : `dry_run:${dryRun.changes.map(change => change.code).join(',')}`,
             });
         }
         await saveWallets(wallets, key, isDecoy);
@@ -423,22 +486,38 @@ export const loadWallets = async (key: string | null, isDecoy = false): Promise<
  * Encrypt a setting value before storing in Preferences.
  * Uses the vault AES key so settings are tied to the vault.
  */
-export const encryptSetting = (value: string | null, key: string | null): string => {
-    if (!value || !key) return value || '';
-    return CryptoJS.AES.encrypt(value, key).toString();
+export const encryptSetting = async (
+    value: string | null,
+    key: string | null,
+    storageKey: string,
+): Promise<string> => {
+    if (!value) return '';
+    if (!key) throw new Error('Vault key required to encrypt setting.');
+    return encryptVaultEnvelope(value, key, `setting:${storageKey}`);
 };
 
 /**
  * Decrypt a setting value read from Preferences.
+ * Versioned data is fail-closed. Legacy CBC and intentional plaintext values
+ * remain readable until the caller persists them again in V2 format.
  */
-export const decryptSetting = (cipher: string | null, key: string | null): string => {
-    if (!cipher || !key) return cipher || '';
+export const decryptSetting = async (
+    cipher: string | null,
+    key: string | null,
+    storageKey: string,
+): Promise<string> => {
+    if (!cipher) return '';
+    if (!key) throw new Error('Vault key required to decrypt setting.');
+    if (isVaultEnvelope(cipher)) {
+        return decryptVaultEnvelope(cipher, key, `setting:${storageKey}`);
+    }
+
     try {
         const bytes = CryptoJS.AES.decrypt(cipher, key);
         const result = bytes.toString(CryptoJS.enc.Utf8);
-        return result || cipher; // Return original if decrypt fails (legacy plaintext)
+        return result || cipher;
     } catch {
-        return cipher; // Return as-is for backward compatibility
+        return cipher;
     }
 };
 

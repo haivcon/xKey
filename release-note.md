@@ -1,4 +1,8 @@
-- 📲 Added offline wallet transfer via QR — no Bluetooth, Wi-Fi, or internet required.
-- 🔐 Export QR now carries full wallet data: address, private key, seed phrase, network, notes, tags, and HD details.
-- 📷 Added QR receive flow from the home tools area to scan and import wallets quickly.
-- 📁 Imported QR wallets go to the selected folder, or a new default "QR" folder when needed.
+- 🔐 Removed the fast backup password oracle while keeping legacy restores compatible.
+- 🛡️ Upgraded main, decoy, and sensitive PINs to salted PBKDF2 with safe migration.
+- 🔒 Moved vaults and encrypted settings to authenticated AES-256-GCM.
+- 💾 Added verified writes to prevent false success messages and silent data loss.
+- ⏱️ Made auto-lock and secret clipboard policies fail closed without resetting preferences.
+- 📥 Added strict size, row, schema, and depth limits for web and Android imports.
+- ⚙️ Made security settings imports transactional with automatic rollback.
+- ✅ Expanded security, fault-injection, Android, locale, smoke, and visual tests.

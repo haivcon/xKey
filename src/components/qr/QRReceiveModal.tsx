@@ -5,6 +5,7 @@ import { useT } from '../../contexts/LanguageContext';
 import CryptoJS from 'crypto-js';
 import PasswordInput from '../shared/PasswordInput';
 import type { Wallet } from '../../types';
+import { assertImportWalletsWithinLimits } from '../../utils/importFileLimits';
 
 type TransferQrChunk = {
   _xkey: 'transfer' | 'wallet-transfer';
@@ -13,6 +14,9 @@ type TransferQrChunk = {
   total: number;
   data: string;
 };
+
+const MAX_TRANSFER_QR_CHUNKS = 2_000;
+const MAX_TRANSFER_QR_CHUNK_CHARS = 16_384;
 
 type QRReceiveModalProps = {
   onClose: () => void;
@@ -26,7 +30,14 @@ const isTransferQrChunk = (value: unknown): value is TransferQrChunk => {
   return (chunk._xkey === 'transfer' || chunk._xkey === 'wallet-transfer')
     && Number.isInteger(chunk.part)
     && Number.isInteger(chunk.total)
-    && typeof chunk.data === 'string';
+    && typeof chunk.part === 'number'
+    && typeof chunk.total === 'number'
+    && chunk.total > 0
+    && chunk.total <= MAX_TRANSFER_QR_CHUNKS
+    && chunk.part > 0
+    && chunk.part <= chunk.total
+    && typeof chunk.data === 'string'
+    && chunk.data.length <= MAX_TRANSFER_QR_CHUNK_CHARS;
 };
 
 const getErrorMessage = (error: unknown): string => (
@@ -181,6 +192,7 @@ export default function QRReceiveModal({ onClose, onImport, targetFolder }: QRRe
 
       const payload = JSON.parse(decryptedString);
       if (!Array.isArray(payload)) throw new Error('Invalid payload format');
+      assertImportWalletsWithinLimits(payload);
 
       // Map to proper wallet format
       const importFolder = targetFolder && targetFolder !== 'All' ? targetFolder : t('qrReceive.defaultFolder');
@@ -189,6 +201,7 @@ export default function QRReceiveModal({ onClose, onImport, targetFolder }: QRRe
         groupId: importFolder,
         updatedAt: Date.now(),
       }));
+      assertImportWalletsWithinLimits(importedWallets);
 
       onImport(importedWallets);
     } catch {

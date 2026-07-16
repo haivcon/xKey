@@ -1,10 +1,11 @@
 import { saveVaultCipher, loadVaultCipher, runCryptoAction } from './storage';
+import { isVaultEnvelope } from './crypto/vaultEnvelope';
 import type { HDRoot } from '../types';
 
 const HD_ROOTS_KEY = 'xkey_hd_roots';
 const DECOY_HD_ROOTS_KEY = 'xkey_decoy_hd_roots';
 
-const hdSaveQueues = new Map<string, Promise<boolean>>();
+const hdSaveQueues = new Map<string, Promise<void>>();
 
 const waitForPendingHDSave = async (storageKey: string): Promise<void> => {
   const pending = hdSaveQueues.get(storageKey);
@@ -13,34 +14,50 @@ const waitForPendingHDSave = async (storageKey: string): Promise<void> => {
 
 /**
  * Load all HD Roots decrypted from fragmented/legacy secure vault storage.
+ * Legacy ciphertext is rewritten as AES-GCM only after successful decryption.
  */
-export const loadHDRoots = async (key: string | null, isDecoy = false): Promise<HDRoot[]> => {
+export const loadHDRoots = async (
+  key: string | null,
+  isDecoy = false,
+): Promise<HDRoot[]> => {
   const storageKey = isDecoy ? DECOY_HD_ROOTS_KEY : HD_ROOTS_KEY;
   await waitForPendingHDSave(storageKey);
-  try {
-    const { value } = await loadVaultCipher(storageKey);
-    if (!value) return [];
-    return await runCryptoAction<HDRoot[]>('DECRYPT_HD_ROOTS', { cipherText: value, key });
-  } catch (e) {
-    console.error('Failed to load HD Roots', e);
-    return [];
+  const { value } = await loadVaultCipher(storageKey);
+  if (!value) return [];
+
+  const roots = await runCryptoAction<HDRoot[]>('DECRYPT_HD_ROOTS', {
+    cipherText: value,
+    key,
+    isDecoy,
+  });
+  if (!isVaultEnvelope(value)) {
+    await saveHDRoots(roots, key, isDecoy);
   }
+  return roots;
 };
 
 /**
- * Encrypt and save HD Roots to fragmented/legacy secure vault storage.
+ * Encrypt and persist HD Roots. Failures propagate to the mutation caller.
  */
-export const saveHDRoots = async (roots: HDRoot[], key: string | null, isDecoy = false): Promise<boolean> => {
+export const saveHDRoots = async (
+  roots: HDRoot[],
+  key: string | null,
+  isDecoy = false,
+): Promise<void> => {
   const storageKey = isDecoy ? DECOY_HD_ROOTS_KEY : HD_ROOTS_KEY;
   const previous = hdSaveQueues.get(storageKey) || Promise.resolve();
 
   const saveTask = previous.catch(() => {}).then(async () => {
-    const encrypted = await runCryptoAction<string>('ENCRYPT_HD_ROOTS', { roots, key });
+    const encrypted = await runCryptoAction<string>('ENCRYPT_HD_ROOTS', {
+      roots,
+      key,
+      isDecoy,
+    });
     await saveVaultCipher(storageKey, encrypted);
-    return true;
-  }).catch((e) => {
-    console.error('Failed to save HD Roots', e);
-    return false;
+    const persisted = await loadVaultCipher(storageKey);
+    if (persisted.value !== encrypted) {
+      throw new Error('HD root persistence verification failed.');
+    }
   });
 
   const queuedTask = saveTask.finally(() => {
@@ -50,12 +67,7 @@ export const saveHDRoots = async (roots: HDRoot[], key: string | null, isDecoy =
   });
   hdSaveQueues.set(storageKey, queuedTask);
 
-  try {
-    return await saveTask;
-  } catch (e) {
-    console.error('Failed to save HD Roots', e);
-    return false;
-  }
+  await saveTask;
 };
 
 /**
@@ -66,11 +78,11 @@ export const createHDRoot = async (
   seedPhrase: string,
   wordCount: 12 | 24,
   key: string | null,
-  isDecoy = false
+  isDecoy = false,
 ): Promise<HDRoot> => {
   const roots = await loadHDRoots(key, isDecoy);
   const newRoot: HDRoot = {
-    _id: 'hdr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 9),
+    _id: `hdr_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 9)}`,
     name,
     encryptedSeed: seedPhrase,
     wordCount,
@@ -78,17 +90,21 @@ export const createHDRoot = async (
     lastDerivedIndex: -1,
     networks: [],
   };
-  roots.push(newRoot);
-  await saveHDRoots(roots, key, isDecoy);
+  await saveHDRoots([...roots, newRoot], key, isDecoy);
   return newRoot;
 };
 
 /**
- * Delete an HD Root from the storage.
+ * Delete an HD Root from storage after a verified persistence commit.
  */
-export const deleteHDRoot = async (id: string, key: string | null, isDecoy = false): Promise<boolean> => {
+export const deleteHDRoot = async (
+  id: string,
+  key: string | null,
+  isDecoy = false,
+): Promise<boolean> => {
   const roots = await loadHDRoots(key, isDecoy);
-  const filtered = roots.filter(r => r._id !== id);
+  const filtered = roots.filter(root => root._id !== id);
   if (filtered.length === roots.length) return false;
-  return await saveHDRoots(filtered, key, isDecoy);
+  await saveHDRoots(filtered, key, isDecoy);
+  return true;
 };

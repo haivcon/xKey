@@ -53,6 +53,12 @@ export default function useVaultAuth({
     setAuthErrorRef.current = setAuthError;
   }, [setAuthError]);
 
+  const getBiometricPrompt = useCallback(() => ({
+    reason: tRef.current('deviceUnlock.unlockButton'),
+    title: tRef.current('deviceUnlock.title'),
+    subtitle: tRef.current('deviceUnlock.subtitle'),
+  }), []);
+
   useEffect(() => {
     if (showSplash) return;
 
@@ -79,7 +85,7 @@ export default function useVaultAuth({
             setNeedsPinAuth(true);
           } else {
             try {
-              const key = await getEncryptionKeyBiometric();
+              const key = await getEncryptionKeyBiometric(getBiometricPrompt());
               setAesKey(key);
               const savedWallets = await loadWallets(key);
               if (savedWallets && savedWallets.length > 0) {
@@ -107,7 +113,7 @@ export default function useVaultAuth({
     };
 
     authenticate();
-  }, [showSplash, useDeviceCredentialUnlock]);
+  }, [getBiometricPrompt, showSplash, useDeviceCredentialUnlock]);
 
   const handlePinSuccess = useCallback(async (isDecoy = false, options: PinSuccessOptions = {}) => {
     try {
@@ -131,12 +137,12 @@ export default function useVaultAuth({
 
   const handleDeviceUnlock = useCallback(async () => {
     setIsDecoyMode(false);
-    const key = await getEncryptionKeyBiometric();
+    const key = await getEncryptionKeyBiometric(getBiometricPrompt());
     setAesKey(key);
     const savedWallets = await loadWallets(key);
     setWalletsRef.current(savedWallets && savedWallets.length > 0 ? savedWallets : []);
     setNeedsPinAuth(false);
-  }, []);
+  }, [getBiometricPrompt]);
 
   const resetVaultLock = useCallback(() => {
     setAesKey(null);

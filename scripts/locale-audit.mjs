@@ -21,6 +21,29 @@ const allowedEnglish = new Set([
 ]);
 
 const englishLeakPattern = /\b(Wrong password|Portable Backups|Enter master password|Change network|Copied!|Backup is valid|Pick backup file)\b/;
+const allowedIdenticalEnglishValues = new Set([
+  ...allowedEnglish,
+  'AES-256-GCM',
+  'AES-GCM',
+  'PBKDF2',
+  'PBKDF2-SHA256',
+  'Argon2id',
+  'Base',
+  'Bitcoin',
+  'Ethereum',
+  'Polygon',
+  'Solana',
+  'USDC',
+  'USDT',
+]);
+
+const shouldWarnIdenticalEnglish = (value) => (
+  typeof value === 'string'
+  && value.trim().length >= 3
+  && /[A-Za-z]/.test(value)
+  && !allowedIdenticalEnglishValues.has(value.trim())
+);
+
 const requiredLocalizedKeys = [
   'createWallet.vanityExtraCaptureTitle',
   'createWallet.vanityExtraCaptureDesc',
@@ -68,6 +91,7 @@ for (const file of files) {
 
 const base = flatten(locales.en);
 let failed = false;
+let qualityWarningCount = 0;
 
 for (const [code, tree] of Object.entries(locales)) {
   if (code === 'en') continue;
@@ -78,6 +102,9 @@ for (const [code, tree] of Object.entries(locales)) {
     .filter(([, value]) => typeof value === 'string')
     .filter(([, value]) => englishLeakPattern.test(value) && !allowedEnglish.has(value));
   const untranslated = requiredLocalizedKeys.filter(key => flat[key] === base[key]);
+  const identicalEnglish = Object.entries(flat)
+    .filter(([key, value]) => value === base[key] && shouldWarnIdenticalEnglish(value))
+    .filter(([key]) => !requiredLocalizedKeys.includes(key));
 
   if (missing.length || extra.length || leaked.length || untranslated.length) {
     failed = true;
@@ -87,7 +114,19 @@ for (const [code, tree] of Object.entries(locales)) {
     if (leaked.length) console.error(`  English leaks: ${leaked.slice(0, 20).map(([key, value]) => `${key}="${value}"`).join(', ')}`);
     if (untranslated.length) console.error(`  Required translations still use English: ${untranslated.join(', ')}`);
   }
+
+  if (identicalEnglish.length) {
+    qualityWarningCount += identicalEnglish.length;
+    console.warn(
+      `Locale ${code} quality warning: ${identicalEnglish.length} value(s) are identical to English. `
+      + `${identicalEnglish.slice(0, 20).map(([key]) => key).join(', ')}`
+      + `${identicalEnglish.length > 20 ? ' ...' : ''}`,
+    );
+  }
 }
 
 if (failed) process.exit(1);
-console.log(`Locale audit passed for ${files.length} locale files.`);
+console.log(
+  `Locale audit passed for ${files.length} locale files.`
+  + (qualityWarningCount ? ` Translation-quality warnings: ${qualityWarningCount}.` : ''),
+);

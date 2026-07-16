@@ -110,7 +110,10 @@ export async function secureCopy(
           return false;
         }
       } catch {
-        // If settings cannot be read, continue with copy so existing behavior is not broken.
+        // Secret policy is security-sensitive: an unreadable policy must not
+        // silently bypass the user's copy restriction.
+        options.onBlocked?.();
+        return false;
       }
     }
 

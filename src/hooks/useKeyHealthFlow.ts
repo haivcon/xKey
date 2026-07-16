@@ -49,8 +49,8 @@ export default function useKeyHealthFlow({
     const checkedById = new Map(checkedTargets.map(wallet => [getWalletIdentity(wallet), wallet]));
     const checked = wallets.map(wallet => checkedById.get(getWalletIdentity(wallet)) || wallet);
 
-    setWallets(checked);
     await saveWallets(checked, aesKey, isDecoyMode);
+    setWallets(checked);
 
     const passed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'passed').length;
     const failed = checkedTargets.filter(wallet => wallet.lastProofOfKeysStatus === 'failed').length;
@@ -80,8 +80,8 @@ export default function useKeyHealthFlow({
     if (!aesKey || targetWallets.length === 0) return;
     const targetIds = new Set(targetWallets.map(getWalletIdentity));
     const updated = wallets.map(wallet => targetIds.has(getWalletIdentity(wallet)) ? { ...wallet, ...patch } : wallet);
-    setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
+    setWallets(updated);
   }, [aesKey, wallets, getWalletIdentity, setWallets, isDecoyMode]);
 
   return {

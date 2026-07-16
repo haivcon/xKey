@@ -31,7 +31,7 @@ export default function useAutoBackup(aesKey: string | null): void {
         const { value: encryptedPassword } = await Preferences.get({ key: PASSWORD_KEY });
         if (!encryptedPassword) return; // No password set, skip
 
-        const password = decryptSetting(encryptedPassword, aesKey);
+        const password = await decryptSetting(encryptedPassword, aesKey, PASSWORD_KEY);
         if (!password) return;
 
         const { value: lastStr } = await Preferences.get({ key: LAST_KEY });

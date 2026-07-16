@@ -79,12 +79,10 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
   const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onLockRef = useRef(onLock);
   const settingsRef = useRef<ContextAutoLockSettings>({
-    enabled: false,
+    enabled: true,
     idleMs: DEFAULT_MS,
     preset: DEFAULT_PRESET,
     ...PRESET_SETTINGS[DEFAULT_PRESET],
-    lockAfterSecretCopy: false,
-    screenOffLock: false,
   });
   const backgroundAtRef = useRef(0);
   const blurAtRef = useRef(0);
@@ -173,14 +171,9 @@ export default function useAutoLock(onLock: () => void, enabled = true): void {
         screenOffLock: autolockEnabled && usesContextTimings && (screenOffValue === null ? presetDefaults.screenOffLock : screenOffValue === 'true'),
       };
     } catch {
-      settingsRef.current = {
-        enabled: false,
-        idleMs: DEFAULT_MS,
-        preset: DEFAULT_PRESET,
-        ...PRESET_SETTINGS[DEFAULT_PRESET],
-        lockAfterSecretCopy: false,
-        screenOffLock: false,
-      };
+      // Fail closed: retain the last successfully loaded settings. Before the
+      // first successful read, settingsRef contains the conservative defaults.
+      void appendAuditLog('app.auto_lock_settings_read_failed').catch(() => {});
     }
   }, []);
 

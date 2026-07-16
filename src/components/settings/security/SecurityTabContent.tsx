@@ -22,7 +22,13 @@ import {
 import { CLIPBOARD_TIMEOUT_KEY } from '../../../utils/clipboard';
 import { SECRET_COPY_DISABLED_KEY } from '../../../utils/dataSensitivity';
 import { hapticTap, hapticSuccess } from '../../../utils/haptics';
-import { PIN_HASH_KEY, KILL_SWITCH_KEY, DECOY_PIN_HASH_KEY } from '../../auth/PinLockScreen';
+import { KILL_SWITCH_KEY } from '../../auth/PinLockScreen';
+import {
+  createPinCredential,
+  DECOY_PIN_HASH_KEY,
+  PIN_HASH_KEY,
+  verifyPinCredential,
+} from '../../../features/security/pinCredential';
 import { getVaultSecurityStatus, isBiometricAvailable, setHardwareBoundOnlyMode } from '../../../utils/storage';
 import { getDeviceIntegrityRisk, isDeviceIntegrityGuardEnabled, setDeviceIntegrityGuardEnabled, type DeviceIntegrityRisk } from '../../../utils/deviceIntegrity';
 import { useScrambledKeyboard } from '../../../contexts/ScrambledKeyboardContext';
@@ -30,7 +36,7 @@ import { useSecureDisplay } from '../../../contexts/SecureDisplayContext';
 import { useScreenSecurity } from '../../../contexts/ScreenSecurityContext';
 import Notice from '../../shared/Notice';
 import PasswordInput from '../../shared/PasswordInput';
-import { getErrorMessage, hashPin, isSixDigitPin, parseStoredInt, sanitizePinInput, type PinStep } from '../securityTabUtils';
+import { getErrorMessage, isSixDigitPin, parseStoredInt, sanitizePinInput, type PinStep } from '../securityTabUtils';
 import { AdvancedSecuritySection } from './AdvancedSecuritySection';
 import { SecurityStatusSection } from './SecurityStatusSection';
 import { PinBiometricSection } from './PinBiometricSection';
@@ -39,6 +45,10 @@ import { SecurityRecommendationsSection } from './SecurityRecommendationsSection
 import { calculateSecurityScore, type SecurityScoreItem } from './securityScore';
 import { isSensitivePinEnabled, removeSensitivePin, requireSensitivePin, setSensitivePin } from '../../../features/security/sensitivePin';
 import { LOGO_LOCK_ENABLED_KEY, LOGO_LOCK_SETTINGS_CHANGED_EVENT } from '../../../features/security/logoLock';
+import {
+  applySecurityConfigImport,
+  validateSecurityConfigImportPayload,
+} from '../../../features/security/securityConfigImport';
 
 export type SecurityTabProps = {
   aesKey: string;
@@ -238,11 +248,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
   const formatAutoLock = (ms: number) => {
     if (ms <= 0) return t('settings.immediately');
     const seconds = Math.round(ms / 1000);
-    if (seconds < 60) return `${seconds} s`;
+    if (seconds < 60) return `${seconds} ${t('settings.autoLockSeconds')}`;
     const minutes = Math.round(ms / 60000);
     if (minutes < 60) return `${minutes} ${t('settings.autoLockMinutes')}`;
     const hours = minutes / 60;
-    return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} h`;
+    return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} ${t('settings.autoLockHours')}`;
   };
 
   const saveClipboard = async (ms: number | string) => {
@@ -486,7 +496,8 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         setPinCurrent('');
         return;
       }
-      if (hashPin(pinCurrent) !== stored) {
+      const currentVerification = await verifyPinCredential(pinCurrent, stored, 'main');
+      if (!currentVerification.valid) {
         const nextAttempts = pinFailedAttempts + 1;
         const delaySeconds = nextAttempts >= 5 ? 30 : nextAttempts >= 3 ? 10 : 0;
         setPinFailedAttempts(nextAttempts);
@@ -497,6 +508,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
           })
           : t('settings.incorrectCurrentPin'));
         return;
+      }
+      if (currentVerification.upgradedRecord) {
+        await Preferences.set({ key: PIN_HASH_KEY, value: currentVerification.upgradedRecord }).catch(() => {});
       }
       setPinFailedAttempts(0);
       setPinBackoffUntil(0);
@@ -518,7 +532,7 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         setPinStep('new'); setPinNew(''); setPinConfirmVal('');
         return;
       }
-      await Preferences.set({ key: PIN_HASH_KEY, value: hashPin(nextPin) });
+      await Preferences.set({ key: PIN_HASH_KEY, value: await createPinCredential(nextPin, 'main') });
       hapticSuccess();
       showToast(t('settings.pinChangedSuccess'), 'success');
       setShowChangePin(false);
@@ -559,8 +573,11 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
     const decoyPin = sanitizePinInput(decoyPinInput);
     if (!isSixDigitPin(decoyPin)) { showToast(t('pinLock.enter6Digits'), 'error'); return; }
     const { value: mainPinHash } = await Preferences.get({ key: PIN_HASH_KEY });
-    if (hashPin(decoyPin) === mainPinHash) { showToast(t('settings.decoySameAsMain'), 'error'); return; }
-    await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: hashPin(decoyPin) });
+    if ((await verifyPinCredential(decoyPin, mainPinHash, 'main')).valid) {
+      showToast(t('settings.decoySameAsMain'), 'error');
+      return;
+    }
+    await Preferences.set({ key: DECOY_PIN_HASH_KEY, value: await createPinCredential(decoyPin, 'decoy') });
     setHasDecoyPin(true); setShowDecoyPinInput(false); setDecoyPinInput('');
     showToast(t('settings.decoyEnabled'), 'success');
   };
@@ -780,16 +797,9 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
       if (!file) return;
 
       try {
-        const payload = JSON.parse(await file.text()) as {
-          app?: string;
-          reportType?: string;
-          enabled?: Array<{ key?: string }>;
-        };
-
-        if (payload.app !== 'xKey' || payload.reportType !== 'security-report' || !Array.isArray(payload.enabled)) {
-          showToast(t('settings.securityConfigImportInvalid', { default: 'Tệp cấu hình bảo mật không hợp lệ.' }), 'error');
-          return;
-        }
+        const payload = validateSecurityConfigImportPayload(
+          JSON.parse(await file.text()) as unknown,
+        );
 
         const confirmed = await showConfirm(t('settings.securityConfigImportConfirm', { default: 'Nhập cấu hình sẽ chỉ áp dụng các mục có thể bật tự động. Các mục cần xác minh sẽ được điều hướng đến vùng cài đặt tương ứng.' }), {
           title: t('settings.importSecurityConfig', { default: 'Nhập cấu hình' }),
@@ -797,30 +807,16 @@ export function SecurityTabContent({ aesKey }: SecurityTabProps) {
         });
         if (!confirmed) return;
 
-        const enabledKeys = new Set(payload.enabled.map(item => item.key).filter(Boolean));
-        const tasks: Promise<unknown>[] = [];
+        const applied = await applySecurityConfigImport(payload);
+        const { enabledKeys } = applied;
 
-        if (enabledKeys.has('auto-lock')) {
-          tasks.push(
-            Preferences.set({ key: AUTOLOCK_ENABLED_KEY, value: 'true' }),
-            Preferences.set({ key: AUTOLOCK_KEY, value: String(DEFAULT_MS) }),
-          );
+        if (applied.autoLockEnabled) {
           setAutoLockEnabled(true);
-          setCurrentAutoLockMs(DEFAULT_MS);
+          if (applied.autoLockMs != null) setCurrentAutoLockMs(applied.autoLockMs);
+          window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
         }
-
-        if (enabledKeys.has('secret-copy')) {
-          tasks.push(Preferences.set({ key: SECRET_COPY_DISABLED_KEY, value: 'true' }));
-          setSecretCopyDisabled(true);
-        }
-
-        if (enabledKeys.has('device-integrity')) {
-          tasks.push(setDeviceIntegrityGuardEnabled(true));
-          setDeviceIntegrityGuard(true);
-        }
-
-        await Promise.all(tasks);
-        window.dispatchEvent(new Event(AUTOLOCK_SETTINGS_CHANGED_EVENT));
+        if (applied.secretCopyDisabled) setSecretCopyDisabled(true);
+        if (applied.deviceIntegrityGuard) setDeviceIntegrityGuard(true);
         showToast(t('settings.securityConfigImported', { default: 'Đã nhập cấu hình bảo mật' }), 'success');
 
         const needsManualSetup = ['master-password', 'sensitive-pin', 'screen-capture', 'hardware-bound', 'decoy-vault']

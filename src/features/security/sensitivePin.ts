@@ -1,6 +1,6 @@
-import CryptoJS from 'crypto-js';
 import { Preferences } from '@capacitor/preferences';
 import { appendAuditLog } from '../../utils/auditLog';
+import { createPinCredential, verifyPinCredential } from './pinCredential';
 import { requestSensitivePinPrompt } from './sensitivePinPrompt';
 
 export const SENSITIVE_PIN_HASH_KEY = 'xkey_sensitive_pin_hash';
@@ -10,10 +10,6 @@ export const SENSITIVE_PIN_LOCK_UNTIL_KEY = 'xkey_sensitive_pin_lock_until';
 const PIN_LENGTH = 6;
 const MAX_ATTEMPTS_BEFORE_LOCK = 5;
 const LOCK_DURATION_MS = 5 * 60 * 1000;
-
-export function hashSensitivePin(pin: string): string {
-  return CryptoJS.SHA256(`${pin}:xkey_sensitive_pin_salt_v1`).toString();
-}
 
 export function isValidSensitivePin(pin: string): boolean {
   return new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pin);
@@ -30,7 +26,7 @@ export async function setSensitivePin(pin: string): Promise<void> {
   }
 
   await Promise.all([
-    Preferences.set({ key: SENSITIVE_PIN_HASH_KEY, value: hashSensitivePin(pin) }),
+    Preferences.set({ key: SENSITIVE_PIN_HASH_KEY, value: await createPinCredential(pin, 'sensitive') }),
     Preferences.set({ key: SENSITIVE_PIN_ATTEMPTS_KEY, value: '0' }),
     Preferences.remove({ key: SENSITIVE_PIN_LOCK_UNTIL_KEY }),
   ]);
@@ -74,8 +70,16 @@ export async function verifySensitivePin(pin: string): Promise<boolean> {
   const { value: storedHash } = await Preferences.get({ key: SENSITIVE_PIN_HASH_KEY });
   if (!storedHash) return true;
 
-  const ok = isValidSensitivePin(pin) && hashSensitivePin(pin) === storedHash;
-  if (ok) {
+  const verification = isValidSensitivePin(pin)
+    ? await verifyPinCredential(pin, storedHash, 'sensitive')
+    : { valid: false };
+  if (verification.valid) {
+    if ('upgradedRecord' in verification && verification.upgradedRecord) {
+      await Preferences.set({
+        key: SENSITIVE_PIN_HASH_KEY,
+        value: verification.upgradedRecord,
+      }).catch(() => {});
+    }
     await Promise.all([
       Preferences.set({ key: SENSITIVE_PIN_ATTEMPTS_KEY, value: '0' }),
       Preferences.remove({ key: SENSITIVE_PIN_LOCK_UNTIL_KEY }),

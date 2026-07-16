@@ -94,26 +94,28 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
       Preferences.get({ key: pinnedKey }),
       Preferences.get({ key: defaultKey }),
     ])
-      .then(([{ value }, { value: pinnedValue }, { value: defaultValue }]) => {
-        if (!value) {
-          setCustomFolders([]);
-        } else {
-          const decoded = decryptSetting(value, aesKey);
+      .then(async ([{ value }, { value: pinnedValue }, { value: defaultValue }]) => {
+        const [decoded, decodedPinned, decodedDefault] = await Promise.all([
+          value ? decryptSetting(value, aesKey, storageKey) : Promise.resolve(''),
+          pinnedValue ? decryptSetting(pinnedValue, aesKey, pinnedKey) : Promise.resolve(''),
+          defaultValue ? decryptSetting(defaultValue, aesKey, defaultKey) : Promise.resolve(''),
+        ]);
+
+        if (decoded) {
           const parsed = JSON.parse(decoded);
           if (Array.isArray(parsed)) {
             setCustomFolders(parsed.filter(Boolean).map(String));
           }
         }
 
-        if (pinnedValue) {
-          const decodedPinned = decryptSetting(pinnedValue, aesKey);
+        if (decodedPinned) {
           const parsedPinned = JSON.parse(decodedPinned);
           if (Array.isArray(parsedPinned)) {
             setPinnedFolders(parsedPinned.filter(Boolean).map(String));
           }
         }
 
-        setDefaultFolder(decryptSetting(defaultValue, aesKey) || '');
+        setDefaultFolder(decodedDefault);
       })
       .catch(() => {
         setCustomFolders([]);
@@ -129,29 +131,39 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
 
   const persistCustomFolders = useCallback(async (nextFolders: string[]) => {
     const normalized = [...new Set(nextFolders.map(f => String(f || '').trim()).filter(Boolean))];
-    setCustomFolders(normalized);
     const storageKey = isDecoyMode ? DECOY_CUSTOM_FOLDERS_KEY : CUSTOM_FOLDERS_KEY;
-    await Preferences.set({ key: storageKey, value: encryptSetting(JSON.stringify(normalized), aesKey) });
+    await Preferences.set({
+      key: storageKey,
+      value: await encryptSetting(JSON.stringify(normalized), aesKey, storageKey),
+    });
+    setCustomFolders(normalized);
     return normalized;
   }, [aesKey, isDecoyMode]);
 
   const persistPinnedFolders = useCallback(async (nextFolders: string[]) => {
     const normalized = [...new Set(nextFolders.map(f => String(f || '').trim()).filter(f => f && f !== 'All'))];
-    setPinnedFolders(normalized);
     const storageKey = isDecoyMode ? DECOY_PINNED_FOLDERS_KEY : PINNED_FOLDERS_KEY;
-    await Preferences.set({ key: storageKey, value: encryptSetting(JSON.stringify(normalized), aesKey) });
+    await Preferences.set({
+      key: storageKey,
+      value: await encryptSetting(JSON.stringify(normalized), aesKey, storageKey),
+    });
+    setPinnedFolders(normalized);
     return normalized;
   }, [aesKey, isDecoyMode]);
 
   const persistDefaultFolder = useCallback(async (folderName: string) => {
     const next = String(folderName || '').trim();
-    setDefaultFolder(next);
     const storageKey = isDecoyMode ? DECOY_DEFAULT_FOLDER_KEY : DEFAULT_FOLDER_KEY;
     if (!next) {
       await Preferences.remove({ key: storageKey });
+      setDefaultFolder('');
       return '';
     }
-    await Preferences.set({ key: storageKey, value: encryptSetting(next, aesKey) });
+    await Preferences.set({
+      key: storageKey,
+      value: await encryptSetting(next, aesKey, storageKey),
+    });
+    setDefaultFolder(next);
     return next;
   }, [aesKey, isDecoyMode]);
 
@@ -215,8 +227,8 @@ export default function useWallets(aesKey: string | null, isDecoyMode: boolean):
   // --- Mutations ---
 
   const persist = useCallback(async (updated: XKeyWallet[]) => {
-    setWallets(updated);
     await saveWallets(updated, aesKey, isDecoyMode);
+    setWallets(updated);
   }, [aesKey, isDecoyMode]);
 
   const showUndoToast = useCallback((message: string, previousWallets: XKeyWallet[], type: ToastType = 'info') => {

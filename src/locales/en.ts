@@ -728,6 +728,8 @@ export default {
     "customMinutes": "Custom time (minutes)",
     "autoLockRangeError": "Enter a time from 1 minute to 24 hours.",
     "autoLockMinutes": "min",
+    "autoLockSeconds": "sec",
+    "autoLockHours": "hr",
     "autoLockCurrent": "Current",
     "autoLockDesc": "Automatically locks the vault after xKey has been idle for the selected time. This protects the vault if you leave the app open, switch away, or forget to lock it manually after startup or unlock.",
     "immediately": "Immediately",

@@ -1,5 +1,11 @@
 import Papa from 'papaparse';
 import type { Wallet } from '../../types';
+import {
+  assertImportHeadersWithinLimits,
+  assertImportWalletsWithinLimits,
+  MAX_IMPORT_FIELD_LENGTHS,
+  MAX_IMPORT_WALLETS,
+} from '../../utils/importFileLimits';
 
 export type CsvWalletColumnKey = keyof Pick<Wallet, 'name' | 'address' | 'balance' | 'groupId' | 'network' | 'privateKey' | 'seedPhrase'>;
 export type CsvImportColumnKey = CsvWalletColumnKey | 'ignore';
@@ -80,8 +86,9 @@ export function getImportFolderName(fileName: string, targetFolderName = ''): st
 export function parseJsonWallets(rawString: string, folderName: string): Wallet[] {
   const jsonData = JSON.parse(rawString.trim()) as Array<Record<string, unknown>>;
   if (!Array.isArray(jsonData)) throw new Error('Expected JSON array');
+  assertImportWalletsWithinLimits(jsonData);
 
-  return jsonData.map(row => ({
+  const wallets = jsonData.map(row => ({
     name: String(row.name || row.Name || ''),
     address: String(row.address || row.Address || row.wallet || ''),
     privateKey: String(row.privateKey || row.private_key || row.pk || ''),
@@ -93,21 +100,29 @@ export function parseJsonWallets(rawString: string, folderName: string): Wallet[
     groupId: folderName,
     createdAt: Number(row.createdAt || Date.now()),
   }));
+  assertImportWalletsWithinLimits(wallets);
+  return wallets;
 }
 
 export function parseTextWallets(rawString: string, folderName: string): Wallet[] {
-  return rawString
+  const lines = rawString
     .trim()
     .split('\n')
     .map(line => line.trim())
-    .filter(Boolean)
-    .map((line, i) => ({
-      name: `Wallet ${i + 1}`,
-      address: line,
-      groupId: folderName,
-      createdAt: Date.now(),
-      network: 'ETH',
-    }));
+    .filter(Boolean);
+  if (lines.length > MAX_IMPORT_WALLETS) {
+    throw new Error(`Import exceeds the ${MAX_IMPORT_WALLETS} wallet limit.`);
+  }
+
+  const wallets = lines.map((line, i) => ({
+    name: `Wallet ${i + 1}`,
+    address: line,
+    groupId: folderName,
+    createdAt: Date.now(),
+    network: 'ETH',
+  }));
+  assertImportWalletsWithinLimits(wallets);
+  return wallets;
 }
 
 function guessCsvColumn(headers: string[], key: CsvWalletColumnKey): string {
@@ -135,6 +150,23 @@ export function guessCsvImportMapping(headers: string[]): CsvImportMapping {
   };
 }
 
+function assertCsvRowsWithinLimits(
+  headers: string[],
+  rows: Array<Record<string, unknown>>,
+): void {
+  assertImportHeadersWithinLimits(headers);
+  if (rows.length > MAX_IMPORT_WALLETS) {
+    throw new Error(`Import exceeds the ${MAX_IMPORT_WALLETS} wallet limit.`);
+  }
+  for (const [rowIndex, row] of rows.entries()) {
+    for (const value of Object.values(row)) {
+      if (String(value ?? '').length > MAX_IMPORT_FIELD_LENGTHS.notes) {
+        throw new Error(`CSV cell exceeds the allowed length at row ${rowIndex + 2}.`);
+      }
+    }
+  }
+}
+
 function parseCsvRows(rawString: string): Promise<{ headers: string[]; rows: Array<Record<string, unknown>> }> {
   return new Promise((resolve, reject) => {
     Papa.parse(rawString.replace(/^\uFEFF/, ''), {
@@ -147,10 +179,16 @@ function parseCsvRows(rawString: string): Promise<{ headers: string[]; rows: Arr
           return;
         }
 
-        resolve({
-          headers: results.meta.fields || [],
-          rows: results.data,
-        });
+        try {
+          const headers = results.meta.fields || [];
+          assertCsvRowsWithinLimits(headers, results.data);
+          resolve({
+            headers,
+            rows: results.data,
+          });
+        } catch (error) {
+          reject(error);
+        }
       },
       error: reject,
     });
@@ -162,7 +200,7 @@ export function mapCsvRowsToWallets(
   folderName: string,
   mapping: CsvImportMapping,
 ): Wallet[] {
-  return rows.map(row => {
+  const wallets = rows.map(row => {
     const normalizedRow: Wallet = {
       _raw: Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? '')])),
       groupId: folderName,
@@ -182,6 +220,8 @@ export function mapCsvRowsToWallets(
 
     return normalizedRow;
   });
+  assertImportWalletsWithinLimits(wallets);
+  return wallets;
 }
 
 export function validateCsvWallets(wallets: Wallet[], existingWallets: Wallet[] = []): CsvImportIssue[] {
@@ -334,8 +374,13 @@ export function parseCsvWallets(rawString: string, folderName: string): Promise<
           return;
         }
 
-        const headers = results.meta.fields || [];
-        resolve(mapCsvRowsToWallets(results.data, folderName, guessCsvImportMapping(headers)));
+        try {
+          const headers = results.meta.fields || [];
+          assertCsvRowsWithinLimits(headers, results.data);
+          resolve(mapCsvRowsToWallets(results.data, folderName, guessCsvImportMapping(headers)));
+        } catch (error) {
+          reject(error);
+        }
       },
       error: reject,
     });
