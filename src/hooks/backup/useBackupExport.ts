@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { createPasswordChallengeChoices, getPasswordChallengeProgress, type PasswordChallengeChoice } from '../../features/backup/passwordChallenge';
 import { loadWallets, saveWallets } from '../../utils/storage';
 import { exportPortableBackup } from '../../utils/backup/backupUtils';
-import { BACKUP_PASSWORD_MIN_LENGTH } from '../../utils/backup/backupPasswordPolicy';
+import { isBackupExportPasswordLongEnough } from '../../utils/backup/backupPasswordPolicy';
 import { markWalletsBackedUp } from '../../utils/keyHealth';
 import { hapticSuccess } from '../../utils/haptics';
 import { requireSensitiveAction } from '../../features/security/sensitiveActions';
@@ -78,7 +78,7 @@ export default function useBackupExport({ aesKey, isDecoyMode, showToast, t }: U
   }, [aesKey, backupFileName, backupPassword, closeBackupExport, isDecoyMode, showToast, t]);
 
   const handleExportBackup = useCallback(async () => {
-    if (!backupPassword || backupPassword.length < BACKUP_PASSWORD_MIN_LENGTH) {
+    if (!isBackupExportPasswordLongEnough(backupPassword)) {
       showToast?.(t('settings.passwordMinError'), 'warning');
       return;
     }

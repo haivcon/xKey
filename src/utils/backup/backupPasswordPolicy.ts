@@ -1,4 +1,9 @@
+export const BACKUP_EXPORT_PASSWORD_MIN_LENGTH = 6;
 export const BACKUP_PASSWORD_MIN_LENGTH = 12;
+
+export const isBackupExportPasswordLongEnough = (password: string): boolean => (
+  password.length >= BACKUP_EXPORT_PASSWORD_MIN_LENGTH
+);
 
 export type BackupPasswordStrength = {
   score: 0 | 1 | 2 | 3 | 4;
