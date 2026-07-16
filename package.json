@@ -1,14 +1,15 @@
 {
   "name": "xkey",
   "private": true,
-  "version": "6.0.29",
+  "version": "6.0.30",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "npm run test:shamir && npm run test:reed-solomon && npm run test:vanity && npm run test:vanity-score && npm run test:vanity-wallet-helpers && npm run test:vanity-render-helpers && npm run test:entropy-quality && npm run test:key-health && npm run test:backup-import && npm run test:backup-utils && npm run test:backup-sandbox && npm run test:backup-selection && npm run test:secret-detection && npm run test:security-tab-utils && npm run test:security-config-import && npm run test:security-attacks && npm run test:pin-credential && npm run test:vault-envelope && npm run test:verified-persistence && npm run test:csv-import-export && npm run test:import-file-limits",
+    "test": "npm run test:android-version && npm run test:shamir && npm run test:reed-solomon && npm run test:vanity && npm run test:vanity-score && npm run test:vanity-wallet-helpers && npm run test:vanity-render-helpers && npm run test:entropy-quality && npm run test:key-health && npm run test:backup-import && npm run test:backup-utils && npm run test:backup-sandbox && npm run test:backup-selection && npm run test:secret-detection && npm run test:security-tab-utils && npm run test:security-config-import && npm run test:security-attacks && npm run test:pin-credential && npm run test:vault-envelope && npm run test:verified-persistence && npm run test:csv-import-export && npm run test:import-file-limits",
+    "test:android-version": "node tests/android-version.test.mjs",
     "test:shamir": "tsx tests/shamir.test.mjs",
     "test:reed-solomon": "tsx tests/reed-solomon.test.mjs",
     "test:vanity": "tsx tests/vanity-match.test.mjs",

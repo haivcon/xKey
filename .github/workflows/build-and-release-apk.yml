@@ -83,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           APP_VERSION=$(node -p "require('./package.json').version")
-          ANDROID_VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          ANDROID_VERSION=$(node --input-type=module -e "import { readFileSync } from 'node:fs'; import { readAndroidVersionMetadata } from './scripts/android-version.mjs'; console.log(readAndroidVersionMetadata(readFileSync('android/app/build.gradle', 'utf8')).versionName);")
 
           if [ "$ANDROID_VERSION" != "$APP_VERSION" ]; then
             echo "Android versionName $ANDROID_VERSION does not match package.json version $APP_VERSION."

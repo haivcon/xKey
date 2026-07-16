@@ -1,6 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
+import {
+  readAndroidVersionMetadata,
+  updateAndroidVersionMetadata,
+} from './android-version.mjs';
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
@@ -282,7 +286,30 @@ try {
   const branch = out('git', ['branch', '--show-current']) || 'main';
 
   const pkg = json('package.json');
+  const lock = json('package-lock.json');
+  const gradlePath = 'android/app/build.gradle';
+  const gradle = readFileSync(gradlePath, 'utf8');
+  const androidVersion = readAndroidVersionMetadata(gradle);
+
+  if (lock.version !== pkg.version || lock.packages?.['']?.version !== pkg.version) {
+    throw new Error(
+      `Version mismatch before release: package.json=${pkg.version}, `
+      + `package-lock.json=${lock.version}, package-lock root=${lock.packages?.['']?.version || 'missing'}.`,
+    );
+  }
+  if (androidVersion.versionName !== pkg.version) {
+    throw new Error(
+      `Version mismatch before release: package.json=${pkg.version}, `
+      + `Android versionName=${androidVersion.versionName}.`,
+    );
+  }
+
   const nextVersion = bump(pkg.version, options.bump);
+  const nextCode = androidVersion.versionCode + 1;
+  const nextGradle = updateAndroidVersionMetadata(gradle, {
+    versionCode: nextCode,
+    versionName: nextVersion,
+  });
   const tag = `v${nextVersion}`;
   ensureTagIsFree(tag);
 
@@ -290,22 +317,12 @@ try {
     runChecks();
   }
 
-  const lock = json('package-lock.json');
   pkg.version = nextVersion;
   lock.version = nextVersion;
-  if (lock.packages?.['']) lock.packages[''].version = nextVersion;
+  lock.packages[''].version = nextVersion;
   writeJson('package.json', pkg);
   writeJson('package-lock.json', lock);
-
-  const gradlePath = 'android/app/build.gradle';
-  const gradle = readFileSync(gradlePath, 'utf8');
-  const codeMatch = /versionCode\s+(\d+)/.exec(gradle);
-  const nameMatch = /versionName\s+"([^"]+)"/.exec(gradle);
-  if (!codeMatch || !nameMatch) throw new Error('Cannot find Android versionCode/versionName.');
-  const nextCode = Number(codeMatch[1]) + 1;
-  writeFileSync(gradlePath, gradle
-    .replace(/versionCode\s+\d+/, `versionCode ${nextCode}`)
-    .replace(/versionName\s+"[^"]+"/, `versionName "${nextVersion}"`));
+  writeFileSync(gradlePath, nextGradle);
 
   const releaseNoteText = options.note.trim() || generateReleaseNote();
   updateReleaseDocs({ version: nextVersion, code: nextCode, noteText: releaseNoteText });
