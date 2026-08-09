@@ -12,14 +12,15 @@
 
 ---
 
-## Current Release: v6.0.31
+## Current Release: v6.0.32
 
-xKey v6.0.31 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.32 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- 🔐 Fixed backup export validation so matching 6-character passwords accepted by the UI can create encrypted backups reliably.\n✅ Added focused regression coverage and wired it into the automated test suite.
-- **Android release metadata:** `versionName 6.0.31`, `versionCode 129`.
+- 📱 Upgraded Android target and compile SDK support to API 36 (Android 16).
+- 🛠️ Fixed Android lint compatibility checks for API 24–26, display cutouts, navigation bars, and optional camera hardware.
+- **Android release metadata:** `versionName 6.0.32`, `versionCode 130`.
 ---
 
 ## Core Features

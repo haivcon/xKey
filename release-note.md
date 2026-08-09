@@ -1,8 +1,2 @@
-- 🔐 Removed the fast backup password oracle while keeping legacy restores compatible.
-- 🛡️ Upgraded main, decoy, and sensitive PINs to salted PBKDF2 with safe migration.
-- 🔒 Moved vaults and encrypted settings to authenticated AES-256-GCM.
-- 💾 Added verified writes to prevent false success messages and silent data loss.
-- ⏱️ Made auto-lock and secret clipboard policies fail closed without resetting preferences.
-- 📥 Added strict size, row, schema, and depth limits for web and Android imports.
-- ⚙️ Made security settings imports transactional with automatic rollback.
-- ✅ Expanded security, fault-injection, Android, locale, smoke, and visual tests.
+📱 Upgraded Android target and compile SDK support to API 36 (Android 16).
+🛠️ Fixed Android lint compatibility checks for API 24–26, display cutouts, navigation bars, and optional camera hardware.

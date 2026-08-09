@@ -2,6 +2,20 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.32] - 2026-08-09
+
+### Release Notes
+
+- 📱 Upgraded Android target and compile SDK support to API 36 (Android 16).
+- 🛠️ Fixed Android lint compatibility checks for API 24–26, display cutouts, navigation bars, and optional camera hardware.
+
+### Release Metadata
+
+- `package.json`: `6.0.32`
+- `package-lock.json`: `6.0.32`
+- Android `versionName`: `6.0.32`
+- Android `versionCode`: `130`
+
 ## [6.0.31] - 2026-07-16
 
 ### Release Notes

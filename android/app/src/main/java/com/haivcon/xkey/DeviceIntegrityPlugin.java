@@ -70,7 +70,19 @@ public class DeviceIntegrityPlugin extends Plugin {
         Process process = null;
         try {
             process = Runtime.getRuntime().exec(new String[] { "which", "su" });
-            return process.waitFor(800, TimeUnit.MILLISECONDS) && process.exitValue() == 0;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                return process.waitFor(800, TimeUnit.MILLISECONDS) && process.exitValue() == 0;
+            }
+
+            long deadline = System.currentTimeMillis() + 800;
+            while (System.currentTimeMillis() < deadline) {
+                try {
+                    return process.exitValue() == 0;
+                } catch (IllegalThreadStateException ignored) {
+                    Thread.sleep(25);
+                }
+            }
+            return false;
         } catch (Exception e) {
             return false;
         } finally {
