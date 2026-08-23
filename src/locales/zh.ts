@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "回文 {pattern}",
     "vanityExtraLucky": "幸运 {pattern}",
     "vanityExtraAlternating": "交替 {pattern}",
+    "vanityExtraNumericTail": "数字尾部 {pattern}",
+    "vanityExtraLowDiversity": "低多样性 {pattern}",
     "vanityExtraScore": "评分 {score}",
     "vanityExtraAutoReplaceHint": "按评分排序；达到上限后会自动替换最低评分结果。",
     "vanityExtraSaveAll": "全部保存",

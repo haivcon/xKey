@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "ท้ายตัวเลข {pattern}",
+    "vanityExtraLowDiversity": "ความหลากหลายต่ำ {pattern}",
     "vanityExtraScore": "คะแนน {score}",
     "vanityExtraAutoReplaceHint": "เรียงตามคะแนน และจะแทนที่ผลลัพธ์คะแนนต่ำสุดอัตโนมัติเมื่อถึงขีดจำกัด",
     "vanityExtraSaveAll": "บันทึกทั้งหมด",

@@ -3,6 +3,13 @@ import {
   VANITY_EXTRA_DEFAULT_FOLDER,
 } from '../../components/create-wallet/constants';
 import type { GeneratedWallet } from '../../components/create-wallet/types';
+import {
+  detectExtraVanityMatch,
+  normalizeVanityAddress,
+  sortAndDedupeVanityAddresses,
+  type VanityExtraFilterConfig,
+} from '../../utils/vanity/vanityMatch';
+import { toVanityScoreMetadata } from '../../utils/vanity/vanityScoreGrade';
 
 export const createVanityWallet = ({
   wallet,
@@ -66,20 +73,31 @@ export const getVanityScoreTone = (score = 0): string => {
   return 'border-rose-400/35 bg-rose-500/15 text-rose-700 dark:text-rose-200';
 };
 
+export const revalidateVanityExtraWallet = (
+  wallet: GeneratedWallet,
+  filters: VanityExtraFilterConfig
+): GeneratedWallet | null => {
+  if (!wallet.address) return null;
+  const match = detectExtraVanityMatch(wallet.address, filters);
+  if (!match) return null;
+  return { ...wallet, ...toVanityScoreMetadata(match, 'extra') };
+};
+
+export const revalidateVanityExtraWallets = (
+  wallets: GeneratedWallet[],
+  filters: VanityExtraFilterConfig
+): GeneratedWallet[] => wallets
+  .map(wallet => revalidateVanityExtraWallet(wallet, filters))
+  .filter((wallet): wallet is GeneratedWallet => wallet !== null);
+
 export const rankVanityExtraWallets = (
   wallets: GeneratedWallet[],
   limit: number
-): GeneratedWallet[] =>
-  wallets
-    .filter(w => !!w.address)
-    .filter(
-      (wallet, index, list) =>
-        list.findIndex(
-          other => other.address?.toLowerCase() === wallet.address?.toLowerCase()
-        ) === index
-    )
-    .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
-    .slice(0, limit);
+): GeneratedWallet[] => sortAndDedupeVanityAddresses(
+  wallets,
+  (left, right) => (right.vanityScore || 0) - (left.vanityScore || 0),
+  limit,
+);
 
 export const buildVanitySelectedWallets = ({
   wallets,
@@ -103,8 +121,8 @@ export const buildVanitySelectedWallets = ({
     .filter(
       wallet =>
         !!wallet.address &&
-        selectedAddresses.has(wallet.address) &&
-        !savedAddresses.has(wallet.address)
+        selectedAddresses.has(normalizeVanityAddress(wallet.address)) &&
+        !savedAddresses.has(normalizeVanityAddress(wallet.address))
     )
     .map(wallet => {
       const rank = wallet.address ? extraRanks.get(wallet.address.toLowerCase()) : undefined;
@@ -126,18 +144,9 @@ export const mergeVanityExtraWallets = ({
   extraWalletName: string;
 }): GeneratedWallet[] => {
   const byAddress = new Map(previousExtras.map(wallet => [wallet.address?.toLowerCase(), wallet]));
-  const mergedExtras = [...previousExtras, ...incomingExtras]
-    .filter(wallet => !!wallet.address)
-    .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0));
+  const mergedExtras = rankVanityExtraWallets([...previousExtras, ...incomingExtras], limit);
 
   return mergedExtras
-    .filter(
-      (wallet, index, list) =>
-        list.findIndex(
-          other => other.address?.toLowerCase() === wallet.address?.toLowerCase()
-        ) === index
-    )
-    .slice(0, limit)
     .map((wallet, index) => {
       const existing = byAddress.get(wallet.address?.toLowerCase() || '');
       const base = existing || buildWallet(wallet, index);
@@ -153,7 +162,7 @@ export const mergeVanityExtraWallets = ({
 };
 
 export const getLowercaseWalletAddressSet = (wallets: GeneratedWallet[]): Set<string> =>
-  new Set(wallets.map(wallet => wallet.address?.toLowerCase()).filter(Boolean) as string[]);
+  new Set(wallets.map(wallet => normalizeVanityAddress(wallet.address)).filter(Boolean));
 
 export const syncVanityExtraSelection = ({
   previousExtras,
@@ -168,12 +177,12 @@ export const syncVanityExtraSelection = ({
   const previousAddresses = getLowercaseWalletAddressSet(previousExtras);
 
   previousExtras.forEach(wallet => {
-    const address = wallet.address?.toLowerCase();
-    if (address && !nextAddresses.has(address)) selectedAddresses.delete(wallet.address || '');
+    const address = normalizeVanityAddress(wallet.address);
+    if (address && !nextAddresses.has(address)) selectedAddresses.delete(address);
   });
 
   nextExtras.forEach(wallet => {
-    const address = wallet.address?.toLowerCase();
-    if (address && !previousAddresses.has(address)) selectedAddresses.add(wallet.address || '');
+    const address = normalizeVanityAddress(wallet.address);
+    if (address && !previousAddresses.has(address)) selectedAddresses.add(address);
   });
 };

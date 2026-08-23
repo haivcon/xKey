@@ -1275,6 +1275,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "Numeric tail {pattern}",
+    "vanityExtraLowDiversity": "Low diversity {pattern}",
     "vanityExtraScore": "Score {score}",
     "vanityExtraAutoReplaceHint": "Sorted by score; the weakest result is replaced automatically when the limit is full.",
     "vanityExtraSaveAll": "Save all",

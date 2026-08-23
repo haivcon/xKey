@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "Числовой хвост {pattern}",
+    "vanityExtraLowDiversity": "Низкое разнообразие {pattern}",
     "vanityExtraScore": "Оценка {score}",
     "vanityExtraAutoReplaceHint": "Сортируется по оценке; самый слабый результат автоматически заменяется при заполнении лимита.",
     "vanityExtraSaveAll": "Сохранить все",

@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "संख्यात्मक अंत {pattern}",
+    "vanityExtraLowDiversity": "कम विविधता {pattern}",
     "vanityExtraScore": "स्कोर {score}",
     "vanityExtraAutoReplaceHint": "स्कोर के अनुसार क्रमबद्ध; सीमा भरने पर सबसे कम स्कोर वाला परिणाम अपने-आप बदल जाएगा।",
     "vanityExtraSaveAll": "सभी सहेजें",

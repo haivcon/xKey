@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "数字の末尾 {pattern}",
+    "vanityExtraLowDiversity": "文字種が少ない {pattern}",
     "vanityExtraScore": "スコア {score}",
     "vanityExtraAutoReplaceHint": "スコア順に並び、上限到達時は最も低い結果を自動的に置き換えます。",
     "vanityExtraSaveAll": "すべて保存",

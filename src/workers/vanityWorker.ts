@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { assertEntropyQuality } from '../utils/crypto/entropyUtils';
 import type { Wallet } from '../types';
-import { compareVanityExtraMatches, detectExtraVanityMatch, normalizeVanityExtraFilters, type VanityExtraFilterConfig, type VanityExtraFilterRule, type VanityExtraMatch, type VanityExtraPatternKey, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanity/vanityMatch';
+import { compareVanityExtraMatches, detectExtraVanityMatch, normalizeVanityAddress, normalizeVanityExtraFilters, sortAndDedupeVanityAddresses, type VanityExtraFilterConfig, type VanityExtraFilterRule, type VanityExtraMatch, type VanityExtraPatternKey, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanity/vanityMatch';
 
 let running = false;
 
@@ -32,11 +32,13 @@ type VanityWallet = Wallet & {
   vanityHeadRun?: string;
   vanityTailRun?: string;
   vanityPatternType?: VanityExtraPatternType;
+  vanityMatchStart?: number;
 };
 
 type VanityExtraCandidate = Pick<VanityWallet,
   'address' | 'vanityMatchType' | 'vanityRepeatSide' | 'vanityRepeatChar' |
-  'vanityRepeatLength' | 'vanityScore' | 'vanityHeadRun' | 'vanityTailRun' | 'vanityPatternType'
+  'vanityRepeatLength' | 'vanityScore' | 'vanityHeadRun' | 'vanityTailRun' | 'vanityPatternType' |
+  'vanityMatchStart'
 >;
 
 type RankedVanityWallet = VanityWallet | VanityExtraCandidate;
@@ -107,6 +109,7 @@ const createVanityWallet = (
   vanityHeadRun: extra?.headRun || (matchType === 'main' && primaryPrefix ? address.slice(2, 2 + primaryPrefix.length) : undefined),
   vanityTailRun: extra?.tailRun || (matchType === 'main' && primarySuffix ? address.slice(-primarySuffix.length) : undefined),
   vanityPatternType: extra?.patternType,
+  vanityMatchStart: extra?.matchStart,
 });
 
 const compareWalletScore = (left: RankedVanityWallet, right: RankedVanityWallet): number => compareVanityExtraMatches({
@@ -173,10 +176,30 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
   const safeExtraMinRun = Math.max(3, Math.min(6, Number(extraMinRun) || 4));
   const safeExtraLimit = Math.max(0, Math.floor(Number(extraLimit) || 0));
   const safeExtraFilters: VanityExtraFilterConfig = normalizeVanityExtraFilters(extraFilters, safeExtraMinRun);
-  const extraWallets = initialExtraCandidates
-    .filter(wallet => !!wallet.address)
-    .sort(compareWalletScore)
-    .slice(0, safeExtraLimit);
+  const validatedInitialExtras: VanityExtraCandidate[] = [];
+  initialExtraCandidates.forEach(wallet => {
+    if (!wallet.address) return;
+    const match = detectExtraVanityMatch(wallet.address, safeExtraFilters);
+    if (!match) return;
+    validatedInitialExtras.push({
+      ...wallet,
+      vanityMatchType: 'extra',
+      vanityRepeatSide: match.side,
+      vanityRepeatChar: match.char,
+      vanityRepeatLength: match.length,
+      vanityScore: match.score,
+      vanityHeadRun: match.headRun,
+      vanityTailRun: match.tailRun,
+      vanityPatternType: match.patternType,
+      vanityMatchStart: match.matchStart,
+    });
+  });
+  const extraWallets = sortAndDedupeVanityAddresses(
+    validatedInitialExtras,
+    compareWalletScore,
+    safeExtraLimit,
+  );
+  const extraAddressKeys = new Set(extraWallets.map(wallet => normalizeVanityAddress(wallet.address)));
 
   const safeBatchSize = Math.max(1, Math.min(20000, Number(batchSize) || 1024));
 
@@ -248,13 +271,15 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           });
           return;
         }
-      } else if (extraMatch && !extraWallets.some(item => item.address?.toLowerCase() === address)) {
+      } else if (extraMatch && !extraAddressKeys.has(normalizeVanityAddress(address))) {
         const extraWallet = createVanityWallet(privateKey, address, 'extra', extraMatch, mnemonic);
         const weakest = extraWallets[extraWallets.length - 1];
         if (extraWallets.length < safeExtraLimit || (weakest && compareWalletScore(extraWallet, weakest) < 0)) {
           extraWallets.push(extraWallet);
+          extraAddressKeys.add(normalizeVanityAddress(extraWallet.address));
           extraWallets.sort(compareWalletScore);
-          extraWallets.splice(safeExtraLimit);
+          const removed = extraWallets.splice(safeExtraLimit);
+          removed.forEach(wallet => extraAddressKeys.delete(normalizeVanityAddress(wallet.address)));
           postVanityMessage({
             type: 'extras',
             scanned,

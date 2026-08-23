@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {
+  getVanityPatternLabel,
   getVanityScoreGradeLabel,
+  getVanityScoreReason,
   inferVanityScoreMetadata,
   shouldShowVanityScore,
   VANITY_SCORE_DISPLAY_THRESHOLD,
@@ -30,6 +32,44 @@ assert.equal(getVanityScoreGradeLabel(91), 'S / Rare');
 assert.equal(getVanityScoreGradeLabel(78), 'A');
 assert.equal(getVanityScoreGradeLabel(55), 'B');
 assert.equal(getVanityScoreGradeLabel(30), 'C');
+assert.equal(getVanityPatternLabel('numeric-tail', 'tail'), 'Numeric tail');
+assert.equal(getVanityPatternLabel('low-diversity', 'head'), 'Low diversity head');
+assert.equal(
+  getVanityScoreReason({
+    vanityPatternType: 'lucky',
+    vanityRepeatSide: 'head',
+    vanityRepeatChar: '168',
+    vanityRepeatLength: 3,
+  }),
+  'Lucky: 168',
+  'lucky reason should use the full pattern exactly once'
+);
+assert.equal(
+  getVanityScoreReason({
+    vanityPatternType: 'repeat',
+    vanityRepeatSide: 'tail',
+    vanityRepeatChar: 'a',
+    vanityRepeatLength: 4,
+  }),
+  'Repeat tail: aaaa',
+  'single-character repeat reason should expand to the run length'
+);
+assert.equal(
+  getVanityScoreReason({
+    vanityPatternType: 'numeric-tail',
+    vanityRepeatSide: 'tail',
+    vanityTailRun: '2024',
+  }),
+  'Numeric tail: Tail 2024'
+);
+assert.equal(
+  getVanityScoreReason({
+    vanityPatternType: 'low-diversity',
+    vanityRepeatSide: 'head',
+    vanityHeadRun: 'aa11aa',
+  }),
+  'Low diversity head: Head aa11aa'
+);
 
 assert.equal(
   shouldShowVanityScore({ vanityScore: 91 }),

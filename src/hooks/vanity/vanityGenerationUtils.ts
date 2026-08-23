@@ -171,26 +171,42 @@ export const getVanityExtraLabel = (
   wallet: GeneratedWallet,
   t: Translate
 ): string => {
+  const body = wallet.address?.replace(/^0x/i, '') || '';
+  const actualPattern =
+    wallet.vanityHeadRun ||
+    wallet.vanityTailRun ||
+    (typeof wallet.vanityMatchStart === 'number' && wallet.vanityRepeatLength
+      ? body.slice(wallet.vanityMatchStart, wallet.vanityMatchStart + wallet.vanityRepeatLength)
+      : '') ||
+    wallet.vanityRepeatChar ||
+    '-';
+
   if (wallet.vanityPatternType === 'sequence-up') {
-    return t('createWallet.vanityExtraSequenceUp', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraSequenceUp', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'sequence-down') {
-    return t('createWallet.vanityExtraSequenceDown', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraSequenceDown', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'mirror') {
-    return t('createWallet.vanityExtraMirror', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraMirror', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'palindrome') {
-    return t('createWallet.vanityExtraPalindrome', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraPalindrome', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'bracket') {
-    return t('createWallet.vanityExtraBracket', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraBracket', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'lucky') {
-    return t('createWallet.vanityExtraLucky', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraLucky', { pattern: actualPattern });
   }
   if (wallet.vanityPatternType === 'alternating') {
-    return t('createWallet.vanityExtraAlternating', { pattern: wallet.vanityRepeatChar || '-' });
+    return t('createWallet.vanityExtraAlternating', { pattern: actualPattern });
+  }
+  if (wallet.vanityPatternType === 'numeric-tail') {
+    return t('createWallet.vanityExtraNumericTail', { pattern: actualPattern });
+  }
+  if (wallet.vanityPatternType === 'low-diversity') {
+    return t('createWallet.vanityExtraLowDiversity', { pattern: actualPattern });
   }
   if (wallet.vanityRepeatSide === 'both') {
     return t('createWallet.vanityExtraBoth', {

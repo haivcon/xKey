@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "숫자 끝자리 {pattern}",
+    "vanityExtraLowDiversity": "낮은 다양성 {pattern}",
     "vanityExtraScore": "점수 {score}",
     "vanityExtraAutoReplaceHint": "점수순으로 정렬되며 한도에 도달하면 가장 낮은 결과가 자동 교체됩니다.",
     "vanityExtraSaveAll": "모두 저장",

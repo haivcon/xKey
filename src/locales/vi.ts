@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Đối xứng {pattern}",
     "vanityExtraLucky": "May mắn {pattern}",
     "vanityExtraAlternating": "Luân phiên {pattern}",
+    "vanityExtraNumericTail": "Đuôi số {pattern}",
+    "vanityExtraLowDiversity": "Ít ký tự khác nhau {pattern}",
     "vanityExtraScore": "{score}đ",
     "vanityExtraAutoReplaceHint": "Ưu tiên ví điểm cao; tự thay kết quả yếu khi danh sách đầy.",
     "vanityExtraSaveAll": "Lưu tất cả",

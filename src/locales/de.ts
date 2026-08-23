@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrom {pattern}",
     "vanityExtraLucky": "Glück gehabt {pattern}",
     "vanityExtraAlternating": "Abwechselnd {pattern}",
+    "vanityExtraNumericTail": "Numerisches Ende {pattern}",
+    "vanityExtraLowDiversity": "Geringe Vielfalt {pattern}",
     "vanityExtraScore": "Ergebnis {score}",
     "vanityExtraAutoReplaceHint": "Nach Punktzahl sortiert; das schwächste Ergebnis wird bei vollem Limit automatisch ersetzt.",
     "vanityExtraSaveAll": "Alle speichern",

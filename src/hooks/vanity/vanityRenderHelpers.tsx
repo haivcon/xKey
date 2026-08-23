@@ -2,24 +2,72 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MiddleEllipsisAddress } from '../../components/create-wallet/components';
 import type { GeneratedWallet } from '../../components/create-wallet/types';
 
-type VanityHighlightWallet = Pick<GeneratedWallet, 'vanityRepeatSide' | 'vanityRepeatLength' | 'vanityHeadRun' | 'vanityTailRun'>;
+type VanityHighlightWallet = Pick<GeneratedWallet, 'vanityRepeatSide' | 'vanityRepeatLength' | 'vanityHeadRun' | 'vanityTailRun' | 'vanityMatchStart'>;
 
 export const getVanityHighlightLengths = (wallet: VanityHighlightWallet, bodyLength = Number.POSITIVE_INFINITY) => {
   const repeatFallbackLength = Math.max(0, wallet.vanityRepeatLength || 0);
+  const hasMiddleMatch = typeof wallet.vanityMatchStart === 'number';
   const rawHeadLength = Math.max(
     0,
     wallet.vanityHeadRun?.length ||
-      (wallet.vanityRepeatSide === 'head' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
+      (!hasMiddleMatch && (wallet.vanityRepeatSide === 'head' || wallet.vanityRepeatSide === 'both') ? repeatFallbackLength : 0)
   );
   const headLength = Math.min(rawHeadLength, Math.max(0, bodyLength));
   const rawTailLength = Math.max(
     0,
     wallet.vanityTailRun?.length ||
-      (wallet.vanityRepeatSide === 'tail' || wallet.vanityRepeatSide === 'both' ? repeatFallbackLength : 0)
+      (!hasMiddleMatch && (wallet.vanityRepeatSide === 'tail' || wallet.vanityRepeatSide === 'both') ? repeatFallbackLength : 0)
   );
   const tailLength = Math.min(rawTailLength, Math.max(0, bodyLength - headLength));
 
-  return { headLength, tailLength };
+  const middleStart = typeof wallet.vanityMatchStart === 'number'
+    && !wallet.vanityHeadRun
+    && !wallet.vanityTailRun
+    ? Math.min(Math.max(0, wallet.vanityMatchStart), Math.max(0, bodyLength))
+    : undefined;
+  const middleLength = middleStart === undefined
+    ? 0
+    : Math.min(repeatFallbackLength, Math.max(0, bodyLength - middleStart));
+
+  return { headLength, tailLength, middleStart, middleLength };
+};
+
+export type CompactVanityMiddleHighlights = {
+  headStart: number;
+  headLength: number;
+  tailStart: number;
+  tailLength: number;
+};
+
+export const getCompactVanityMiddleHighlights = ({
+  bodyLength,
+  visibleHeadLength,
+  visibleTailLength,
+  middleStart,
+  middleLength,
+}: {
+  bodyLength: number;
+  visibleHeadLength: number;
+  visibleTailLength: number;
+  middleStart?: number;
+  middleLength: number;
+}): CompactVanityMiddleHighlights => {
+  const safeBodyLength = Math.max(0, bodyLength);
+  const headEnd = Math.min(safeBodyLength, Math.max(0, visibleHeadLength));
+  const tailStartInBody = Math.max(headEnd, safeBodyLength - Math.max(0, visibleTailLength));
+  const matchStart = Math.min(safeBodyLength, Math.max(0, middleStart ?? safeBodyLength));
+  const matchEnd = Math.min(safeBodyLength, matchStart + Math.max(0, middleLength));
+  const headIntersectionStart = Math.min(headEnd, Math.max(0, matchStart));
+  const headIntersectionEnd = Math.min(headEnd, Math.max(headIntersectionStart, matchEnd));
+  const tailIntersectionStart = Math.min(safeBodyLength, Math.max(tailStartInBody, matchStart));
+  const tailIntersectionEnd = Math.min(safeBodyLength, Math.max(tailIntersectionStart, matchEnd));
+
+  return {
+    headStart: headIntersectionStart,
+    headLength: headIntersectionEnd - headIntersectionStart,
+    tailStart: tailIntersectionStart - tailStartInBody,
+    tailLength: tailIntersectionEnd - tailIntersectionStart,
+  };
 };
 
 export const compactVanityAddress = (address: string, head = 12, tail = 8): ReactNode => {
@@ -43,6 +91,8 @@ function HighlightedCompactAddress({
   minTail = 6,
   headHighlightLength = 0,
   tailHighlightLength = 0,
+  middleHighlightStart,
+  middleHighlightLength = 0,
   highlightClassName,
 }: {
   address: string;
@@ -52,6 +102,8 @@ function HighlightedCompactAddress({
   minTail?: number;
   headHighlightLength?: number;
   tailHighlightLength?: number;
+  middleHighlightStart?: number;
+  middleHighlightLength?: number;
   highlightClassName: string;
 }) {
   const containerRef = useRef<HTMLSpanElement>(null);
@@ -130,34 +182,54 @@ function HighlightedCompactAddress({
       Math.max(0, fullBody.length - headHighlight)
     );
     const tailStart = fullBody.length - tailHighlight;
+    const innerStart = middleHighlightStart === undefined
+      ? headHighlight
+      : Math.min(Math.max(headHighlight, middleHighlightStart), tailStart);
+    const innerEnd = Math.min(tailStart, innerStart + middleHighlightLength);
 
     return (
       <>
         {headHighlight ? <span className={highlightClassName}>{fullBody.slice(0, headHighlight)}</span> : null}
-        <span className="opacity-80">{fullBody.slice(headHighlight, tailStart)}</span>
+        <span className="opacity-80">{fullBody.slice(headHighlight, innerStart)}</span>
+        {innerEnd > innerStart ? <span className={highlightClassName}>{fullBody.slice(innerStart, innerEnd)}</span> : null}
+        <span className="opacity-80">{fullBody.slice(innerEnd, tailStart)}</span>
         {tailHighlight ? <span className={highlightClassName}>{fullBody.slice(tailStart)}</span> : null}
       </>
     );
   };
 
+  const compactMiddle = getCompactVanityMiddleHighlights({
+    bodyLength: fullBody.length,
+    visibleHeadLength: headBody.length,
+    visibleTailLength: tailBody.length,
+    middleStart: middleHighlightStart,
+    middleLength: middleHighlightLength,
+  });
+
   const renderHead = () => {
-    const highlightLength = Math.min(headHighlightLength, headBody.length);
-    if (!highlightLength) return <span>{headBody}</span>;
+    const edgeHighlightLength = Math.min(headHighlightLength, headBody.length);
+    const middleStart = Math.max(edgeHighlightLength, compactMiddle.headStart);
+    const middleEnd = Math.min(headBody.length, middleStart + compactMiddle.headLength);
     return (
       <>
-        <span className={highlightClassName}>{headBody.slice(0, highlightLength)}</span>
-        <span>{headBody.slice(highlightLength)}</span>
+        {edgeHighlightLength ? <span className={highlightClassName}>{headBody.slice(0, edgeHighlightLength)}</span> : null}
+        <span>{headBody.slice(edgeHighlightLength, middleStart)}</span>
+        {middleEnd > middleStart ? <span className={highlightClassName}>{headBody.slice(middleStart, middleEnd)}</span> : null}
+        <span>{headBody.slice(middleEnd)}</span>
       </>
     );
   };
 
   const renderTail = () => {
-    const highlightLength = Math.min(tailHighlightLength, tailBody.length);
-    if (!highlightLength) return <span>{tailBody}</span>;
+    const edgeStart = Math.max(0, tailBody.length - Math.min(tailHighlightLength, tailBody.length));
+    const middleStart = Math.min(edgeStart, compactMiddle.tailStart);
+    const middleEnd = Math.min(edgeStart, middleStart + compactMiddle.tailLength);
     return (
       <>
-        <span>{tailBody.slice(0, tailBody.length - highlightLength)}</span>
-        <span className={highlightClassName}>{tailBody.slice(-highlightLength)}</span>
+        <span>{tailBody.slice(0, middleStart)}</span>
+        {middleEnd > middleStart ? <span className={highlightClassName}>{tailBody.slice(middleStart, middleEnd)}</span> : null}
+        <span>{tailBody.slice(middleEnd, edgeStart)}</span>
+        {edgeStart < tailBody.length ? <span className={highlightClassName}>{tailBody.slice(edgeStart)}</span> : null}
       </>
     );
   };
@@ -187,6 +259,8 @@ const renderHighlightedCompactAddress = (props: {
   minTail?: number;
   headHighlightLength?: number;
   tailHighlightLength?: number;
+  middleHighlightStart?: number;
+  middleHighlightLength?: number;
   highlightClassName: string;
 }): ReactNode => {
   if (!props.address) return '';
@@ -249,10 +323,10 @@ export const createVanityAddressRenderer = (
     const hasHexPrefix = address.startsWith('0x') || address.startsWith('0X');
     const prefix = hasHexPrefix ? address.slice(0, 2) : '';
     const body = hasHexPrefix ? address.slice(2) : address;
-    const { headLength, tailLength } = getVanityHighlightLengths(wallet, body.length);
+    const { headLength, tailLength, middleStart, middleLength } = getVanityHighlightLengths(wallet, body.length);
     const highlightClassName = 'rounded-[0.18em] bg-cyan-500/20 text-cyan-700 box-decoration-clone dark:text-cyan-200';
 
-    if (!headLength && !tailLength) return renderVanityAddress(address, compact, compactOptions);
+    if (!headLength && !tailLength && !middleLength) return renderVanityAddress(address, compact, compactOptions);
 
     if (compact) {
       return renderHighlightedCompactAddress({
@@ -263,25 +337,35 @@ export const createVanityAddressRenderer = (
         minTail: compactOptions.minTail ?? 6,
         headHighlightLength: headLength,
         tailHighlightLength: tailLength,
+        middleHighlightStart: middleStart,
+        middleHighlightLength: middleLength,
         highlightClassName,
       });
     }
 
-    const middleStart = Math.min(headLength, body.length);
-    const middleEnd = Math.max(middleStart, body.length - tailLength);
+    const edgeMiddleStart = Math.min(headLength, body.length);
+    const edgeMiddleEnd = Math.max(edgeMiddleStart, body.length - tailLength);
+    const innerStart = middleStart === undefined
+      ? edgeMiddleStart
+      : Math.min(Math.max(edgeMiddleStart, middleStart), edgeMiddleEnd);
+    const innerEnd = Math.min(edgeMiddleEnd, innerStart + middleLength);
 
     return (
       <>
         <span>{prefix}</span>
         {headLength ? (
           <span className={highlightClassName}>
-            {body.slice(0, middleStart)}
+            {body.slice(0, edgeMiddleStart)}
           </span>
         ) : null}
-        <span className="opacity-80">{body.slice(middleStart, middleEnd)}</span>
+        <span className="opacity-80">{body.slice(edgeMiddleStart, innerStart)}</span>
+        {innerEnd > innerStart ? (
+          <span className={highlightClassName}>{body.slice(innerStart, innerEnd)}</span>
+        ) : null}
+        <span className="opacity-80">{body.slice(innerEnd, edgeMiddleEnd)}</span>
         {tailLength ? (
           <span className={highlightClassName}>
-            {body.slice(middleEnd)}
+            {body.slice(edgeMiddleEnd)}
           </span>
         ) : null}
       </>

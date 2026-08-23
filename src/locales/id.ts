@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "Akhiran angka {pattern}",
+    "vanityExtraLowDiversity": "Keragaman rendah {pattern}",
     "vanityExtraScore": "Skor {score}",
     "vanityExtraAutoReplaceHint": "Diurutkan berdasarkan skor; hasil terendah otomatis diganti saat batas penuh.",
     "vanityExtraSaveAll": "Simpan semua",

@@ -1,3 +1,5 @@
+import type { VanityExtraPatternType } from './utils/vanity/vanityMatch';
+
 /** Core HD Root metadata model. */
 export interface HDRoot {
   _id: string;
@@ -73,7 +75,8 @@ export interface Wallet {
   vanityScore?: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
-  vanityPatternType?: string;
+  vanityPatternType?: VanityExtraPatternType;
+  vanityMatchStart?: number;
   /** Raw CSV row data preserved on import */
   _raw?: Record<string, string>;
 }

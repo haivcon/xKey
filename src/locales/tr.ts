@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "Palindrome {pattern}",
     "vanityExtraLucky": "Lucky {pattern}",
     "vanityExtraAlternating": "Alternating {pattern}",
+    "vanityExtraNumericTail": "Sayısal son {pattern}",
+    "vanityExtraLowDiversity": "Düşük çeşitlilik {pattern}",
     "vanityExtraScore": "Puan {score}",
     "vanityExtraAutoReplaceHint": "Puana göre sıralanır; limit dolunca en düşük sonuç otomatik değiştirilir.",
     "vanityExtraSaveAll": "Tümünü kaydet",

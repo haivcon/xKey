@@ -4,6 +4,7 @@ import { APP_ACTIVITY_EVENT } from '../security/useAutoLock';
 import { useCpuTemperature } from '../useCpuTemperature';
 import {
   DEFAULT_VANITY_EXTRA_FILTERS,
+  normalizeVanityAddress,
   normalizeVanityExtraFilters,
   type VanityExtraFilterConfig,
   type VanityExtraFilterRule,
@@ -50,6 +51,7 @@ import {
   getVanityScoreTone as getVanityScoreToneClass,
   mergeVanityExtraWallets,
   rankVanityExtraWallets,
+  revalidateVanityExtraWallets,
   syncVanityExtraSelection,
 } from './vanityWalletHelpers';
 import {
@@ -723,14 +725,20 @@ export function useVanityGeneration({
   const getVanityScoreTone = getVanityScoreToneClass;
 
   const syncVanityExtraWallets = (wallets: GeneratedWallet[]) => {
-    const nextExtras = rankVanityExtraWallets(wallets, vanitySafeExtraLimit);
+    const nextExtras = rankVanityExtraWallets(
+      revalidateVanityExtraWallets(wallets, vanitySafeExtraFilters),
+      vanitySafeExtraLimit
+    );
     vanityExtraRef.current = nextExtras;
     setVanityExtraWallets(nextExtras);
     return nextExtras;
   };
 
   const removeVanityExtraWallet = async (address: string) => {
-    const wallet = vanityExtraRef.current.find(w => w.address === address);
+    const normalizedAddress = normalizeVanityAddress(address);
+    const wallet = vanityExtraRef.current.find(
+      w => normalizeVanityAddress(w.address) === normalizedAddress
+    );
     const ok = await showConfirm(t('home.deleteWalletConfirm', { name: wallet?.name || address }), {
       danger: true,
       title: t('common.delete'),
@@ -738,24 +746,26 @@ export function useVanityGeneration({
       cancelText: t('common.cancel'),
     });
     if (!ok) return;
-    const normalizedAddress = address.toLowerCase();
     vanityDeletedExtraRef.current.add(normalizedAddress);
     const nextExtras = syncVanityExtraWallets(
       vanityExtraRef.current.filter(w => w.address?.toLowerCase() !== normalizedAddress)
     );
-    vanitySelectedRef.current.delete(address);
-    vanitySavedRef.current.delete(address);
+    vanitySelectedRef.current.delete(normalizedAddress);
+    vanitySavedRef.current.delete(normalizedAddress);
+    const availableAddresses = getLowercaseWalletAddressSet([
+      ...nextExtras,
+      ...vanityFoundRef.current,
+    ]);
     setSelectedVanityAddresses(
-      [...vanitySelectedRef.current].filter(
-        a =>
-          nextExtras.some(w => w.address === a) ||
-          vanityFoundRef.current.some(w => w.address === a)
-      )
+      [...vanitySelectedRef.current].filter(addressKey => availableAddresses.has(addressKey))
     );
   };
 
   const removeVanityPrimaryWallet = async (address: string) => {
-    const wallet = vanityFoundRef.current.find(w => w.address === address);
+    const addressKey = normalizeVanityAddress(address);
+    const wallet = vanityFoundRef.current.find(
+      w => normalizeVanityAddress(w.address) === addressKey
+    );
     const ok = await showConfirm(t('home.deleteWalletConfirm', { name: wallet?.name || address }), {
       danger: true,
       title: t('common.delete'),
@@ -763,17 +773,19 @@ export function useVanityGeneration({
       cancelText: t('common.cancel'),
     });
     if (!ok) return;
-    const nextPrimary = vanityFoundRef.current.filter(w => w.address !== address);
+    const nextPrimary = vanityFoundRef.current.filter(
+      w => normalizeVanityAddress(w.address) !== addressKey
+    );
     vanityFoundRef.current = nextPrimary;
     setGeneratedWallets(nextPrimary);
-    vanitySelectedRef.current.delete(address);
-    vanitySavedRef.current.delete(address);
+    vanitySelectedRef.current.delete(addressKey);
+    vanitySavedRef.current.delete(addressKey);
+    const availableAddresses = getLowercaseWalletAddressSet([
+      ...nextPrimary,
+      ...vanityExtraRef.current,
+    ]);
     setSelectedVanityAddresses(
-      [...vanitySelectedRef.current].filter(
-        a =>
-          nextPrimary.some(w => w.address === a) ||
-          vanityExtraRef.current.some(w => w.address === a)
-      )
+      [...vanitySelectedRef.current].filter(selectedKey => availableAddresses.has(selectedKey))
     );
   };
 
@@ -788,31 +800,33 @@ export function useVanityGeneration({
     if (!ok) return;
     vanityExtraRef.current.forEach(w => {
       if (w.address) {
-        vanityDeletedExtraRef.current.add(w.address.toLowerCase());
-        vanitySelectedRef.current.delete(w.address);
-        vanitySavedRef.current.delete(w.address);
+        const addressKey = normalizeVanityAddress(w.address);
+        vanityDeletedExtraRef.current.add(addressKey);
+        vanitySelectedRef.current.delete(addressKey);
+        vanitySavedRef.current.delete(addressKey);
       }
     });
     syncVanityExtraWallets([]);
     setSelectedVanityAddresses(
-      [...vanitySelectedRef.current].filter(a => vanityFoundRef.current.some(w => w.address === a))
+      [...vanitySelectedRef.current].filter(addressKey =>
+        vanityFoundRef.current.some(w => normalizeVanityAddress(w.address) === addressKey)
+      )
     );
   };
 
   const saveSingleVanityWallet = async (wallet: GeneratedWallet) => {
-    if (!wallet.address || vanitySavedRef.current.has(wallet.address)) return;
+    const addressKey = normalizeVanityAddress(wallet.address);
+    if (!addressKey || vanitySavedRef.current.has(addressKey)) return;
     const rank =
       wallet.vanityMatchType === 'extra'
-        ? vanityExtraRef.current
-            .filter(w => !!w.address)
-            .sort((a, b) => (b.vanityScore || 0) - (a.vanityScore || 0))
-            .findIndex(w => w.address?.toLowerCase() === wallet.address?.toLowerCase()) + 1
+        ? rankVanityExtraWallets(vanityExtraRef.current, vanityExtraRef.current.length)
+            .findIndex(w => normalizeVanityAddress(w.address) === addressKey) + 1
         : 0;
     const walletToSave =
       rank > 0 ? { ...wallet, name: `${t('createWallet.vanityExtraWalletName')} ${rank}` } : wallet;
     try {
       await onSave(walletToSave);
-      vanitySavedRef.current.add(wallet.address);
+      vanitySavedRef.current.add(addressKey);
       setVanitySavedCount(1);
       showToast(
         {
@@ -830,7 +844,7 @@ export function useVanityGeneration({
 
   const saveAllVanityExtraWallets = async () => {
     vanityExtraRef.current.forEach(w => {
-      if (w.address) vanitySelectedRef.current.add(w.address);
+      if (w.address) vanitySelectedRef.current.add(normalizeVanityAddress(w.address));
     });
     setSelectedVanityAddresses([...vanitySelectedRef.current]);
     await saveVanityWallets(vanityExtraRef.current, false);
@@ -850,7 +864,7 @@ export function useVanityGeneration({
     try {
       await onSave(selectedWallets.length === 1 ? selectedWallets[0] : selectedWallets);
       selectedWallets.forEach(w => {
-        if (w.address) vanitySavedRef.current.add(w.address);
+        if (w.address) vanitySavedRef.current.add(normalizeVanityAddress(w.address));
       });
       setVanitySavedCount(selectedWallets.length);
       showToast(
@@ -911,7 +925,9 @@ export function useVanityGeneration({
     if (foundWallets.length > 0 && saveFound) {
       const saved = await saveVanityWallets(foundWallets, closeAfterSave);
       if (!saved) return false;
-      if (foundWallets.every(w => !!w.address && vanitySavedRef.current.has(w.address))) {
+      if (foundWallets.every(
+        w => !!w.address && vanitySavedRef.current.has(normalizeVanityAddress(w.address))
+      )) {
         await clearVanitySession();
       }
     } else if (foundWallets.length > 0) {
@@ -965,10 +981,11 @@ export function useVanityGeneration({
         VANITY_EXTRA_MIN_RUNS.includes(state.extraMinRun) ? state.extraMinRun : 4
       );
       setVanityExtraLimit(Math.max(1, Math.floor(Number(state.extraLimit) || 50)));
-      if (state.extraFilters)
-        setVanityExtraFilters(
-          normalizeVanityExtraFilters(state.extraFilters, state.extraMinRun || 4)
-        );
+      const restoredExtraFilters = normalizeVanityExtraFilters(
+        state.extraFilters || DEFAULT_VANITY_EXTRA_FILTERS,
+        state.extraMinRun || 4
+      );
+      setVanityExtraFilters(restoredExtraFilters);
       setVanityExtraFolder(state.extraFolder || VANITY_EXTRA_DEFAULT_FOLDER);
       setVanityTags(Array.isArray(state.tags) ? state.tags : []);
       setVanityPerformanceMode(
@@ -988,16 +1005,28 @@ export function useVanityGeneration({
       if (typeof state.keepAwake === 'boolean') setVanityKeepAwake(state.keepAwake);
       setVanityCandidates(Array.isArray(state.candidates) ? state.candidates.slice(-12) : []);
       vanityFoundRef.current = restored.wallets;
-      vanityExtraRef.current = Array.isArray(state.extraWallets) ? state.extraWallets : [];
-      vanitySelectedRef.current = new Set(
-        state.selectedAddresses ||
-          (
-            [...restored.wallets, ...vanityExtraRef.current]
-              .map(w => w.address)
-              .filter(Boolean) as string[]
-          )
+      vanityExtraRef.current = rankVanityExtraWallets(
+        revalidateVanityExtraWallets(
+          Array.isArray(state.extraWallets) ? state.extraWallets : [],
+          restoredExtraFilters
+        ),
+        Math.max(1, Math.floor(Number(state.extraLimit) || 50))
       );
-      vanitySavedRef.current = new Set(state.savedAddresses || []);
+      const availableAddresses = getLowercaseWalletAddressSet([
+        ...restored.wallets,
+        ...vanityExtraRef.current,
+      ]);
+      vanitySelectedRef.current = new Set(
+        (state.selectedAddresses || [
+          ...restored.wallets,
+          ...vanityExtraRef.current,
+        ].map(w => w.address).filter(Boolean) as string[])
+          .map(normalizeVanityAddress)
+          .filter(addressKey => availableAddresses.has(addressKey))
+      );
+      vanitySavedRef.current = new Set(
+        (state.savedAddresses || []).map(normalizeVanityAddress).filter(Boolean)
+      );
       setGeneratedWallets(restored.wallets);
       setVanityExtraWallets(vanityExtraRef.current);
       setSelectedVanityAddresses([...vanitySelectedRef.current]);
@@ -1103,9 +1132,10 @@ export function useVanityGeneration({
       if (type === 'extras' && Array.isArray(event.data.wallets)) {
         const previousExtras = vanityExtraRef.current;
         const previousAddresses = getLowercaseWalletAddressSet(previousExtras);
-        const incomingExtras = (event.data.wallets as GeneratedWallet[]).filter(
-          item => !vanityDeletedExtraRef.current.has(item.address?.toLowerCase() || '')
-        );
+        const incomingExtras = revalidateVanityExtraWallets(
+          event.data.wallets as GeneratedWallet[],
+          vanitySafeExtraFilters
+        ).filter(item => !vanityDeletedExtraRef.current.has(item.address?.toLowerCase() || ''));
         const nextExtras = mergeVanityExtraWallets({
           previousExtras,
           incomingExtras,
@@ -1138,9 +1168,10 @@ export function useVanityGeneration({
           const nextWallet = buildVanityWallet(wallet, vanityFoundRef.current.length);
           vanityFoundRef.current = [...vanityFoundRef.current, nextWallet];
           setGeneratedWallets(vanityFoundRef.current);
-          vanitySelectedRef.current.add(wallet.address);
+          const addressKey = normalizeVanityAddress(wallet.address);
+          vanitySelectedRef.current.add(addressKey);
           setSelectedVanityAddresses(prev =>
-            prev.includes(wallet.address) ? prev : [...prev, wallet.address]
+            prev.includes(addressKey) ? prev : [...prev, addressKey]
           );
           setVanityCandidates(prev => [
             ...prev.slice(-11),
@@ -1192,6 +1223,7 @@ export function useVanityGeneration({
           vanityHeadRun: w.vanityHeadRun,
           vanityTailRun: w.vanityTailRun,
           vanityPatternType: w.vanityPatternType,
+          vanityMatchStart: w.vanityMatchStart,
           privateKey: w.privateKey,
           seedPhrase: w.seedPhrase,
           mnemonic: w.mnemonic,
@@ -1250,11 +1282,13 @@ export function useVanityGeneration({
   ]);
 
   const toggleVanitySelection = (address: string) => {
+    const addressKey = normalizeVanityAddress(address);
+    if (!addressKey) return;
     setSelectedVanityAddresses(current => {
-      const selected = current.includes(address);
-      if (selected) vanitySelectedRef.current.delete(address);
-      else vanitySelectedRef.current.add(address);
-      return selected ? current.filter(v => v !== address) : [...current, address];
+      const selected = current.includes(addressKey);
+      if (selected) vanitySelectedRef.current.delete(addressKey);
+      else vanitySelectedRef.current.add(addressKey);
+      return selected ? current.filter(value => value !== addressKey) : [...current, addressKey];
     });
   };
 

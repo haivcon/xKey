@@ -4,8 +4,10 @@ import {
   getLowercaseWalletAddressSet,
   mergeVanityExtraWallets,
   rankVanityExtraWallets,
+  revalidateVanityExtraWallets,
   syncVanityExtraSelection,
 } from '../src/hooks/vanity/vanityWalletHelpers.ts';
+import { getVanityExtraLabel } from '../src/hooks/vanity/vanityGenerationUtils.ts';
 
 const wallet = (address, vanityScore = 0, extra = {}) => ({
   address,
@@ -27,7 +29,7 @@ const ranked = rankVanityExtraWallets(
 );
 assert.deepEqual(
   ranked.map(item => item.address),
-  ['0xccc', '0xbbb']
+  ['0xAAA', '0xccc']
 );
 
 const selectedWallets = buildVanitySelectedWallets({
@@ -87,6 +89,54 @@ assert.deepEqual(
 );
 assert.deepEqual(built, [['0xnew', 0]]);
 
+const revalidated = revalidateVanityExtraWallets([
+  wallet('0xabcdefabcdefab1234567890123456789012345678', 999, {
+    vanityPatternType: 'repeat',
+    vanityRepeatSide: 'head',
+    vanityHeadRun: 'ffff',
+  }),
+  wallet('0x12abce81234567890abcdef1234567890abcdee', 999, {
+    vanityPatternType: 'repeat',
+  }),
+], {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: false },
+  bracket: { enabled: false },
+  lucky: { enabled: false },
+  alternating: { enabled: false },
+  numericTail: { enabled: true, minRun: 4 },
+  lowDiversity: { enabled: false },
+});
+assert.equal(revalidated.length, 1);
+assert.equal(revalidated[0].vanityPatternType, 'numeric-tail');
+assert.equal(revalidated[0].vanityTailRun, '1234567890123456789012345678');
+assert.equal(revalidated[0].vanityScore, 348);
+assert.equal(revalidated[0].vanityHeadRun, undefined);
+
+const translate = (key, vars = {}) => `${key}:${vars.pattern || ''}`;
+const labelCases = [
+  ['sequence-up', { vanityHeadRun: '1234' }, 'vanityExtraSequenceUp:1234'],
+  ['sequence-down', { vanityTailRun: 'fedc' }, 'vanityExtraSequenceDown:fedc'],
+  ['mirror', { vanityHeadRun: 'abc' }, 'vanityExtraMirror:abc'],
+  ['palindrome', { vanityHeadRun: 'abccba' }, 'vanityExtraPalindrome:abccba'],
+  ['bracket', { vanityHeadRun: 'abc' }, 'vanityExtraBracket:abc'],
+  ['lucky', { vanityRepeatChar: '168', vanityMatchStart: 6, vanityRepeatLength: 3 }, 'vanityExtraLucky:168'],
+  ['alternating', { vanityTailRun: 'ababab' }, 'vanityExtraAlternating:ababab'],
+  ['numeric-tail', { vanityTailRun: '2024' }, 'vanityExtraNumericTail:2024'],
+  ['low-diversity', { vanityHeadRun: 'aa11aa' }, 'vanityExtraLowDiversity:aa11aa'],
+];
+labelCases.forEach(([vanityPatternType, metadata, expected]) => {
+  assert.equal(getVanityExtraLabel({
+    address: '0xabcdef168abcdef',
+    vanityPatternType,
+    ...metadata,
+  }, translate), `createWallet.${expected}`);
+});
+
 const addressSet = getLowercaseWalletAddressSet([
   wallet('0xABC'),
   wallet('0xdef'),
@@ -101,5 +151,25 @@ syncVanityExtraSelection({
   selectedAddresses,
 });
 assert.deepEqual([...selectedAddresses].sort(), ['0xkeep', '0xnew']);
+
+const mixedCaseSelectedAddresses = new Set(['0xabc']);
+syncVanityExtraSelection({
+  previousExtras: [wallet('0xABC')],
+  nextExtras: [],
+  selectedAddresses: mixedCaseSelectedAddresses,
+});
+assert.deepEqual(
+  [...mixedCaseSelectedAddresses],
+  [],
+  'selection sync should remove normalized keys regardless of wallet address casing'
+);
+
+const caseInsensitiveSelectedWallets = buildVanitySelectedWallets({
+  wallets: [wallet('0xAbC', 50, { name: 'Checksum Wallet' })],
+  selectedAddresses: new Set(['0xabc']),
+  savedAddresses: new Set(),
+  extraWalletName: 'Extra Wallet',
+});
+assert.equal(caseInsensitiveSelectedWallets.length, 1);
 
 console.log('Vanity wallet helper tests passed');

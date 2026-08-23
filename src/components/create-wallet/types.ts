@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 import type { Wallet as WalletModel } from '../../types';
-import type { VanityExtraFilterRule, VanityExtraPatternKey } from '../../utils/vanity/vanityMatch';
+import type {
+  VanityExtraFilterRule,
+  VanityExtraPatternKey,
+  VanityExtraPatternType,
+} from '../../utils/vanity/vanityMatch';
 
 export type SelectOption = { value: string; label: ReactNode };
 export type CreateWalletTab = 'manual' | 'generate' | 'hdTree' | 'vanity' | 'advancedEntropy';
@@ -21,7 +25,8 @@ export type GeneratedWallet = WalletModel & {
   vanityScore?: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
-  vanityPatternType?: string;
+  vanityPatternType?: VanityExtraPatternType;
+  vanityMatchStart?: number;
 };
 
 export type FloatingEffect = { key: number; count: number; address?: string };

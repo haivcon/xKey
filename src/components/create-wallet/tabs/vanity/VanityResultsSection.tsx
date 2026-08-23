@@ -5,6 +5,7 @@ import type { TranslationFn } from '../../../../contexts/LanguageContext';
 import { VANITY_DEFAULT_FOLDER } from '../../constants';
 import type { GeneratedWallet } from '../../types';
 import VanityScoreBadge from '../../../vanity/VanityScoreBadge';
+import { normalizeVanityAddress } from '../../../../utils/vanity/vanityMatch';
 
 type VanityResultsSectionProps = {
   t: TranslationFn;
@@ -79,9 +80,10 @@ export function VanityResultsSection({
       <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto bg-surface-50/70 p-3 dark:bg-surface-900/30 theme-aurora:bg-white/5 theme-glass:bg-white/5">
         {allVanityWallets.map((wallet, index) => {
           const address = wallet.address || '';
-          const selected = selectedVanityAddresses.includes(address);
+          const addressKey = normalizeVanityAddress(address);
+          const selected = selectedVanityAddresses.includes(addressKey);
           const isExtra = wallet.vanityMatchType === 'extra';
-          const saved = !!address && vanitySavedRef.current.has(address);
+          const saved = !!addressKey && vanitySavedRef.current.has(addressKey);
           const isExpanded = expandedVanitySecrets[address] || false;
 
           return (

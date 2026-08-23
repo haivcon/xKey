@@ -90,7 +90,10 @@ const luckyOnly = detectExtraVanityMatch('0x1234567890abcdef168abcdef1234567890a
   lowDiversity: { enabled: false },
 });
 assert.equal(luckyOnly?.patternType, 'lucky');
-assert.equal(luckyOnly?.headRun, '168');
+assert.equal(luckyOnly?.char, '168');
+assert.equal(luckyOnly?.headRun, undefined);
+assert.equal(luckyOnly?.tailRun, undefined);
+assert.equal(luckyOnly?.matchStart, 16);
 
 const alternatingOnly = detectExtraVanityMatch('0xababab1234567890abcdef1234567890abcdef12', {
   repeat: { enabled: false },
@@ -123,6 +126,22 @@ const numericTailOnly = detectExtraVanityMatch('0xabcdef1234567890abcdef12345678
 });
 assert.equal(numericTailOnly?.patternType, 'numeric-tail');
 assert.equal(numericTailOnly?.tailRun, '2024');
+
+const numericTailScore324 = detectExtraVanityMatch(`0x${'a'.repeat(14)}${'1234567890'.repeat(2)}123456`, {
+  repeat: { enabled: false },
+  sequenceUp: { enabled: false },
+  sequenceDown: { enabled: false },
+  mirror: { enabled: false },
+  bothEnds: { enabled: false },
+  palindrome: { enabled: false },
+  bracket: { enabled: false },
+  lucky: { enabled: false },
+  alternating: { enabled: false },
+  numericTail: { enabled: true, minRun: 4 },
+  lowDiversity: { enabled: false },
+});
+assert.equal(numericTailScore324?.length, 26);
+assert.equal(numericTailScore324?.score, 324);
 
 const lowDiversityOnly = detectExtraVanityMatch('0xaa11aa1234567890abcdef1234567890abcdef12', {
   repeat: { enabled: false },

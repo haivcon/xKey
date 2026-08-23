@@ -35,6 +35,27 @@ export type VanityExtraFilterRule = {
 
 export type VanityExtraFilterConfig = Record<VanityExtraPatternKey, VanityExtraFilterRule>;
 
+export const normalizeVanityAddress = (address?: string | null): string =>
+  String(address || '').toLowerCase();
+
+export const sortAndDedupeVanityAddresses = <T extends { address?: string }>(
+  items: T[],
+  compare: (left: T, right: T) => number,
+  limit = Number.POSITIVE_INFINITY,
+): T[] => {
+  const seen = new Set<string>();
+  return [...items]
+    .filter(item => !!item.address)
+    .sort(compare)
+    .filter(item => {
+      const key = normalizeVanityAddress(item.address);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, Math.max(0, limit));
+};
+
 export type VanityExtraMatch = {
   side: VanityRepeatSide;
   char: string;
@@ -43,6 +64,7 @@ export type VanityExtraMatch = {
   score: number;
   headRun?: string;
   tailRun?: string;
+  matchStart?: number;
 };
 
 type CharacterRun = {
@@ -218,13 +240,15 @@ const detectLucky = (body: string, patterns: string[]): VanityExtraMatch | null 
     const contains = body.includes(pattern);
     if (!head && !tail && !contains) continue;
     const side: VanityRepeatSide = head && tail ? 'both' : head ? 'head' : tail ? 'tail' : 'head';
+    const matchStart = body.indexOf(pattern);
     const match: VanityExtraMatch = {
       side,
-      char: pattern[0] || '',
+      char: pattern,
       length: pattern.length,
       patternType: 'lucky',
-      headRun: head || contains ? pattern : undefined,
+      headRun: head ? pattern : undefined,
       tailRun: tail ? pattern : undefined,
+      matchStart,
       score: pattern.length * 9 + (head || tail ? 18 : 6) + (side === 'both' ? 18 : 0),
     };
     if (!best || compareVanityExtraMatches(match, best) < 0) best = match;

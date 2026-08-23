@@ -2,6 +2,7 @@ import { AlertTriangle, BrainCircuit, Check, ChevronDown, Copy, Gauge, Maximize2
 import { formatCompactNumber, formatVanitySeconds } from '../../formatters';
 import { VanityExtraWalletCard } from './VanityExtraWalletCard';
 import type { VanityTabProps } from './VanityTabContent';
+import { normalizeVanityAddress } from '../../../../utils/vanity/vanityMatch';
 
 export function VanityRunningPanel(props: VanityTabProps) {
   const {
@@ -198,8 +199,9 @@ export function VanityRunningPanel(props: VanityTabProps) {
           <div className="max-h-80 space-y-1 overflow-y-auto p-1.5">
             {generatedWallets.length === 0 ? <p className="px-2 py-3 text-center text-scale-xs text-emerald-600/70 dark:text-emerald-200/50">{t('createWallet.vanityScanning')}</p> : generatedWallets.map((wallet, index) => {
               const address = wallet.address || '';
-              const selected = selectedVanityAddresses.includes(address);
-              const saved = !!address && vanitySavedRef.current.has(address);
+              const addressKey = normalizeVanityAddress(address);
+              const selected = selectedVanityAddresses.includes(addressKey);
+              const saved = !!addressKey && vanitySavedRef.current.has(addressKey);
               return <div key={address || index} className={`rounded-xl border p-2 transition-all ${selected ? 'border-emerald-400/60 bg-emerald-100/80 shadow-sm shadow-emerald-900/5 dark:bg-emerald-500/15 dark:shadow-emerald-950/20' : 'border-surface-200 bg-surface-50/90 hover:border-emerald-300 hover:bg-emerald-50/70 dark:border-surface-700/80 dark:bg-surface-900/80 dark:hover:border-emerald-500/35 dark:hover:bg-surface-900'}`}>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                   <button type="button" onClick={() => toggleVanitySelection(address)} className="flex min-w-0 items-start gap-2 overflow-hidden text-left" aria-pressed={selected}>
@@ -265,14 +267,15 @@ export function VanityRunningPanel(props: VanityTabProps) {
             <div className="max-h-80 space-y-1 overflow-y-auto p-1.5">
               {vanityExtraWallets.length === 0 ? <p className="px-2 py-3 text-center text-scale-xs text-cyan-600/70 dark:text-cyan-200/50">{t('createWallet.vanityExtraEmpty')}</p> : vanityExtraWallets.map((wallet, index) => {
                 const address = wallet.address || '';
+                const addressKey = normalizeVanityAddress(address);
                 return (
                   <VanityExtraWalletCard
                     key={address || index}
                     t={t}
                     wallet={wallet}
                     index={index}
-                    selected={selectedVanityAddresses.includes(address)}
-                    saved={!!address && vanitySavedRef.current.has(address)}
+                    selected={selectedVanityAddresses.includes(addressKey)}
+                    saved={!!addressKey && vanitySavedRef.current.has(addressKey)}
                     copiedField={copiedField}
                     renderVanityExtraAddress={renderVanityExtraAddress}
                     getVanityExtraLabel={getVanityExtraLabel}

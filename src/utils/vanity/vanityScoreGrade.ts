@@ -14,6 +14,7 @@ export type VanityScoreMetadata = {
   vanityHeadRun?: string;
   vanityTailRun?: string;
   vanityPatternType?: VanityExtraPatternType;
+  vanityMatchStart?: number;
 };
 
 export const getVanityScoreGrade = (score = 0): VanityScoreGrade => {
@@ -41,7 +42,7 @@ export const getVanityScoreTone = (score = 0): string => {
   return 'border-slate-400/30 bg-slate-500/10 text-slate-600 dark:text-slate-300 opacity-80';
 };
 
-export const getVanityPatternLabel = (patternType?: string, side?: string): string => {
+export const getVanityPatternLabel = (patternType?: VanityExtraPatternType, side?: string): string => {
   const sideLabel = side === 'head' ? 'head' : side === 'tail' ? 'tail' : side === 'both' ? 'both ends' : '';
   switch (patternType) {
     case 'repeat':
@@ -60,6 +61,10 @@ export const getVanityPatternLabel = (patternType?: string, side?: string): stri
       return 'Lucky';
     case 'alternating':
       return sideLabel ? `Alternating ${sideLabel}` : 'Alternating';
+    case 'numeric-tail':
+      return 'Numeric tail';
+    case 'low-diversity':
+      return sideLabel ? `Low diversity ${sideLabel}` : 'Low diversity';
     default:
       return sideLabel ? `Vanity ${sideLabel}` : 'Vanity';
   }
@@ -74,7 +79,12 @@ export const getVanityScoreReason = (wallet: Pick<Wallet, 'vanityPatternType' | 
 
   if (runs.length) return `${pattern}: ${runs.join(' · ')}`;
   if (wallet.vanityRepeatChar && wallet.vanityRepeatLength) {
-    return `${pattern}: ${wallet.vanityRepeatChar.repeat(wallet.vanityRepeatLength)}`;
+    const value = wallet.vanityPatternType === 'lucky'
+      ? wallet.vanityRepeatChar
+      : wallet.vanityPatternType === 'repeat' && wallet.vanityRepeatChar.length === 1
+        ? wallet.vanityRepeatChar.repeat(wallet.vanityRepeatLength)
+        : wallet.vanityRepeatChar;
+    return `${pattern}: ${value}`;
   }
   return pattern;
 };
@@ -99,6 +109,7 @@ export const toVanityScoreMetadata = (
   vanityHeadRun: match.headRun,
   vanityTailRun: match.tailRun,
   vanityPatternType: match.patternType,
+  vanityMatchStart: match.matchStart,
 });
 
 export const inferVanityScoreMetadata = (wallet: Pick<Wallet, 'address' | 'vanityMatchType'>): VanityScoreMetadata | null => {

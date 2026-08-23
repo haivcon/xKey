@@ -1274,6 +1274,8 @@ export default {
     "vanityExtraPalindrome": "متناظر {pattern}",
     "vanityExtraLucky": "محظوظ {pattern}",
     "vanityExtraAlternating": "بالتناوب {pattern}",
+    "vanityExtraNumericTail": "ذيل رقمي {pattern}",
+    "vanityExtraLowDiversity": "تنوع منخفض {pattern}",
     "vanityExtraScore": "النتيجة {score}",
     "vanityExtraAutoReplaceHint": "يتم ترتيب النتائج حسب النقاط واستبدال الأقل تلقائيًا عند امتلاء القائمة.",
     "vanityExtraSaveAll": "حفظ الكل",
