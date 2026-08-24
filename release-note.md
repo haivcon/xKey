@@ -1,2 +1,5 @@
-📱 Upgraded Android target and compile SDK support to API 36 (Android 16).
-🛠️ Fixed Android lint compatibility checks for API 24–26, display cutouts, navigation bars, and optional camera hardware.
+✨ Corrected vanity wallet metadata and compact address highlighting.
+🏷️ Improved score labels and reasons for lucky, numeric-tail, and low-diversity patterns.
+🔤 Made vanity selection, saving, deletion, and restore handling address-case insensitive.
+⚡ Unified sorting and Set-based deduplication across the main thread and worker.
+✅ Added regression coverage for highlighting, scoring, metadata, and mixed-case addresses.

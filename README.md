@@ -12,15 +12,18 @@
 
 ---
 
-## Current Release: v6.0.32
+## Current Release: v6.0.33
 
-xKey v6.0.32 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.33 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- 📱 Upgraded Android target and compile SDK support to API 36 (Android 16).
-- 🛠️ Fixed Android lint compatibility checks for API 24–26, display cutouts, navigation bars, and optional camera hardware.
-- **Android release metadata:** `versionName 6.0.32`, `versionCode 130`.
+- ✨ Corrected vanity wallet metadata and compact address highlighting.
+- 🏷️ Improved score labels and reasons for lucky, numeric-tail, and low-diversity patterns.
+- 🔤 Made vanity selection, saving, deletion, and restore handling address-case insensitive.
+- ⚡ Unified sorting and Set-based deduplication across the main thread and worker.
+- ✅ Added regression coverage for highlighting, scoring, metadata, and mixed-case addresses.
+- **Android release metadata:** `versionName 6.0.33`, `versionCode 131`.
 ---
 
 ## Core Features

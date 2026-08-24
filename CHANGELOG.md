@@ -2,6 +2,23 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.33] - 2026-08-24
+
+### Release Notes
+
+- ✨ Corrected vanity wallet metadata and compact address highlighting.
+- 🏷️ Improved score labels and reasons for lucky, numeric-tail, and low-diversity patterns.
+- 🔤 Made vanity selection, saving, deletion, and restore handling address-case insensitive.
+- ⚡ Unified sorting and Set-based deduplication across the main thread and worker.
+- ✅ Added regression coverage for highlighting, scoring, metadata, and mixed-case addresses.
+
+### Release Metadata
+
+- `package.json`: `6.0.33`
+- `package-lock.json`: `6.0.33`
+- Android `versionName`: `6.0.33`
+- Android `versionCode`: `131`
+
 ## [6.0.32] - 2026-08-09
 
 ### Release Notes
