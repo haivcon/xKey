@@ -235,6 +235,9 @@ export function VanityTabContent(props: VanityTabProps) {
                   onToggle={() => toggleVanitySection('performance')}
                 />
 
+              </div>
+
+              <div className={`vanity-setup-card space-y-4 rounded-xl border border-surface-200 bg-surface-50/80 p-4 shadow-sm shadow-surface-900/5 dark:border-surface-700 dark:bg-surface-800/40 dark:shadow-none ${vanityRunActive && !vanityPaused ? 'hidden' : ''}`}>
                 <VanityExtraFiltersSection
                   t={t}
                   expanded={vanityExpandedSections.extraFilters}

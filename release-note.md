@@ -1,5 +1,5 @@
-✨ Corrected vanity wallet metadata and compact address highlighting.
-🏷️ Improved score labels and reasons for lucky, numeric-tail, and low-diversity patterns.
-🔤 Made vanity selection, saving, deletion, and restore handling address-case insensitive.
-⚡ Unified sorting and Set-based deduplication across the main thread and worker.
-✅ Added regression coverage for highlighting, scoring, metadata, and mixed-case addresses.
+- Edit extra-wallet filters while paused without losing Resume.
+- Revalidate retained extras, ranking, limits, and selection when resuming; ignore stale worker messages.
+- Correct numeric-tail scoring, sequence direction, palindrome matching, and supported pattern lengths.
+- Match lucky patterns at address edges and respect an empty custom-pattern list.
+- Add real-worker UI regression coverage for filtering, scoring, and pause/edit/resume.

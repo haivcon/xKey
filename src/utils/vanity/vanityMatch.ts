@@ -115,7 +115,7 @@ export const normalizeVanityExtraFilters = (
       enabled: typeof incoming?.enabled === 'boolean' ? incoming.enabled : base.enabled,
       minRun: key === 'lucky' ? undefined : clampMinRun(incoming?.minRun, base.minRun || fallbackMinRun),
       patterns: key === 'lucky'
-        ? (Array.isArray(incoming?.patterns) && incoming.patterns.length ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
+        ? (Array.isArray(incoming?.patterns) ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
           .map(pattern => String(pattern).replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
           .filter(pattern => pattern.length >= 2)
         : undefined,
@@ -145,27 +145,26 @@ const longestEdgeSequence = (
   direction: 'up' | 'down',
   charType: VanityExtraCharType = 'any',
 ): { length: number; value: string; side: 'head' | 'tail' } | null => {
-  const source = direction === 'up' ? HEX_SEQUENCE : [...HEX_SEQUENCE].reverse().join('');
-  const variants = Array.from({ length: source.length }, (_, index) => source.slice(index) + source.slice(0, index));
   let best: { length: number; value: string; side: 'head' | 'tail' } | null = null;
-  for (const variant of variants) {
-    for (const side of ['head', 'tail'] as const) {
-      const target = side === 'head' ? body : [...body].reverse().join('');
-      let length = 0;
-      while (length < target.length && target[length] === variant[length % variant.length]) length += 1;
-      if (length >= 3) {
-        const value = side === 'head' ? body.slice(0, length) : body.slice(body.length - length);
-        if (isCharTypeMatch(value, charType) && (!best || length > best.length)) {
-          best = { length, value, side };
-        }
-      }
+  for (const side of ['head', 'tail'] as const) {
+    const target = side === 'head' ? body : [...body].reverse().join('');
+    const step = (direction === 'up' ? 1 : -1) * (side === 'head' ? 1 : -1);
+    let length = isCharTypeMatch(target[0] || '', charType) ? 1 : 0;
+    while (length > 0 && length < target.length
+      && isCharTypeMatch(target[length], charType)
+      && HEX_SEQUENCE.indexOf(target[length]) - HEX_SEQUENCE.indexOf(target[length - 1]) === step) {
+      length += 1;
+    }
+    if (length >= 3 && (!best || length > best.length)) {
+      const value = side === 'head' ? body.slice(0, length) : body.slice(-length);
+      best = { length, value, side };
     }
   }
   return best;
 };
 
 const detectMirror = (body: string, charType: VanityExtraCharType = 'any'): VanityExtraMatch | null => {
-  const edge = Math.min(8, Math.floor(body.length / 2));
+  const edge = Math.min(12, Math.floor(body.length / 2));
   let length = 0;
   for (let i = 0; i < edge; i += 1) {
     if (body[i] !== body[body.length - 1 - i]) break;
@@ -191,13 +190,14 @@ const detectPalindrome = (
   minRun: number,
   charType: VanityExtraCharType = 'any',
 ): VanityExtraMatch | null => {
-  const max = Math.min(10, body.length);
+  const max = Math.min(12, body.length);
+  let best: VanityExtraMatch | null = null;
   for (const side of ['head', 'tail'] as const) {
     const source = side === 'head' ? body.slice(0, max) : body.slice(-max);
     for (let length = max; length >= minRun; length -= 1) {
       const value = side === 'head' ? source.slice(0, length) : source.slice(source.length - length);
       if (value === [...value].reverse().join('') && isCharTypeMatch(value, charType)) {
-        return {
+        const match: VanityExtraMatch = {
           side,
           char: value[0] || '',
           length,
@@ -205,14 +205,16 @@ const detectPalindrome = (
           [side === 'head' ? 'headRun' : 'tailRun']: value,
           score: length * 16 + (side === 'head' ? 10 : 9),
         };
+        if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
+        break;
       }
     }
   }
-  return null;
+  return best;
 };
 
 const detectBracket = (body: string, minRun: number, charType: VanityExtraCharType = 'any'): VanityExtraMatch | null => {
-  const max = Math.min(8, Math.floor(body.length / 2));
+  const max = Math.min(12, Math.floor(body.length / 2));
   for (let length = max; length >= minRun; length -= 1) {
     const head = body.slice(0, length);
     const tail = body.slice(body.length - length);
@@ -237,10 +239,9 @@ const detectLucky = (body: string, patterns: string[]): VanityExtraMatch | null 
     if (!pattern || pattern.length < 2) continue;
     const head = body.startsWith(pattern);
     const tail = body.endsWith(pattern);
-    const contains = body.includes(pattern);
-    if (!head && !tail && !contains) continue;
-    const side: VanityRepeatSide = head && tail ? 'both' : head ? 'head' : tail ? 'tail' : 'head';
-    const matchStart = body.indexOf(pattern);
+    if (!head && !tail) continue;
+    const side: VanityRepeatSide = head && tail ? 'both' : head ? 'head' : 'tail';
+    const matchStart = head ? 0 : body.length - pattern.length;
     const match: VanityExtraMatch = {
       side,
       char: pattern,
@@ -301,7 +302,9 @@ const detectNumericTail = (body: string, minRun: number): VanityExtraMatch | nul
     length,
     patternType: 'numeric-tail',
     tailRun: value,
-    score: length * 12 + 12,
+    // Numeric characters occupy 10 of 16 hex symbols; score their actual
+    // constraint strength rather than treating each digit as a fixed symbol.
+    score: Math.round(length * Math.log2(16 / 10) * 2.5),
   };
 };
 

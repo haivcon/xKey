@@ -1074,6 +1074,18 @@ export function useVanityGeneration({
       vanityExtraRef.current = [];
     }
 
+    if (resume) {
+      const previousExtras = vanityExtraRef.current;
+      const nextExtras = rankVanityExtraWallets(
+        revalidateVanityExtraWallets(previousExtras, vanitySafeExtraFilters),
+        vanitySafeExtraLimit
+      );
+      syncVanityExtraSelection({ previousExtras, nextExtras, selectedAddresses: vanitySelectedRef.current });
+      vanityExtraRef.current = nextExtras;
+      setVanityExtraWallets(nextExtras);
+      setSelectedVanityAddresses([...vanitySelectedRef.current]);
+    }
+
     window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
     if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
     vanityActivityRef.current = setInterval(() => {
@@ -1091,7 +1103,7 @@ export function useVanityGeneration({
 
     const handleWorkerMessage = (workerIndex: number) => (event: MessageEvent) => {
       const { type, scanned, elapsed, wallet, candidate, matchType } = event.data || {};
-      if (!isVanityRunningRef.current) return;
+      if (!isVanityRunningRef.current || vanityWorkerRef.current !== workers) return;
 
       if (type === 'error' && event.data?.code === 'entropy-verification-failed') {
         void finishVanityRun({

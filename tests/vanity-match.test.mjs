@@ -6,7 +6,7 @@ assert.deepEqual(head, {
   side: 'tail',
   char: 'a',
   length: 6,
-  patternType: 'sequence-down',
+  patternType: 'sequence-up',
   tailRun: 'abcdef',
   score: 91,
 });
@@ -89,11 +89,7 @@ const luckyOnly = detectExtraVanityMatch('0x1234567890abcdef168abcdef1234567890a
   numericTail: { enabled: false },
   lowDiversity: { enabled: false },
 });
-assert.equal(luckyOnly?.patternType, 'lucky');
-assert.equal(luckyOnly?.char, '168');
-assert.equal(luckyOnly?.headRun, undefined);
-assert.equal(luckyOnly?.tailRun, undefined);
-assert.equal(luckyOnly?.matchStart, 16);
+assert.equal(luckyOnly, null, 'a lucky pattern in the middle is not an edge match');
 
 const alternatingOnly = detectExtraVanityMatch('0xababab1234567890abcdef1234567890abcdef12', {
   repeat: { enabled: false },
@@ -141,7 +137,7 @@ const numericTailScore324 = detectExtraVanityMatch(`0x${'a'.repeat(14)}${'123456
   lowDiversity: { enabled: false },
 });
 assert.equal(numericTailScore324?.length, 26);
-assert.equal(numericTailScore324?.score, 324);
+assert.equal(numericTailScore324?.score, 44);
 
 const lowDiversityOnly = detectExtraVanityMatch('0xaa11aa1234567890abcdef1234567890abcdef12', {
   repeat: { enabled: false },
@@ -164,4 +160,32 @@ assert.equal(detectExtraVanityMatch('0x12abce81234567890abcdef1234567890abcdee',
 const ranked = [head, tail, both].filter(Boolean).sort(compareVanityExtraMatches);
 assert.deepEqual(ranked.map(match => match.side), ['both', 'tail', 'head']);
 
+const off = Object.fromEntries(['repeat', 'sequenceUp', 'sequenceDown', 'mirror', 'bothEnds', 'palindrome', 'bracket', 'lucky', 'alternating', 'numericTail', 'lowDiversity'].map(key => [key, { enabled: false }]));
+const only = (key, rule = {}) => ({ ...off, [key]: { enabled: true, ...rule } });
+const address = (head = '', tail = '') => `0x${head}${'9c2e7b'.repeat(7).slice(0, 40 - head.length - tail.length)}${tail}`;
+for (const [key, good, bad] of [['sequenceUp', '1234', '4321'], ['sequenceDown', '4321', '1234']]) {
+  const config = only(key, { minRun: 4, charType: 'numbers' });
+  assert.equal(detectExtraVanityMatch(address('', good), config)?.tailRun, good);
+  assert.equal(detectExtraVanityMatch(address('', bad), config), null);
+  assert.equal(detectExtraVanityMatch(address(good), config)?.headRun, good);
+}
+assert.equal(detectExtraVanityMatch(address('ef01'), only('sequenceUp', { minRun: 4 })), null);
+assert.equal(detectExtraVanityMatch(address('789abc'), only('sequenceUp', { minRun: 3, charType: 'numbers' }))?.headRun, '789');
+const luckyEdges = only('lucky', { patterns: ['168'] });
+assert.equal(detectExtraVanityMatch(address('168'), luckyEdges)?.matchStart, 0);
+assert.equal(detectExtraVanityMatch(address('', '168'), luckyEdges)?.matchStart, 37);
+assert.equal(detectExtraVanityMatch(address('168', '168'), luckyEdges)?.side, 'both');
+assert.equal(detectExtraVanityMatch(address('888'), only('lucky', { patterns: [] })), null);
+assert.equal(detectExtraVanityMatch(address('', '2024'), only('numericTail', { minRun: 4 }))?.score, 7);
+assert.equal(detectExtraVanityMatch(address('', '2024'), only('numericTail', { minRun: 5 })), null);
+for (const [key, head, tail] of [
+  ['mirror', '123456789abc', 'cba987654321'],
+  ['bracket', '123456789abc', '123456789abc'],
+  ['palindrome', '123456654321', ''],
+]) {
+  assert.equal(detectExtraVanityMatch(address(head, tail), only(key, { minRun: 12 }))?.length, 12);
+}
+assert.equal(detectExtraVanityMatch(address('12321', '12344321'), only('palindrome', { minRun: 5 }))?.tailRun, '12344321');
+assert.equal(detectExtraVanityMatch(address('8888', '8888'), off), null);
+assert.equal(detectExtraVanityMatch(address('aaaa'), only('repeat', { minRun: 4, charType: 'numbers' })), null);
 console.log('Vanity match tests passed');

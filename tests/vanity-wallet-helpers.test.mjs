@@ -114,7 +114,7 @@ const revalidated = revalidateVanityExtraWallets([
 assert.equal(revalidated.length, 1);
 assert.equal(revalidated[0].vanityPatternType, 'numeric-tail');
 assert.equal(revalidated[0].vanityTailRun, '1234567890123456789012345678');
-assert.equal(revalidated[0].vanityScore, 348);
+assert.equal(revalidated[0].vanityScore, 47);
 assert.equal(revalidated[0].vanityHeadRun, undefined);
 
 const translate = (key, vars = {}) => `${key}:${vars.pattern || ''}`;

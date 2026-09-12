@@ -7,8 +7,8 @@ android {
         applicationId = "com.haivcon.xkey"
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 131
-        versionName = "6.0.33"
+        versionCode = 132
+        versionName = "6.0.34"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

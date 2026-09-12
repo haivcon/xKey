@@ -23,7 +23,7 @@ assert.equal(headMetadata?.vanityScore, 78);
 
 const tailWallet = { address: '0x111abcde1234567890abcdef1234567890abcdef' };
 const tailMetadata = inferVanityScoreMetadata(tailWallet);
-assert.equal(tailMetadata?.vanityPatternType, 'sequence-down');
+assert.equal(tailMetadata?.vanityPatternType, 'sequence-up');
 assert.equal(tailMetadata?.vanityRepeatSide, 'tail');
 assert.equal(tailMetadata?.vanityTailRun, 'abcdef');
 assert.equal(tailMetadata?.vanityScore, 91);

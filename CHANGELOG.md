@@ -2,6 +2,23 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.34] - 2026-09-12
+
+### Release Notes
+
+- - Edit extra-wallet filters while paused without losing Resume.
+- - Revalidate retained extras, ranking, limits, and selection when resuming; ignore stale worker messages.
+- - Correct numeric-tail scoring, sequence direction, palindrome matching, and supported pattern lengths.
+- - Match lucky patterns at address edges and respect an empty custom-pattern list.
+- - Add real-worker UI regression coverage for filtering, scoring, and pause/edit/resume.
+
+### Release Metadata
+
+- `package.json`: `6.0.34`
+- `package-lock.json`: `6.0.34`
+- Android `versionName`: `6.0.34`
+- Android `versionCode`: `132`
+
 ## [6.0.33] - 2026-08-24
 
 ### Release Notes
