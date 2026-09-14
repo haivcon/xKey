@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import type { Wallet } from '../../types';
+import { useT } from '../../contexts/LanguageContext';
 import { getVanityScoreGradeLabel, getVanityScoreReason, getVanityScoreTone } from '../../utils/vanity/vanityScoreGrade';
 
 type VanityScoreBadgeProps = {
@@ -16,16 +17,19 @@ export default function VanityScoreBadge({
   className = '',
 }: VanityScoreBadgeProps) {
   const score = typeof wallet.vanityScore === 'number' ? wallet.vanityScore : 0;
-  const gradeLabel = getVanityScoreGradeLabel(score);
-  const reason = getVanityScoreReason(wallet);
+  const t = useT();
+  const gradeLabel = getVanityScoreGradeLabel(score, t);
+  const reason = getVanityScoreReason(wallet, t);
+  const scoreLabel = t('createWallet.vanityExtraScore', { score });
+  const gradeDescription = t('createWallet.vanityGrade', { grade: gradeLabel });
 
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border font-black uppercase leading-none shadow-sm ${getVanityScoreTone(score)} ${
         compact ? 'px-1.5 py-[0.125rem] text-[0.55rem]' : 'px-2 py-0.5 text-[0.625rem]'
       } ${className}`}
-      title={`${reason} · Score ${score}`}
-      aria-label={`${reason}. Score ${score}. Grade ${gradeLabel}`}
+      title={`${reason} · ${scoreLabel}`}
+      aria-label={`${reason}. ${scoreLabel}. ${gradeDescription}`}
     >
       <Sparkles size={compact ? 9 : 10} />
       <span>{gradeLabel}</span>

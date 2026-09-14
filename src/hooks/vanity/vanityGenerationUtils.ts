@@ -1,5 +1,14 @@
 import type { GeneratedWallet, VanityPerformanceMode } from '../../components/create-wallet/types';
 
+export const normalizeVanityTimeLimit = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : 300;
+
+export const isVanityLuckyDraftInvalid = (draft: string | null): boolean =>
+  draft !== null && draft.trim() !== ''
+    && draft.split(',').some(pattern => !/^(?:0x)?[0-9a-f]{2,12}$/i.test(pattern.trim()));
+
 export type VanityDifficultyKey = 'easy' | 'medium' | 'hard' | 'extreme';
 
 export type VanityDifficultyAnalyzer = {

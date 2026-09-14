@@ -163,6 +163,13 @@ assert.deepEqual(ranked.map(match => match.side), ['both', 'tail', 'head']);
 const off = Object.fromEntries(['repeat', 'sequenceUp', 'sequenceDown', 'mirror', 'bothEnds', 'palindrome', 'bracket', 'lucky', 'alternating', 'numericTail', 'lowDiversity'].map(key => [key, { enabled: false }]));
 const only = (key, rule = {}) => ({ ...off, [key]: { enabled: true, ...rule } });
 const address = (head = '', tail = '') => `0x${head}${'9c2e7b'.repeat(7).slice(0, 40 - head.length - tail.length)}${tail}`;
+
+for (const pattern of ['ababab', 'bababab', '121212']) {
+  const match = detectExtraVanityMatch(address('', pattern), only('alternating', { minRun: 6 }));
+  assert.equal(match?.side, 'tail');
+  assert.equal(match?.tailRun, pattern);
+  assert.equal(match?.char, pattern[0]);
+}
 for (const [key, good, bad] of [['sequenceUp', '1234', '4321'], ['sequenceDown', '4321', '1234']]) {
   const config = only(key, { minRun: 4, charType: 'numbers' });
   assert.equal(detectExtraVanityMatch(address('', good), config)?.tailRun, good);
@@ -188,4 +195,11 @@ for (const [key, head, tail] of [
 assert.equal(detectExtraVanityMatch(address('12321', '12344321'), only('palindrome', { minRun: 5 }))?.tailRun, '12344321');
 assert.equal(detectExtraVanityMatch(address('8888', '8888'), off), null);
 assert.equal(detectExtraVanityMatch(address('aaaa'), only('repeat', { minRun: 4, charType: 'numbers' })), null);
+// Custom patterns are normalized once committed, deduplicated, and never
+// silently repopulated when the user clears their list.
+const { normalizeVanityExtraFilters } = await import('../src/utils/vanity/vanityMatch.ts');
+assert.deepEqual(normalizeVanityExtraFilters(only('lucky', {
+  patterns: ['888', ' 0xAB ', 'ab', '888', ''],
+})).lucky.patterns, ['888', 'ab']);
+assert.deepEqual(normalizeVanityExtraFilters(only('lucky', { patterns: [] })).lucky.patterns, []);
 console.log('Vanity match tests passed');

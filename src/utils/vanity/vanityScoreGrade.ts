@@ -1,4 +1,5 @@
 import type { Wallet } from '../../types';
+import type { TranslationFn } from '../../contexts/LanguageContext';
 import { detectExtraVanityMatch, type VanityExtraMatch, type VanityExtraPatternType } from './vanityMatch';
 
 export const VANITY_SCORE_DISPLAY_THRESHOLD = 30;
@@ -24,9 +25,9 @@ export const getVanityScoreGrade = (score = 0): VanityScoreGrade => {
   return 'C';
 };
 
-export const getVanityScoreGradeLabel = (score = 0): string => {
+export const getVanityScoreGradeLabel = (score: number, t: TranslationFn): string => {
   const grade = getVanityScoreGrade(score);
-  return grade === 'S' ? 'S / Rare' : grade;
+  return grade === 'S' ? t('createWallet.vanityGradeRare', { grade }) : grade;
 };
 
 export const getVanityScoreTone = (score = 0): string => {
@@ -42,39 +43,24 @@ export const getVanityScoreTone = (score = 0): string => {
   return 'border-slate-400/30 bg-slate-500/10 text-slate-600 dark:text-slate-300 opacity-80';
 };
 
-export const getVanityPatternLabel = (patternType?: VanityExtraPatternType, side?: string): string => {
-  const sideLabel = side === 'head' ? 'head' : side === 'tail' ? 'tail' : side === 'both' ? 'both ends' : '';
-  switch (patternType) {
-    case 'repeat':
-      return sideLabel ? `Repeat ${sideLabel}` : 'Repeat';
-    case 'sequence-up':
-      return sideLabel ? `Sequence ↑ ${sideLabel}` : 'Sequence ↑';
-    case 'sequence-down':
-      return sideLabel ? `Sequence ↓ ${sideLabel}` : 'Sequence ↓';
-    case 'mirror':
-      return 'Mirror';
-    case 'palindrome':
-      return sideLabel ? `Palindrome ${sideLabel}` : 'Palindrome';
-    case 'bracket':
-      return 'Bracket';
-    case 'lucky':
-      return 'Lucky';
-    case 'alternating':
-      return sideLabel ? `Alternating ${sideLabel}` : 'Alternating';
-    case 'numeric-tail':
-      return 'Numeric tail';
-    case 'low-diversity':
-      return sideLabel ? `Low diversity ${sideLabel}` : 'Low diversity';
-    default:
-      return sideLabel ? `Vanity ${sideLabel}` : 'Vanity';
-  }
+export const getVanityPatternLabel = (patternType: VanityExtraPatternType | undefined, side: string | undefined, t: TranslationFn): string => {
+  const keys: Record<VanityExtraPatternType, string> = {
+    repeat: 'repeat', 'sequence-up': 'sequenceUp', 'sequence-down': 'sequenceDown',
+    mirror: 'mirror', palindrome: 'palindrome', bracket: 'bracket', lucky: 'lucky',
+    alternating: 'alternating', 'numeric-tail': 'numericTail', 'low-diversity': 'lowDiversity',
+  };
+  const pattern = patternType ? t(`createWallet.vanityExtraFilter_${keys[patternType]}`) : t('actionBar.vanityScore');
+  const sideLabel = side === 'head' ? t('createWallet.vanityPrefix')
+    : side === 'tail' ? t('createWallet.vanitySuffix')
+      : side === 'both' ? `${t('createWallet.vanityPrefix')} / ${t('createWallet.vanitySuffix')}` : '';
+  return sideLabel ? `${pattern} (${sideLabel})` : pattern;
 };
 
-export const getVanityScoreReason = (wallet: Pick<Wallet, 'vanityPatternType' | 'vanityRepeatSide' | 'vanityRepeatChar' | 'vanityRepeatLength' | 'vanityHeadRun' | 'vanityTailRun'>): string => {
-  const pattern = getVanityPatternLabel(wallet.vanityPatternType, wallet.vanityRepeatSide);
+export const getVanityScoreReason = (wallet: Pick<Wallet, 'vanityPatternType' | 'vanityRepeatSide' | 'vanityRepeatChar' | 'vanityRepeatLength' | 'vanityHeadRun' | 'vanityTailRun'>, t: TranslationFn): string => {
+  const pattern = getVanityPatternLabel(wallet.vanityPatternType, wallet.vanityRepeatSide, t);
   const runs = [
-    wallet.vanityHeadRun ? `Head ${wallet.vanityHeadRun}` : '',
-    wallet.vanityTailRun ? `Tail ${wallet.vanityTailRun}` : '',
+    wallet.vanityHeadRun ? `${t('createWallet.vanityPrefix')}: ${wallet.vanityHeadRun}` : '',
+    wallet.vanityTailRun ? `${t('createWallet.vanitySuffix')}: ${wallet.vanityTailRun}` : '',
   ].filter(Boolean);
 
   if (runs.length) return `${pattern}: ${runs.join(' · ')}`;

@@ -7,7 +7,20 @@ import {
   revalidateVanityExtraWallets,
   syncVanityExtraSelection,
 } from '../src/hooks/vanity/vanityWalletHelpers.ts';
-import { getVanityExtraLabel } from '../src/hooks/vanity/vanityGenerationUtils.ts';
+import { getVanityExtraLabel, normalizeVanityTimeLimit, isVanityLuckyDraftInvalid } from '../src/hooks/vanity/vanityGenerationUtils.ts';
+
+for (const [input, expected] of [[0, 0], [60, 60], [60.9, 60], [undefined, 300], [null, 300], ['', 300], ['0', 300], ['bad', 300], [-1, 300], [NaN, 300], [Infinity, 300], [false, 300]]) {
+  assert.equal(normalizeVanityTimeLimit(input), expected);
+}
+for (const draft of [null, '', ' ', '168, 0xAB', 'ab']) assert.equal(isVanityLuckyDraftInvalid(draft), false);
+for (const draft of ['8', 'ab,', 'xyz', '123456789abcd']) assert.equal(isVanityLuckyDraftInvalid(draft), true);
+
+import { getVanityScoreTone as extraTone } from '../src/hooks/vanity/vanityWalletHelpers.ts';
+import { getVanityScoreTone as badgeTone } from '../src/utils/vanity/vanityScoreGrade.ts';
+
+for (const score of [0, 7, 29, 30, 49, 50, 69, 70, 75, 80, 89, 90, 120]) {
+  assert.equal(extraTone(score), badgeTone(score));
+}
 
 const wallet = (address, vanityScore = 0, extra = {}) => ({
   address,

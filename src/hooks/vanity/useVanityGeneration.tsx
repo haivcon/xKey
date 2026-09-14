@@ -61,6 +61,8 @@ import {
   getVanityDifficultyTone,
   getVanityExtraLabel as formatVanityExtraLabel,
   getVanityWorkerCount,
+  normalizeVanityTimeLimit,
+  isVanityLuckyDraftInvalid,
 } from './vanityGenerationUtils';
 import {
   buildVanityExtraFolderOptions,
@@ -190,9 +192,12 @@ export function useVanityGeneration({
     ? Math.min(0.999999, vanityScanned / Math.max(1, vanityExpectedTries * vanitySafeTargetCount))
     : 0;
   const vanityTooLong = vanityPatternLength > VANITY_MAX_SAFE_LENGTH;
-  const vanityCanStart = vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
-  const vanityCanResume = vanityPaused && vanityHasPattern && !vanityInvalidChars && !vanityGenerating;
-  const vanitySafeExtraLimit = Math.max(0, Math.floor(Number(vanityExtraLimit) || 0));
+  const [luckyDraft, setLuckyDraft] = useState<string | null>(null);
+  const luckyDraftInvalid = isVanityLuckyDraftInvalid(luckyDraft);
+  const activeLuckyDraftInvalid = vanityCaptureExtras && vanityExtraFilters.lucky.enabled && luckyDraftInvalid;
+  const vanityCanStart = vanityHasPattern && !vanityInvalidChars && !vanityGenerating && !activeLuckyDraftInvalid;
+  const vanityCanResume = vanityPaused && vanityCanStart;
+  const vanitySafeExtraLimit = Math.max(1, Math.floor(Number(vanityExtraLimit) || 1));
   const vanitySafeExtraMinRun = Math.max(3, Math.min(6, Number(vanityExtraMinRun) || 4));
   const vanitySafeExtraFilters = useMemo(
     () => normalizeVanityExtraFilters(vanityExtraFilters, vanitySafeExtraMinRun),
@@ -973,7 +978,8 @@ export function useVanityGeneration({
       setVanityScanned(Math.max(0, Number(state.scanned) || 0));
       setVanityTime(Math.max(0, Number(state.elapsed) || 0));
       setVanityTargetCount(Math.max(1, Math.floor(Number(state.targetCount) || 1)));
-      setVanityTimeLimit(Math.max(0, Math.floor(Number(state.timeLimit) || 300)));
+      setVanityTimeLimit(normalizeVanityTimeLimit(state.timeLimit));
+      setLuckyDraft(null);
       setVanityNetwork(NETWORKS.includes(state.network) ? state.network : 'XLAYER');
       setVanityFolder(state.folder || VANITY_DEFAULT_FOLDER);
       setVanityCaptureExtras(typeof state.captureExtras === 'boolean' ? state.captureExtras : true);
@@ -1378,6 +1384,9 @@ export function useVanityGeneration({
     vanityExpectedTries,
     vanityCompletionRatio,
     vanityTooLong,
+    luckyDraft,
+    setLuckyDraft,
+    luckyDraftInvalid,
     vanityCanStart,
     vanityCanResume,
     vanitySafeExtraLimit,

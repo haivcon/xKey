@@ -63,15 +63,7 @@ export const createVanityExtraWallet = ({
   mnemonic: wallet.mnemonic || wallet.seedPhrase || '',
 });
 
-export const getVanityScoreTone = (score = 0): string => {
-  if (score >= 80)
-    return 'border-emerald-400/35 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200';
-  if (score >= 50)
-    return 'border-amber-400/35 bg-amber-500/15 text-amber-700 dark:text-amber-200';
-  if (score >= 30)
-    return 'border-orange-400/35 bg-orange-500/15 text-orange-700 dark:text-orange-200';
-  return 'border-rose-400/35 bg-rose-500/15 text-rose-700 dark:text-rose-200';
-};
+export { getVanityScoreTone } from '../../utils/vanity/vanityScoreGrade';
 
 export const revalidateVanityExtraWallet = (
   wallet: GeneratedWallet,

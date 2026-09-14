@@ -255,6 +255,9 @@ export function VanityTabContent(props: VanityTabProps) {
                   vanityExtraFolderOptions={vanityExtraFolderOptions}
                   vanityExtraFolderLabel={vanityExtraFolderLabel}
                   vanityEnabledExtraFilterCount={vanityEnabledExtraFilterCount}
+                  luckyDraft={props.luckyDraft}
+                  setLuckyDraft={props.setLuckyDraft}
+                  luckyDraftInvalid={props.luckyDraftInvalid}
                   vanitySafeExtraFilters={vanitySafeExtraFilters}
                   vanitySafeExtraMinRun={vanitySafeExtraMinRun}
                   vanityExtraMinRunDrafts={vanityExtraMinRunDrafts}

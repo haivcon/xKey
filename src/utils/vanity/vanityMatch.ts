@@ -115,9 +115,9 @@ export const normalizeVanityExtraFilters = (
       enabled: typeof incoming?.enabled === 'boolean' ? incoming.enabled : base.enabled,
       minRun: key === 'lucky' ? undefined : clampMinRun(incoming?.minRun, base.minRun || fallbackMinRun),
       patterns: key === 'lucky'
-        ? (Array.isArray(incoming?.patterns) ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
-          .map(pattern => String(pattern).replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
-          .filter(pattern => pattern.length >= 2)
+        ? [...new Set((Array.isArray(incoming?.patterns) ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
+          .map(pattern => String(pattern).trim().replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
+          .filter(pattern => pattern.length >= 2))]
         : undefined,
       charType: key !== 'lucky' && key !== 'numericTail' && key !== 'lowDiversity'
         ? normalizeCharType(incoming?.charType ?? base.charType)
@@ -276,7 +276,7 @@ const detectAlternating = (
       if (!isCharTypeMatch(value, charType)) continue;
       const match: VanityExtraMatch = {
         side,
-        char: a,
+        char: value[0],
         length,
         patternType: 'alternating',
         [side === 'head' ? 'headRun' : 'tailRun']: value,

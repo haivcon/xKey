@@ -8,6 +8,9 @@ import type { VanityExtraCharType, VanityExtraFilterConfig, VanityExtraFilterRul
 
 type VanityExtraFiltersSectionProps = {
   t: TranslationFn;
+  luckyDraft: string | null;
+  setLuckyDraft: Dispatch<SetStateAction<string | null>>;
+  luckyDraftInvalid: boolean;
   expanded: boolean;
   vanityCaptureExtras: boolean;
   setVanityCaptureExtras: (enabled: boolean) => void;
@@ -36,6 +39,9 @@ type VanityExtraFiltersSectionProps = {
 
 export function VanityExtraFiltersSection({
   t,
+  luckyDraft,
+  setLuckyDraft,
+  luckyDraftInvalid,
   expanded,
   vanityCaptureExtras,
   setVanityCaptureExtras,
@@ -61,6 +67,11 @@ export function VanityExtraFiltersSection({
   stepVanityExtraMinRun,
   onToggle,
 }: VanityExtraFiltersSectionProps) {
+  const commitLuckyDraft = () => {
+    if (luckyDraft === null || luckyDraftInvalid) return;
+    updateVanityExtraFilter('lucky', { patterns: luckyDraft.split(',') });
+    setLuckyDraft(null);
+  };
   const charTypeFilterOptions: Array<{ value: VanityExtraCharType; label: string }> = [
     { value: 'any', label: t('createWallet.vanityExtraCharTypeAny') },
     { value: 'letters', label: t('createWallet.vanityExtraCharTypeLetters') },
@@ -381,10 +392,15 @@ export function VanityExtraFiltersSection({
                               <span className="max-w-[7rem] truncate">{pattern}</span>
                               <button
                                 type="button"
-                                disabled={vanityGenerating || !vanityCaptureExtras || !enabled || (rule.patterns || []).length <= 1}
-                                onClick={() => updateVanityExtraFilter(key, { patterns: (rule.patterns || []).filter((_, currentIndex) => currentIndex !== patternIndex) })}
+                                disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
+                                onClick={() => {
+                                  updateVanityExtraFilter(key, { patterns: (rule.patterns || []).filter((_, currentIndex) => currentIndex !== patternIndex) });
+                                  setLuckyDraft(draft => draft === null ? null : draft.split(',')
+                                    .filter(value => value.trim().replace(/^0x/i, '').toLowerCase() !== pattern)
+                                    .join(','));
+                                }}
                                 className="rounded-full p-0.5 text-cyan-700 transition-colors hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-35 dark:text-cyan-200"
-                                aria-label={t('common.remove')}
+                                aria-label={t('common.delete')}
                               >
                                 <X size={10} />
                               </button>
@@ -394,23 +410,34 @@ export function VanityExtraFiltersSection({
                         <div className="flex gap-1.5">
                           <input
                             type="text"
-                            value={(rule.patterns || []).join(', ')}
+                            value={luckyDraft ?? (rule.patterns || []).join(', ')}
                             disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
-                            onChange={(event) => updateVanityExtraFilter(key, { patterns: event.target.value.split(',') })}
+                            onChange={(event) => setLuckyDraft(event.target.value)}
+                            onBlur={commitLuckyDraft}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter') event.currentTarget.blur();
+                            }}
                             placeholder="888, 666, 168"
                             className="min-w-0 flex-1 rounded-lg border border-surface-200 bg-surface-50 px-2 py-1.5 text-xs font-semibold text-surface-950 placeholder:text-surface-400 focus:border-cyan-500 focus:outline-none disabled:opacity-50 dark:border-surface-700 dark:bg-surface-950 dark:text-white dark:placeholder:text-surface-500"
                             aria-label={t('createWallet.vanityLuckyPatterns')}
+                            aria-invalid={luckyDraftInvalid}
+                            aria-describedby={luckyDraftInvalid ? 'vanity-lucky-error' : undefined}
                           />
                           <button
                             type="button"
-                            disabled={vanityGenerating || !vanityCaptureExtras || !enabled}
-                            onClick={() => updateVanityExtraFilter(key, { patterns: [...(rule.patterns || []), '888'] })}
+                            disabled={vanityGenerating || !vanityCaptureExtras || !enabled || luckyDraft === null || luckyDraftInvalid}
+                            onClick={commitLuckyDraft}
                             className="inline-flex items-center gap-1 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-2 py-1.5 text-scale-2xs font-bold text-cyan-700 transition-colors hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-45 dark:text-cyan-200"
                           >
                             <Plus size={12} />
                             {t('common.add')}
                           </button>
                         </div>
+                        {luckyDraftInvalid && (
+                          <p id="vanity-lucky-error" role="alert" className="text-xs text-rose-600 dark:text-rose-300">
+                            {t('createWallet.vanityLuckyPatternsInvalid')}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
