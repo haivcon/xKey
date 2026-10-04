@@ -27,14 +27,14 @@ assert.equal(headMetadata?.vanityMatchType, 'extra');
 assert.equal(headMetadata?.vanityPatternType, 'sequence-up');
 assert.equal(headMetadata?.vanityRepeatSide, 'head');
 assert.equal(headMetadata?.vanityHeadRun, 'abcde');
-assert.equal(headMetadata?.vanityScore, 78);
+assert.equal(headMetadata?.vanityScore, 39);
 
 const tailWallet = { address: '0x111abcde1234567890abcdef1234567890abcdef' };
 const tailMetadata = inferVanityScoreMetadata(tailWallet);
 assert.equal(tailMetadata?.vanityPatternType, 'sequence-up');
 assert.equal(tailMetadata?.vanityRepeatSide, 'tail');
 assert.equal(tailMetadata?.vanityTailRun, 'abcdef');
-assert.equal(tailMetadata?.vanityScore, 91);
+assert.equal(tailMetadata?.vanityScore, 49);
 
 assert.equal(getVanityScoreGradeLabel(91, t), 'S / Rare');
 assert.equal(getVanityScoreGradeLabel(78, t), 'A');
@@ -89,6 +89,27 @@ assert.equal(shouldShowVanityScore({ vanityMatchType: 'main', vanityScore: 29 })
 assert.equal(shouldShowVanityScore({ vanityMatchType: 'main', vanityScore: 30 }), true);
 assert.equal(shouldShowVanityScore({ vanityMatchType: 'extra', vanityScore: 78 }, false), false);
 
+const { primaryVanityScoreMetadata } = await import('../src/utils/vanity/vanityScoreGrade.ts');
+const { scoreVanityMatch, normalizeVanityExtraFilters } = await import('../src/utils/vanity/vanityMatch.ts');
+const score = (patternType, length, side = 'head', extra = {}) => scoreVanityMatch({ patternType, length, side, char: 'a', score: 0, ...extra });
+assert.equal(score('palindrome', 5), 18);
+assert.equal(score('repeat', 3, 'both', { headRun: 'aaa', tailRun: 'bbb' }), 40);
+assert.equal(score('numeric-tail', 4, 'tail'), 7);
+assert.ok(score('repeat', 6) > score('low-diversity', 6));
+assert.ok(score('alternating', 6) > score('low-diversity', 6));
+assert.equal(primaryVanityScoreMetadata('abcd', '1234').vanityScore, 80);
+assert.equal(primaryVanityScoreMetadata('a'.repeat(30), 'a'.repeat(30)).vanityScore, 400);
+const primary = { address: `0xabcd${'19'.repeat(16)}1234`, vanityMatchType: 'main', vanityHeadRun: 'abcd', vanityTailRun: '1234' };
+const migrated = inferVanityScoreMetadata(primary);
+assert.equal(migrated.vanityHeadRun, 'abcd');
+assert.equal(migrated.vanityTailRun, '1234');
+assert.equal(migrated.vanityScoreVersion, 2);
+assert.equal(migrated.vanityScore, 80);
+assert.equal(inferVanityScoreMetadata({ ...primary, vanityPatternType: 'repeat' }), null);
+assert.equal(inferVanityScoreMetadata({ ...primary, vanityHeadRun: 'ffff' }), null);
+assert.equal(inferVanityScoreMetadata({ address: primary.address, vanityMatchType: 'extra', vanityPatternType: 'numeric-tail', vanityRepeatLength: 4, vanityRepeatSide: 'tail', vanityScore: 99 }).vanityScore, 7);
+assert.equal(normalizeVanityExtraFilters(null, 6).repeat.minRun, 6);
+assert.equal(normalizeVanityExtraFilters({ repeat: { minRun: 3 } }, 6).repeat.minRun, 3);
 console.log('Vanity score grade tests passed');
 assert.equal(getVanityScoreGradeLabel(95, translate(vi)), 'S / Hiếm');
 for (const type of ['repeat','sequence-up','sequence-down','mirror','palindrome','bracket','lucky','alternating','numeric-tail','low-diversity',undefined]) {

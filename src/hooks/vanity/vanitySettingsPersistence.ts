@@ -96,7 +96,9 @@ export const loadVanitySettings = async (
     setters.setVanityExtraFilters(
       normalizeVanityExtraFilters(settings.extraFilters, settings.extraMinRun || 4)
     );
-  else setters.setVanityExtraFilters(normalizeVanityExtraFilters(DEFAULT_VANITY_EXTRA_FILTERS));
+  else setters.setVanityExtraFilters(normalizeVanityExtraFilters(
+    settings.extraMinRun ? null : DEFAULT_VANITY_EXTRA_FILTERS, settings.extraMinRun || 4
+  ));
   if (settings.extraFolder) setters.setVanityExtraFolder(settings.extraFolder);
   if (
     settings.performanceMode === 'eco' ||

@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 import { createPostQuantumEnvelope, DEFAULT_ROTATION_MONTHS } from '../utils/keyHealth';
 import { normalizeAmountInput } from '../utils/amountFormat';
 import { secureCopy } from '../utils/clipboard';
+import { isSecretKind, resolveCopyFieldKind } from '../utils/dataSensitivity';
+import { SECRET_COPIED_EVENT } from './security/useAutoLock';
 import { assertEntropyQuality } from '../utils/crypto/entropyUtils';
 import type { EntropyVerification } from '../types';
 import type { BulkResult, CreateWalletModalProps, FloatingEffect, GeneratedWallet } from '../components/create-wallet/types';
@@ -236,18 +238,15 @@ export function useWalletGeneration({
   };
 
   const handleCopy = async (text: string, field: string) => {
-    const copied = await secureCopy(text, {
-      kind: field === 'privateKey' || field === 'pk'
-        ? 'privateKey'
-        : field === 'mnemonic' || field === 'seedPhrase' || field === 'seed'
-          ? 'mnemonic'
-          : field === 'address'
-            ? 'address'
-            : 'generic',
-    });
+    const kind = resolveCopyFieldKind(field);
+    let blocked = false;
+    const copied = await secureCopy(text, { kind, onBlocked: () => { blocked = true; } });
     if (!copied) {
-      showToast({ key: 'settings.secretCopyBlocked', category: 'security' }, 'warning');
+      showToast({ key: blocked ? 'walletCard.secretCopyDisabled' : 'walletCard.copyFailed', category: 'security' }, blocked ? 'warning' : 'error');
       return;
+    }
+    if (isSecretKind(kind)) {
+      window.dispatchEvent(new CustomEvent(SECRET_COPIED_EVENT, { detail: { kind } }));
     }
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);

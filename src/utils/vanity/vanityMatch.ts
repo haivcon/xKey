@@ -113,7 +113,8 @@ export const normalizeVanityExtraFilters = (
     const incoming = config?.[key];
     merged[key] = {
       enabled: typeof incoming?.enabled === 'boolean' ? incoming.enabled : base.enabled,
-      minRun: key === 'lucky' ? undefined : clampMinRun(incoming?.minRun, base.minRun || fallbackMinRun),
+      minRun: key === 'lucky' ? undefined : clampMinRun(incoming?.minRun,
+        config ? base.minRun || fallbackMinRun : fallbackMinRun),
       patterns: key === 'lucky'
         ? [...new Set((Array.isArray(incoming?.patterns) ? incoming.patterns : base.patterns || DEFAULT_LUCKY_PATTERNS)
           .map(pattern => String(pattern).trim().replace(/^0x/i, '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 12))
@@ -138,7 +139,33 @@ const getRun = (value: string, fromEnd = false): CharacterRun => {
   return { char, length, value: char.repeat(length) };
 };
 
-const scoreRun = (length: number, side: 'head' | 'tail'): number => length * 10 + (side === 'head' ? 4 : 3);
+export const VANITY_SCORE_VERSION = 2;
+export const scoreVanityBits = (bits: number): number => Math.round(Math.max(0, bits) * 2.5);
+
+/** Conservative family rarity, including either-edge opportunities, not key strength. */
+export const scoreVanityMatch = (match: VanityExtraMatch): number => {
+  const n = match.length;
+  let bits: number;
+  switch (match.patternType) {
+    case 'repeat':
+      bits = match.side === 'both'
+        ? 4 * ((match.headRun?.length || n) + (match.tailRun?.length || n) - 2)
+        : 4 * (n - 1) - 1;
+      break;
+    case 'sequence-up': case 'sequence-down': bits = 4 * n - Math.log2(Math.max(1, 17 - n)) - 1; break;
+    case 'mirror': case 'bracket': bits = 4 * n; break;
+    case 'palindrome': bits = 4 * Math.floor(n / 2) - 1; break;
+    case 'alternating': bits = 4 * n - Math.log2(16 * 15) - 1; break;
+    case 'numeric-tail': bits = n * Math.log2(16 / 10); break;
+    case 'low-diversity': bits = 4 * n - Math.log2(16 + 120 * (2 ** n - 2)) - 1; break;
+    // A fixed custom pattern, independent of the user's other enabled patterns.
+    case 'lucky': bits = match.side === 'both' ? 4 * Math.min(40, n * 2) : 4 * n - 1; break;
+    default: bits = 0;
+  }
+  return scoreVanityBits(bits);
+};
+
+const scoreRun = (length: number): number => scoreVanityBits(4 * (length - 1) - 1);
 
 const longestEdgeSequence = (
   body: string,
@@ -205,6 +232,7 @@ const detectPalindrome = (
           [side === 'head' ? 'headRun' : 'tailRun']: value,
           score: length * 16 + (side === 'head' ? 10 : 9),
         };
+        match.score = scoreVanityMatch(match);
         if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
         break;
       }
@@ -252,6 +280,7 @@ const detectLucky = (body: string, patterns: string[]): VanityExtraMatch | null 
       matchStart,
       score: pattern.length * 9 + (head || tail ? 18 : 6) + (side === 'both' ? 18 : 0),
     };
+    match.score = scoreVanityMatch(match);
     if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
   }
   return best;
@@ -282,6 +311,7 @@ const detectAlternating = (
         [side === 'head' ? 'headRun' : 'tailRun']: value,
         score: length * 13 + (side === 'head' ? 8 : 7),
       };
+      match.score = scoreVanityMatch(match);
       if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
     }
   }
@@ -329,6 +359,7 @@ const detectLowDiversity = (body: string, minRun: number): VanityExtraMatch | nu
         [side === 'head' ? 'headRun' : 'tailRun']: value,
         score: length * 11 + (side === 'head' ? 7 : 6),
       };
+      match.score = scoreVanityMatch(match);
       if (!best || compareVanityExtraMatches(match, best) < 0) best = match;
     }
   }
@@ -379,7 +410,7 @@ export const detectExtraVanityMatch = (
       patternType: 'repeat',
       headRun: head.value,
       tailRun: tail.value,
-      score: scoreRun(head.length, 'head') + scoreRun(tail.length, 'tail') + 20,
+      score: scoreRun(head.length) + scoreRun(tail.length) + 20,
     });
   }
 
@@ -391,7 +422,7 @@ export const detectExtraVanityMatch = (
         length: head.length,
         patternType: 'repeat',
         headRun: head.value,
-        score: scoreRun(head.length, 'head'),
+        score: scoreRun(head.length),
       });
     }
     if (hasTail && isCharTypeMatch(tail.value, filters.repeat.charType)) {
@@ -401,7 +432,7 @@ export const detectExtraVanityMatch = (
         length: tail.length,
         patternType: 'repeat',
         tailRun: tail.value,
-        score: scoreRun(tail.length, 'tail'),
+        score: scoreRun(tail.length),
       });
     }
   }
@@ -451,5 +482,6 @@ export const detectExtraVanityMatch = (
   const lowDiversity = filters.lowDiversity.enabled ? detectLowDiversity(body, clampMinRun(filters.lowDiversity.minRun, 6)) : null;
   if (lowDiversity) matches.push(lowDiversity);
 
-  return matches.sort(compareVanityExtraMatches)[0] || null;
+  return matches.map(match => ({ ...match, score: scoreVanityMatch(match) }))
+    .sort(compareVanityExtraMatches)[0] || null;
 };

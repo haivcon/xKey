@@ -12,18 +12,18 @@
 
 ---
 
-## Current Release: v6.0.34
+## Current Release: v6.0.35
 
-xKey v6.0.34 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
+xKey v6.0.35 is the current synchronized web and Android release. This release updates the app version metadata, Android build metadata, documentation, and release automation notes used for GitHub Releases.
 
 ### What's New
 
-- - Edit extra-wallet filters while paused without losing Resume.
-- - Revalidate retained extras, ranking, limits, and selection when resuming; ignore stale worker messages.
-- - Correct numeric-tail scoring, sequence direction, palindrome matching, and supported pattern lengths.
-- - Match lucky patterns at address edges and respect an empty custom-pattern list.
-- - Add real-worker UI regression coverage for filtering, scoring, and pause/edit/resume.
-- **Android release metadata:** `versionName 6.0.34`, `versionCode 132`.
+- Fix wallet-list identity and virtualized layout across PIN unlock, density, and scale changes.
+- Correct vanity matching, score metadata, and resumed-session filtering.
+- Respect idle auto-lock during vanity scanning and lock-on-copy for generated secrets.
+- Classify vanity address copies correctly without weakening clipboard protections.
+- Expand worker, clipboard, and light/dark layout regression coverage; 49 browser tests pass.
+- **Android release metadata:** `versionName 6.0.35`, `versionCode 133`.
 ---
 
 ## Core Features

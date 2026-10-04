@@ -16,6 +16,7 @@ import { getVaultStorageStatusForKeys, loadVaultCipher, removeVaultFragmentDirec
 import { persistAndVerify } from './storage/verifiedPersistence';
 import type { Wallet } from '../types';
 import { inferVanityScoreMetadata } from './vanity/vanityScoreGrade';
+import { VANITY_SCORE_VERSION } from './vanity/vanityMatch';
 import {
     decryptVaultEnvelope,
     encryptVaultEnvelope,
@@ -125,10 +126,7 @@ const backfillVanityScoreMetadata = (wallets: Wallet[]): { wallets: Wallet[]; mi
     const next = wallets.map(wallet => {
         if (!wallet.address) return wallet;
         if (
-            wallet.vanityMatchType &&
-            typeof wallet.vanityScore === 'number' &&
-            wallet.vanityPatternType &&
-            (wallet.vanityHeadRun || wallet.vanityTailRun || wallet.vanityRepeatLength)
+            wallet.vanityScoreVersion === VANITY_SCORE_VERSION
         ) {
             return wallet;
         }

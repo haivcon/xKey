@@ -2,6 +2,23 @@
 
 All notable changes to xKey are summarized here. Older details are intentionally compact so the current release remains easy to audit.
 
+## [6.0.35] - 2026-10-04
+
+### Release Notes
+
+- Fix wallet-list identity and virtualized layout across PIN unlock, density, and scale changes.
+- Correct vanity matching, score metadata, and resumed-session filtering.
+- Respect idle auto-lock during vanity scanning and lock-on-copy for generated secrets.
+- Classify vanity address copies correctly without weakening clipboard protections.
+- Expand worker, clipboard, and light/dark layout regression coverage; 49 browser tests pass.
+
+### Release Metadata
+
+- `package.json`: `6.0.35`
+- `package-lock.json`: `6.0.35`
+- Android `versionName`: `6.0.35`
+- Android `versionCode`: `133`
+
 ## [6.0.34] - 2026-09-12
 
 ### Release Notes

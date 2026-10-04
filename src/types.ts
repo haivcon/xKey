@@ -73,6 +73,7 @@ export interface Wallet {
   vanityRepeatChar?: string;
   vanityRepeatLength?: number;
   vanityScore?: number;
+  vanityScoreVersion?: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
   vanityPatternType?: VanityExtraPatternType;

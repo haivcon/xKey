@@ -1,5 +1,5 @@
-- Edit extra-wallet filters while paused without losing Resume.
-- Revalidate retained extras, ranking, limits, and selection when resuming; ignore stale worker messages.
-- Correct numeric-tail scoring, sequence direction, palindrome matching, and supported pattern lengths.
-- Match lucky patterns at address edges and respect an empty custom-pattern list.
-- Add real-worker UI regression coverage for filtering, scoring, and pause/edit/resume.
+Fix wallet-list identity and virtualized layout across PIN unlock, density, and scale changes.
+Correct vanity matching, score metadata, and resumed-session filtering.
+Respect idle auto-lock during vanity scanning and lock-on-copy for generated secrets.
+Classify vanity address copies correctly without weakening clipboard protections.
+Expand worker, clipboard, and light/dark layout regression coverage; 49 browser tests pass.

@@ -54,3 +54,11 @@ export const getClipboardPolicy = (kind: SecretKind): ClipboardPolicy => CLIPBOA
 
 export const isSecretKind = (kind: SecretKind): boolean =>
   kind === 'privateKey' || kind === 'mnemonic' || kind === 'sensitiveNote';
+
+/** UI copy IDs may carry an index/address suffix; classify before policy checks. */
+export const resolveCopyFieldKind = (field: string): SecretKind => {
+  if (/^(privateKey|pk)(?:$|[_-])/i.test(field)) return 'privateKey';
+  if (/^(mnemonic|mn|seedPhrase|seed)(?:$|[_-])/i.test(field)) return 'mnemonic';
+  if (/^(address|addr|vanity-extra|vanity-result|vanity-found|vanity-candidate)(?:$|[_-])/i.test(field)) return 'address';
+  return 'generic';
+};

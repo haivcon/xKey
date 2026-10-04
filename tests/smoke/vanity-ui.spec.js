@@ -93,3 +93,42 @@ test('real worker extras respect numeric filters and revalidate on resume', asyn
   await expect(page.getByRole('button', { name: /Save selected/ })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+for (const resumed of [false, true]) {
+test(`worker deletion frees a ranked slot and sends only newly accepted secrets (resumed=${resumed})`, async ({ page }) => {
+  test.setTimeout(60000);
+  await page.goto('/');
+  const result = await page.evaluate(async resumed => {
+    const { normalizeVanityExtraFilters } = await import('/src/utils/vanity/vanityMatch.ts');
+    const worker = new Worker('/src/workers/vanityWorker.ts', { type: 'module' });
+    const seededAddress = `0x${'1'.repeat(40)}`;
+    const filters = normalizeVanityExtraFilters({});
+    Object.values(filters).forEach(rule => { rule.enabled = false; });
+    filters.numericTail = { enabled: true, minRun: 3 };
+    return await new Promise((resolve, reject) => {
+      let removed = resumed;
+      const timeout = setTimeout(() => { worker.terminate(); reject(new Error('No replacement candidate after deletion')); }, 30000);
+      worker.onerror = event => { clearTimeout(timeout); worker.terminate(); reject(new Error(event.message)); };
+      worker.onmessage = event => {
+        if (event.data.type === 'error') { clearTimeout(timeout); worker.terminate(); reject(new Error(event.data.code)); }
+        if (event.data.type === 'progress' && !removed) {
+          removed = true;
+          worker.postMessage({ type: 'remove-extras', addresses: [seededAddress.toUpperCase()] });
+        }
+        if (event.data.type === 'extras') {
+          clearTimeout(timeout);
+          worker.terminate();
+          resolve({ wallets: event.data.wallets, seededAddress });
+        }
+      };
+      worker.postMessage({ type: 'start', prefix: 'abcdefabcdef', batchSize: 20, captureExtras: true,
+        excludedExtraAddresses: resumed ? [seededAddress.toUpperCase()] : [],
+        extraLimit: 1, extraFilters: filters, initialExtraCandidates: [{ address: seededAddress }] });
+    });
+  }, resumed);
+  expect(result.wallets).toHaveLength(1);
+  expect(result.wallets[0].address.toLowerCase()).not.toBe(result.seededAddress);
+  expect(result.wallets[0].privateKey).toMatch(/^0x[0-9a-f]{64}$/i);
+  expect(result.wallets[0].vanityScoreVersion).toBe(2);
+});
+}

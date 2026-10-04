@@ -23,6 +23,7 @@ export type GeneratedWallet = WalletModel & {
   vanityRepeatChar?: string;
   vanityRepeatLength?: number;
   vanityScore?: number;
+  vanityScoreVersion?: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
   vanityPatternType?: VanityExtraPatternType;

@@ -8,7 +8,7 @@ assert.deepEqual(head, {
   length: 6,
   patternType: 'sequence-up',
   tailRun: 'abcdef',
-  score: 91,
+  score: 49,
 });
 
 const tail = detectExtraVanityMatch('0xabcde1234567890abcdef1234567890abcdefaaaa', 4);
@@ -18,14 +18,14 @@ assert.deepEqual(tail, {
   length: 5,
   patternType: 'sequence-up',
   headRun: 'abcde',
-  score: 78,
+  score: 39,
 });
 
 const both = detectExtraVanityMatch('0x111abcde1234567890abcdef1234567890aaaa', 3);
 assert.equal(both?.side, 'both');
 assert.equal(both?.headRun, '111');
 assert.equal(both?.tailRun, 'aaaa');
-assert.equal(both?.score, 97);
+assert.equal(both?.score, 50);
 
 const sequenceUp = detectExtraVanityMatch('0x1234567890abcdef1234567890abcdefffffffff', 4);
 assert.equal(sequenceUp?.patternType, 'sequence-up');

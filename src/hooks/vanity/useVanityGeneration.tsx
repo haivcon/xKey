@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
-import { APP_ACTIVITY_EVENT } from '../security/useAutoLock';
 import { useCpuTemperature } from '../useCpuTemperature';
 import {
   DEFAULT_VANITY_EXTRA_FILTERS,
@@ -161,7 +160,6 @@ export function useVanityGeneration({
   // ── Refs ───────────────────────────────────────────────────────────────
   const isVanityRunningRef = useRef(false);
   const vanityWorkerRef = useRef<Worker[]>([]);
-  const vanityActivityRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vanityFoundRef = useRef<GeneratedWallet[]>([]);
   const vanityExtraRef = useRef<GeneratedWallet[]>([]);
   const vanitySelectedRef = useRef<Set<string>>(new Set());
@@ -511,7 +509,6 @@ export function useVanityGeneration({
   useEffect(() => {
     return () => {
       isVanityRunningRef.current = false;
-      if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
       vanityWorkerRef.current.forEach(w => w.terminate());
       vanityWorkerRef.current = [];
       if (vanitySessionPersistTimerRef.current)
@@ -752,6 +749,7 @@ export function useVanityGeneration({
     });
     if (!ok) return;
     vanityDeletedExtraRef.current.add(normalizedAddress);
+    vanityWorkerRef.current.forEach(worker => worker.postMessage({ type: 'remove-extras', addresses: [normalizedAddress] }));
     const nextExtras = syncVanityExtraWallets(
       vanityExtraRef.current.filter(w => w.address?.toLowerCase() !== normalizedAddress)
     );
@@ -811,6 +809,7 @@ export function useVanityGeneration({
         vanitySavedRef.current.delete(addressKey);
       }
     });
+    vanityWorkerRef.current.forEach(worker => worker.postMessage({ type: 'remove-extras', addresses: [...vanityDeletedExtraRef.current] }));
     syncVanityExtraWallets([]);
     setSelectedVanityAddresses(
       [...vanitySelectedRef.current].filter(addressKey =>
@@ -907,8 +906,6 @@ export function useVanityGeneration({
     isVanityRunningRef.current = false;
     setVanityGenerating(false);
     setVanityPaused(false);
-    if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
-    vanityActivityRef.current = null;
     vanityWorkerRef.current.forEach(w => {
       w.postMessage({ type: 'stop' });
       w.terminate();
@@ -988,7 +985,7 @@ export function useVanityGeneration({
       );
       setVanityExtraLimit(Math.max(1, Math.floor(Number(state.extraLimit) || 50)));
       const restoredExtraFilters = normalizeVanityExtraFilters(
-        state.extraFilters || DEFAULT_VANITY_EXTRA_FILTERS,
+        state.extraFilters || (state.extraMinRun ? null : DEFAULT_VANITY_EXTRA_FILTERS),
         state.extraMinRun || 4
       );
       setVanityExtraFilters(restoredExtraFilters);
@@ -1092,11 +1089,6 @@ export function useVanityGeneration({
       setSelectedVanityAddresses([...vanitySelectedRef.current]);
     }
 
-    window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
-    if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
-    vanityActivityRef.current = setInterval(() => {
-      window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
-    }, 15000);
 
     vanityWorkerRef.current.forEach(w => w.terminate());
     const workers = Array.from(
@@ -1121,7 +1113,6 @@ export function useVanityGeneration({
         return;
       }
 
-      window.dispatchEvent(new Event(APP_ACTIVITY_EVENT));
       workerScanned[workerIndex] = Math.max(0, Number(scanned) || 0);
       const totalScanned = workerScanned.reduce(
         (sum, c) => sum + c,
@@ -1231,6 +1222,7 @@ export function useVanityGeneration({
         extraFilters: vanitySafeExtraFilters,
         generationMode: vanityGenerationMode,
         mnemonicWords: vanityMnemonicWords,
+        excludedExtraAddresses: [...vanityDeletedExtraRef.current],
         initialExtraCandidates: vanityExtraRef.current.map(w => ({
           address: w.address,
           vanityMatchType: 'extra' as const,
@@ -1242,9 +1234,6 @@ export function useVanityGeneration({
           vanityTailRun: w.vanityTailRun,
           vanityPatternType: w.vanityPatternType,
           vanityMatchStart: w.vanityMatchStart,
-          privateKey: w.privateKey,
-          seedPhrase: w.seedPhrase,
-          mnemonic: w.mnemonic,
         })),
       });
     });
@@ -1258,8 +1247,6 @@ export function useVanityGeneration({
       w.terminate();
     });
     vanityWorkerRef.current = [];
-    if (vanityActivityRef.current) clearInterval(vanityActivityRef.current);
-    vanityActivityRef.current = null;
     setVanityGenerating(false);
     setVanityPaused(true);
     setVanityStopReason(reason || t('createWallet.vanityPaused'));

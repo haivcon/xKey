@@ -3,10 +3,15 @@ import { assertEntropyQuality } from '../utils/crypto/entropyUtils';
 import type { Wallet } from '../types';
 import { compareVanityExtraMatches, detectExtraVanityMatch, normalizeVanityAddress, normalizeVanityExtraFilters, sortAndDedupeVanityAddresses, type VanityExtraFilterConfig, type VanityExtraFilterRule, type VanityExtraMatch, type VanityExtraPatternKey, type VanityExtraPatternType, type VanityRepeatSide } from '../utils/vanity/vanityMatch';
 
+import { primaryVanityScoreMetadata, toVanityScoreMetadata } from '../utils/vanity/vanityScoreGrade';
+
 let running = false;
+let removeExtras: (addresses: string[]) => void = () => {};
 
 type VanityWorkerRequest = {
-  type?: 'start' | 'stop';
+  type?: 'start' | 'stop' | 'remove-extras';
+  addresses?: string[];
+  excludedExtraAddresses?: string[];
   prefix?: string;
   suffix?: string;
   batchSize?: number;
@@ -102,14 +107,9 @@ const createVanityWallet = (
   balance: '0.00',
   network: 'XLAYER',
   vanityMatchType: matchType,
-  vanityRepeatSide: extra?.side,
-  vanityRepeatChar: extra?.char,
-  vanityRepeatLength: extra?.length,
-  vanityScore: extra?.score,
-  vanityHeadRun: extra?.headRun || (matchType === 'main' && primaryPrefix ? address.slice(2, 2 + primaryPrefix.length) : undefined),
-  vanityTailRun: extra?.tailRun || (matchType === 'main' && primarySuffix ? address.slice(-primarySuffix.length) : undefined),
-  vanityPatternType: extra?.patternType,
-  vanityMatchStart: extra?.matchStart,
+  ...(matchType === 'main'
+    ? primaryVanityScoreMetadata(primaryPrefix, primarySuffix)
+    : extra ? toVanityScoreMetadata(extra) : {}),
 });
 
 const compareWalletScore = (left: RankedVanityWallet, right: RankedVanityWallet): number => compareVanityExtraMatches({
@@ -153,6 +153,10 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     return;
   }
 
+  if (type === 'remove-extras') {
+    removeExtras(event.data.addresses || []);
+    return;
+  }
   if (type !== 'start') return;
 
   const entropyVerification = assertEntropyQuality();
@@ -200,6 +204,19 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     safeExtraLimit,
   );
   const extraAddressKeys = new Set(extraWallets.map(wallet => normalizeVanityAddress(wallet.address)));
+  const deletedAddresses = new Set<string>();
+  removeExtras = addresses => {
+    addresses.forEach(address => deletedAddresses.add(normalizeVanityAddress(address)));
+    for (let index = extraWallets.length - 1; index >= 0; index -= 1) {
+      const key = normalizeVanityAddress(extraWallets[index].address);
+      if (deletedAddresses.has(key)) {
+        extraWallets.splice(index, 1);
+        extraAddressKeys.delete(key);
+      }
+    }
+  };
+
+  removeExtras(event.data.excludedExtraAddresses || []);
 
   const safeBatchSize = Math.max(1, Math.min(20000, Number(batchSize) || 1024));
 
@@ -220,7 +237,6 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
     if (!running) return;
 
     for (let i = 0; i < safeBatchSize; i += 1) {
-      let privateKeyBytes: Uint8Array | null = null;
       let privateKey: string;
       let address: string;
       let mnemonic = '';
@@ -239,9 +255,13 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           mnemonic = wallet.mnemonic?.phrase || '';
         }
       } else {
-        privateKeyBytes = ethers.randomBytes(32);
-        privateKey = ethers.hexlify(privateKeyBytes);
-        address = deriveAddressFromPrivateKey(privateKey).toLowerCase();
+        const privateKeyBytes = ethers.randomBytes(32);
+        try {
+          privateKey = ethers.hexlify(privateKeyBytes);
+          address = deriveAddressFromPrivateKey(privateKey).toLowerCase();
+        } finally {
+          wipePrivateKeyBytes(privateKeyBytes);
+        }
       }
 
       lastCandidate = address;
@@ -271,11 +291,12 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
           });
           return;
         }
-      } else if (extraMatch && !extraAddressKeys.has(normalizeVanityAddress(address))) {
+      } else if (extraMatch && !extraAddressKeys.has(normalizeVanityAddress(address)) && !deletedAddresses.has(normalizeVanityAddress(address))) {
         const extraWallet = createVanityWallet(privateKey, address, 'extra', extraMatch, mnemonic);
         const weakest = extraWallets[extraWallets.length - 1];
         if (extraWallets.length < safeExtraLimit || (weakest && compareWalletScore(extraWallet, weakest) < 0)) {
-          extraWallets.push(extraWallet);
+          // Keep public ranking data only; send each accepted secret exactly once.
+          extraWallets.push({ address: extraWallet.address, ...toVanityScoreMetadata(extraMatch) });
           extraAddressKeys.add(normalizeVanityAddress(extraWallet.address));
           extraWallets.sort(compareWalletScore);
           const removed = extraWallets.splice(safeExtraLimit);
@@ -285,13 +306,9 @@ self.onmessage = (event: MessageEvent<VanityWorkerRequest>) => {
             scanned,
             found,
             elapsed: (Date.now() - startTime) / 1000,
-            wallets: extraWallets,
+            wallets: [extraWallet],
           });
-        } else {
-          if (privateKeyBytes) wipePrivateKeyBytes(privateKeyBytes);
         }
-      } else {
-        if (privateKeyBytes) wipePrivateKeyBytes(privateKeyBytes);
       }
 
       const now = Date.now();

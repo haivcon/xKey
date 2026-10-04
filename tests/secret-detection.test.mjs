@@ -22,4 +22,15 @@ assert.equal(isSecretKind('sensitiveNote'), true);
 assert.equal(isSecretKind('address'), false);
 assert.ok(CLIPBOARD_POLICIES.privateKey.defaultClearAfterMs < CLIPBOARD_POLICIES.address.defaultClearAfterMs);
 
+const { resolveCopyFieldKind } = await import('../src/utils/dataSensitivity.ts');
+for (const field of ['pk', 'privateKey', 'pk_0', 'pk_123', 'privateKey-abc']) {
+  assert.equal(resolveCopyFieldKind(field), 'privateKey');
+}
+for (const field of ['mn', 'mn_0', 'mnemonic', 'seedPhrase', 'seed_2']) {
+  assert.equal(resolveCopyFieldKind(field), 'mnemonic');
+}
+for (const field of ['address', 'addr_0', 'vanity-extra-2', 'vanity-result-0', 'vanity-found-0', 'vanity-found-12', 'vanity-candidate-3']) {
+  assert.equal(resolveCopyFieldKind(field), 'address');
+}
+assert.equal(resolveCopyFieldKind('unknown'), 'generic');
 console.log('Secret detection and clipboard policy tests passed');

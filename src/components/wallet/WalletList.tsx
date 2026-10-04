@@ -63,7 +63,7 @@ function WalletList({
   const densityRowSize = walletDensity === 'ultra' ? 50 : walletDensity === 'compact' ? 60 : 72;
 
   const measureListOffset = useCallback(() => {
-    if (!listRef.current) return;
+    if (!listRef.current || !listRef.current.getClientRects().length) return;
     const rect = listRef.current.getBoundingClientRect();
     setListOffset(rect.top + window.scrollY);
   }, []);
@@ -79,12 +79,34 @@ function WalletList({
       setColumnCount(getColumnCount());
       requestAnimationFrame(measureListOffset);
     };
+    const observer = new ResizeObserver(measureListOffset);
+    observer.observe(document.body);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
   }, [measureListOffset]);
 
-  // Generate stable IDs for dnd-kit
-  const getWalletId = (w: Wallet, i: number): UniqueIdentifier => w._id || `${w.address || 'no-addr'}-${w.groupId || 'root'}-${i}`;
+  // Share unique display IDs across React, dnd-kit and the measurement cache.
+  // Tuple encoding prevents user IDs from colliding with occurrence suffixes.
+  const itemIds = useMemo(() => {
+    const occurrences = new Map<string, number>();
+    return filteredWallets.map((wallet, index) => {
+      const base = wallet._id
+        ? JSON.stringify(['id', wallet._id])
+        : JSON.stringify(['address', wallet.address || `no-addr-${index}`, wallet.groupId || 'root']);
+      const occurrence = occurrences.get(base) || 0;
+      occurrences.set(base, occurrence + 1);
+      return JSON.stringify([base, occurrence]);
+    });
+  }, [filteredWallets]);
+
+  const getItemKey = useCallback((index: number): UniqueIdentifier => JSON.stringify(
+    itemIds.slice(index * effectiveColumns, (index + 1) * effectiveColumns)
+  ), [itemIds, effectiveColumns]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -93,34 +115,37 @@ function WalletList({
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rowCount,
+    getItemKey,
     estimateSize: () => Math.max(28, densityRowSize * (effectiveDisplayScale / 100)),
+    measureElement: (element, _entry, instance) => {
+      const height = element.getBoundingClientRect().height;
+      const index = Number(element.getAttribute('data-index'));
+      // PIN hides the mounted app with display:none. Do not poison its cache.
+      return height > 0 ? height : instance.getVirtualItems().find(row => row.index === index)?.size
+        || Math.max(28, densityRowSize * (effectiveDisplayScale / 100));
+    },
     overscan: 4,
     scrollMargin: listOffset,
   });
 
-  const itemIds = useMemo(
-    () => filteredWallets.map((w, i) => getWalletId(w, i)),
-    [filteredWallets],
-  );
-
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [rowVirtualizer, effectiveDisplayScale, walletDensity, effectiveColumns, filteredWallets.length]);
+  }, [rowVirtualizer, effectiveDisplayScale, walletDensity]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = filteredWallets.findIndex((w, i) => getWalletId(w, i) === active.id);
-    const newIndex = filteredWallets.findIndex((w, i) => getWalletId(w, i) === over.id);
+    const oldIndex = itemIds.indexOf(String(active.id));
+    const newIndex = itemIds.indexOf(String(over.id));
     if (oldIndex === -1 || newIndex === -1) return;
 
     onReorder?.(oldIndex, newIndex);
-  }, [filteredWallets, onReorder]);
+  }, [itemIds, onReorder]);
 
   const renderCard = (w: Wallet, i: number) => (
     <WalletCard
-      key={getWalletId(w, i)}
+      key={itemIds[i]}
       wallet={w}
       onShowQR={(data: string, title: string, subtitle?: string) => setQrModalData({ isOpen: true, data, title, subtitle: subtitle || '' })}
       onDelete={() => handleDeleteWallet(w)}
@@ -204,7 +229,7 @@ function WalletList({
 
         const rowContent = rowWallets.map((w, offset) => {
           const i = rowStart + offset;
-          const id = getWalletId(w, i);
+          const id = itemIds[i];
 
           return isDndEnabled ? (
             <SortableWalletCard key={id} id={id}>{renderCard(w, i)}</SortableWalletCard>

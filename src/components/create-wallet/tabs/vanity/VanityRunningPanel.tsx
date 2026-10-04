@@ -292,7 +292,6 @@ export function VanityRunningPanel(props: VanityTabProps) {
         </section>
       )}
 
-      <p className="px-1 text-scale-xs leading-relaxed text-surface-600 dark:text-surface-500">{t('createWallet.vanityAutoLockPaused')}</p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         {vanityPaused ? (
           <>

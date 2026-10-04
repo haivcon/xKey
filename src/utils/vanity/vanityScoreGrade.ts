@@ -1,6 +1,6 @@
 import type { Wallet } from '../../types';
 import type { TranslationFn } from '../../contexts/LanguageContext';
-import { detectExtraVanityMatch, type VanityExtraMatch, type VanityExtraPatternType } from './vanityMatch';
+import { detectExtraVanityMatch, scoreVanityBits, scoreVanityMatch, VANITY_SCORE_VERSION, type VanityExtraMatch, type VanityExtraPatternType } from './vanityMatch';
 
 export const VANITY_SCORE_DISPLAY_THRESHOLD = 30;
 
@@ -12,6 +12,7 @@ export type VanityScoreMetadata = {
   vanityRepeatChar?: string;
   vanityRepeatLength?: number;
   vanityScore: number;
+  vanityScoreVersion: number;
   vanityHeadRun?: string;
   vanityTailRun?: string;
   vanityPatternType?: VanityExtraPatternType;
@@ -92,14 +93,46 @@ export const toVanityScoreMetadata = (
   vanityRepeatChar: match.char,
   vanityRepeatLength: match.length,
   vanityScore: match.score,
+  vanityScoreVersion: VANITY_SCORE_VERSION,
   vanityHeadRun: match.headRun,
   vanityTailRun: match.tailRun,
   vanityPatternType: match.patternType,
   vanityMatchStart: match.matchStart,
 });
 
-export const inferVanityScoreMetadata = (wallet: Pick<Wallet, 'address' | 'vanityMatchType'>): VanityScoreMetadata | null => {
+export const primaryVanityScoreMetadata = (prefix: string, suffix: string): VanityScoreMetadata => ({
+  vanityMatchType: 'main',
+  vanityScoreVersion: VANITY_SCORE_VERSION,
+  vanityScore: scoreVanityBits(4 * Math.min(40, prefix.length + suffix.length)),
+  vanityHeadRun: prefix || undefined,
+  vanityTailRun: suffix || undefined,
+  vanityRepeatSide: prefix && suffix ? 'both' : prefix ? 'head' : 'tail',
+  vanityPatternType: undefined,
+  vanityRepeatChar: undefined,
+  vanityRepeatLength: undefined,
+  vanityMatchStart: undefined,
+});
+
+export const inferVanityScoreMetadata = (wallet: Partial<Wallet>): VanityScoreMetadata | null => {
   if (!wallet.address) return null;
+  // Preserve known primary highlights; old mixed extra metadata cannot prove a primary target.
+  if (wallet.vanityMatchType === 'main') {
+    if (wallet.vanityPatternType) return null;
+    const body = wallet.address.replace(/^0x/i, '').toLowerCase();
+    const head = wallet.vanityHeadRun?.toLowerCase() || '';
+    const tail = wallet.vanityTailRun?.toLowerCase() || '';
+    if ((!head && !tail) || !body.startsWith(head) || !body.endsWith(tail)) return null;
+    return primaryVanityScoreMetadata(head, tail);
+  }
+  if (wallet.vanityPatternType && wallet.vanityRepeatLength) {
+    const match: VanityExtraMatch = {
+      side: wallet.vanityRepeatSide || 'head', char: wallet.vanityRepeatChar || '',
+      length: wallet.vanityRepeatLength, patternType: wallet.vanityPatternType,
+      headRun: wallet.vanityHeadRun, tailRun: wallet.vanityTailRun,
+      matchStart: wallet.vanityMatchStart, score: 0,
+    };
+    return toVanityScoreMetadata({ ...match, score: scoreVanityMatch(match) });
+  }
   const match = detectExtraVanityMatch(wallet.address, 3);
   if (!match || match.score < VANITY_SCORE_DISPLAY_THRESHOLD) return null;
   return toVanityScoreMetadata(match, wallet.vanityMatchType || 'extra');
